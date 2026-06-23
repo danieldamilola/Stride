@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OneTab - Spur</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0C0C0C;
+            color: #D4D4D4;
+            font-family: 'Segoe UI', Inter, sans-serif;
+            padding: 24px 32px;
+        }
+        h1 { font-size: 22px; font-weight: 600; margin-bottom: 20px; }
+        .group {
+            background: #1A1A1A;
+            border: 1px solid #1E1E1E;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .group-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #1E1E1E;
+            background: #1A1A1A;
+        }
+        .drag-handle { cursor: grab; color: #444444; font-size: 14px; }
+        .group-name {
+            font-weight: 600;
+            font-size: 14px;
+            cursor: text;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .group-name:focus { outline: 1px solid #D4A574; background: #222222; }
+        .group-time { color: #444444; font-size: 11px; }
+        .group-count { color: #7A7A7A; font-size: 12px; margin-left: auto; }
+        .btn {
+            padding: 5px 12px;
+            border: 1px solid #1E1E1E;
+            background: transparent;
+            color: #7A7A7A;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .btn:hover { background: #222222; color: #D4D4D4; }
+        .btn-danger:hover { background: #C4453A; border-color: #C4453A; color: white; }
+        .tab-list { padding: 4px 0; }
+        .tab {
+            display: flex;
+            align-items: center;
+            padding: 6px 16px;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+        .tab:hover { background: #222222; }
+        .tab-star {
+            cursor: pointer;
+            font-size: 14px;
+            color: #444444;
+            transition: color 0.15s;
+        }
+        .tab-star.starred { color: #F59E0B; }
+        .tab-star:hover { color: #F59E0B; }
+        .tab-title {
+            color: #D4D4D4;
+            text-decoration: none;
+            font-size: 13px;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .tab-title:hover { color: #D4A574; }
+        .tab-url {
+            color: #444444;
+            font-size: 11px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .tab-delete {
+            background: none;
+            border: none;
+            color: #444444;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            opacity: 0;
+            transition: all 0.15s;
+        }
+        .tab:hover .tab-delete { opacity: 1; }
+        .tab-delete:hover { color: #C4453A; background: #1A0000; }
+        .empty {
+            color: #444444;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 80px;
+        }
+    </style>
+</head>
+<body>
+    <h1>OneTab</h1>
+    {{CONTENT}}
+</body>
+</html>

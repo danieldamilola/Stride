@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Tab - Spur</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0C0C0C;
+            color: #D4D4D4;
+            font-family: 'Segoe UI', Inter, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .logo {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #D4A574, #E8C9A0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .search-container {
+            width: 100%;
+            max-width: 560px;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: 1px solid #1E1E1E;
+            background: #1A1A1A;
+            color: #D4D4D4;
+            font-size: 15px;
+            font-family: 'Segoe UI', Inter, sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus {
+            border-color: #D4A574;
+        }
+        .search-input::placeholder {
+            color: #444444;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">Spur</div>
+    <div class="search-container">
+        <input type="text" class="search-input" placeholder="Search the web or enter a URL..."
+               autofocus
+               onkeydown="if(event.key==='Enter'){window.chrome.webview.postMessage('search:'+this.value)}">
+    </div>
+</body>
+</html>

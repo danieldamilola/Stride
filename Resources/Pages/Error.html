@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Error - Spur</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0C0C0C;
+            color: #D4D4D4;
+            font-family: 'Segoe UI', Inter, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .error-icon { font-size: 64px; margin-bottom: 24px; opacity: 0.4; }
+        h1 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+        .message { color: #7A7A7A; font-size: 14px; max-width: 500px; text-align: center; margin-bottom: 8px; }
+        .url { color: #444444; font-size: 12px; word-break: break-all; max-width: 500px; text-align: center; margin-bottom: 24px; }
+        .retry-btn {
+            padding: 10px 24px;
+            background: #D4A574;
+            color: #0C0C0C;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: opacity 0.2s;
+        }
+        .retry-btn:hover { background: #C4956A; }
+    </style>
+</head>
+<body>
+    <div class="error-icon">⚠️</div>
+    <h1>This page can't be reached</h1>
+    <p class="message">{{ERROR_MESSAGE}}</p>
+    <p class="url">{{URL}}</p>
+    <button class="retry-btn" onclick="window.chrome.webview.postMessage('error-retry:{{RETRY_URL}}')">Retry</button>
+</body>
+</html>

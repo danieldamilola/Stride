@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings - Spur</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0C0C0C;
+            color: #D4D4D4;
+            font-family: 'Segoe UI', Inter, sans-serif;
+            padding: 24px 32px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 22px; font-weight: 600; margin-bottom: 24px; }
+        h2 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #7A7A7A;
+            margin: 24px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #1E1E1E;
+        }
+        .setting {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+        .setting label {
+            font-size: 13px;
+            color: #D4D4D4;
+        }
+        .setting select, .setting input[type="number"] {
+            background: #1A1A1A;
+            color: #D4D4D4;
+            border: 1px solid #1E1E1E;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+        }
+        .setting select:focus, .setting input[type="number"]:focus {
+            border-color: #D4A574;
+        }
+        .setting input[type="checkbox"] {
+            accent-color: #D4A574;
+            width: 16px;
+            height: 16px;
+        }
+        .section-note {
+            font-size: 11px;
+            color: #444444;
+            margin-top: 4px;
+        }
+        .default-browser-btn {
+            padding: 10px 24px;
+            background: #D4A574;
+            color: #0C0C0C;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 24px;
+        }
+        .default-browser-btn:hover { background: #C4956A; }
+    </style>
+    <script>
+        function s(key, el) {
+            const val = el.type === 'checkbox' ? el.checked : el.value;
+            window.chrome.webview.postMessage('setting:' + key + ':' + val);
+        }
+    </script>
+</head>
+<body>
+    <h1>Settings</h1>
+
+    <h2>General</h2>
+    <div class="setting">
+        <label>Search Engine</label>
+        <select onchange="s('searchEngine', this)">
+            <option value="DuckDuckGo"{{SEARCH_DUCKDUCKGO}}>DuckDuckGo</option>
+            <option value="Brave"{{SEARCH_BRAVE}}>Brave</option>
+            <option value="Google"{{SEARCH_GOOGLE}}>Google</option>
+            <option value="Bing"{{SEARCH_BING}}>Bing</option>
+            <option value="Yahoo"{{SEARCH_YAHOO}}>Yahoo</option>
+            <option value="Startpage"{{SEARCH_STARTPAGE}}>Startpage</option>
+        </select>
+    </div>
+    <div class="setting">
+        <label>Default Zoom</label>
+        <select onchange="s('defaultZoom', this)">
+            <option value="75"{{ZOOM_75}}>75%</option>
+            <option value="80"{{ZOOM_80}}>80%</option>
+            <option value="90"{{ZOOM_90}}>90%</option>
+            <option value="100"{{ZOOM_100}}>100%</option>
+            <option value="110"{{ZOOM_110}}>110%</option>
+            <option value="125"{{ZOOM_125}}>125%</option>
+            <option value="150"{{ZOOM_150}}>150%</option>
+            <option value="175"{{ZOOM_175}}>175%</option>
+            <option value="200"{{ZOOM_200}}>200%</option>
+        </select>
+    </div>
+    <div class="setting">
+        <label>Restore session on startup</label>
+        <input type="checkbox"{{CHK_RESTORE}} onchange="s('restoreSessionOnStartup', this)">
+    </div>
+    <div class="setting">
+        <label>Force dark mode on websites</label>
+        <input type="checkbox"{{CHK_DARK}} onchange="s('forceDarkMode', this)">
+    </div>
+    <div class="setting">
+        <label>Force HTTPS</label>
+        <input type="checkbox"{{CHK_HTTPS}} onchange="s('forceHttps', this)">
+    </div>
+    <div class="setting">
+        <label>Clear data on exit</label>
+        <input type="checkbox"{{CHK_CLEAR}} onchange="s('clearDataOnExit', this)">
+    </div>
+    <div class="setting">
+        <label>Block duplicate tabs</label>
+        <input type="checkbox"{{CHK_DUPES}} onchange="s('blockDuplicateTabs', this)">
+    </div>
+
+    <h2>YouTube Enhancer</h2>
+    <div class="setting">
+        <label>Default Quality</label>
+        <select onchange="s('ytDefaultQuality', this)">
+            <option value="auto"{{YT_QUALITY_AUTO}}>Auto</option>
+            <option value="tiny"{{YT_QUALITY_TINY}}>144p</option>
+            <option value="small"{{YT_QUALITY_SMALL}}>240p</option>
+            <option value="medium"{{YT_QUALITY_MEDIUM}}>360p</option>
+            <option value="large"{{YT_QUALITY_LARGE}}>480p</option>
+            <option value="hd720"{{YT_QUALITY_720}}>720p</option>
+            <option value="hd1080"{{YT_QUALITY_1080}}>1080p</option>
+            <option value="hd1440"{{YT_QUALITY_1440}}>1440p</option>
+            <option value="highres"{{YT_QUALITY_4K}}>4K</option>
+        </select>
+    </div>
+    <div class="setting">
+        <label>Default Speed</label>
+        <input type="number" value="{{YT_SPEED}}" min="0.25" max="3" step="0.25"
+               onchange="s('ytDefaultSpeed', this)" style="width: 80px;">
+    </div>
+    <div class="setting">
+        <label>Disable autoplay</label>
+        <input type="checkbox"{{CHK_YT_AUTOPLAY}} onchange="s('ytDisableAutoplay', this)">
+    </div>
+    <div class="setting">
+        <label>Pause video on tab switch</label>
+        <input type="checkbox"{{CHK_YT_PAUSE}} onchange="s('ytPauseOnTabSwitch', this)">
+    </div>
+    <div class="setting">
+        <label>Loop video</label>
+        <input type="checkbox"{{CHK_YT_LOOP}} onchange="s('ytLoopVideo', this)">
+    </div>
+
+    <h2>YouTube Unhook</h2>
+    <div class="setting"><label>Hide video sidebar</label><input type="checkbox"{{CHK_UNHOOK_SIDEBAR}} onchange="s('unhookHideVideoSidebar', this)"></div>
+    <div class="setting"><label>Hide recommended</label><input type="checkbox"{{CHK_UNHOOK_RECOMMENDED}} onchange="s('unhookHideRecommended', this)"></div>
+    <div class="setting"><label>Hide live chat</label><input type="checkbox"{{CHK_UNHOOK_LIVECHAT}} onchange="s('unhookHideLiveChat', this)"></div>
+    <div class="setting"><label>Hide playlist</label><input type="checkbox"{{CHK_UNHOOK_PLAYLIST}} onchange="s('unhookHidePlaylist', this)"></div>
+    <div class="setting"><label>Hide fundraiser</label><input type="checkbox"{{CHK_UNHOOK_FUNDRAISER}} onchange="s('unhookHideFundraiser', this)"></div>
+    <div class="setting"><label>Hide end screen feed</label><input type="checkbox"{{CHK_UNHOOK_ENDFEED}} onchange="s('unhookHideEndScreenFeed', this)"></div>
+    <div class="setting"><label>Hide end screen cards</label><input type="checkbox"{{CHK_UNHOOK_ENDCARDS}} onchange="s('unhookHideEndScreenCards', this)"></div>
+    <div class="setting"><label>Hide Shorts</label><input type="checkbox"{{CHK_UNHOOK_SHORTS}} onchange="s('unhookHideShorts', this)"></div>
+    <div class="setting"><label>Hide comments</label><input type="checkbox"{{CHK_UNHOOK_COMMENTS}} onchange="s('unhookHideComments', this)"></div>
+    <div class="setting"><label>Hide mixes</label><input type="checkbox"{{CHK_UNHOOK_MIXES}} onchange="s('unhookHideMixes', this)"></div>
+    <div class="setting"><label>Hide merch</label><input type="checkbox"{{CHK_UNHOOK_MERCH}} onchange="s('unhookHideMerch', this)"></div>
+    <div class="setting"><label>Hide video info</label><input type="checkbox"{{CHK_UNHOOK_VIDEOINFO}} onchange="s('unhookHideVideoInfo', this)"></div>
+    <div class="setting"><label>Hide home feed</label><input type="checkbox"{{CHK_UNHOOK_HOMEFEED}} onchange="s('unhookHideHomeFeed', this)"></div>
+    <div class="setting"><label>Hide top header</label><input type="checkbox"{{CHK_UNHOOK_TOPHEADER}} onchange="s('unhookHideTopHeader', this)"></div>
+    <div class="setting"><label>Hide notifications</label><input type="checkbox"{{CHK_UNHOOK_NOTIFICATIONS}} onchange="s('unhookHideNotifications', this)"></div>
+    <div class="setting"><label>Hide inapt search results</label><input type="checkbox"{{CHK_UNHOOK_INAPTSEARCH}} onchange="s('unhookHideInaptSearch', this)"></div>
+    <div class="setting"><label>Hide Explore</label><input type="checkbox"{{CHK_UNHOOK_EXPLORE}} onchange="s('unhookHideExplore', this)"></div>
+    <div class="setting"><label>Hide More from YouTube</label><input type="checkbox"{{CHK_UNHOOK_MOREYT}} onchange="s('unhookHideMoreYT', this)"></div>
+    <div class="setting"><label>Hide Subscriptions</label><input type="checkbox"{{CHK_UNHOOK_SUBSCRIPTIONS}} onchange="s('unhookHideSubscriptions', this)"></div>
+    <div class="setting"><label>Disable autoplay</label><input type="checkbox"{{CHK_UNHOOK_AUTOPLAY}} onchange="s('unhookDisableAutoplay', this)"></div>
+    <div class="setting"><label>Disable annotations</label><input type="checkbox"{{CHK_UNHOOK_ANNOTATIONS}} onchange="s('unhookDisableAnnotations', this)"></div>
+
+    <h2>Other</h2>
+    <button class="default-browser-btn" onclick="window.chrome.webview.postMessage('set-default-browser')">
+        Set as Default Browser
+    </button>
+</body>
+</html>
