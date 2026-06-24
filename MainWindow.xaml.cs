@@ -37,10 +37,10 @@ public partial class MainWindow : Window
     private bool _isFullscreen;
     private WindowState _preFullscreenState;
 
-    private const double LoadingIndicatorWidth = 140;
+    private const double LoadingIndicatorWidth = 100;
     private const double LoadingOvershootPx = 20;
     private const double FallbackContainerWidth = 900;
-    private const double SweepDurationSeconds = 1.4;
+    private const double SweepDurationSeconds = 1.2;
 
     public MainWindow(IServiceProvider services, BrowserViewModel vm)
     {

@@ -228,11 +228,11 @@
                     Background="{DynamicResource BaseBrush}"
                     ClipToBounds="True">
                 <Grid>
-                    <!-- Loading bar — 2px amber gradient sweep -->
-                    <Border x:Name="LoadingBar" Height="2" VerticalAlignment="Top"
+                    <!-- Loading bar — 1.5px amber glow sweep, transparent track -->
+                    <Border x:Name="LoadingBar" Height="1.5" VerticalAlignment="Top"
                             Visibility="Collapsed" Panel.ZIndex="10"
-                            Background="{DynamicResource AccentWash}" ClipToBounds="True">
-                        <Border x:Name="LoadingIndicator" Width="120"
+                            Background="Transparent" ClipToBounds="True">
+                        <Border x:Name="LoadingIndicator" Width="100"
                                 HorizontalAlignment="Left" CornerRadius="1">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
