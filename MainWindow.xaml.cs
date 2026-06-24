@@ -121,6 +121,7 @@ public partial class MainWindow : Window
             await _engine.InitializeAsync();
 
             _shortcuts = BuildShortcutMap();
+            _shortcuts.RebuildBindings(_vm.Settings.CustomShortcuts);
 
             await RestoreSessionOrCreateTab();
             SyncTabsBinding();
@@ -759,6 +760,10 @@ public partial class MainWindow : Window
 
         if (key == "accentColor")
             ApplyAccentColor(_vm.Settings.AccentColor);
+
+        // Live-rebuild shortcut bindings when user rebinds a key
+        if (key is "shortcut" or "shortcutReset")
+            _shortcuts?.RebuildBindings(_vm.Settings.CustomShortcuts);
 
         if (_engine.ActiveTab?.Url == InternalUrls.Settings)
             _engine.NavigateToSettings(_engine.ActiveTab, _vm.Settings);

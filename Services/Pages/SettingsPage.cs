@@ -1,4 +1,6 @@
+using System.Text;
 using StrideBrowser.Models;
+using StrideBrowser.Services.Input;
 
 namespace StrideBrowser.Services.Pages;
 
@@ -76,6 +78,64 @@ public sealed class SettingsPage
                 ["CHK_UNHOOK_SUBSCRIPTIONS"] = Chk(settings.UnhookHideSubscriptions),
                 ["CHK_UNHOOK_AUTOPLAY"] = Chk(settings.UnhookDisableAutoplay),
                 ["CHK_UNHOOK_ANNOTATIONS"] = Chk(settings.UnhookDisableAnnotations),
+                ["KEYBOARD_SHORTCUTS_HTML"] = BuildShortcutsHtml(settings.CustomShortcuts),
             });
+    }
+
+    private static string BuildShortcutsHtml(Dictionary<string, string> customShortcuts)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("<div class=\"section\">");
+        sb.AppendLine("    <div class=\"section-header\">Keyboard Shortcuts</div>");
+        sb.AppendLine("    <div class=\"card\">");
+
+        string? lastCategory = null;
+
+        foreach (var def in ShortcutDefaults.All)
+        {
+            // Category subsection header
+            if (def.Category != lastCategory)
+            {
+                if (lastCategory is not null)
+                    sb.AppendLine(); // spacing between categories
+                sb.AppendLine($"        <div class=\"subsection-label\">{def.Category}</div>");
+                lastCategory = def.Category;
+            }
+
+            var currentCombo = ShortcutDefaults.GetCombo(def.Name, customShortcuts);
+            var isCustom = customShortcuts.ContainsKey(def.Name);
+            var displayCombo = FormatComboDisplay(currentCombo);
+
+            sb.AppendLine("        <div class=\"setting-row\">");
+            sb.AppendLine("            <div class=\"setting-info\">");
+            sb.AppendLine($"                <div class=\"setting-label\">{def.Label}</div>");
+            if (!string.IsNullOrEmpty(def.Description))
+                sb.AppendLine($"                <div class=\"setting-desc\">{def.Description}</div>");
+            sb.AppendLine("            </div>");
+            sb.AppendLine("            <div class=\"shortcut-controls\">");
+
+            // Reset button (only shown if custom)
+            if (isCustom)
+            {
+                sb.AppendLine($"                <button class=\"shortcut-reset\" onclick=\"resetShortcut('{def.Name}', this.nextElementSibling)\" title=\"Reset to {FormatComboDisplay(def.DefaultCombo)}\">Reset</button>");
+            }
+
+            // Clickable combo badge
+            sb.AppendLine($"                <span class=\"shortcut-badge\" data-action=\"{def.Name}\" data-combo=\"{currentCombo}\" data-default-combo=\"{def.DefaultCombo}\" onclick=\"startRecording(this)\">{displayCombo}</span>");
+
+            sb.AppendLine("            </div>");
+            sb.AppendLine("        </div>");
+        }
+
+        sb.AppendLine("    </div>");
+        sb.AppendLine("</div>");
+
+        return sb.ToString();
+    }
+
+    private static string FormatComboDisplay(string combo)
+    {
+        // "Ctrl+Shift+T" → "Ctrl + Shift + T"
+        return combo.Replace("+", " + ");
     }
 }

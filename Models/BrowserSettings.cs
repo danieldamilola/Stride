@@ -45,6 +45,13 @@ public sealed partial class BrowserSettings : ObservableObject
     [ObservableProperty]
     private string _newTabBackground = "";
 
+    /// <summary>
+    /// Custom keyboard shortcut overrides. Maps action name (e.g. "NewTab")
+    /// to key combo string (e.g. "Ctrl+K"). Missing entries use built-in defaults.
+    /// </summary>
+    [ObservableProperty]
+    private Dictionary<string, string> _customShortcuts = new();
+
     // ── YouTube Enhancer ──
 
     [ObservableProperty]

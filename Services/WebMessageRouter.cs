@@ -111,6 +111,28 @@ public sealed class WebMessageRouter
         var key = parts[0];
         var value = parts[1];
 
+        // Special handling for shortcut rebinding: "shortcut:ActionName:Combo"
+        if (key == "shortcut")
+        {
+            var subParts = value.Split(':', 2);
+            if (subParts.Length == 2)
+            {
+                _vm.Settings.CustomShortcuts[subParts[0]] = subParts[1];
+                _settingsStore.Save(_vm.Settings);
+                SettingChanged?.Invoke("shortcut", subParts[0]);
+            }
+            return;
+        }
+
+        // Special handling for shortcut reset: "shortcutReset:ActionName"
+        if (key == "shortcutReset")
+        {
+            _vm.Settings.CustomShortcuts.Remove(value);
+            _settingsStore.Save(_vm.Settings);
+            SettingChanged?.Invoke("shortcutReset", value);
+            return;
+        }
+
         if (SettingSetters.TryGetValue(key, out var setter))
             setter(_vm.Settings, value);
         else

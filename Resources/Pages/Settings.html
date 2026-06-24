@@ -230,6 +230,60 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #333; }
+
+        /* ── Shortcut key badge ── */
+        .shortcut-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: #1A1A1A;
+            border: 1px solid #262626;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'Segoe UI Variable', monospace;
+            font-weight: 500;
+            color: #999;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            min-width: 60px;
+            text-align: center;
+            justify-content: center;
+            user-select: none;
+        }
+        .shortcut-badge:hover {
+            border-color: #444;
+            background: #222;
+        }
+        .shortcut-badge.recording {
+            border-color: #D4A574;
+            background: #1A1510;
+            color: #D4A574;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .shortcut-reset {
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 11px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.15s;
+            font-family: inherit;
+        }
+        .shortcut-reset:hover {
+            color: #D4A574;
+        }
+        .shortcut-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
     </style>
     <script>
         function s(key, el) {
@@ -242,12 +296,76 @@
                 sw.classList.toggle('active', sw.dataset.color === hex);
             });
         }
+        // ── Shortcut recording ──
+        var activeRecorder = null;
+
+        function startRecording(badge) {
+            if (activeRecorder) stopRecording(activeRecorder, false);
+            activeRecorder = badge;
+            badge.classList.add('recording');
+            badge.textContent = 'Press keys...';
+            badge.dataset.oldCombo = badge.dataset.combo;
+        }
+
+        function stopRecording(badge, save) {
+            badge.classList.remove('recording');
+            if (!save) badge.textContent = formatCombo(badge.dataset.combo);
+            activeRecorder = null;
+        }
+
+        function formatCombo(combo) {
+            return combo.split('+').map(function(p) {
+                return p.charAt(0).toUpperCase() + p.slice(1);
+            }).join(' + ');
+        }
+
+        function resetShortcut(actionName, badge) {
+            var def = badge.dataset.defaultCombo;
+            badge.dataset.combo = def;
+            badge.textContent = formatCombo(def);
+            window.chrome.webview.postMessage('setting:shortcutReset:' + actionName);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (!activeRecorder) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Ignore lone modifier keys
+            if (['Control','Shift','Alt','Meta'].includes(e.key)) return;
+
+            var parts = [];
+            if (e.ctrlKey) parts.push('Ctrl');
+            if (e.shiftKey) parts.push('Shift');
+            if (e.altKey) parts.push('Alt');
+
+            // Map key name
+            var keyName = e.key;
+            if (keyName === ' ') keyName = 'Space';
+            else if (keyName === 'ArrowLeft') keyName = 'Left';
+            else if (keyName === 'ArrowRight') keyName = 'Right';
+            else if (keyName === 'ArrowUp') keyName = 'Up';
+            else if (keyName === 'ArrowDown') keyName = 'Down';
+            else if (keyName === 'Escape') { stopRecording(activeRecorder, false); return; }
+            else if (keyName.length === 1) keyName = keyName.toUpperCase();
+
+            parts.push(keyName);
+            var combo = parts.join('+');
+
+            var badge = activeRecorder;
+            var actionName = badge.dataset.action;
+            badge.dataset.combo = combo;
+            badge.textContent = formatCombo(combo);
+            stopRecording(badge, true);
+
+            window.chrome.webview.postMessage('setting:shortcut:' + actionName + ':' + combo);
+        }, true);
+
         document.addEventListener('DOMContentLoaded', function() {
             var current = '{{ACCENT_COLOR}}';
             document.querySelectorAll('.color-swatch').forEach(function(sw) {
                 if (sw.dataset.color === current) sw.classList.add('active');
             });
-            // Also update the toggle switch CSS variable
             var style = document.createElement('style');
             style.textContent = '.toggle:checked { background: ' + current + ' !important; }';
             document.head.appendChild(style);
@@ -382,6 +500,9 @@
                 </div>
             </div>
         </div>
+
+        <!-- ════════ KEYBOARD SHORTCUTS ════════ -->
+        {{KEYBOARD_SHORTCUTS_HTML}}
 
         <!-- ════════ YOUTUBE ENHANCER ════════ -->
         <div class="section">
