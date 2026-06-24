@@ -1,4 +1,4 @@
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>Session entry for saving/restoring tabs across restarts.</summary>
 public record SessionEntry(string Url, string Title, bool IsPinned);

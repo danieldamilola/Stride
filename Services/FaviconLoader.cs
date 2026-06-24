@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using System.Windows.Media.Imaging;
-using SpurBrowser.Models;
+using StrideBrowser.Models;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>Loads and caches favicons from DuckDuckGo's icon service.</summary>
 public sealed class FaviconLoader

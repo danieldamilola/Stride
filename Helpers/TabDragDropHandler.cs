@@ -3,9 +3,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using SpurBrowser.Models;
+using StrideBrowser.Models;
 
-namespace SpurBrowser.Helpers;
+namespace StrideBrowser.Helpers;
 
 /// <summary>
 /// Encapsulates tab drag-and-drop reordering logic for a ListBox.

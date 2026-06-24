@@ -1,10 +1,12 @@
+#if DEBUG
 using System.Diagnostics;
 
-namespace SpurBrowser.Engine;
+namespace StrideBrowser.Engine;
 
 /// <summary>
 /// Runs a multi-phase stress test against the tab engine to verify stability
 /// under rapid tab creation, switching, closing, and restoration.
+/// Only available in DEBUG builds.
 /// </summary>
 public sealed class StressTestRunner
 {
@@ -150,3 +152,4 @@ public sealed class StressTestRunner
         Trace.WriteLine($"Memory: {proc.WorkingSet64 / 1024 / 1024}MB");
     }
 }
+#endif

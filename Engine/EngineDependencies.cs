@@ -1,7 +1,7 @@
-using SpurBrowser.Models;
-using SpurBrowser.Services;
+using StrideBrowser.Models;
+using StrideBrowser.Services;
 
-namespace SpurBrowser.Engine;
+namespace StrideBrowser.Engine;
 
 /// <summary>
 /// Groups the non-UI dependencies that TabEngine needs,

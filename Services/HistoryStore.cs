@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using SpurBrowser.Helpers;
-using SpurBrowser.Models;
+using StrideBrowser.Helpers;
+using StrideBrowser.Models;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>Persists browsing history to disk.</summary>
 public sealed class HistoryStore : IHistoryStore

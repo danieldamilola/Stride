@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace SpurBrowser.Interop;
+namespace StrideBrowser.Interop;
 
 /// <summary>
 /// P/Invoke declarations and native struct definitions used by the window chrome.

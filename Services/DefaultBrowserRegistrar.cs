@@ -2,23 +2,23 @@ using System.Diagnostics;
 using System.IO;
 using Microsoft.Win32;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>
-/// Registers Spur Browser as a default browser candidate in the Windows registry (HKCU).
+/// Registers Stride Browser as a default browser candidate in the Windows registry (HKCU).
 /// On Windows 10+, apps cannot programmatically set themselves as default — the user must
 /// choose in Settings → Apps → Default Apps after registration.
 /// </summary>
 public static class DefaultBrowserRegistrar
 {
-    private const string AppName = "Spur Browser";
+    private const string AppName = "Stride Browser";
     private const string AppDescription = "A fast, privacy-focused web browser.";
-    private const string ProgIdHtml = "SpurBrowserHTML";
-    private const string ProgIdUrl = "SpurBrowserURL";
-    private const string CapabilitiesPath = @"Software\SpurBrowser\Capabilities";
+    private const string ProgIdHtml = "StrideBrowserHTML";
+    private const string ProgIdUrl = "StrideBrowserURL";
+    private const string CapabilitiesPath = @"Software\StrideBrowser\Capabilities";
 
     /// <summary>
-    /// Writes all required registry keys under HKCU so Windows recognises Spur Browser
+    /// Writes all required registry keys under HKCU so Windows recognises Stride Browser
     /// as an available browser for HTTP, HTTPS, and HTML files.
     /// </summary>
     public static void Register()
@@ -26,7 +26,7 @@ public static class DefaultBrowserRegistrar
         try
         {
             var exePath = Environment.ProcessPath
-                ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SpurBrowser.exe");
+                ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "StrideBrowser.exe");
             var openCommand = $"\"{exePath}\" \"%1\"";
             var iconValue = $"\"{exePath}\",0";
 
@@ -104,7 +104,7 @@ public static class DefaultBrowserRegistrar
     }
 
     /// <summary>
-    /// Opens the Windows Settings → Default Apps page so the user can select Spur Browser.
+    /// Opens the Windows Settings → Default Apps page so the user can select Stride Browser.
     /// </summary>
     public static void OpenDefaultAppsSettings()
     {
@@ -122,7 +122,7 @@ public static class DefaultBrowserRegistrar
         }
     }
 
-    /// <summary>Checks whether Spur Browser is already registered as a browser candidate.</summary>
+    /// <summary>Checks whether Stride Browser is already registered as a browser candidate.</summary>
     public static bool IsRegistered()
     {
         try

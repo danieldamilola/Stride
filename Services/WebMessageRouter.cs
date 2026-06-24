@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using SpurBrowser.Engine;
-using SpurBrowser.Models;
-using SpurBrowser.ViewModels;
+using StrideBrowser.Engine;
+using StrideBrowser.Models;
+using StrideBrowser.ViewModels;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>
 /// Dispatches web messages from internal pages to typed handlers.
@@ -103,10 +103,10 @@ public sealed class WebMessageRouter
         return Task.CompletedTask;
     }
 
-    private Task HandleSetting(string payload)
+    private async Task HandleSetting(string payload)
     {
         var parts = payload.Split(':', 2);
-        if (parts.Length < 2) return Task.CompletedTask;
+        if (parts.Length < 2) return;
 
         var key = parts[0];
         var value = parts[1];
@@ -118,7 +118,10 @@ public sealed class WebMessageRouter
 
         _settingsStore.Save(_vm.Settings);
         SettingChanged?.Invoke(key, value);
-        return Task.CompletedTask;
+
+        // Live-reload: re-inject unhook script into YouTube tabs when settings change
+        if (key.StartsWith("unhook", StringComparison.Ordinal))
+            await _engine.ReInjectUnhookAsync();
     }
 
     private async Task HandleOneTabRestore(string groupId)
@@ -155,6 +158,7 @@ public sealed class WebMessageRouter
         {
             group.Name = newName;
             _oneTabStore.Save(groups);
+            RefreshOneTabPages();
         }
         return Task.CompletedTask;
     }
@@ -259,6 +263,8 @@ public sealed class WebMessageRouter
         ["forceHttps"] = (s, v) => s.ForceHttps = v == "true",
         ["clearOnExit"] = (s, v) => s.ClearDataOnExit = v == "true",
         ["blockDupes"] = (s, v) => s.BlockDuplicateTabs = v == "true",
+        ["sidebarPosition"] = (s, v) => s.IsSidebarOnRight = v == "right",
+        ["accentColor"] = (s, v) => { if (v.StartsWith('#') && (v.Length == 7 || v.Length == 4)) s.AccentColor = v; },
 
         ["ytQuality"] = (s, v) => s.YtDefaultQuality = v,
         ["ytAutoplay"] = (s, v) => s.YtDisableAutoplay = v == "true",
@@ -266,6 +272,7 @@ public sealed class WebMessageRouter
         ["ytSpeed"] = (s, v) => { if (double.TryParse(v, out var spd)) s.YtDefaultSpeed = spd; },
         ["ytLoop"] = (s, v) => s.YtLoopVideo = v == "true",
 
+        ["unhookEnabled"] = (s, v) => s.UnhookEnabled = v == "true",
         ["unhookHomeFeed"] = (s, v) => s.UnhookHideHomeFeed = v == "true",
         ["unhookSidebar"] = (s, v) => s.UnhookHideVideoSidebar = v == "true",
         ["unhookRecommended"] = (s, v) => s.UnhookHideRecommended = v == "true",

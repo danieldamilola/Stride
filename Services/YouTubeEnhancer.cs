@@ -1,8 +1,8 @@
 using System.Globalization;
-using SpurBrowser.Helpers;
-using SpurBrowser.Models;
+using StrideBrowser.Helpers;
+using StrideBrowser.Models;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>
 /// Generates JavaScript that enhances the YouTube viewing experience.

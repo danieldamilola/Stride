@@ -1,16 +1,16 @@
 using System.IO;
 
-namespace SpurBrowser.Helpers;
+namespace StrideBrowser.Helpers;
 
 /// <summary>
-/// Provides standard paths for Spur's data files.
-/// All files are stored in %LocalAppData%\SpurBrowser.
+/// Provides standard paths for Stride's data files.
+/// All files are stored in %LocalAppData%\StrideBrowser.
 /// </summary>
 public static class AppPaths
 {
     private static readonly string Base = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "SpurBrowser");
+        "StrideBrowser");
 
     public static string DataDirectory => Base;
 
@@ -22,7 +22,7 @@ public static class AppPaths
     public static string ExtensionsDir => Path.Combine(Base, "extensions");
     public static string WebViewDataDir => Path.Combine(Base, "WebView2");
     public static string WebView2Dir => WebViewDataDir;
-    public static string LogFile => Path.Combine(Base, "spur.log");
+    public static string LogFile => Path.Combine(Base, "stride.log");
     public static string CrashLogFile => Path.Combine(Base, "crash.log");
     public static string UBlockHashFile => Path.Combine(Base, "ublock.sha256");
 

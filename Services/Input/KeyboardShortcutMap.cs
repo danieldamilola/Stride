@@ -1,7 +1,7 @@
 using System.Windows.Input;
-using SpurBrowser.Engine;
+using StrideBrowser.Engine;
 
-namespace SpurBrowser.Services.Input;
+namespace StrideBrowser.Services.Input;
 
 /// <summary>
 /// Declarative keyboard shortcut table. Maps (modifiers, key) pairs
@@ -27,7 +27,8 @@ public sealed class KeyboardShortcutMap
         Action<string> copyUrl,
         Func<List<(string url, string title)>> sendAllToOneTab,
         Action<List<(string url, string title)>> saveOneTabGroup,
-        Action syncTabsBinding)
+        Action syncTabsBinding,
+        Func<Task> openOneTab)
     {
         var ctrl = ModifierKeys.Control;
         var ctrlShift = ModifierKeys.Control | ModifierKeys.Shift;
@@ -86,13 +87,13 @@ public sealed class KeyboardShortcutMap
                 if (!string.IsNullOrEmpty(url)) copyUrl(url);
                 return Task.CompletedTask;
             }),
-            new(ctrlShift, Key.F12, "StressTest", async () => await new StressTestRunner(engine).RunAsync()),
             new(none, Key.F12, "DevTools", () =>
             {
                 engine.GetCoreWebView2()?.OpenDevToolsWindow();
                 return Task.CompletedTask;
             }),
             new(ctrl, Key.H, "History", openHistory),
+            new(ctrlShift, Key.O, "OpenOneTab", openOneTab),
         ];
     }
 

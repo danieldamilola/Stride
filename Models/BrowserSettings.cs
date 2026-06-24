@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace SpurBrowser.Models;
+namespace StrideBrowser.Models;
 
 /// <summary>User-configurable browser settings.</summary>
 public sealed partial class BrowserSettings : ObservableObject
@@ -17,6 +17,9 @@ public sealed partial class BrowserSettings : ObservableObject
 
     [ObservableProperty]
     private bool _adBlockEnabled = true;
+
+    [ObservableProperty]
+    private string _accentColor = "#D4A574";
 
     [ObservableProperty]
     private int _defaultZoom = 100;
@@ -60,6 +63,9 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _ytLoopVideo;
 
     // ── YouTube Unhook ──
+
+    [ObservableProperty]
+    private bool _unhookEnabled = true;
 
     [ObservableProperty]
     private bool _unhookHideHomeFeed;

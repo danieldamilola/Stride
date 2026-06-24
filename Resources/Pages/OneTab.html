@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OneTab - Spur</title>
+    <title>OneTab - Stride</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -27,7 +27,6 @@
             border-bottom: 1px solid #1E1E1E;
             background: #1A1A1A;
         }
-        .drag-handle { cursor: grab; color: #444444; font-size: 14px; }
         .group-name {
             font-weight: 600;
             font-size: 14px;
@@ -105,10 +104,57 @@
             text-align: center;
             margin-top: 80px;
         }
+        .search-bar {
+            display: flex;
+            margin-bottom: 16px;
+        }
+        .search-bar input {
+            flex: 1;
+            background: #1A1A1A;
+            border: 1px solid #1E1E1E;
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: #D4D4D4;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .search-bar input:focus { border-color: #D4A574; }
+        .search-bar input::placeholder { color: #444444; }
+        .group.hidden, .tab.hidden { display: none !important; }
     </style>
 </head>
 <body>
     <h1>OneTab</h1>
+    {{SEARCH}}
     {{CONTENT}}
+    <script>
+    (function() {
+        var input = document.getElementById('onetab-search');
+        if (!input) return;
+        input.addEventListener('input', function() {
+            var q = input.value.toLowerCase().trim();
+            var groups = document.querySelectorAll('.group');
+            for (var i = 0; i < groups.length; i++) {
+                var g = groups[i];
+                var tabs = g.querySelectorAll('.tab');
+                var anyVisible = false;
+                for (var j = 0; j < tabs.length; j++) {
+                    var t = tabs[j];
+                    var title = (t.querySelector('.tab-title') || {}).textContent || '';
+                    var url = (t.querySelector('.tab-url') || {}).textContent || '';
+                    var match = !q || title.toLowerCase().includes(q) || url.toLowerCase().includes(q);
+                    t.classList.toggle('hidden', !match);
+                    if (match) anyVisible = true;
+                }
+                // Also check group name
+                var name = (g.querySelector('.group-name') || {}).textContent || '';
+                if (name.toLowerCase().includes(q)) anyVisible = true;
+                g.classList.toggle('hidden', !anyVisible && q.length > 0);
+            }
+        });
+    })();
+    </script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using SpurBrowser.Models;
-using SpurBrowser.Services;
+using StrideBrowser.Models;
+using StrideBrowser.Services;
 
-namespace SpurBrowser.ViewModels;
+namespace StrideBrowser.ViewModels;
 
 /// <summary>
 /// Thin coordinator between the UI and the engine/services.

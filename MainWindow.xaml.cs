@@ -7,14 +7,14 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Microsoft.Extensions.DependencyInjection;
-using SpurBrowser.Engine;
-using SpurBrowser.Interop;
-using SpurBrowser.Models;
-using SpurBrowser.Services;
-using SpurBrowser.Services.Input;
-using SpurBrowser.ViewModels;
+using StrideBrowser.Engine;
+using StrideBrowser.Interop;
+using StrideBrowser.Models;
+using StrideBrowser.Services;
+using StrideBrowser.Services.Input;
+using StrideBrowser.ViewModels;
 
-namespace SpurBrowser;
+namespace StrideBrowser;
 
 /// <summary>
 /// Thin view layer — delegates all logic to BrowserViewModel and TabEngine.
@@ -60,6 +60,14 @@ public partial class MainWindow : Window
         DataContext = _vm;
 
         WireEngineEvents();
+
+        // Apply saved sidebar position
+        if (_vm.Settings.IsSidebarOnRight)
+            ApplySidebarPosition(true);
+
+        // Apply saved accent color
+        if (_vm.Settings.AccentColor != "#D4A574")
+            ApplyAccentColor(_vm.Settings.AccentColor);
 
         Loaded += OnWindowLoaded;
     }
@@ -126,12 +134,7 @@ public partial class MainWindow : Window
             if (!DefaultBrowserRegistrar.IsRegistered())
                 DefaultBrowserRegistrar.Register();
 
-            var args = Environment.GetCommandLineArgs();
-            if (args.Any(a => a.Equals("--stress-test", StringComparison.OrdinalIgnoreCase)))
-            {
-                await Task.Delay(2000);
-                await new StressTestRunner(_engine).RunAsync();
-            }
+
         }
         catch (Exception ex)
         {
@@ -163,7 +166,8 @@ public partial class MainWindow : Window
                 };
                 _oneTabStore.AddGroup(group);
             },
-            syncTabsBinding: SyncTabsBinding);
+            syncTabsBinding: SyncTabsBinding,
+            openOneTab: OpenOneTabPage);
     }
 
     private async Task RestoreSessionOrCreateTab()
@@ -452,7 +456,9 @@ public partial class MainWindow : Window
 
     // ───────────────────── OneTab ─────────────────────
 
-    private async void OneTab_Click(object sender, RoutedEventArgs e)
+    private async void OneTab_Click(object sender, RoutedEventArgs e) => await OpenOneTabPage();
+
+    private async Task OpenOneTabPage()
     {
         try
         {
@@ -481,6 +487,7 @@ public partial class MainWindow : Window
                 SavedAt = now,
                 Tabs = _engine.Tabs
                     .Where(t => !string.IsNullOrWhiteSpace(t.Url)
+                        && !InternalUrls.IsInternal(t.Url)
                         && !t.Url.StartsWith("data:", StringComparison.OrdinalIgnoreCase)
                         && !t.Url.StartsWith("about:", StringComparison.OrdinalIgnoreCase))
                     .Select(t => new OneTabEntry(t.Url, t.Title, null, now))
@@ -531,8 +538,107 @@ public partial class MainWindow : Window
         if (key == "darkMode")
             _engine.ApplyDarkModeToAll(_vm.Settings.ForceDarkMode);
 
+        if (key == "sidebarPosition")
+            ApplySidebarPosition(_vm.Settings.IsSidebarOnRight);
+
+        if (key == "accentColor")
+            ApplyAccentColor(_vm.Settings.AccentColor);
+
         if (_engine.ActiveTab?.Url == InternalUrls.Settings)
             _engine.NavigateToSettings(_engine.ActiveTab, _vm.Settings);
+    }
+
+    private void ApplySidebarPosition(bool onRight)
+    {
+        var body = (Grid)Sidebar.Parent!;
+
+        if (onRight)
+        {
+            Grid.SetColumn(Sidebar, 2);
+            Grid.SetColumn(ContentArea, 0);
+            // Content column (left)
+            body.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+            body.ColumnDefinitions[0].MinWidth = 0;
+            body.ColumnDefinitions[0].MaxWidth = double.PositiveInfinity;
+            // Sidebar column (right)
+            body.ColumnDefinitions[2].Width = new GridLength(220);
+            body.ColumnDefinitions[2].MinWidth = 140;
+            body.ColumnDefinitions[2].MaxWidth = 400;
+            Sidebar.BorderThickness = new Thickness(1, 0, 0, 0);
+        }
+        else
+        {
+            Grid.SetColumn(Sidebar, 0);
+            Grid.SetColumn(ContentArea, 2);
+            // Sidebar column (left)
+            body.ColumnDefinitions[0].Width = new GridLength(220);
+            body.ColumnDefinitions[0].MinWidth = 140;
+            body.ColumnDefinitions[0].MaxWidth = 400;
+            // Content column (right)
+            body.ColumnDefinitions[2].Width = new GridLength(1, GridUnitType.Star);
+            body.ColumnDefinitions[2].MinWidth = 0;
+            body.ColumnDefinitions[2].MaxWidth = double.PositiveInfinity;
+            Sidebar.BorderThickness = new Thickness(0, 0, 1, 0);
+        }
+    }
+
+    private void ApplyAccentColor(string hex)
+    {
+        try
+        {
+            var color = (Color)ColorConverter.ConvertFromString(hex);
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+
+            // Update accent color & brush
+            Application.Current.Resources["AccentColor"] = color;
+            Application.Current.Resources["Accent"] = brush;
+
+            // Update accent wash (10% opacity version)
+            var wash = new SolidColorBrush(Color.FromArgb(0x1A, color.R, color.G, color.B));
+            wash.Freeze();
+            Application.Current.Resources["AccentWash"] = wash;
+        }
+        catch { /* ignore invalid color strings */ }
+    }
+
+    // ──── Keyboard shortcuts ────
+
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        var ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+
+        if (ctrl && e.Key == Key.B)
+        {
+            ToggleSidebar();
+            e.Handled = true;
+        }
+    }
+
+    private GridLength _savedSidebarWidth = new(220);
+
+    private void ToggleSidebar()
+    {
+        var col = ((Grid)Sidebar.Parent).ColumnDefinitions[
+            Grid.GetColumn(Sidebar)];
+
+        if (col.Width.Value > 0)
+        {
+            // Hide — save current width, collapse to 0
+            _savedSidebarWidth = col.Width;
+            col.Width = new GridLength(0);
+            col.MinWidth = 0;
+            Sidebar.Visibility = Visibility.Collapsed;
+            SidebarSplitter.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            // Show — restore saved width
+            col.Width = _savedSidebarWidth;
+            col.MinWidth = 140;
+            Sidebar.Visibility = Visibility.Visible;
+            SidebarSplitter.Visibility = Visibility.Visible;
+        }
     }
 
     private async void Settings_Click(object sender, RoutedEventArgs e)
@@ -584,12 +690,14 @@ public partial class MainWindow : Window
             _preFullscreenState = WindowState;
             Toolbar.Visibility = Visibility.Collapsed;
             Sidebar.Visibility = Visibility.Collapsed;
+            SidebarSplitter.Visibility = Visibility.Collapsed;
             WindowState = WindowState.Maximized;
         }
         else
         {
             Toolbar.Visibility = Visibility.Visible;
             Sidebar.Visibility = Visibility.Visible;
+            SidebarSplitter.Visibility = Visibility.Visible;
             WindowState = _preFullscreenState;
         }
     }
@@ -696,6 +804,17 @@ public partial class MainWindow : Window
                     e.Handled = true;
                     return;
                 }
+
+                // Alt+1–9: also switch tabs (user preference)
+                if (modifiers == ModifierKeys.Alt && e.Key >= Key.D1 && e.Key <= Key.D9)
+                {
+                    var tabIndex = e.Key - Key.D1;
+                    if (e.Key == Key.D9)
+                        tabIndex = _engine.Tabs.Count - 1;
+                    await SwitchToTabByIndex(tabIndex);
+                    e.Handled = true;
+                    return;
+                }
             }
         }
         catch (Exception ex)
@@ -749,7 +868,7 @@ public partial class MainWindow : Window
             _copyTimer.Tick -= OnCopyTimerTick;
             _copyTimer = null;
         }
-        Title = "Spur";
+        Title = "Stride";
     }
 
     private async Task CycleTabAsync(bool reverse)

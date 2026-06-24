@@ -1,7 +1,7 @@
-using SpurBrowser.Models;
-using SpurBrowser.Services.Pages;
+using StrideBrowser.Models;
+using StrideBrowser.Services.Pages;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>
 /// Thin facade over the per-page generators.

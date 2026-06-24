@@ -1,4 +1,4 @@
-namespace SpurBrowser.Models;
+namespace StrideBrowser.Models;
 
 /// <summary>
 /// A named group of tabs saved via OneTab.

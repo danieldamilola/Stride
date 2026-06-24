@@ -1,7 +1,7 @@
-using SpurBrowser.Models;
+using StrideBrowser.Models;
 using System.Net;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>Resolves raw user input into navigable URLs.</summary>
 public sealed class NavigationService

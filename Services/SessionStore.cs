@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using SpurBrowser.Helpers;
+using StrideBrowser.Helpers;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>
 /// Persists session state (open tabs) to disk for restore-on-startup.

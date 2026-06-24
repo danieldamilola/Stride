@@ -1,7 +1,7 @@
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace SpurBrowser.Models;
+namespace StrideBrowser.Models;
 
 /// <summary>
 /// Represents a single browser tab. Implements INotifyPropertyChanged

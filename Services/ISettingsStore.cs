@@ -1,6 +1,6 @@
-using SpurBrowser.Models;
+using StrideBrowser.Models;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>Interface for persisting browser settings.</summary>
 public interface ISettingsStore

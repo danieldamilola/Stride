@@ -1,13 +1,13 @@
-namespace SpurBrowser.Models;
+namespace StrideBrowser.Models;
 
 /// <summary>Constants for internal browser URLs. Eliminates magic strings.</summary>
 public static class InternalUrls
 {
-    public const string NewTab = "spur://newtab";
-    public const string Settings = "spur://settings";
-    public const string OneTab = "spur://onetab";
-    public const string History = "spur://history";
-    public const string Prefix = "spur://";
+    public const string NewTab = "stride://newtab";
+    public const string Settings = "stride://settings";
+    public const string OneTab = "stride://onetab";
+    public const string History = "stride://history";
+    public const string Prefix = "stride://";
 
     public static bool IsInternal(string url) =>
         url.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase);

@@ -1,4 +1,4 @@
-namespace SpurBrowser.Models;
+namespace StrideBrowser.Models;
 
 /// <summary>A single browsing history record.</summary>
 public sealed class HistoryEntry

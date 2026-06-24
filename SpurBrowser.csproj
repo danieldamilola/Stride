@@ -6,9 +6,9 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>SpurBrowser</RootNamespace>
-    <AssemblyName>SpurBrowser</AssemblyName>
-    <!-- <ApplicationIcon>icons\spur-browser.ico</ApplicationIcon> -->
+    <RootNamespace>StrideBrowser</RootNamespace>
+    <AssemblyName>StrideBrowser</AssemblyName>
+    <!-- <ApplicationIcon>icons\stride-browser.ico</ApplicationIcon> -->
   </PropertyGroup>
 
   <ItemGroup>

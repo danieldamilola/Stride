@@ -1,6 +1,6 @@
-using SpurBrowser.Models;
+using StrideBrowser.Models;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>Interface for the OneTab persistence layer.</summary>
 public interface IOneTabStore
@@ -9,7 +9,6 @@ public interface IOneTabStore
     void Save(List<OneTabGroup> groups);
     void AddGroup(OneTabGroup group);
     void RemoveGroup(string groupId);
-    void MoveTab(string fromGroupId, string toGroupId, int tabIndex);
     void RemoveTab(string groupId, string url);
     void ToggleStar(string groupId, int tabIndex);
     void ReorderGroup(int oldIndex, int newIndex);

@@ -1,4 +1,4 @@
-namespace SpurBrowser.Services.Pages;
+namespace StrideBrowser.Services.Pages;
 
 /// <summary>Generates the new tab page HTML.</summary>
 public sealed class NewTabPage

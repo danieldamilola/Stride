@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
-namespace SpurBrowser.Controls;
+namespace StrideBrowser.Controls;
 
 /// <summary>
 /// A StackPanel that animates children to their new positions when layout changes

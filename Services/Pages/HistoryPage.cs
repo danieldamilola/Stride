@@ -1,9 +1,9 @@
 using System.Net;
 using System.Text;
-using SpurBrowser.Helpers;
-using SpurBrowser.Models;
+using StrideBrowser.Helpers;
+using StrideBrowser.Models;
 
-namespace SpurBrowser.Services.Pages;
+namespace StrideBrowser.Services.Pages;
 
 /// <summary>Generates the history page HTML with browsing entries grouped by date.</summary>
 public sealed class HistoryPage

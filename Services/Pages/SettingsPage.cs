@@ -1,6 +1,6 @@
-using SpurBrowser.Models;
+using StrideBrowser.Models;
 
-namespace SpurBrowser.Services.Pages;
+namespace StrideBrowser.Services.Pages;
 
 /// <summary>Generates the settings page HTML.</summary>
 public sealed class SettingsPage
@@ -37,7 +37,11 @@ public sealed class SettingsPage
                 ["CHK_HTTPS"] = Chk(settings.ForceHttps),
                 ["CHK_CLEAR"] = Chk(settings.ClearDataOnExit),
                 ["CHK_DUPES"] = Chk(settings.BlockDuplicateTabs),
+                ["SIDEBAR_LEFT"] = settings.IsSidebarOnRight ? "" : " selected",
+                ["SIDEBAR_RIGHT"] = settings.IsSidebarOnRight ? " selected" : "",
+                ["ACCENT_COLOR"] = settings.AccentColor,
                 ["YT_QUALITY_AUTO"] = SelStr(settings.YtDefaultQuality, "auto"),
+                ["YT_QUALITY_HIGHEST"] = SelStr(settings.YtDefaultQuality, "highest"),
                 ["YT_QUALITY_TINY"] = SelStr(settings.YtDefaultQuality, "tiny"),
                 ["YT_QUALITY_SMALL"] = SelStr(settings.YtDefaultQuality, "small"),
                 ["YT_QUALITY_MEDIUM"] = SelStr(settings.YtDefaultQuality, "medium"),
@@ -50,6 +54,7 @@ public sealed class SettingsPage
                 ["CHK_YT_AUTOPLAY"] = Chk(settings.YtDisableAutoplay),
                 ["CHK_YT_PAUSE"] = Chk(settings.YtPauseOnTabSwitch),
                 ["CHK_YT_LOOP"] = Chk(settings.YtLoopVideo),
+                ["CHK_UNHOOK_ENABLED"] = Chk(settings.UnhookEnabled),
                 ["CHK_UNHOOK_SIDEBAR"] = Chk(settings.UnhookHideVideoSidebar),
                 ["CHK_UNHOOK_RECOMMENDED"] = Chk(settings.UnhookHideRecommended),
                 ["CHK_UNHOOK_LIVECHAT"] = Chk(settings.UnhookHideLiveChat),

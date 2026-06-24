@@ -1,4 +1,4 @@
-<Application x:Class="SpurBrowser.App"
+<Application x:Class="StrideBrowser.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
@@ -12,14 +12,14 @@
         <!--  TYPOGRAPHY                                            -->
         <!--  System font. Invisible. Fast. Zero download.          -->
         <!--  3 sizes only: 11 (captions), 13 (body), 14 (brand).  -->
-        <!--  Regular weight everywhere. SemiBold only for "Spur".  -->
+        <!--  Regular weight everywhere. SemiBold only for "Stride".  -->
         <!-- ═══════════════════════════════════════════════════════ -->
         <FontFamily x:Key="UIFont">Segoe UI Variable, Segoe UI</FontFamily>
 
         <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  COLORS — Spur Identity                                -->
+        <!--  COLORS — Stride Identity                                -->
         <!--                                                        -->
-        <!--  Spur is dark. Not "dark mode" — dark is the native    -->
+        <!--  Stride is dark. Not "dark mode" — dark is the native    -->
         <!--  state. The browser dissolves so content breathes.     -->
         <!--                                                        -->
         <!--  Void     #0C0C0C  — deepest layer, content floats on  -->
@@ -60,6 +60,7 @@
         <SolidColorBrush x:Key="TextPrimary"       Color="{StaticResource TextPrimaryColor}"/>
         <SolidColorBrush x:Key="TextSecondary"     Color="{StaticResource TextSecondaryColor}"/>
         <SolidColorBrush x:Key="TextMuted"         Color="{StaticResource TextMutedColor}"/>
+        <SolidColorBrush x:Key="DangerBrush"       Color="{StaticResource DangerColor}"/>
 
         <!-- ═══════════════════════════════════════════════════════ -->
         <!--  ICON GEOMETRIES — Lucide-inspired, 24×24 viewbox      -->
@@ -159,7 +160,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource DangerColor}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource DangerBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -226,21 +227,17 @@
         <Style x:Key="NewTabBtn" TargetType="Button" BasedOn="{StaticResource SidebarActionBtn}"/>
 
         <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  ADDRESS BAR                                           -->
-        <!--  Graphite (#1A1A1A) on Ink (#141414) = visible.        -->
-        <!--  10px radius. Ember border on focus.                   -->
-        <!--  13px body text.                                       -->
+        <!--  ADDRESS BAR — Standard browser address bar.           -->
+        <!--  Globe icon inside, placeholder text, 13px, 8px radius -->
         <!-- ═══════════════════════════════════════════════════════ -->
         <Style x:Key="AddressBarStyle" TargetType="TextBox">
             <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="SelectionBrush" Value="{StaticResource Accent}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#D4D4D4"/>
+            <Setter Property="CaretBrush" Value="#D4D4D4"/>
+            <Setter Property="SelectionBrush" Value="#44FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontFamily" Value="{StaticResource UIFont}"/>
-            <Setter Property="Padding" Value="8,7"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
@@ -248,22 +245,34 @@
                     <ControlTemplate TargetType="TextBox">
                         <Border x:Name="Bd"
                                 Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          VerticalAlignment="Center"
-                                          Margin="{TemplateBinding Padding}"
-                                          Focusable="False"/>
+                                CornerRadius="8"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <!-- Text area — left margin leaves space for SecurityIcon overlay -->
+                                <ScrollViewer x:Name="PART_ContentHost"
+                                              VerticalAlignment="Center"
+                                              Margin="30,7,10,7"
+                                              Focusable="False"/>
+                                <!-- Placeholder -->
+                                <TextBlock x:Name="Placeholder"
+                                           Text="Search or enter URL"
+                                           Foreground="#444"
+                                           FontSize="13"
+                                           FontFamily="{StaticResource UIFont}"
+                                           VerticalAlignment="Center"
+                                           Margin="30,0,10,0"
+                                           IsHitTestVisible="False"
+                                           Visibility="Collapsed"/>
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#2A2A2A"/>
-                            </Trigger>
-                            <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                <Setter TargetName="Bd" Property="Background" Value="#1E1E1E"/>
-                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Text" Value=""/>
+                                    <Condition Property="IsFocused" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Placeholder" Property="Visibility" Value="Visible"/>
+                            </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -287,36 +296,29 @@
                     <Style TargetType="ListBoxItem">
                         <Setter Property="Padding" Value="0"/>
                         <Setter Property="Margin" Value="0"/>
+                        <Setter Property="Background" Value="Transparent"/>
                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">
                                     <Grid Margin="6,1,6,1">
-                                        <Border x:Name="Bd" Background="Transparent"
+                                        <Border Background="{TemplateBinding Background}"
                                                 CornerRadius="6" Padding="0">
                                             <ContentPresenter/>
                                         </Border>
-                                        <!-- 3px ember pill — selected tab indicator -->
-                                        <Rectangle x:Name="AccentBar" Width="3"
-                                                   HorizontalAlignment="Left"
-                                                   Fill="{DynamicResource Accent}"
-                                                   RadiusX="1.5" RadiusY="1.5"
-                                                   Visibility="Collapsed"
-                                                   Margin="1,9"/>
                                     </Grid>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="Bd" Property="Background" Value="#0AFFFFFF"/>
-                                        </Trigger>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentWash}"/>
-                                            <Setter TargetName="AccentBar" Property="Visibility" Value="Visible"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#0AFFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AccentWash}"/>
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                 </Setter.Value>
             </Setter>

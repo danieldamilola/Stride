@@ -3,10 +3,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Security.Cryptography;
-using SpurBrowser.Helpers;
+using StrideBrowser.Helpers;
 using Microsoft.Web.WebView2.Core;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>
 /// Manages WebView2 browser extensions including built-in uBlock Origin.
@@ -71,12 +71,25 @@ public sealed class ExtensionManager
             var zipPath = Path.Combine(ExtensionsDir, $"uBlock0_{UBlockVersion}.zip");
 
             Trace.WriteLine($"ExtensionManager: downloading uBlock from {UBlockDownloadUrl}");
-            using var response = await Http.GetAsync(UBlockDownloadUrl);
-            response.EnsureSuccessStatusCode();
-
-            await using (var fs = File.Create(zipPath))
+            const int maxRetries = 3;
+            for (var attempt = 1; attempt <= maxRetries; attempt++)
             {
-                await response.Content.CopyToAsync(fs);
+                try
+                {
+                    using var response = await Http.GetAsync(UBlockDownloadUrl);
+                    response.EnsureSuccessStatusCode();
+
+                    await using (var fs = File.Create(zipPath))
+                    {
+                        await response.Content.CopyToAsync(fs);
+                    }
+                    break;
+                }
+                catch when (attempt < maxRetries)
+                {
+                    Trace.WriteLine($"ExtensionManager: download attempt {attempt}/{maxRetries} failed, retrying...");
+                    await Task.Delay(1000 * attempt);
+                }
             }
 
             if (!await VerifyTofuHashAsync(zipPath))

@@ -1,9 +1,9 @@
 using System.Net;
 using System.Text;
-using SpurBrowser.Helpers;
-using SpurBrowser.Models;
+using StrideBrowser.Helpers;
+using StrideBrowser.Models;
 
-namespace SpurBrowser.Services.Pages;
+namespace StrideBrowser.Services.Pages;
 
 /// <summary>Generates the OneTab page HTML showing saved tab groups.</summary>
 public sealed class OneTabPage
@@ -11,13 +11,16 @@ public sealed class OneTabPage
     public string Render(List<OneTabGroup> groups)
     {
         var sb = new StringBuilder();
+        var search = "";
 
         if (groups.Count == 0)
         {
-            sb.Append("<div class='empty'>No saved tabs. Press Ctrl+Shift+S to save all open tabs.</div>");
+            sb.Append("<div class='empty'>No saved tabs. Press Ctrl+Shift+S or Ctrl+Shift+1 to save all open tabs.</div>");
         }
         else
         {
+            search = "<div class='search-bar'><input id='onetab-search' type='text' placeholder='Search saved tabs...' autocomplete='off' spellcheck='false'></div>";
+
             for (int gi = 0; gi < groups.Count; gi++)
             {
                 var group = groups[gi];
@@ -26,9 +29,8 @@ public sealed class OneTabPage
                 var safeName = WebUtility.HtmlEncode(group.Name);
                 var timestamp = group.SavedAt.ToLocalTime().ToString("MMM d, h:mm tt");
 
-                sb.Append("<div class='group' draggable='true' data-group-index='" + gi + "' data-group-id='" + safeId + "'>");
+                sb.Append("<div class='group' data-group-id='" + safeId + "'>");
                 sb.Append("<div class='group-header'>");
-                sb.Append("<span class='drag-handle group-drag' title='Drag to reorder'>⠿</span>");
                 sb.Append("<span class='group-name' data-id='" + safeId + "' onclick=\"this.contentEditable='true';this.focus();\" ");
                 sb.Append("onblur=\"this.contentEditable='false';window.chrome.webview.postMessage('onetab-rename:" + jsId + ":'+this.textContent);\" ");
                 sb.Append("onkeydown=\"if(event.key==='Enter'){event.preventDefault();this.blur();}\">" );
@@ -36,7 +38,7 @@ public sealed class OneTabPage
                 sb.Append("</span>");
                 sb.Append("<span class='group-time'>" + WebUtility.HtmlEncode(timestamp) + "</span>");
                 sb.Append("<span class='group-count'>" + group.Tabs.Count + " tabs</span>");
-                sb.Append("<button class='btn' onclick=\"window.chrome.webview.postMessage('onetab-restore:" + jsId + "')\">Restore All</button>");
+                sb.Append("<button class='btn' onclick=\"if(confirm('Restore all tabs in this group?'))window.chrome.webview.postMessage('onetab-restore:" + jsId + "')\">Restore All</button>");
                 sb.Append("<button class='btn btn-danger' onclick=\"if(confirm('Delete this group?'))window.chrome.webview.postMessage('onetab-delete:" + jsId + "')\">Delete</button>");
                 sb.Append("</div>");
 
@@ -49,7 +51,7 @@ public sealed class OneTabPage
                     var safeTitle = WebUtility.HtmlEncode(tab.Title);
                     var starClass = tab.IsStarred ? "starred" : "";
 
-                    sb.Append("<div class='tab' draggable='true' data-tab-index='" + ti + "' data-group-id='" + safeId + "'>");
+                    sb.Append("<div class='tab' data-tab-index='" + ti + "' data-group-id='" + safeId + "'>");
                     sb.Append("<span class='tab-star " + starClass + "' onclick=\"event.stopPropagation();window.chrome.webview.postMessage('onetab-star:" + jsId + ":" + ti + "')\" title='Star this tab'>" + (tab.IsStarred ? "★" : "☆") + "</span>");
                     sb.Append("<a class='tab-title' href='#' onclick=\"event.preventDefault();window.chrome.webview.postMessage('onetab-open:" + jsId + ":" + jsUrl + "');return false;\">" + safeTitle + "</a>");
                     sb.Append("<span class='tab-url'>" + safeUrl + "</span>");
@@ -63,6 +65,10 @@ public sealed class OneTabPage
         }
 
         return Helpers.ResourceLoader.LoadTemplate("Resources.Pages.OneTab.html",
-            new Dictionary<string, string> { ["CONTENT"] = sb.ToString() });
+            new Dictionary<string, string>
+            {
+                ["CONTENT"] = sb.ToString(),
+                ["SEARCH"] = search
+            });
     }
 }

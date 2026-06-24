@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using SpurBrowser.Helpers;
-using SpurBrowser.Models;
+using StrideBrowser.Helpers;
+using StrideBrowser.Models;
 
-namespace SpurBrowser.Services;
+namespace StrideBrowser.Services;
 
 /// <summary>
 /// Persists <see cref="OneTabGroup"/> data to a local JSON file.
@@ -58,26 +58,6 @@ public sealed class OneTabStore : IOneTabStore
         }
     }
 
-    public void MoveTab(string fromGroupId, string toGroupId, int tabIndex)
-    {
-        lock (_lock)
-        {
-            try
-            {
-                var groups = LoadUnsafe();
-                var from = groups.FirstOrDefault(g => g.Id == fromGroupId);
-                var to = groups.FirstOrDefault(g => g.Id == toGroupId);
-                if (from is null || to is null) { Trace.WriteLine("OneTabStore.MoveTab: source or target group not found."); return; }
-                if (tabIndex < 0 || tabIndex >= from.Tabs.Count) { Trace.WriteLine($"OneTabStore.MoveTab: tabIndex {tabIndex} out of range."); return; }
-                var tab = from.Tabs[tabIndex];
-                from.Tabs.RemoveAt(tabIndex);
-                to.Tabs.Add(tab);
-                SaveUnsafe(groups);
-            }
-            catch (Exception ex) { Trace.WriteLine($"OneTabStore.MoveTab failed: {ex.Message}"); }
-        }
-    }
-
     public void RemoveTab(string groupId, string url)
     {
         lock (_lock)
@@ -87,7 +67,8 @@ public sealed class OneTabStore : IOneTabStore
                 var groups = LoadUnsafe();
                 var group = groups.FirstOrDefault(g => g.Id == groupId);
                 if (group is null) return;
-                group.Tabs.RemoveAll(t => t.Url == url);
+                var idx = group.Tabs.FindIndex(t => t.Url == url);
+                if (idx >= 0) group.Tabs.RemoveAt(idx);
                 if (group.Tabs.Count == 0) groups.Remove(group);
                 SaveUnsafe(groups);
             }

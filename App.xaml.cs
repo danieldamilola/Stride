@@ -2,9 +2,9 @@ using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
-using SpurBrowser.ViewModels;
+using StrideBrowser.ViewModels;
 
-namespace SpurBrowser;
+namespace StrideBrowser;
 
 public partial class App : Application
 {
@@ -39,8 +39,8 @@ public partial class App : Application
         Dispatcher.InvokeAsync(() =>
         {
             MessageBox.Show(
-                $"Spur Browser encountered an error:\n\n{e.Exception.Message}",
-                "Spur Browser",
+                $"Stride Browser encountered an error:\n\n{e.Exception.Message}",
+                "Stride Browser",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         });

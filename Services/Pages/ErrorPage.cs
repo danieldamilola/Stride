@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace SpurBrowser.Services.Pages;
+namespace StrideBrowser.Services.Pages;
 
 /// <summary>Generates the error page HTML for navigation failures.</summary>
 public sealed class ErrorPage

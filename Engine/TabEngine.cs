@@ -5,11 +5,11 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using SpurBrowser.Helpers;
-using SpurBrowser.Models;
-using SpurBrowser.Services;
+using StrideBrowser.Helpers;
+using StrideBrowser.Models;
+using StrideBrowser.Services;
 
-namespace SpurBrowser.Engine;
+namespace StrideBrowser.Engine;
 
 /// <summary>
 /// Manages the full tab lifecycle: creation, switching, hibernation, and disposal.
@@ -216,6 +216,10 @@ public sealed class TabEngine : IDisposable
         // If the tab already has a live WebView, show it immediately (no semaphore needed)
         if (_webViews.ContainsKey(tab.Id) && !tab.IsHibernated)
         {
+            // Resume from suspension (unfreezes JS, restores rendering)
+            if (_webViews.TryGetValue(tab.Id, out var existing) && existing.CoreWebView2 is not null)
+                existing.CoreWebView2.Resume();
+
             ShowOnlyActiveWebView(tab);
             tab.LastActiveTime = DateTime.UtcNow;
             SuspendBackgroundTabs(tab);
@@ -396,6 +400,10 @@ public sealed class TabEngine : IDisposable
         WireContextMenuEvents(wv, tab);
         HandleProcessFailure(wv, tab);
 
+        // Network-level ad blocking — block known ad URLs before they load
+        if (_settings.AdBlockEnabled)
+            WireAdBlockFilters(wv);
+
         if (!_extensionsLoaded)
         {
             try
@@ -422,7 +430,7 @@ public sealed class TabEngine : IDisposable
 
     private void NavigateInitialUrl(WebView2 wv, BrowserTab tab)
     {
-        var callerManagedUrls = new HashSet<string> { "spur://settings", "spur://onetab", "spur://history" };
+        var callerManagedUrls = new HashSet<string> { "stride://settings", "stride://onetab", "stride://history" };
         if (callerManagedUrls.Contains(tab.Url))
             return;
 
@@ -437,18 +445,68 @@ public sealed class TabEngine : IDisposable
 
     private async Task InjectContentScriptsAsync(WebView2 wv)
     {
+        // YouTube ad nuker — injected first so ads are killed before anything else
         if (_settings.AdBlockEnabled)
+        {
             await wv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-                ResourceLoader.Load("Resources.Scripts.youtube-adskip.js"));
+                ResourceLoader.Load("Resources.Scripts.youtube-adnuke.js"));
+        }
 
+        // YouTube enhancer (quality, speed, loop — self-guards)
         var enhancer = _youtubeEnhancer.GetScript(_settings);
         if (!string.IsNullOrEmpty(enhancer))
             await wv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(enhancer);
 
+        // YouTube unhook (hide distractions — self-guards)
         var unhook = _youtubeUnhook.GetScript(_settings);
         if (!string.IsNullOrEmpty(unhook))
             await wv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(unhook);
+
+        // Force dark mode via Dark Reader (MIT License — github.com/darkreader/darkreader)
+        if (_settings.ForceDarkMode)
+        {
+            await wv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
+                ResourceLoader.Load("Resources.Scripts.darkreader.min.js"));
+            await wv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
+                ResourceLoader.Load("Resources.Scripts.force-dark-mode.js"));
+        }
     }
+
+
+
+    /// <summary>
+    /// Re-injects the YouTube Unhook script into all active YouTube tabs.
+    /// Called when unhook settings change for live-reload without page refresh.
+    /// Strips all stride-unhook-* classes and re-applies with new config.
+    /// </summary>
+    public async Task ReInjectUnhookAsync()
+    {
+        // Remove all unhook classes + reset loaded flag so the script re-runs class toggles
+        const string cleanup =
+            "document.documentElement.className = " +
+            "document.documentElement.className.replace(/\\bstride-unhook-\\w+/g, '').trim(); " +
+            "window.__STRIDE_UNHOOK_LOADED = false;";
+        var script = _youtubeUnhook.GetScript(_settings);
+
+        foreach (var (_, wv) in _webViews)
+        {
+            if (wv.CoreWebView2 is null) continue;
+            var url = wv.Source?.ToString() ?? "";
+            if (!url.Contains("youtube.com")) continue;
+
+            try
+            {
+                await wv.CoreWebView2.ExecuteScriptAsync(cleanup);
+                if (!string.IsNullOrEmpty(script))
+                    await wv.CoreWebView2.ExecuteScriptAsync(script);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Unhook re-injection failed: {ex.Message}");
+            }
+        }
+    }
+
 
     // ──── WebView Event Wiring ────
 
@@ -462,7 +520,7 @@ public sealed class TabEngine : IDisposable
             {
                 var scheme = parsedCustomUri.Scheme.ToLowerInvariant();
                 if (scheme != "http" && scheme != "https" && scheme != "file" && scheme != "data" && 
-                    scheme != "about" && scheme != "edge" && scheme != "chrome" && scheme != "spur" && scheme != "javascript")
+                    scheme != "about" && scheme != "edge" && scheme != "chrome" && scheme != "stride" && scheme != "javascript")
                 {
                     e.Cancel = true;
                     _dispatcher.InvokeAsync(() =>
@@ -546,6 +604,8 @@ public sealed class TabEngine : IDisposable
                     tab.IsLoading = false;
                     LoadingStateChanged?.Invoke(tab, false);
                     UpdateTabFromWebView(wv, tab);
+
+
                 }
                 catch (Exception ex) { Trace.WriteLine($"NavigationCompleted error: {ex.Message}"); }
             });
@@ -655,6 +715,46 @@ public sealed class TabEngine : IDisposable
         };
     }
 
+    /// <summary>
+    /// Blocks known ad-serving URLs at the network level.
+    /// Requests matching these patterns are cancelled before loading.
+    /// </summary>
+    private void WireAdBlockFilters(WebView2 wv)
+    {
+        // YouTube ad video/tracking URL patterns
+        string[] adPatterns =
+        [
+            "*://*.doubleclick.net/*",
+            "*://*.googlesyndication.com/*",
+            "*://*.googleadservices.com/*",
+            "*://*.google-analytics.com/*",
+            "*://www.youtube.com/api/stats/ads*",
+            "*://www.youtube.com/pagead/*",
+            "*://www.youtube.com/get_midroll_info*",
+            "*://*.youtube.com/ptracking*",
+            "*://*.youtube.com/api/stats/qoe*",
+            "*://yt3.ggpht.com/*/ads/*",
+            "*://*.googleads.g.doubleclick.net/*",
+            "*://ad.youtube.com/*",
+            "*://ads.youtube.com/*",
+            "*://*.moatads.com/*",
+            "*://*.adsafeprotected.com/*"
+        ];
+
+        foreach (var pattern in adPatterns)
+        {
+            wv.CoreWebView2.AddWebResourceRequestedFilter(
+                pattern, CoreWebView2WebResourceContext.All);
+        }
+
+        wv.CoreWebView2.WebResourceRequested += (_, e) =>
+        {
+            // Block the request by returning an empty response
+            e.Response = wv.CoreWebView2.Environment.CreateWebResourceResponse(
+                null, 200, "OK", "");
+        };
+    }
+
     private void HandleProcessFailure(WebView2 wv, BrowserTab tab)
     {
         wv.CoreWebView2.ProcessFailed += (_, e) =>
@@ -742,11 +842,12 @@ public sealed class TabEngine : IDisposable
 
             try
             {
+                wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
                 _ = wv.CoreWebView2.TrySuspendAsync();
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"TrySuspendAsync failed for tab {id}: {ex.Message}");
+                Trace.WriteLine($"SuspendBackgroundTabs failed for tab {id}: {ex.Message}");
             }
         }
     }
@@ -806,7 +907,17 @@ public sealed class TabEngine : IDisposable
     private void ShowOnlyActiveWebView(BrowserTab activeTab)
     {
         foreach (var (id, wv) in _webViews)
-            wv.Visibility = id == activeTab.Id ? Visibility.Visible : Visibility.Collapsed;
+        {
+            var isActive = id == activeTab.Id;
+            wv.Visibility = isActive ? Visibility.Visible : Visibility.Collapsed;
+
+            if (wv.CoreWebView2 is null) continue;
+
+            // Active tab: normal memory budget. Background tabs: aggressive GC
+            wv.CoreWebView2.MemoryUsageTargetLevel = isActive
+                ? CoreWebView2MemoryUsageTargetLevel.Normal
+                : CoreWebView2MemoryUsageTargetLevel.Low;
+        }
     }
 
     // ──── Disposal ────

@@ -1,10 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
-using SpurBrowser.Engine;
-using SpurBrowser.Models;
-using SpurBrowser.Services;
-using SpurBrowser.ViewModels;
+using StrideBrowser.Engine;
+using StrideBrowser.Models;
+using StrideBrowser.Services;
+using StrideBrowser.ViewModels;
 
-namespace SpurBrowser;
+namespace StrideBrowser;
 
 /// <summary>
 /// Composition root — registers all services into the DI container.
