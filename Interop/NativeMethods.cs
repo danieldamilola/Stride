@@ -63,4 +63,14 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    /// <summary>
+    /// Sets the AppUserModelID for the current process. This tells Windows
+    /// Task Manager to group all child processes (WebView2, GPU, etc.)
+    /// under the main Stride entry instead of "Utility".
+    /// Must be called before creating any windows.
+    /// </summary>
+    [DllImport("shell32.dll", SetLastError = true)]
+    internal static extern void SetCurrentProcessExplicitAppUserModelID(
+        [MarshalAs(UnmanagedType.LPWStr)] string AppID);
 }

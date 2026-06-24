@@ -14,6 +14,9 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Set AppUserModelID so Task Manager groups WebView2 processes under Stride
+        Interop.NativeMethods.SetCurrentProcessExplicitAppUserModelID("StrideBrowser");
+
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;

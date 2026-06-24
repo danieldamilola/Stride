@@ -91,6 +91,7 @@ public sealed class TabEngine : IDisposable
             ScrollBarStyle = CoreWebView2ScrollbarStyle.FluentOverlay,
             // Reduce telemetry and background activity
             AdditionalBrowserArguments =
+                "--app-user-model-id=StrideBrowser " +
                 "--renderer-process-limit=4 " +
                 "--disable-background-networking " +
                 "--disable-breakpad " +
