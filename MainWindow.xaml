@@ -22,38 +22,45 @@
                   ToolTip="{Binding Title}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>  <!-- Pin dot -->
-                    <ColumnDefinition Width="20"/>    <!-- Favicon + close overlay -->
+                    <ColumnDefinition Width="20"/>    <!-- Favicon + hover close overlay -->
                     <ColumnDefinition Width="Auto"/>  <!-- Title (active only) -->
-                    <ColumnDefinition Width="Auto"/>  <!-- Close (active only) -->
+                    <ColumnDefinition Width="Auto"/>  <!-- Close pill (active only) -->
                 </Grid.ColumnDefinitions>
                 <!-- Pin indicator — 3px amber dot -->
                 <Ellipse Grid.Column="0" Width="3" Height="3"
                          Fill="{DynamicResource Accent}" Margin="0,0,2,0"
                          VerticalAlignment="Center"
                          Visibility="{Binding IsPinned, Converter={StaticResource BoolToVis}}"/>
-                <!-- Favicon — 16×16 with globe fallback -->
+                <!-- Favicon — 20×20 area with 16×16 icon -->
                 <Grid Grid.Column="1" Width="20" Height="20" VerticalAlignment="Center">
-                    <!-- Default globe icon (visible when no favicon) -->
+                    <!-- Default globe icon -->
                     <Path Data="{StaticResource IconGlobe}"
                           Stroke="{DynamicResource TextSecondary}"
                           StrokeThickness="1" Width="12" Height="12"
                           Stretch="Uniform" HorizontalAlignment="Center"
                           VerticalAlignment="Center" x:Name="DefaultIcon"/>
-                    <!-- Actual favicon (overlays globe when loaded) -->
+                    <!-- Actual favicon -->
                     <Image Source="{Binding Favicon}"
                            Width="16" Height="16"
                            RenderOptions.BitmapScalingMode="HighQuality"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center" x:Name="FaviconImage"/>
-                    <!-- Close overlay on favicon — only for inactive tabs -->
+                    <!-- INACTIVE close: overlay on favicon, hover-only, hidden when selected -->
                     <Button Click="CloseTab_Click" Tag="{Binding}"
-                            Style="{DynamicResource TabCloseBtn}" ToolTip="Close tab"
+                            ToolTip="Close tab"
                             Width="12" Height="12"
                             HorizontalAlignment="Right" VerticalAlignment="Top"
                             Margin="0,-2,-2,0">
-                        <Button.RenderTransform>
-                            <TranslateTransform/>
-                        </Button.RenderTransform>
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource TabCloseBtn}">
+                                <!-- Hide when tab is selected (active tab uses pill close instead) -->
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
                         <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextPrimary}"
                               StrokeThickness="1.2" Width="5" Height="5" Stretch="Uniform"
                               StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
@@ -80,6 +87,44 @@
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
+                <!-- ACTIVE close: end of pill, always visible when selected -->
+                <Button Grid.Column="3" Click="CloseTab_Click" Tag="{Binding}"
+                        ToolTip="Close tab"
+                        Width="14" Height="14" Margin="6,0,2,0"
+                        VerticalAlignment="Center" Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Bd" Background="Transparent"
+                                                CornerRadius="4" Padding="2">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#14FFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextMuted}"
+                          StrokeThickness="1" Width="6" Height="6" Stretch="Uniform"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                </Button>
             </Grid>
         </DataTemplate>
     </Window.Resources>
