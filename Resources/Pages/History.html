@@ -5,33 +5,169 @@
     <title>History - Stride</title>
     <style>
         :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #0C0C0C;
             color: #D4D4D4;
-            font-family: 'Segoe UI', Inter, sans-serif;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
             padding: 24px 32px;
         }
-        h1 { font-size: 22px; font-weight: 600; margin-bottom: 20px; }
-        .group { margin-bottom: 24px; }
-        .group-header {
-            font-size: 14px;
-            font-weight: 600;
-            color: #7A7A7A;
-            padding: 8px 0;
-            border-bottom: 1px solid #1E1E1E;
-            margin-bottom: 4px;
-        }
-        .tab {
+
+        /* ── Header ── */
+        .header {
             display: flex;
             align-items: center;
-            padding: 8px 12px;
-            border-radius: 6px;
-            transition: background 0.15s;
+            gap: 16px;
+            margin-bottom: 20px;
         }
-        .tab:hover { background: #222222; }
-        .tab-main { flex: 1; min-width: 0; }
-        .tab-title {
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #E8E4DF;
+            flex-shrink: 0;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        /* ── Search bar ── */
+        .search-bar {
+            position: relative;
+        }
+        .search-bar input {
+            width: 260px;
+            padding: 7px 12px 7px 32px;
+            border-radius: 8px;
+            border: 1px solid #2A2A2E;
+            background: #151517;
+            color: #E8E4DF;
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 150ms ease;
+        }
+        .search-bar input:focus {
+            border-color: rgba(var(--accent-rgb), 0.35);
+        }
+        .search-bar input::placeholder { color: #4A4844; }
+        .search-bar svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            color: #4A4844;
+            pointer-events: none;
+        }
+
+        /* ── Clear button ── */
+        .clear-btn {
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid #2A2A2E;
+            background: transparent;
+            color: #8A8680;
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 150ms, color 150ms, border-color 150ms;
+        }
+        .clear-btn:hover {
+            background: #1E1012;
+            border-color: #5A2020;
+            color: #E55050;
+        }
+
+        /* ── Date sections ── */
+        .date-section {
+            margin-bottom: 24px;
+        }
+        .date-header {
+            font-size: 13px;
+            font-weight: 500;
+            color: #5A5854;
+            padding: 8px 0;
+            border-bottom: 1px solid #1A1A1E;
+            margin-bottom: 2px;
+            position: sticky;
+            top: 0;
+            background: #0C0C0C;
+            z-index: 2;
+        }
+
+        /* ── Domain groups ── */
+        .domain-group {
+            margin-bottom: 4px;
+        }
+        .domain-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 150ms;
+            user-select: none;
+        }
+        .domain-header:hover {
+            background: #181818;
+        }
+        .domain-header img {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .domain-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #C4C0BA;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .domain-count {
+            font-size: 11px;
+            color: #4A4844;
+            flex-shrink: 0;
+        }
+        .domain-chevron {
+            width: 12px;
+            height: 12px;
+            color: #4A4844;
+            transition: transform 200ms ease;
+            flex-shrink: 0;
+        }
+        .domain-group.collapsed .domain-chevron {
+            transform: rotate(-90deg);
+        }
+        .domain-group.collapsed .domain-entries {
+            display: none;
+        }
+
+        /* ── Individual entries ── */
+        .entry {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px 6px 36px;
+            border-radius: 6px;
+            transition: background 150ms;
+        }
+        .entry:hover {
+            background: #181818;
+        }
+        .entry-main {
+            flex: 1;
+            min-width: 0;
+        }
+        .entry-title {
             color: #D4D4D4;
             text-decoration: none;
             font-size: 13px;
@@ -39,10 +175,13 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            cursor: pointer;
         }
-        .tab-title:hover { color: var(--accent); }
-        .tab-url {
-            color: #444444;
+        .entry-title:hover {
+            color: var(--accent);
+        }
+        .entry-url {
+            color: #3A3834;
             font-size: 11px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -50,21 +189,273 @@
             display: block;
         }
         .entry-time {
-            color: #444444;
+            color: #3A3834;
             font-size: 11px;
             margin-left: 12px;
             white-space: nowrap;
+            flex-shrink: 0;
         }
+
+        /* ── Empty state ── */
         .empty {
-            color: #444444;
+            color: #4A4844;
             font-size: 14px;
             text-align: center;
             margin-top: 80px;
         }
+
+        /* ── Confirm dialog ── */
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .dialog-overlay.open { display: flex; }
+        .dialog {
+            background: #1A1A1E;
+            border: 1px solid #2A2A2E;
+            border-radius: 12px;
+            padding: 24px;
+            width: 320px;
+        }
+        .dialog h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #E8E4DF;
+            margin-bottom: 8px;
+        }
+        .dialog p {
+            font-size: 12px;
+            color: #8A8680;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .dialog-actions button {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: 1px solid #2A2A2E;
+            background: #1A1A1E;
+            color: #8A8680;
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 150ms, color 150ms;
+        }
+        .dialog-actions button:hover {
+            background: #222226;
+            color: #E8E4DF;
+        }
+        .dialog-actions button.danger {
+            background: #1E1012;
+            border-color: #5A2020;
+            color: #E55050;
+        }
+        .dialog-actions button.danger:hover {
+            background: #2A1218;
+        }
+
+        /* ── Transitions ── */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <h1>History</h1>
-    {{CONTENT}}
+    <div class="header">
+        <h1>History</h1>
+        <div class="header-actions">
+            <div class="search-bar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Search history..." autofocus>
+            </div>
+            <button class="clear-btn" id="clearBtn">Clear all</button>
+        </div>
+    </div>
+
+    <div id="historyContent"></div>
+
+    <div class="dialog-overlay" id="confirmDialog">
+        <div class="dialog">
+            <h3>Clear browsing history?</h3>
+            <p>This will permanently delete all your browsing history. This action cannot be undone.</p>
+            <div class="dialog-actions">
+                <button onclick="closeConfirm()">Cancel</button>
+                <button class="danger" onclick="confirmClear()">Clear all</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const entries = JSON.parse('{{ENTRIES}}' || '[]');
+
+        function getDomain(url) {
+            try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
+        }
+
+        function getDomainLabel(domain) {
+            // "figma.com" → "Figma", "mail.google.com" → "Mail Google"
+            const parts = domain.replace(/\.(com|org|net|io|co|dev|ai|app|me|tv|gg|xyz)$/i, '').split('.');
+            return parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+        }
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const entryDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const diffDays = Math.floor((today - entryDate) / 86400000);
+
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return d.toLocaleDateString(undefined, { weekday: 'long' });
+            return d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function formatTime(dateStr) {
+            return new Date(dateStr).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function render(filter = '') {
+            const container = document.getElementById('historyContent');
+            const lowerFilter = filter.toLowerCase();
+
+            // Filter entries
+            const filtered = filter
+                ? entries.filter(e => (e.Title || '').toLowerCase().includes(lowerFilter) || (e.Url || '').toLowerCase().includes(lowerFilter))
+                : entries;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty">${filter ? 'No results found.' : 'No browsing history yet.'}</div>`;
+                return;
+            }
+
+            // Sort by time descending
+            const sorted = [...filtered].sort((a, b) => new Date(b.VisitedAt) - new Date(a.VisitedAt));
+
+            // Group by date first
+            const byDate = {};
+            sorted.forEach(e => {
+                const dateKey = formatDate(e.VisitedAt);
+                if (!byDate[dateKey]) byDate[dateKey] = [];
+                byDate[dateKey].push(e);
+            });
+
+            let html = '';
+
+            for (const [dateLabel, dateEntries] of Object.entries(byDate)) {
+                // Group by domain within each date
+                const byDomain = {};
+                dateEntries.forEach(e => {
+                    const domain = getDomain(e.Url);
+                    if (!byDomain[domain]) byDomain[domain] = [];
+                    byDomain[domain].push(e);
+                });
+
+                html += `<div class="date-section">`;
+                html += `<div class="date-header">${escapeHtml(dateLabel)}</div>`;
+
+                for (const [domain, domainEntries] of Object.entries(byDomain)) {
+                    const label = getDomainLabel(domain);
+                    const groupId = `g-${dateLabel}-${domain}`.replace(/[^a-zA-Z0-9]/g, '_');
+
+                    if (domainEntries.length === 1) {
+                        // Single entry — no group header, show directly
+                        const e = domainEntries[0];
+                        const title = e.Title || e.Url;
+                        html += `<div class="entry">
+                            <img src="https://icons.duckduckgo.com/ip3/${domain}.ico" width="16" height="16"
+                                 onerror="this.style.display='none'" style="margin-right:8px;border-radius:3px;flex-shrink:0">
+                            <div class="entry-main">
+                                <a class="entry-title" onclick="openUrl('${escapeHtml(e.Url)}')">${escapeHtml(title)}</a>
+                                <span class="entry-url">${escapeHtml(e.Url)}</span>
+                            </div>
+                            <span class="entry-time">${formatTime(e.VisitedAt)}</span>
+                        </div>`;
+                    } else {
+                        // Multiple entries — group by domain
+                        html += `<div class="domain-group" id="${groupId}">
+                            <div class="domain-header" onclick="toggleGroup('${groupId}')">
+                                <img src="https://icons.duckduckgo.com/ip3/${domain}.ico" width="16" height="16"
+                                     onerror="this.style.display='none'">
+                                <span class="domain-name">${escapeHtml(label)}</span>
+                                <span class="domain-count">${domainEntries.length}</span>
+                                <svg class="domain-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                            <div class="domain-entries">`;
+
+                        domainEntries.forEach(e => {
+                            const title = e.Title || e.Url;
+                            html += `<div class="entry">
+                                <div class="entry-main">
+                                    <a class="entry-title" onclick="openUrl('${escapeHtml(e.Url)}')">${escapeHtml(title)}</a>
+                                    <span class="entry-url">${escapeHtml(e.Url)}</span>
+                                </div>
+                                <span class="entry-time">${formatTime(e.VisitedAt)}</span>
+                            </div>`;
+                        });
+
+                        html += `</div></div>`;
+                    }
+                }
+
+                html += `</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleGroup(id) {
+            document.getElementById(id)?.classList.toggle('collapsed');
+        }
+
+        function openUrl(url) {
+            window.chrome.webview.postMessage('history-open:' + url);
+        }
+
+        // Search
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            render(e.target.value);
+        });
+
+        // Clear
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            document.getElementById('confirmDialog').classList.add('open');
+        });
+
+        function closeConfirm() {
+            document.getElementById('confirmDialog').classList.remove('open');
+        }
+
+        function confirmClear() {
+            window.chrome.webview.postMessage('history-clear');
+            closeConfirm();
+        }
+
+        document.getElementById('confirmDialog').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeConfirm();
+        });
+
+        document.getElementById('confirmDialog').addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeConfirm();
+        });
+
+        // Initial render
+        render();
+    </script>
 </body>
 </html>
