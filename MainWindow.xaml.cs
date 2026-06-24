@@ -436,6 +436,18 @@ public partial class MainWindow : Window
         WebViewHost.Visibility = Visibility.Hidden;
         CommandBarOverlay.Visibility = Visibility.Visible;
 
+        // 150ms ease-out appear animation: fade in + slide down
+        CommandBarOverlay.Opacity = 0;
+        CommandBarPanel.RenderTransform = new TranslateTransform(0, -10);
+
+        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(150))
+        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+        var slideIn = new DoubleAnimation(-10, 0, TimeSpan.FromMilliseconds(150))
+        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+
+        CommandBarOverlay.BeginAnimation(OpacityProperty, fadeIn);
+        CommandBarPanel.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slideIn);
+
         // Focus after layout pass to ensure TextBox is in visual tree
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () =>
         {
@@ -447,15 +459,31 @@ public partial class MainWindow : Window
 
     private void HideCommandBar()
     {
+        if (!_isCommandBarOpen) return;
         _isCommandBarOpen = false;
-        CommandBarOverlay.Visibility = Visibility.Collapsed;
 
-        // Restore WebView visibility
-        WebViewHost.Visibility = Visibility.Visible;
+        // 150ms ease-out dismiss animation: fade out + slide up
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(150))
+        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+        fadeOut.Completed += (_, _) =>
+        {
+            CommandBarOverlay.Visibility = Visibility.Collapsed;
+            CommandBarOverlay.BeginAnimation(OpacityProperty, null);
 
-        // Return focus to WebView
-        if (_engine.ActiveTab is not null)
-            WebViewHost.Focus();
+            // Restore WebView visibility
+            WebViewHost.Visibility = Visibility.Visible;
+
+            // Return focus to WebView
+            if (_engine.ActiveTab is not null)
+                WebViewHost.Focus();
+        };
+
+        var slideOut = new DoubleAnimation(0, -10, TimeSpan.FromMilliseconds(150))
+        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+
+        CommandBarOverlay.BeginAnimation(OpacityProperty, fadeOut);
+        if (CommandBarPanel.RenderTransform is TranslateTransform tt)
+            tt.BeginAnimation(TranslateTransform.YProperty, slideOut);
     }
 
     private void UrlLabel_Click(object sender, MouseButtonEventArgs e)
