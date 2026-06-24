@@ -432,6 +432,8 @@ public partial class MainWindow : Window
             _vm.AddressText = "";
         }
 
+        // Hide WebView — it's a native HWND that renders above WPF overlays (airspace issue)
+        WebViewHost.Visibility = Visibility.Hidden;
         CommandBarOverlay.Visibility = Visibility.Visible;
 
         // Focus after layout pass to ensure TextBox is in visual tree
@@ -447,6 +449,9 @@ public partial class MainWindow : Window
     {
         _isCommandBarOpen = false;
         CommandBarOverlay.Visibility = Visibility.Collapsed;
+
+        // Restore WebView visibility
+        WebViewHost.Visibility = Visibility.Visible;
 
         // Return focus to WebView
         if (_engine.ActiveTab is not null)
