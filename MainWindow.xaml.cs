@@ -795,6 +795,10 @@ public partial class MainWindow : Window
             var wash = new SolidColorBrush(Color.FromArgb(0x1A, color.R, color.G, color.B));
             wash.Freeze();
             Application.Current.Resources["AccentWash"] = wash;
+
+            // Update loading bar gradient to match accent
+            Application.Current.Resources["LoadingBarGlowColor"] = color;
+            Application.Current.Resources["LoadingBarFadeColor"] = Color.FromArgb(0x00, color.R, color.G, color.B);
         }
         catch { /* ignore invalid color strings */ }
     }
