@@ -659,6 +659,19 @@ public sealed class TabEngine : IDisposable
                 }
             });
         };
+
+        // Use WebView2's native favicon API (like Chrome/Firefox)
+        // instead of relying solely on a 3rd-party service
+        wv.CoreWebView2.FaviconChanged += (_, _) =>
+        {
+            if (!_webViews.ContainsKey(tab.Id)) return;
+            var source = wv.Source?.ToString() ?? "";
+            _ = _faviconLoader.HandleFaviconChangedAsync(wv, source).ContinueWith(t =>
+            {
+                if (t.IsCompletedSuccessfully && t.Result is not null)
+                    _dispatcher.Invoke(() => { tab.Favicon = t.Result; TabStateChanged?.Invoke(tab); });
+            }, TaskContinuationOptions.OnlyOnRanToCompletion);
+        };
     }
 
     private void WireMessageAndWindowEvents(WebView2 wv, BrowserTab tab)
