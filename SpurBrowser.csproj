@@ -23,4 +23,11 @@
     <EmbeddedResource Include="Resources\Scripts\*.js" />
   </ItemGroup>
 
+  <!-- App icons — copied to output for Window.Icon and taskbar -->
+  <ItemGroup>
+    <Content Include="icons\stride-browser-*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
