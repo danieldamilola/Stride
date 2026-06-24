@@ -94,6 +94,31 @@ public partial class MainWindow : Window
 
                 mmi.ptMaxPosition = new NativeMethods.POINT { X = work.Left - mon.Left, Y = work.Top - mon.Top };
                 mmi.ptMaxSize = new NativeMethods.POINT { X = work.Right - work.Left, Y = work.Bottom - work.Top };
+
+                // When the taskbar is auto-hidden, rcWork == rcMonitor (full screen).
+                // The maximized window then covers the taskbar trigger zone (the 1px edge).
+                // Detect this and leave a 1px gap on the taskbar edge so the cursor can trigger it.
+                if (NativeMethods.IsTaskbarAutoHide())
+                {
+                    var edge = NativeMethods.GetTaskbarEdge();
+                    switch (edge)
+                    {
+                        case 0: // Left
+                            mmi.ptMaxPosition.X += 1;
+                            mmi.ptMaxSize.X -= 1;
+                            break;
+                        case 1: // Top
+                            mmi.ptMaxPosition.Y += 1;
+                            mmi.ptMaxSize.Y -= 1;
+                            break;
+                        case 2: // Right
+                            mmi.ptMaxSize.X -= 1;
+                            break;
+                        case 3: // Bottom (most common)
+                            mmi.ptMaxSize.Y -= 1;
+                            break;
+                    }
+                }
             }
             Marshal.StructureToPtr(mmi, lParam, true);
             handled = true;
