@@ -767,6 +767,16 @@ public partial class MainWindow : Window
 
         if (_engine.ActiveTab?.Url == InternalUrls.Settings)
             _engine.NavigateToSettings(_engine.ActiveTab, _vm.Settings);
+
+        // Live-refresh new tab pages when shortcuts are added/removed
+        if (key == "shortcuts")
+        {
+            foreach (var tab in _engine.Tabs)
+            {
+                if (tab.Url == InternalUrls.NewTab)
+                    _engine.Navigate(tab, InternalUrls.NewTab);
+            }
+        }
     }
 
     private void ApplyAccentColor(string hex)

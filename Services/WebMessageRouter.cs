@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using StrideBrowser.Engine;
 using StrideBrowser.Models;
 using StrideBrowser.ViewModels;
@@ -51,6 +52,9 @@ public sealed class WebMessageRouter
             [WebMessagePrefix.OneTabReorderGroup] = HandleOneTabReorderGroup,
             [WebMessagePrefix.HistoryOpen] = HandleOpen,
             [WebMessagePrefix.ErrorRetry] = HandleErrorRetry,
+            [WebMessagePrefix.ShortcutAdd] = HandleShortcutAdd,
+            [WebMessagePrefix.ShortcutRemove] = HandleShortcutRemove,
+            [WebMessagePrefix.ShortcutClick] = HandleShortcutClick,
         };
 
         _exactHandlers = new Dictionary<string, Func<Task>>
@@ -262,6 +266,46 @@ public sealed class WebMessageRouter
     {
         if (_engine.ActiveTab is not null)
             _engine.Navigate(_engine.ActiveTab, url);
+        return Task.CompletedTask;
+    }
+
+    private Task HandleShortcutAdd(string payload)
+    {
+        try
+        {
+            var item = JsonSerializer.Deserialize<ShortcutItem>(payload, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (item is null || string.IsNullOrWhiteSpace(item.Url)) return Task.CompletedTask;
+
+            _vm.Settings.NewTabShortcuts.Add(item);
+            _settingsStore.Save(_vm.Settings);
+            SettingChanged?.Invoke("shortcuts", "");
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"HandleShortcutAdd failed: {ex.Message}");
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task HandleShortcutRemove(string payload)
+    {
+        if (!int.TryParse(payload, out var index)) return Task.CompletedTask;
+        if (index < 0 || index >= _vm.Settings.NewTabShortcuts.Count) return Task.CompletedTask;
+
+        _vm.Settings.NewTabShortcuts.RemoveAt(index);
+        _settingsStore.Save(_vm.Settings);
+        SettingChanged?.Invoke("shortcuts", "");
+        return Task.CompletedTask;
+    }
+
+    private Task HandleShortcutClick(string url)
+    {
+        if (_engine.ActiveTab is not null)
+        {
+            _engine.ActiveTab.Url = url;
+            _vm.AddressText = url;
+            _engine.Navigate(_engine.ActiveTab, url);
+        }
         return Task.CompletedTask;
     }
 

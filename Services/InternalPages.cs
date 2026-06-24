@@ -16,7 +16,7 @@ public sealed class InternalPages
     private readonly ErrorPage _error = new();
 
     /// <summary>Returns the new tab page HTML.</summary>
-    public string NewTabPage(string backgroundPath = "") => _newTab.Render(backgroundPath);
+    public string NewTabPage(List<ShortcutItem> shortcuts, string backgroundPath = "") => _newTab.Render(shortcuts, backgroundPath);
 
     /// <summary>Returns a minimal blank dark page.</summary>
     public string BlankPage() =>

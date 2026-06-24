@@ -45,6 +45,9 @@ public sealed partial class BrowserSettings : ObservableObject
     [ObservableProperty]
     private string _newTabBackground = "";
 
+    [ObservableProperty]
+    private List<ShortcutItem> _newTabShortcuts = new();
+
     /// <summary>
     /// Custom keyboard shortcut overrides. Maps action name (e.g. "NewTab")
     /// to key combo string (e.g. "Ctrl+K"). Missing entries use built-in defaults.

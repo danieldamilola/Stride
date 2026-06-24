@@ -72,7 +72,215 @@
             pointer-events: none;
         }
 
-        /* ── Shortcuts — barely visible, functional ── */
+        /* ── Shortcut Tiles ── */
+        .shortcut-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+            max-width: 520px;
+        }
+
+        .shortcut-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            border-radius: 10px;
+            background: #1A1A1E;
+            border: 1px solid #2A2A2E;
+            cursor: pointer;
+            transition: background 150ms ease, border-color 150ms ease;
+            position: relative;
+            text-decoration: none;
+        }
+
+        .shortcut-tile:hover {
+            background: #222226;
+            border-color: #3A3A3E;
+        }
+
+        .shortcut-tile img {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            pointer-events: none;
+        }
+
+        .shortcut-tile .tile-name {
+            font-size: 10px;
+            font-weight: 400;
+            color: #8A8680;
+            max-width: 60px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .shortcut-tile .tile-remove {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #333338;
+            border: none;
+            color: #8A8680;
+            font-size: 10px;
+            line-height: 16px;
+            text-align: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 120ms ease;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .shortcut-tile:hover .tile-remove {
+            opacity: 1;
+        }
+
+        .shortcut-tile .tile-remove:hover {
+            background: #D4A574;
+            color: #111113;
+        }
+
+        .shortcut-add {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px dashed #2A2A2E;
+            cursor: pointer;
+            transition: border-color 150ms ease, background 150ms ease;
+        }
+
+        .shortcut-add:hover {
+            border-color: rgba(212,165,116,0.35);
+            background: rgba(212,165,116,0.04);
+        }
+
+        .shortcut-add svg {
+            width: 18px;
+            height: 18px;
+            color: #4A4844;
+            transition: color 150ms ease;
+        }
+
+        .shortcut-add:hover svg {
+            color: #D4A574;
+        }
+
+        /* ── Add Dialog ── */
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dialog-overlay.open {
+            display: flex;
+        }
+
+        .dialog {
+            background: #1A1A1E;
+            border: 1px solid #2A2A2E;
+            border-radius: 12px;
+            padding: 24px;
+            width: 340px;
+            animation: fadeSlideUp 200ms ease-out forwards;
+        }
+
+        .dialog h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #E8E4DF;
+            margin-bottom: 16px;
+        }
+
+        .dialog label {
+            display: block;
+            font-size: 11px;
+            font-weight: 400;
+            color: #8A8680;
+            margin-bottom: 4px;
+        }
+
+        .dialog input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #2A2A2E;
+            background: #111113;
+            color: #E8E4DF;
+            font-size: 13px;
+            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            outline: none;
+            margin-bottom: 12px;
+            transition: border-color 200ms ease;
+        }
+
+        .dialog input:focus {
+            border-color: rgba(212,165,116,0.35);
+        }
+
+        .dialog input::placeholder {
+            color: #4A4844;
+        }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .dialog-actions button {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: 1px solid #2A2A2E;
+            background: #1A1A1E;
+            color: #8A8680;
+            font-size: 12px;
+            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            cursor: pointer;
+            transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+        }
+
+        .dialog-actions button:hover {
+            background: #222226;
+            color: #E8E4DF;
+        }
+
+        .dialog-actions button.primary {
+            background: rgba(212,165,116,0.12);
+            border-color: rgba(212,165,116,0.25);
+            color: #D4A574;
+        }
+
+        .dialog-actions button.primary:hover {
+            background: rgba(212,165,116,0.2);
+        }
+
+        /* ── Keyboard Shortcuts — barely visible, functional ── */
         .shortcuts {
             margin-top: 20px;
             display: flex;
@@ -126,6 +334,7 @@
                 <line x1="16.2" y1="16.2" x2="21" y2="21"/>
             </svg>
         </div>
+        <div class="shortcut-grid" id="shortcutGrid"></div>
         <div class="shortcuts">
             <span class="shortcut"><kbd>Ctrl</kbd><kbd>L</kbd> URL</span>
             <span class="shortcut"><kbd>Ctrl</kbd><kbd>T</kbd> Tab</span>
@@ -133,13 +342,115 @@
         </div>
     </div>
 
+    <!-- Add Shortcut Dialog -->
+    <div class="dialog-overlay" id="dialogOverlay">
+        <div class="dialog">
+            <h3>Add shortcut</h3>
+            <label for="scName">Name</label>
+            <input type="text" id="scName" placeholder="YouTube" maxlength="24" autofocus>
+            <label for="scUrl">URL</label>
+            <input type="text" id="scUrl" placeholder="https://youtube.com">
+            <div class="dialog-actions">
+                <button onclick="closeDialog()">Cancel</button>
+                <button class="primary" onclick="saveShortcut()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const shortcuts = JSON.parse('{{SHORTCUTS}}' || '[]');
+
+        function getDomain(url) {
+            try { return new URL(url).hostname; } catch { return url; }
+        }
+
+        function renderShortcuts() {
+            const grid = document.getElementById('shortcutGrid');
+            grid.innerHTML = '';
+
+            shortcuts.forEach((sc, i) => {
+                const tile = document.createElement('div');
+                tile.className = 'shortcut-tile';
+                tile.title = sc.Url || sc.url;
+
+                const url = sc.Url || sc.url || '';
+                const name = sc.Name || sc.name || '';
+                const domain = getDomain(url);
+
+                tile.innerHTML = `
+                    <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32"
+                         onerror="this.style.display='none'" alt="">
+                    <span class="tile-name">${name.length > 10 ? name.substring(0, 10) : name}</span>
+                    <button class="tile-remove" data-index="${i}" onclick="event.stopPropagation();removeShortcut(${i})">&times;</button>
+                `;
+
+                tile.addEventListener('click', () => {
+                    window.chrome.webview.postMessage('shortcut-click:' + url);
+                });
+
+                grid.appendChild(tile);
+            });
+
+            // Add button (max 16 shortcuts)
+            if (shortcuts.length < 16) {
+                const add = document.createElement('div');
+                add.className = 'shortcut-add';
+                add.title = 'Add shortcut';
+                add.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+                add.addEventListener('click', openDialog);
+                grid.appendChild(add);
+            }
+        }
+
+        function openDialog() {
+            document.getElementById('scName').value = '';
+            document.getElementById('scUrl').value = '';
+            document.getElementById('dialogOverlay').classList.add('open');
+            setTimeout(() => document.getElementById('scName').focus(), 50);
+        }
+
+        function closeDialog() {
+            document.getElementById('dialogOverlay').classList.remove('open');
+        }
+
+        function saveShortcut() {
+            const name = document.getElementById('scName').value.trim();
+            let url = document.getElementById('scUrl').value.trim();
+            if (!url) return;
+
+            // Auto-prefix https if no protocol
+            if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+            const payload = JSON.stringify({ name: name || getDomain(url), url: url });
+            window.chrome.webview.postMessage('shortcut-add:' + payload);
+            closeDialog();
+        }
+
+        function removeShortcut(index) {
+            window.chrome.webview.postMessage('shortcut-remove:' + index);
+        }
+
+        // Dialog keyboard handling
+        document.getElementById('dialogOverlay').addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDialog();
+            if (e.key === 'Enter') saveShortcut();
+        });
+
+        // Close dialog on overlay click
+        document.getElementById('dialogOverlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeDialog();
+        });
+
         document.addEventListener('keydown', (e) => {
+            const overlay = document.getElementById('dialogOverlay');
+            if (overlay.classList.contains('open')) return;
             const input = document.querySelector('.search-input');
             if (document.activeElement !== input && !e.ctrlKey && !e.altKey && !e.metaKey && e.key.length === 1) {
                 input.focus();
             }
         });
+
+        renderShortcuts();
     </script>
 </body>
 </html>

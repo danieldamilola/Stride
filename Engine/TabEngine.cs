@@ -268,7 +268,7 @@ public sealed class TabEngine : IDisposable
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
 
         if (url == InternalUrls.NewTab)
-            wv.CoreWebView2.NavigateToString(_pages.NewTabPage());
+            wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts));
         else
         {
             try { wv.CoreWebView2.Navigate(url); }
@@ -454,11 +454,11 @@ public sealed class TabEngine : IDisposable
             return;
 
         if (tab.Url == InternalUrls.NewTab)
-            wv.CoreWebView2.NavigateToString(_pages.NewTabPage());
+            wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts));
         else
         {
             try { wv.CoreWebView2.Navigate(tab.Url); }
-            catch (ArgumentException) { wv.CoreWebView2.NavigateToString(_pages.NewTabPage()); }
+            catch (ArgumentException) { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts)); }
         }
     }
 
