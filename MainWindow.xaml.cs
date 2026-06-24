@@ -409,6 +409,8 @@ public partial class MainWindow : Window
 
     // ───────────────────── Helpers ─────────────────────
 
+    private bool _isCommandBarOpen;
+
     private void FocusAddressBar()
     {
         ShowCommandBar();
@@ -416,9 +418,26 @@ public partial class MainWindow : Window
 
     private void ShowCommandBar()
     {
-        CommandBarOverlay.Visibility = Visibility.Visible;
-        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, () =>
+        if (_isCommandBarOpen) return;
+        _isCommandBarOpen = true;
+
+        // Pre-fill with current URL
+        if (_engine.ActiveTab is { } activeTab && !string.IsNullOrEmpty(activeTab.Url)
+            && !InternalUrls.IsInternal(activeTab.Url))
         {
+            _vm.AddressText = activeTab.Url;
+        }
+        else
+        {
+            _vm.AddressText = "";
+        }
+
+        CommandBarOverlay.Visibility = Visibility.Visible;
+
+        // Focus after layout pass to ensure TextBox is in visual tree
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () =>
+        {
+            AddressBar.Focus();
             Keyboard.Focus(AddressBar);
             AddressBar.SelectAll();
         });
@@ -426,12 +445,18 @@ public partial class MainWindow : Window
 
     private void HideCommandBar()
     {
+        _isCommandBarOpen = false;
         CommandBarOverlay.Visibility = Visibility.Collapsed;
+
+        // Return focus to WebView
+        if (_engine.ActiveTab is not null)
+            WebViewHost.Focus();
     }
 
     private void UrlLabel_Click(object sender, MouseButtonEventArgs e)
     {
         ShowCommandBar();
+        e.Handled = true;
     }
 
     private void CommandBarBackdrop_Click(object sender, MouseButtonEventArgs e)
@@ -441,12 +466,8 @@ public partial class MainWindow : Window
 
     private void AddressBar_LostFocus(object sender, RoutedEventArgs e)
     {
-        // Only hide if focus moved outside the command bar panel
-        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, () =>
-        {
-            if (!AddressBar.IsKeyboardFocusWithin)
-                HideCommandBar();
-        });
+        // Don't auto-close — only close on Escape, Enter, or backdrop click
+        // This prevents the race condition where it closes immediately
     }
 
     private void UpdateUrlLabel(BrowserTab tab)
