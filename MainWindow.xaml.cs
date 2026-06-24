@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using StrideBrowser.Engine;
 using StrideBrowser.Interop;
@@ -60,10 +61,6 @@ public partial class MainWindow : Window
         DataContext = _vm;
 
         WireEngineEvents();
-
-        // Apply saved sidebar position
-        if (_vm.Settings.IsSidebarOnRight)
-            ApplySidebarPosition(true);
 
         // Apply saved accent color
         if (_vm.Settings.AccentColor != "#D4A574")
@@ -127,7 +124,7 @@ public partial class MainWindow : Window
 
             await RestoreSessionOrCreateTab();
             SyncTabsBinding();
-            FocusAddressBar();
+            // Don't auto-open command bar on startup
 
             await HandleCommandLineUrls();
 
@@ -222,6 +219,8 @@ public partial class MainWindow : Window
             {
                 _vm.SyncAddressBar(tab);
                 UpdateSecurityIcon(tab.Url);
+                UpdateUrlLabel(tab);
+                UpdateToolbarTint(tab);
                 _isUpdatingSelection = true;
                 try
                 {
@@ -367,6 +366,13 @@ public partial class MainWindow : Window
 
     private void AddressBar_KeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Escape)
+        {
+            HideCommandBar();
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key != Key.Enter) return;
         e.Handled = true;
 
@@ -380,6 +386,8 @@ public partial class MainWindow : Window
             _vm.AddressText = url;
             _engine.Navigate(tab, url);
         }
+
+        HideCommandBar();
     }
 
     private void AddressBar_GotFocus(object sender, RoutedEventArgs e)
@@ -402,11 +410,143 @@ public partial class MainWindow : Window
 
     private void FocusAddressBar()
     {
+        ShowCommandBar();
+    }
+
+    private void ShowCommandBar()
+    {
+        CommandBarOverlay.Visibility = Visibility.Visible;
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, () =>
         {
             Keyboard.Focus(AddressBar);
             AddressBar.SelectAll();
         });
+    }
+
+    private void HideCommandBar()
+    {
+        CommandBarOverlay.Visibility = Visibility.Collapsed;
+    }
+
+    private void UrlLabel_Click(object sender, MouseButtonEventArgs e)
+    {
+        ShowCommandBar();
+    }
+
+    private void CommandBarBackdrop_Click(object sender, MouseButtonEventArgs e)
+    {
+        HideCommandBar();
+    }
+
+    private void AddressBar_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Only hide if focus moved outside the command bar panel
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, () =>
+        {
+            if (!AddressBar.IsKeyboardFocusWithin)
+                HideCommandBar();
+        });
+    }
+
+    private void UpdateUrlLabel(BrowserTab tab)
+    {
+        if (string.IsNullOrEmpty(tab.Url) || InternalUrls.IsInternal(tab.Url))
+        {
+            UrlLabel.Text = tab.Title ?? "New Tab";
+            return;
+        }
+
+        try
+        {
+            var uri = new Uri(tab.Url);
+            UrlLabel.Text = uri.Host;
+        }
+        catch
+        {
+            UrlLabel.Text = tab.Title ?? tab.Url;
+        }
+    }
+
+    // ───────────────────── Adaptive Site Tinting ─────────────────────
+    // Extracts dominant color from favicon and applies subtle 8% tint
+    // on the toolbar background. 400ms smooth transition.
+
+    private Color _currentTintColor = Colors.Transparent;
+
+    private void UpdateToolbarTint(BrowserTab tab)
+    {
+        var tintColor = ExtractDominantColor(tab.Favicon as BitmapSource);
+        if (tintColor == _currentTintColor) return;
+        _currentTintColor = tintColor;
+
+        var baseColor = (Color)FindResource("SidebarColor");
+        Color targetColor;
+
+        if (tintColor == Colors.Transparent)
+        {
+            targetColor = baseColor;
+        }
+        else
+        {
+            // Blend: 92% base + 8% site color
+            targetColor = Color.FromRgb(
+                (byte)(baseColor.R * 0.92 + tintColor.R * 0.08),
+                (byte)(baseColor.G * 0.92 + tintColor.G * 0.08),
+                (byte)(baseColor.B * 0.92 + tintColor.B * 0.08));
+        }
+
+        var anim = new ColorAnimation
+        {
+            To = targetColor,
+            Duration = TimeSpan.FromMilliseconds(400),
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
+        };
+
+        var brush = Toolbar.Background as SolidColorBrush;
+        if (brush is null || brush.IsFrozen)
+        {
+            brush = new SolidColorBrush(baseColor);
+            Toolbar.Background = brush;
+        }
+        brush.BeginAnimation(SolidColorBrush.ColorProperty, anim);
+    }
+
+    private static Color ExtractDominantColor(BitmapSource? bitmap)
+    {
+        if (bitmap is null) return Colors.Transparent;
+
+        try
+        {
+            // Scale down to 1x1 pixel for average color
+            var scaled = new TransformedBitmap(bitmap,
+                new ScaleTransform(
+                    1.0 / bitmap.PixelWidth,
+                    1.0 / bitmap.PixelHeight));
+
+            var pixel = new byte[4];
+            scaled.CopyPixels(pixel, 4, 0);
+
+            var b = pixel[0];
+            var g = pixel[1];
+            var r = pixel[2];
+
+            // Skip very dark or very light colors (not useful as tint)
+            var brightness = (r * 0.299 + g * 0.587 + b * 0.114);
+            if (brightness < 20 || brightness > 240)
+                return Colors.Transparent;
+
+            // Skip near-grey colors (low saturation)
+            var max = Math.Max(r, Math.Max(g, b));
+            var min = Math.Min(r, Math.Min(g, b));
+            if (max - min < 20)
+                return Colors.Transparent;
+
+            return Color.FromRgb(r, g, b);
+        }
+        catch
+        {
+            return Colors.Transparent;
+        }
     }
 
     private void UpdateSecurityIcon(string url)
@@ -538,48 +678,11 @@ public partial class MainWindow : Window
         if (key == "darkMode")
             _engine.ApplyDarkModeToAll(_vm.Settings.ForceDarkMode);
 
-        if (key == "sidebarPosition")
-            ApplySidebarPosition(_vm.Settings.IsSidebarOnRight);
-
         if (key == "accentColor")
             ApplyAccentColor(_vm.Settings.AccentColor);
 
         if (_engine.ActiveTab?.Url == InternalUrls.Settings)
             _engine.NavigateToSettings(_engine.ActiveTab, _vm.Settings);
-    }
-
-    private void ApplySidebarPosition(bool onRight)
-    {
-        var body = (Grid)Sidebar.Parent!;
-
-        if (onRight)
-        {
-            Grid.SetColumn(Sidebar, 2);
-            Grid.SetColumn(ContentArea, 0);
-            // Content column (left)
-            body.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
-            body.ColumnDefinitions[0].MinWidth = 0;
-            body.ColumnDefinitions[0].MaxWidth = double.PositiveInfinity;
-            // Sidebar column (right)
-            body.ColumnDefinitions[2].Width = new GridLength(220);
-            body.ColumnDefinitions[2].MinWidth = 140;
-            body.ColumnDefinitions[2].MaxWidth = 400;
-            Sidebar.BorderThickness = new Thickness(1, 0, 0, 0);
-        }
-        else
-        {
-            Grid.SetColumn(Sidebar, 0);
-            Grid.SetColumn(ContentArea, 2);
-            // Sidebar column (left)
-            body.ColumnDefinitions[0].Width = new GridLength(220);
-            body.ColumnDefinitions[0].MinWidth = 140;
-            body.ColumnDefinitions[0].MaxWidth = 400;
-            // Content column (right)
-            body.ColumnDefinitions[2].Width = new GridLength(1, GridUnitType.Star);
-            body.ColumnDefinitions[2].MinWidth = 0;
-            body.ColumnDefinitions[2].MaxWidth = double.PositiveInfinity;
-            Sidebar.BorderThickness = new Thickness(0, 0, 1, 0);
-        }
     }
 
     private void ApplyAccentColor(string hex)
@@ -606,39 +709,7 @@ public partial class MainWindow : Window
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        var ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
-
-        if (ctrl && e.Key == Key.B)
-        {
-            ToggleSidebar();
-            e.Handled = true;
-        }
-    }
-
-    private GridLength _savedSidebarWidth = new(220);
-
-    private void ToggleSidebar()
-    {
-        var col = ((Grid)Sidebar.Parent).ColumnDefinitions[
-            Grid.GetColumn(Sidebar)];
-
-        if (col.Width.Value > 0)
-        {
-            // Hide — save current width, collapse to 0
-            _savedSidebarWidth = col.Width;
-            col.Width = new GridLength(0);
-            col.MinWidth = 0;
-            Sidebar.Visibility = Visibility.Collapsed;
-            SidebarSplitter.Visibility = Visibility.Collapsed;
-        }
-        else
-        {
-            // Show — restore saved width
-            col.Width = _savedSidebarWidth;
-            col.MinWidth = 140;
-            Sidebar.Visibility = Visibility.Visible;
-            SidebarSplitter.Visibility = Visibility.Visible;
-        }
+        // No sidebar toggle needed — Stride has no sidebar
     }
 
     private async void Settings_Click(object sender, RoutedEventArgs e)
@@ -674,11 +745,6 @@ public partial class MainWindow : Window
     private void Maximize_Click(object sender, RoutedEventArgs e) => ToggleMaximize();
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
-    private void ToggleSidebarPin_Click(object sender, RoutedEventArgs e)
-    {
-        // Sidebar is now always visible — no-op
-    }
-
     private void ToggleMaximize() =>
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
@@ -689,15 +755,11 @@ public partial class MainWindow : Window
         {
             _preFullscreenState = WindowState;
             Toolbar.Visibility = Visibility.Collapsed;
-            Sidebar.Visibility = Visibility.Collapsed;
-            SidebarSplitter.Visibility = Visibility.Collapsed;
             WindowState = WindowState.Maximized;
         }
         else
         {
             Toolbar.Visibility = Visibility.Visible;
-            Sidebar.Visibility = Visibility.Visible;
-            SidebarSplitter.Visibility = Visibility.Visible;
             WindowState = _preFullscreenState;
         }
     }
@@ -762,23 +824,13 @@ public partial class MainWindow : Window
 
     private void UpdateZoomIndicator()
     {
-        var zoom = _engine.GetZoomLevel();
-        var percent = (int)(zoom * 100);
-        if (percent == 100 || percent == (int)(_vm.Settings.DefaultZoom))
-        {
-            ZoomIndicator.Visibility = Visibility.Collapsed;
-        }
-        else
-        {
-            ZoomIndicator.Text = $"{percent}%";
-            ZoomIndicator.Visibility = Visibility.Visible;
-        }
+        // Stride minimal UI — no visible zoom indicator
+        // Zoom still works via Ctrl+/- shortcuts
     }
 
     private void ZoomIndicator_Click(object sender, MouseButtonEventArgs e)
     {
         _engine.ResetZoom();
-        UpdateZoomIndicator();
     }
 
     protected override async void OnKeyDown(KeyEventArgs e)

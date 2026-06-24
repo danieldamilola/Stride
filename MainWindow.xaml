@@ -11,37 +11,50 @@
         PreviewKeyDown="Window_PreviewKeyDown">
 
     <Window.Resources>
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  FAVICON PILL TAB — The Stride signature element       -->
+        <!--  Active: amber pill with favicon + title               -->
+        <!--  Inactive: favicon circle only, 70% opacity            -->
+        <!-- ═══════════════════════════════════════════════════════ -->
         <DataTemplate x:Key="TabItemTemplate">
-            <Grid Height="36" Cursor="Hand" Background="Transparent"
-                  MouseRightButtonUp="TabItem_RightClick" Tag="{Binding}">
+            <Grid Height="28" Cursor="Hand" Background="Transparent"
+                  MouseRightButtonUp="TabItem_RightClick" Tag="{Binding}"
+                  ToolTip="{Binding Title}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="28"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="Auto"/>  <!-- Pin dot -->
+                    <ColumnDefinition Width="20"/>    <!-- Favicon -->
+                    <ColumnDefinition Width="Auto"/>  <!-- Title (active only) -->
+                    <ColumnDefinition Width="Auto"/>  <!-- Close -->
                 </Grid.ColumnDefinitions>
-                <!-- Pin indicator — 4px ember dot -->
-                <Ellipse Grid.Column="0" Width="4" Height="4"
-                         Fill="{DynamicResource Accent}" Margin="8,0,0,0"
+                <!-- Pin indicator — 3px amber dot -->
+                <Ellipse Grid.Column="0" Width="3" Height="3"
+                         Fill="{DynamicResource Accent}" Margin="0,0,2,0"
+                         VerticalAlignment="Center"
                          Visibility="{Binding IsPinned, Converter={StaticResource BoolToVis}}"/>
                 <!-- Favicon — 16×16 -->
                 <Image Grid.Column="1" Source="{Binding Favicon}"
-                       Width="16" Height="16" Margin="8,0,0,0"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
-                <!-- Title — 13px -->
+                       Width="16" Height="16"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       VerticalAlignment="Center"/>
+                <!-- Title — only visible on active tab -->
                 <TextBlock Grid.Column="2" Text="{Binding Title}"
-                           Foreground="{DynamicResource TextSecondary}"
-                           FontSize="13" FontFamily="{DynamicResource UIFont}"
+                           Foreground="{DynamicResource TextPrimary}"
+                           FontSize="12" FontFamily="{DynamicResource UIFont}"
+                           FontWeight="Normal"
                            VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis"
-                           Margin="8,0,4,0"/>
+                           MaxWidth="160"
+                           Margin="6,0,0,0"
+                           Visibility="Collapsed"
+                           x:Name="TabTitle"/>
                 <!-- Close — appears on hover -->
                 <Button Grid.Column="3" Click="CloseTab_Click" Tag="{Binding}"
                         Style="{DynamicResource TabCloseBtn}" ToolTip="Close tab"
+                        Width="14" Height="14" Margin="4,0,0,0"
                         Visibility="{Binding RelativeSource={RelativeSource AncestorType=Grid},
                                      Path=IsMouseOver, Converter={StaticResource BoolToVis}}">
                     <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextMuted}"
-                          StrokeThickness="1.2" Width="7" Height="7" Stretch="Uniform"
+                          StrokeThickness="1" Width="6" Height="6" Stretch="Uniform"
                           StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                 </Button>
             </Grid>
@@ -53,208 +66,152 @@
                       GlassFrameThickness="0" CornerRadius="0"/>
     </WindowChrome.WindowChrome>
 
-    <DockPanel>
+    <Grid>
+        <!-- Main layout: toolbar on top, content fills rest -->
+        <DockPanel>
 
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  TOOLBAR — Full width. One row. Everything essential.  -->
-        <!--  Stride branding | nav buttons | address bar | win ctrl  -->
-        <!--  44px height. Draggable background.                    -->
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <Border x:Name="Toolbar" DockPanel.Dock="Top" Height="44"
-                Background="{DynamicResource SidebarBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="0,0,0,1"
-                MouseLeftButtonDown="TitleBar_MouseDown">
-            <Grid x:Name="ToolbarRow" Margin="12,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>    <!-- Nav buttons -->
-                    <ColumnDefinition Width="*"/>       <!-- Address bar (fills) -->
-                    <ColumnDefinition Width="Auto"/>    <!-- Zoom indicator -->
-                    <ColumnDefinition Width="Auto"/>    <!-- Window controls -->
-                </Grid.ColumnDefinitions>
-
-                <!-- Navigation: ← → ↻ -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal"
-                            VerticalAlignment="Center" Margin="0,0,8,0">
-                    <Button Click="GoBack_Click" Style="{DynamicResource IconBtn}"
-                            Width="30" Height="30" ToolTip="Back (Alt+Left)">
-                        <Path Data="{StaticResource IconBack}"
-                              Stroke="{DynamicResource TextSecondary}"
-                              StrokeThickness="1.6" Width="11" Height="11"
-                              Stretch="Uniform" StrokeStartLineCap="Round"
-                              StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                    </Button>
-                    <Button Click="GoForward_Click" Style="{DynamicResource IconBtn}"
-                            Width="30" Height="30" ToolTip="Forward (Alt+Right)">
-                        <Path Data="{StaticResource IconForward}"
-                              Stroke="{DynamicResource TextSecondary}"
-                              StrokeThickness="1.6" Width="11" Height="11"
-                              Stretch="Uniform" StrokeStartLineCap="Round"
-                              StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                    </Button>
-                    <Button Click="Refresh_Click" Style="{DynamicResource IconBtn}"
-                            Width="30" Height="30" ToolTip="Refresh (F5)">
-                        <Path Data="{StaticResource IconRefresh}"
-                              Stroke="{DynamicResource TextSecondary}"
-                              StrokeThickness="1.6" Width="11" Height="11"
-                              Stretch="Uniform" StrokeStartLineCap="Round"
-                              StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                              Fill="Transparent"/>
-                    </Button>
-                </StackPanel>
-
-                <!-- Address bar with security icon overlay -->
-                <Grid Grid.Column="1" Margin="4,6,8,6">
-                    <TextBox x:Name="AddressBar"
-                             Style="{DynamicResource AddressBarStyle}"
-                             Text="{Binding AddressText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             KeyDown="AddressBar_KeyDown"
-                             GotFocus="AddressBar_GotFocus"
-                             PreviewMouseLeftButtonDown="AddressBar_PreviewMouseDown"/>
-                    <!-- Security icon — sits over the template globe, code-behind swaps it -->
-                    <Path x:Name="SecurityIcon"
-                          Data="{StaticResource IconGlobe}"
-                          Stroke="{DynamicResource TextMuted}"
-                          StrokeThickness="1.2" Width="13" Height="13"
-                          Stretch="Uniform" HorizontalAlignment="Left"
-                          VerticalAlignment="Center" Margin="10,0,0,0"
-                          IsHitTestVisible="False"/>
-                </Grid>
-
-                <!-- Zoom indicator -->
-                <TextBlock x:Name="ZoomIndicator" Grid.Column="2"
-                           VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextMuted}"
-                           FontSize="11" FontFamily="{DynamicResource UIFont}"
-                           Margin="0,0,4,0" Visibility="Collapsed"
-                           Cursor="Hand"
-                           MouseLeftButtonDown="ZoomIndicator_Click"/>
-
-                <!-- Window controls: — □ × -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal"
-                            VerticalAlignment="Stretch">
-                    <Button Click="Minimize_Click" Style="{DynamicResource TitleBtn}">
-                        <Path Data="{StaticResource IconMinimize}"
-                              Stroke="{DynamicResource TextSecondary}"
-                              StrokeThickness="1" Width="10" Height="1"
-                              Stretch="Fill"/>
-                    </Button>
-                    <Button Click="Maximize_Click" Style="{DynamicResource TitleBtn}">
-                        <Path Data="{StaticResource IconMaximize}"
-                              Stroke="{DynamicResource TextSecondary}"
-                              StrokeThickness="1" Width="10" Height="10"
-                              Stretch="Uniform" Fill="Transparent"/>
-                    </Button>
-                    <Button Click="Close_Click" Style="{DynamicResource CloseTitleBtn}">
-                        <Path Data="{StaticResource IconClose}"
-                              Stroke="{DynamicResource TextSecondary}"
-                              StrokeThickness="1.2" Width="10" Height="10"
-                              Stretch="Uniform" StrokeStartLineCap="Round"
-                              StrokeEndLineCap="Round"/>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  BODY — Sidebar + Content side by side below toolbar   -->
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="220" MinWidth="140" MaxWidth="400"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- ─── SIDEBAR — Tabs only. Clean. ─── -->
-            <Border x:Name="Sidebar" Grid.Column="0"
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!--  TAB STRIP — 36px. Favicon pills + nav + controls.    -->
+            <!--  This IS the toolbar. No separate address bar.        -->
+            <!--  Stride signature: compact, warm, minimal.            -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <Border x:Name="Toolbar" DockPanel.Dock="Top" Height="36"
                     Background="{DynamicResource SidebarBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
-                    BorderThickness="0,0,1,0">
-                <DockPanel>
+                    BorderThickness="0,0,0,1"
+                    MouseLeftButtonDown="TitleBar_MouseDown">
+                <Grid x:Name="ToolbarRow" Margin="8,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>    <!-- Nav buttons -->
+                        <ColumnDefinition Width="*"/>       <!-- Tab strip (fills) -->
+                        <ColumnDefinition Width="Auto"/>    <!-- URL label -->
+                        <ColumnDefinition Width="Auto"/>    <!-- Action buttons -->
+                        <ColumnDefinition Width="Auto"/>    <!-- Window controls -->
+                    </Grid.ColumnDefinitions>
 
-                    <!-- Bottom: action buttons -->
-                    <Border DockPanel.Dock="Bottom"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="0,1,0,0"
-                            Margin="0,4,0,0">
-                        <StackPanel Margin="6,8,6,8">
-                            <Button Click="NewTab_Click" Style="{DynamicResource SidebarActionBtn}"
-                                    ToolTip="New Tab (Ctrl+T)">
-                                <StackPanel Orientation="Horizontal">
-                                    <Path Data="{StaticResource IconPlus}"
-                                          Stroke="{DynamicResource TextMuted}"
-                                          StrokeThickness="1.4" Width="12" Height="12"
-                                          Stretch="Uniform" StrokeStartLineCap="Round"
-                                          StrokeEndLineCap="Round" VerticalAlignment="Center"/>
-                                    <TextBlock Text="New Tab" Foreground="{DynamicResource TextMuted}"
-                                               FontSize="13" FontFamily="{DynamicResource UIFont}"
-                                               Margin="10,0,0,0" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Click="Settings_Click" Style="{DynamicResource SidebarActionBtn}"
-                                    ToolTip="Settings">
-                                <StackPanel Orientation="Horizontal">
-                                    <Path Data="{StaticResource IconSettings}"
-                                          Stroke="{DynamicResource TextMuted}"
-                                          StrokeThickness="1.4" Width="12" Height="12"
-                                          Stretch="Uniform" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Settings" Foreground="{DynamicResource TextMuted}"
-                                               FontSize="13" FontFamily="{DynamicResource UIFont}"
-                                               Margin="10,0,0,0" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Click="OneTab_Click" Style="{DynamicResource SidebarActionBtn}"
-                                    ToolTip="OneTab">
-                                <StackPanel Orientation="Horizontal">
-                                    <Path Data="{StaticResource IconTabList}"
-                                          Stroke="{DynamicResource TextMuted}"
-                                          StrokeThickness="1.4" Width="12" Height="12"
-                                          Stretch="Uniform" StrokeStartLineCap="Round"
-                                          StrokeEndLineCap="Round" VerticalAlignment="Center"/>
-                                    <TextBlock Text="OneTab" Foreground="{DynamicResource TextMuted}"
-                                               FontSize="13" FontFamily="{DynamicResource UIFont}"
-                                               Margin="10,0,0,0" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Border>
+                    <!-- Navigation: ← → ↻ -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="0,0,4,0">
+                        <Button Click="GoBack_Click" Style="{DynamicResource IconBtn}"
+                                Width="26" Height="26" ToolTip="Back (Alt+Left)">
+                            <Path Data="{StaticResource IconBack}"
+                                  Stroke="{DynamicResource TextSecondary}"
+                                  StrokeThickness="1.4" Width="10" Height="10"
+                                  Stretch="Uniform" StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                        </Button>
+                        <Button Click="GoForward_Click" Style="{DynamicResource IconBtn}"
+                                Width="26" Height="26" ToolTip="Forward (Alt+Right)">
+                            <Path Data="{StaticResource IconForward}"
+                                  Stroke="{DynamicResource TextSecondary}"
+                                  StrokeThickness="1.4" Width="10" Height="10"
+                                  Stretch="Uniform" StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                        </Button>
+                        <Button Click="Refresh_Click" Style="{DynamicResource IconBtn}"
+                                Width="26" Height="26" ToolTip="Refresh (F5)">
+                            <Path Data="{StaticResource IconRefresh}"
+                                  Stroke="{DynamicResource TextSecondary}"
+                                  StrokeThickness="1.4" Width="10" Height="10"
+                                  Stretch="Uniform" StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Fill="Transparent"/>
+                        </Button>
+                    </StackPanel>
 
-                    <!-- Tab list — fills remaining space -->
-                    <ListBox x:Name="TabList"
-                             Style="{DynamicResource HorizontalTabListStyle}"
+                    <!-- Horizontal tab strip — favicon pills -->
+                    <ListBox x:Name="TabList" Grid.Column="1"
+                             Style="{DynamicResource FaviconTabListStyle}"
                              SelectionChanged="TabList_SelectionChanged"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
                              Background="Transparent" BorderThickness="0"
-                             Margin="0,8,0,0"
+                             Margin="4,0,4,0"
+                             VerticalAlignment="Center"
                              PreviewMouseLeftButtonDown="TabList_PreviewMouseLeftButtonDown"
                              PreviewMouseMove="TabList_PreviewMouseMove"
                              Drop="TabList_Drop" AllowDrop="True"
                              ItemTemplate="{StaticResource TabItemTemplate}">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <controls:AnimatedStackPanel Orientation="Vertical"/>
+                                <StackPanel Orientation="Horizontal"/>
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                     </ListBox>
 
-                </DockPanel>
+                    <!-- URL label — clickable, shows current domain -->
+                    <Border Grid.Column="2" Margin="4,4,4,4" Cursor="Hand"
+                            Background="{DynamicResource SurfaceBrush}"
+                            CornerRadius="6" Padding="8,0"
+                            MouseLeftButtonDown="UrlLabel_Click"
+                            ToolTip="Click to edit URL (Ctrl+L)">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path x:Name="SecurityIcon"
+                                  Data="{StaticResource IconGlobe}"
+                                  Stroke="{DynamicResource TextMuted}"
+                                  StrokeThickness="1" Width="11" Height="11"
+                                  Stretch="Uniform" VerticalAlignment="Center"
+                                  Margin="0,0,6,0"/>
+                            <TextBlock x:Name="UrlLabel"
+                                       Text="New Tab"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       FontSize="12" FontFamily="{DynamicResource UIFont}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxWidth="240"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Action buttons: + New Tab, Search -->
+                    <StackPanel Grid.Column="3" Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="0,0,4,0">
+                        <Button Click="NewTab_Click" Style="{DynamicResource IconBtn}"
+                                Width="26" Height="26" ToolTip="New Tab (Ctrl+T)">
+                            <Path Data="{StaticResource IconPlus}"
+                                  Stroke="{DynamicResource TextSecondary}"
+                                  StrokeThickness="1.4" Width="10" Height="10"
+                                  Stretch="Uniform" StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"/>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Window controls: — □ × -->
+                    <StackPanel Grid.Column="4" Orientation="Horizontal"
+                                VerticalAlignment="Stretch">
+                        <Button Click="Minimize_Click" Style="{DynamicResource TitleBtn}"
+                                Width="42" Height="36">
+                            <Path Data="{StaticResource IconMinimize}"
+                                  Stroke="{DynamicResource TextSecondary}"
+                                  StrokeThickness="1" Width="10" Height="1"
+                                  Stretch="Fill"/>
+                        </Button>
+                        <Button Click="Maximize_Click" Style="{DynamicResource TitleBtn}"
+                                Width="42" Height="36">
+                            <Path Data="{StaticResource IconMaximize}"
+                                  Stroke="{DynamicResource TextSecondary}"
+                                  StrokeThickness="1" Width="10" Height="10"
+                                  Stretch="Uniform" Fill="Transparent"/>
+                        </Button>
+                        <Button Click="Close_Click" Style="{DynamicResource CloseTitleBtn}"
+                                Width="42" Height="36">
+                            <Path Data="{StaticResource IconClose}"
+                                  Stroke="{DynamicResource TextSecondary}"
+                                  StrokeThickness="1.2" Width="10" Height="10"
+                                  Stretch="Uniform" StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
             </Border>
 
-            <!-- ─── SIDEBAR SPLITTER — Drag to resize ─── -->
-            <GridSplitter x:Name="SidebarSplitter" Grid.Column="1" Width="4"
-                          Background="Transparent" HorizontalAlignment="Center"
-                          VerticalAlignment="Stretch" ResizeDirection="Columns"
-                          Cursor="SizeWE"/>
-
-            <!-- ─── CONTENT — Pure web content ─── -->
-            <Border x:Name="ContentArea" Grid.Column="2"
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!--  CONTENT — Full width. No sidebar. Just web content.  -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <Border x:Name="ContentArea"
                     Background="{DynamicResource BaseBrush}"
-                    ClipToBounds="True"
-                    Margin="0,0,0,0">
+                    ClipToBounds="True">
                 <Grid>
-                    <!-- Loading bar — 2px ember gradient sweep -->
+                    <!-- Loading bar — 2px amber gradient sweep -->
                     <Border x:Name="LoadingBar" Height="2" VerticalAlignment="Top"
                             Visibility="Collapsed" Panel.ZIndex="10"
                             Background="{DynamicResource AccentWash}" ClipToBounds="True">
@@ -273,6 +230,45 @@
                     <Grid x:Name="WebViewHost" Background="{DynamicResource BaseBrush}"/>
                 </Grid>
             </Border>
+        </DockPanel>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  COMMAND BAR — Floating overlay. Centered. On-demand.  -->
+        <!--  Appears on Ctrl+L / click URL label. Disappears on   -->
+        <!--  Escape or click-away. No permanent address bar.      -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <Grid x:Name="CommandBarOverlay" Visibility="Collapsed" Panel.ZIndex="100">
+            <!-- Backdrop dim -->
+            <Border Background="#40000000"
+                    MouseLeftButtonDown="CommandBarBackdrop_Click"/>
+            <!-- Centered command bar -->
+            <Border x:Name="CommandBarPanel"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Margin="0,60,0,0"
+                    Width="520"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="4">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="24" ShadowDepth="4"
+                                      Opacity="0.4" Color="Black"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBox x:Name="AddressBar"
+                             Style="{DynamicResource CommandBarInputStyle}"
+                             Text="{Binding AddressText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             KeyDown="AddressBar_KeyDown"
+                             GotFocus="AddressBar_GotFocus"
+                             LostFocus="AddressBar_LostFocus"
+                             PreviewMouseLeftButtonDown="AddressBar_PreviewMouseDown"/>
+                </Grid>
+            </Border>
         </Grid>
-    </DockPanel>
+    </Grid>
 </Window>

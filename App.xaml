@@ -17,33 +17,32 @@
         <FontFamily x:Key="UIFont">Segoe UI Variable, Segoe UI</FontFamily>
 
         <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  COLORS — Stride Identity                                -->
+        <!--  COLORS — Stride Identity                              -->
         <!--                                                        -->
-        <!--  Stride is dark. Not "dark mode" — dark is the native    -->
-        <!--  state. The browser dissolves so content breathes.     -->
+        <!--  Warm dark. Not cold grey — warm like firelight.        -->
+        <!--  Swiss Minimalism: single accent, zero decoration.     -->
         <!--                                                        -->
-        <!--  Void     #0C0C0C  — deepest layer, content floats on  -->
-        <!--  Ink      #141414  — sidebar, surfaces. Barely above.  -->
-        <!--  Graphite #1A1A1A  — elevated (address bar, inputs)    -->
-        <!--  Smoke    #222222  — hover/active. Most visible chrome -->
-        <!--  Wire     #1E1E1E  — borders. Sensed, not seen.        -->
-        <!--  Bone     #D4D4D4  — primary text. Warm neutral.       -->
-        <!--  Ash      #7A7A7A  — secondary (tab titles, labels)    -->
-        <!--  Stone    #444444  — muted (disabled, hints)           -->
-        <!--  Ember    #D4A574  — accent. Warm amber. Interaction   -->
-        <!--                     only — never decoration. A flame   -->
+        <!--  Base     #111113  — near-black, warmer than pure #000 -->
+        <!--  Surface  #1A1A1E  — elevated surfaces (toolbar)       -->
+        <!--  Hover    #252528  — hover/active states               -->
+        <!--  Border   #2A2A2E  — barely visible, sensed not seen   -->
+        <!--  Text     #E8E4DF  — warm white, not sterile #FFF      -->
+        <!--  Muted    #8A8680  — warm grey (secondary labels)      -->
+        <!--  Dim      #4A4844  — disabled, hints                   -->
+        <!--  Ember    #D4A574  — THE accent. Warm amber. One color -->
+        <!--                     for every interaction. A flame     -->
         <!--                     in the dark.                       -->
         <!-- ═══════════════════════════════════════════════════════ -->
-        <Color x:Key="BaseColor">#0C0C0C</Color>
-        <Color x:Key="SidebarColor">#141414</Color>
-        <Color x:Key="SurfaceColor">#1A1A1A</Color>
-        <Color x:Key="SurfaceHoverColor">#222222</Color>
-        <Color x:Key="BorderColor">#1E1E1E</Color>
+        <Color x:Key="BaseColor">#111113</Color>
+        <Color x:Key="SidebarColor">#151517</Color>
+        <Color x:Key="SurfaceColor">#1A1A1E</Color>
+        <Color x:Key="SurfaceHoverColor">#252528</Color>
+        <Color x:Key="BorderColor">#2A2A2E</Color>
         <Color x:Key="AccentColor">#D4A574</Color>
-        <Color x:Key="AccentWashColor">#15D4A574</Color>
-        <Color x:Key="TextPrimaryColor">#D4D4D4</Color>
-        <Color x:Key="TextSecondaryColor">#7A7A7A</Color>
-        <Color x:Key="TextMutedColor">#444444</Color>
+        <Color x:Key="AccentWashColor">#18D4A574</Color>
+        <Color x:Key="TextPrimaryColor">#E8E4DF</Color>
+        <Color x:Key="TextSecondaryColor">#8A8680</Color>
+        <Color x:Key="TextMutedColor">#4A4844</Color>
         <Color x:Key="DangerColor">#C4453A</Color>
         <Color x:Key="LoadingBarFadeColor">#00D4A574</Color>
         <Color x:Key="LoadingBarGlowColor">#D4A574</Color>
@@ -232,8 +231,8 @@
         <!-- ═══════════════════════════════════════════════════════ -->
         <Style x:Key="AddressBarStyle" TargetType="TextBox">
             <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-            <Setter Property="Foreground" Value="#D4D4D4"/>
-            <Setter Property="CaretBrush" Value="#D4D4D4"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
             <Setter Property="SelectionBrush" Value="#44FFFFFF"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontSize" Value="13"/>
@@ -256,7 +255,7 @@
                                 <!-- Placeholder -->
                                 <TextBlock x:Name="Placeholder"
                                            Text="Search or enter URL"
-                                           Foreground="#444"
+                                           Foreground="{StaticResource TextMuted}"
                                            FontSize="13"
                                            FontFamily="{StaticResource UIFont}"
                                            VerticalAlignment="Center"
@@ -280,13 +279,11 @@
         </Style>
 
         <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  TAB LIST                                              -->
-        <!--  3px left ember pill on selected tab.                 -->
-        <!--  EmberWash bg on selected. 6px radius.                 -->
-        <!--  Hover: rgba(255,255,255,0.04) — barely there.         -->
-        <!--  Selected tab glows faintly. Unselected recedes.      -->
+        <!--  FAVICON TAB LIST — Stride signature                   -->
+        <!--  Horizontal pills. Active = amber pill. Inactive = icon.-->
+        <!--  14px radius on active pill. Compact 2px horizontal gap.-->
         <!-- ═══════════════════════════════════════════════════════ -->
-        <Style x:Key="HorizontalTabListStyle" TargetType="ListBox">
+        <Style x:Key="FaviconTabListStyle" TargetType="ListBox">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="0"/>
@@ -295,31 +292,84 @@
                 <Setter.Value>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="Margin" Value="1,0"/>
                         <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Opacity" Value="0.7"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">
-                                    <Grid Margin="6,1,6,1">
-                                        <Border Background="{TemplateBinding Background}"
-                                                CornerRadius="6" Padding="0">
-                                            <ContentPresenter/>
-                                        </Border>
-                                    </Grid>
+                                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                            CornerRadius="14" Padding="4,2">
+                                        <ContentPresenter VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background"
+                                                    Value="#0DFFFFFF"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#0AFFFFFF"/>
+                                <Setter Property="Opacity" Value="1"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Background" Value="{DynamicResource AccentWash}"/>
+                                <Setter Property="Opacity" Value="1"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  COMMAND BAR INPUT — Floating URL/search bar           -->
+        <!--  Large, clean, centered. 13px Inter. No border.        -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <Style x:Key="CommandBarInputStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="SelectionBrush" Value="#44FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontFamily" Value="{StaticResource UIFont}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8" Padding="12,10">
+                            <Grid>
+                                <ScrollViewer x:Name="PART_ContentHost"
+                                              VerticalAlignment="Center"
+                                              Focusable="False"/>
+                                <TextBlock x:Name="Placeholder"
+                                           Text="Search or enter URL"
+                                           Foreground="{StaticResource TextMuted}"
+                                           FontSize="14"
+                                           FontFamily="{StaticResource UIFont}"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False"
+                                           Visibility="Collapsed"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Text" Value=""/>
+                                    <Condition Property="IsFocused" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Placeholder" Property="Visibility" Value="Visible"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
