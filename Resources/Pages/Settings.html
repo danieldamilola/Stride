@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Settings - Stride</title>
     <style>
+        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
@@ -111,7 +112,7 @@
             transition: transform 0.2s, background 0.2s;
         }
         .toggle:checked {
-            background: #D4A574;
+            background: var(--accent);
         }
         .toggle:checked::before {
             transform: translateX(16px);
@@ -140,7 +141,7 @@
             border-color: #333;
         }
         .select:focus {
-            border-color: #D4A574;
+            border-color: var(--accent);
         }
 
         /* ── Number input ── */
@@ -158,15 +159,15 @@
             transition: border-color 0.15s;
         }
         .input-number:focus {
-            border-color: #D4A574;
+            border-color: var(--accent);
         }
 
         /* ── Action button ── */
         .action-btn {
             padding: 9px 20px;
             background: transparent;
-            color: #D4A574;
-            border: 1px solid #D4A574;
+            color: var(--accent);
+            border: 1px solid var(--accent);
             border-radius: 8px;
             font-size: 13px;
             font-weight: 500;
@@ -175,7 +176,7 @@
             transition: background 0.15s, color 0.15s;
         }
         .action-btn:hover {
-            background: #D4A574;
+            background: var(--accent);
             color: #0C0C0C;
         }
 
@@ -256,9 +257,9 @@
             background: #222;
         }
         .shortcut-badge.recording {
-            border-color: #D4A574;
+            border-color: var(--accent);
             background: #1A1510;
-            color: #D4A574;
+            color: var(--accent);
             animation: pulse 1.5s ease-in-out infinite;
         }
         @keyframes pulse {
@@ -277,7 +278,7 @@
             font-family: inherit;
         }
         .shortcut-reset:hover {
-            color: #D4A574;
+            color: var(--accent);
         }
         .shortcut-controls {
             display: flex;

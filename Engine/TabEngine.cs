@@ -268,7 +268,7 @@ public sealed class TabEngine : IDisposable
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
 
         if (url == InternalUrls.NewTab)
-            wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts));
+            wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)));
         else
         {
             try { wv.CoreWebView2.Navigate(url); }
@@ -285,13 +285,13 @@ public sealed class TabEngine : IDisposable
     public void NavigateToOneTab(BrowserTab tab, List<OneTabGroup> groups)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        wv.CoreWebView2.NavigateToString(_pages.OneTabPage(groups));
+        wv.CoreWebView2.NavigateToString(_pages.OneTabPage(groups, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)));
     }
 
     public void NavigateToHistory(BrowserTab tab, List<Models.HistoryEntry> entries)
     {
         if (_webViews.TryGetValue(tab.Id, out var wv))
-            wv.CoreWebView2.NavigateToString(_pages.HistoryPage(entries));
+            wv.CoreWebView2.NavigateToString(_pages.HistoryPage(entries, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)));
     }
 
     public void GoBack()
@@ -454,11 +454,11 @@ public sealed class TabEngine : IDisposable
             return;
 
         if (tab.Url == InternalUrls.NewTab)
-            wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts));
+            wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)));
         else
         {
             try { wv.CoreWebView2.Navigate(tab.Url); }
-            catch (ArgumentException) { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts)); }
+            catch (ArgumentException) { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor))); }
         }
     }
 
@@ -616,7 +616,7 @@ public sealed class TabEngine : IDisposable
                             CoreWebView2WebErrorStatus.CertificateIsInvalid => "The site's security certificate is not trusted.",
                             _ => $"Navigation failed: {e.WebErrorStatus} (Code: {(int)e.WebErrorStatus})"
                         };
-                        try { wv.CoreWebView2.NavigateToString(_pages.ErrorPage(tab.Url, errorMsg)); } catch { }
+                        try { wv.CoreWebView2.NavigateToString(_pages.ErrorPage(tab.Url, errorMsg, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor))); } catch { }
                         return;
                     }
 

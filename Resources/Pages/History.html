@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>History - Stride</title>
     <style>
+        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #0C0C0C;
@@ -39,7 +40,7 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        .tab-title:hover { color: #D4A574; }
+        .tab-title:hover { color: var(--accent); }
         .tab-url {
             color: #444444;
             font-size: 11px;

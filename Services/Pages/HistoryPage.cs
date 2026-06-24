@@ -8,7 +8,7 @@ namespace StrideBrowser.Services.Pages;
 /// <summary>Generates the history page HTML with browsing entries grouped by date.</summary>
 public sealed class HistoryPage
 {
-    public string Render(List<HistoryEntry> entries)
+    public string Render(List<HistoryEntry> entries, string accentColor, string accentRgb)
     {
         var sb = new StringBuilder();
 
@@ -48,6 +48,11 @@ public sealed class HistoryPage
             sb.Append("<div class='empty'>No browsing history yet.</div>");
 
         return Helpers.ResourceLoader.LoadTemplate("Resources.Pages.History.html",
-            new Dictionary<string, string> { ["CONTENT"] = sb.ToString() });
+            new Dictionary<string, string>
+            {
+                ["CONTENT"] = sb.ToString(),
+                ["ACCENT"] = accentColor,
+                ["ACCENT_RGB"] = accentRgb
+            });
     }
 }

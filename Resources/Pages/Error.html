@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Error - Stride</title>
     <style>
+        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #0C0C0C;
@@ -21,7 +22,7 @@
         .url { color: #444444; font-size: 12px; word-break: break-all; max-width: 500px; text-align: center; margin-bottom: 24px; }
         .retry-btn {
             padding: 10px 24px;
-            background: #D4A574;
+            background: var(--accent);
             color: #0C0C0C;
             border: none;
             border-radius: 8px;
@@ -30,7 +31,7 @@
             font-family: inherit;
             transition: opacity 0.2s;
         }
-        .retry-btn:hover { background: #C4956A; }
+        .retry-btn:hover { background: var(--accent); filter: brightness(0.9); }
     </style>
 </head>
 <body>

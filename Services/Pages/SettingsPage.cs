@@ -42,6 +42,8 @@ public sealed class SettingsPage
                 ["SIDEBAR_LEFT"] = settings.IsSidebarOnRight ? "" : " selected",
                 ["SIDEBAR_RIGHT"] = settings.IsSidebarOnRight ? " selected" : "",
                 ["ACCENT_COLOR"] = settings.AccentColor,
+                ["ACCENT"] = settings.AccentColor,
+                ["ACCENT_RGB"] = HexToRgb(settings.AccentColor),
                 ["YT_QUALITY_AUTO"] = SelStr(settings.YtDefaultQuality, "auto"),
                 ["YT_QUALITY_HIGHEST"] = SelStr(settings.YtDefaultQuality, "highest"),
                 ["YT_QUALITY_TINY"] = SelStr(settings.YtDefaultQuality, "tiny"),
@@ -137,5 +139,15 @@ public sealed class SettingsPage
     {
         // "Ctrl+Shift+T" → "Ctrl + Shift + T"
         return combo.Replace("+", " + ");
+    }
+
+    private static string HexToRgb(string hex)
+    {
+        hex = hex.TrimStart('#');
+        if (hex.Length != 6) return "212,165,116";
+        var r = Convert.ToInt32(hex[..2], 16);
+        var g = Convert.ToInt32(hex[2..4], 16);
+        var b = Convert.ToInt32(hex[4..6], 16);
+        return $"{r},{g},{b}";
     }
 }

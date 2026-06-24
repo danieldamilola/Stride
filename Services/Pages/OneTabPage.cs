@@ -8,7 +8,7 @@ namespace StrideBrowser.Services.Pages;
 /// <summary>Generates the OneTab page HTML showing saved tab groups.</summary>
 public sealed class OneTabPage
 {
-    public string Render(List<OneTabGroup> groups)
+    public string Render(List<OneTabGroup> groups, string accentColor, string accentRgb)
     {
         var sb = new StringBuilder();
         var search = "";
@@ -68,7 +68,9 @@ public sealed class OneTabPage
             new Dictionary<string, string>
             {
                 ["CONTENT"] = sb.ToString(),
-                ["SEARCH"] = search
+                ["SEARCH"] = search,
+                ["ACCENT"] = accentColor,
+                ["ACCENT_RGB"] = accentRgb
             });
     }
 }

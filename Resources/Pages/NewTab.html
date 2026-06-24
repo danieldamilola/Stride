@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Tab - Stride</title>
     <style>
+        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -53,7 +54,7 @@
         }
 
         .search-input:focus {
-            border-color: rgba(212,165,116,0.35);
+            border-color: rgba(var(--accent-rgb),0.35);
         }
 
         .search-input::placeholder {
@@ -151,7 +152,7 @@
         }
 
         .shortcut-tile .tile-remove:hover {
-            background: #D4A574;
+            background: var(--accent);
             color: #111113;
         }
 
@@ -170,8 +171,8 @@
         }
 
         .shortcut-add:hover {
-            border-color: rgba(212,165,116,0.35);
-            background: rgba(212,165,116,0.04);
+            border-color: rgba(var(--accent-rgb),0.35);
+            background: rgba(var(--accent-rgb),0.04);
         }
 
         .shortcut-add svg {
@@ -182,7 +183,7 @@
         }
 
         .shortcut-add:hover svg {
-            color: #D4A574;
+            color: var(--accent);
         }
 
         /* ── Add Dialog ── */
@@ -239,7 +240,7 @@
         }
 
         .dialog input:focus {
-            border-color: rgba(212,165,116,0.35);
+            border-color: rgba(var(--accent-rgb),0.35);
         }
 
         .dialog input::placeholder {
@@ -271,13 +272,13 @@
         }
 
         .dialog-actions button.primary {
-            background: rgba(212,165,116,0.12);
-            border-color: rgba(212,165,116,0.25);
-            color: #D4A574;
+            background: rgba(var(--accent-rgb),0.12);
+            border-color: rgba(var(--accent-rgb),0.25);
+            color: var(--accent);
         }
 
         .dialog-actions button.primary:hover {
-            background: rgba(212,165,116,0.2);
+            background: rgba(var(--accent-rgb),0.2);
         }
 
         /* ── Keyboard Shortcuts — barely visible, functional ── */
