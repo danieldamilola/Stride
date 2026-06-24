@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>StrideBrowser</RootNamespace>
-    <AssemblyName>StrideBrowser</AssemblyName>
+    <AssemblyName>Stride</AssemblyName>
     <!-- <ApplicationIcon>icons\stride-browser.ico</ApplicationIcon> -->
   </PropertyGroup>
 

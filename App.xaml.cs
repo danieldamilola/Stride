@@ -15,7 +15,7 @@ public partial class App : Application
         base.OnStartup(e);
 
         // Set AppUserModelID for taskbar grouping
-        Interop.NativeMethods.SetCurrentProcessExplicitAppUserModelID("StrideBrowser");
+        Interop.NativeMethods.SetCurrentProcessExplicitAppUserModelID("Stride");
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
