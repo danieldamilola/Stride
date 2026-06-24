@@ -353,13 +353,31 @@ public sealed class TabEngine : IDisposable
         return 1.0;
     }
 
-    public void ApplyDarkModeToAll(bool enabled)
+    public async void ApplyDarkModeToAll(bool enabled)
     {
         var scheme = enabled ? CoreWebView2PreferredColorScheme.Dark : CoreWebView2PreferredColorScheme.Auto;
         foreach (var (_, wv) in _webViews)
         {
-            if (wv.CoreWebView2 is not null)
-                wv.CoreWebView2.Profile.PreferredColorScheme = scheme;
+            if (wv.CoreWebView2 is null) continue;
+            wv.CoreWebView2.Profile.PreferredColorScheme = scheme;
+
+            // Also inject/remove Dark Reader on already-loaded pages
+            try
+            {
+                if (enabled)
+                {
+                    var darkReaderJs = ResourceLoader.Load("Resources.Scripts.darkreader.min.js");
+                    var forceDarkJs = ResourceLoader.Load("Resources.Scripts.force-dark-mode.js");
+                    await wv.CoreWebView2.ExecuteScriptAsync(darkReaderJs);
+                    await wv.CoreWebView2.ExecuteScriptAsync(forceDarkJs);
+                }
+                else
+                {
+                    await wv.CoreWebView2.ExecuteScriptAsync(
+                        "if(typeof DarkReader!=='undefined')DarkReader.disable();");
+                }
+            }
+            catch { /* Page may not be ready */ }
         }
     }
 
