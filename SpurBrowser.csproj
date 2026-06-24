@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>StrideBrowser</RootNamespace>
     <AssemblyName>Stride</AssemblyName>
-    <!-- <ApplicationIcon>icons\stride-browser.ico</ApplicationIcon> -->
+    <ApplicationIcon>icons\stride.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +26,9 @@
   <!-- App icons — copied to output for Window.Icon and taskbar -->
   <ItemGroup>
     <Content Include="icons\stride-browser-*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\stride.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

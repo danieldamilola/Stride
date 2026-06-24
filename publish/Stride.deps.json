@@ -1,0 +1,133 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0/win-x64",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {},
+    ".NETCoreApp,Version=v9.0/win-x64": {
+      "Stride/1.0.0": {
+        "dependencies": {
+          "CommunityToolkit.Mvvm": "8.4.2",
+          "Microsoft.Extensions.DependencyInjection": "9.0.17",
+          "Microsoft.Web.WebView2": "1.0.4022.49",
+          "Microsoft.Web.WebView2.Core": "1.0.4022.49",
+          "Microsoft.Web.WebView2.WinForms": "1.0.4022.49",
+          "Microsoft.Web.WebView2.Wpf": "1.0.4022.49"
+        },
+        "runtime": {
+          "Stride.dll": {}
+        }
+      },
+      "CommunityToolkit.Mvvm/8.4.2": {
+        "runtime": {
+          "lib/net8.0/CommunityToolkit.Mvvm.dll": {
+            "assemblyVersion": "8.4.0.0",
+            "fileVersion": "8.4.2.1"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection/9.0.17": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.17"
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.DependencyInjection.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.1726.26416"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.17": {
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.1726.26416"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2/1.0.4022.49": {
+        "native": {
+          "runtimes/win-x64/native/WebView2Loader.dll": {
+            "fileVersion": "1.0.4022.49"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.Core/1.0.4022.49": {
+        "runtime": {
+          "Microsoft.Web.WebView2.Core.dll": {
+            "assemblyVersion": "1.0.4022.49",
+            "fileVersion": "1.0.4022.49"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.WinForms/1.0.4022.49": {
+        "runtime": {
+          "Microsoft.Web.WebView2.WinForms.dll": {
+            "assemblyVersion": "1.0.4022.49",
+            "fileVersion": "1.0.4022.49"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.Wpf/1.0.4022.49": {
+        "runtime": {
+          "Microsoft.Web.WebView2.Wpf.dll": {
+            "assemblyVersion": "1.0.4022.49",
+            "fileVersion": "1.0.4022.49"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Stride/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "CommunityToolkit.Mvvm/8.4.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-WadCzGEc2U+3e20avRLng4qNtt4zoOGWrdUISqJWrHe3/FSnrYjuM5Sb4yQb09LhkBXrrI4Zt3dLKgRMbItsrg==",
+      "path": "communitytoolkit.mvvm/8.4.2",
+      "hashPath": "communitytoolkit.mvvm.8.4.2.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection/9.0.17": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-rEx48tbgwf2oIYi3g3kj2oUV6gWqrASaYD/lmTu7fOPOdQh4/c/lTCHQpSwndI4fElsrZTXGTLjjmTJ8Qn3a6w==",
+      "path": "microsoft.extensions.dependencyinjection/9.0.17",
+      "hashPath": "microsoft.extensions.dependencyinjection.9.0.17.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.17": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/Oy6N+l6aBqKKnjpBhH2MSzzKV+UbjDELuk/OkwJW0auMqWZm14aK7n+QGjscH7JosoI1ChTWf4utUGEA6m2RA==",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/9.0.17",
+      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.9.0.17.nupkg.sha512"
+    },
+    "Microsoft.Web.WebView2/1.0.4022.49": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Dwewh8bbbXoFiF2y0jT3MBEV5ZXZVA7FDbMl6DixUCCLQAoymLMxMwqibdBaY/eWCG/BBSAILUOFDIzJZ9lfNQ==",
+      "path": "microsoft.web.webview2/1.0.4022.49",
+      "hashPath": "microsoft.web.webview2.1.0.4022.49.nupkg.sha512"
+    },
+    "Microsoft.Web.WebView2.Core/1.0.4022.49": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Web.WebView2.WinForms/1.0.4022.49": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Web.WebView2.Wpf/1.0.4022.49": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
