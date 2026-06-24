@@ -11,7 +11,7 @@ namespace StrideBrowser.Services;
 public sealed class YouTubeUnhook
 {
     /// <summary>
-    /// Returns a JS string that sets window.__SPUR_UNHOOK config
+    /// Returns a JS string that sets window.__STRIDE_UNHOOK config
     /// then immediately runs the unhook script.
     /// Returns empty string if unhook is disabled.
     /// </summary>
@@ -44,7 +44,7 @@ public sealed class YouTubeUnhook
             inaptSearch = s.UnhookHideInaptSearch
         };
 
-        var config = $"window.__SPUR_UNHOOK = {JsonSerializer.Serialize(configObj)};";
+        var config = $"window.__STRIDE_UNHOOK = {JsonSerializer.Serialize(configObj)};";
         var script = ResourceLoader.Load("Resources.Scripts.youtube-unhook.js");
 
         return config + "\n" + script;
