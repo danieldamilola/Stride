@@ -416,7 +416,7 @@ public partial class MainWindow : Window
         ShowCommandBar();
     }
 
-    private void ShowCommandBar()
+    private async void ShowCommandBar()
     {
         if (_isCommandBarOpen) return;
         _isCommandBarOpen = true;
@@ -431,6 +431,28 @@ public partial class MainWindow : Window
         {
             _vm.AddressText = "";
         }
+
+        // Capture WebView content as screenshot before hiding (for dimmed preview)
+        try
+        {
+            var core = _engine.GetCoreWebView2();
+            if (core is not null)
+            {
+                using var ms = new System.IO.MemoryStream();
+                await core.CapturePreviewAsync(
+                    Microsoft.Web.WebView2.Core.CoreWebView2CapturePreviewImageFormat.Png, ms);
+                ms.Position = 0;
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.StreamSource = ms;
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                PageSnapshot.Source = bitmap;
+                PageSnapshot.Visibility = Visibility.Visible;
+            }
+        }
+        catch { /* Fallback: no snapshot, just dark background */ }
 
         // Hide WebView — it's a native HWND that renders above WPF overlays (airspace issue)
         WebViewHost.Visibility = Visibility.Hidden;
@@ -470,7 +492,9 @@ public partial class MainWindow : Window
             CommandBarOverlay.Visibility = Visibility.Collapsed;
             CommandBarOverlay.BeginAnimation(OpacityProperty, null);
 
-            // Restore WebView visibility
+            // Restore WebView visibility and clear snapshot
+            PageSnapshot.Visibility = Visibility.Collapsed;
+            PageSnapshot.Source = null;
             WebViewHost.Visibility = Visibility.Visible;
 
             // Return focus to WebView

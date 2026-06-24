@@ -45,16 +45,53 @@
                            RenderOptions.BitmapScalingMode="HighQuality"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center" x:Name="FaviconImage"/>
-                    <!-- INACTIVE close: overlay on favicon, hover-only, hidden when selected -->
+                    <!-- INACTIVE close: overlay on favicon, hover tab to show, hidden when selected -->
                     <Button Click="CloseTab_Click" Tag="{Binding}"
                             ToolTip="Close tab"
                             Width="12" Height="12"
                             HorizontalAlignment="Right" VerticalAlignment="Top"
-                            Margin="0,-2,-2,0">
+                            Margin="0,-2,-2,0" Cursor="Hand">
                         <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource TabCloseBtn}">
-                                <!-- Hide when tab is selected (active tab uses pill close instead) -->
+                            <Style TargetType="Button">
+                                <Setter Property="Opacity" Value="0"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="Transparent" CornerRadius="3" Padding="1">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
                                 <Style.Triggers>
+                                    <!-- Fade in when hovering the TAB (ListBoxItem), not just favicon -->
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     To="1" Duration="0:0:0.08">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <QuadraticEase EasingMode="EaseOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     To="0" Duration="0:0:0.08"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                    <!-- Hide completely when tab is selected (active uses pill close) -->
                                     <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
@@ -292,6 +329,9 @@
                             </Border.Background>
                         </Border>
                     </Border>
+                    <!-- Page snapshot — shown dimmed when command bar is open -->
+                    <Image x:Name="PageSnapshot" Stretch="Fill"
+                           Visibility="Collapsed" Opacity="0.3"/>
                     <!-- WebView2 host -->
                     <Grid x:Name="WebViewHost" Background="{DynamicResource BaseBrush}"/>
                 </Grid>
