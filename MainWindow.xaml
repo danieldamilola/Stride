@@ -255,23 +255,23 @@
         <!--  Escape or click-away. No permanent address bar.      -->
         <!-- ═══════════════════════════════════════════════════════ -->
         <Grid x:Name="CommandBarOverlay" Visibility="Collapsed" Panel.ZIndex="100">
-            <!-- Backdrop dim -->
-            <Border Background="#40000000"
+            <!-- Backdrop dim — 50% black to clearly show floating panel -->
+            <Border Background="#80000000"
                     MouseLeftButtonDown="CommandBarBackdrop_Click"/>
-            <!-- Centered command bar -->
+            <!-- Centered command bar — clearly lighter than the dim backdrop -->
             <Border x:Name="CommandBarPanel"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Top"
-                    Margin="0,60,0,0"
-                    Width="520"
-                    Background="{DynamicResource SurfaceHoverBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
+                    Margin="0,80,0,0"
+                    Width="540"
+                    Background="#2C2C32"
+                    BorderBrush="#444449"
                     BorderThickness="1"
                     CornerRadius="12"
                     Padding="4">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="24" ShadowDepth="4"
-                                      Opacity="0.4" Color="Black"/>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="8"
+                                      Opacity="0.6" Color="Black"/>
                 </Border.Effect>
                 <Grid>
                     <Grid.RowDefinitions>
