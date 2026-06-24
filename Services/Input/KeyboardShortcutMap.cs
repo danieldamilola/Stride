@@ -28,7 +28,8 @@ public sealed class KeyboardShortcutMap
         Func<List<(string url, string title)>> sendAllToOneTab,
         Action<List<(string url, string title)>> saveOneTabGroup,
         Action syncTabsBinding,
-        Func<Task> openOneTab)
+        Func<Task> openOneTab,
+        Func<Task> openSettings)
     {
         var ctrl = ModifierKeys.Control;
         var ctrlShift = ModifierKeys.Control | ModifierKeys.Shift;
@@ -94,6 +95,7 @@ public sealed class KeyboardShortcutMap
             }),
             new(ctrl, Key.H, "History", openHistory),
             new(ctrlShift, Key.O, "OpenOneTab", openOneTab),
+            new(ctrl, Key.OemComma, "OpenSettings", openSettings),
         ];
     }
 

@@ -36,7 +36,7 @@
                        Width="16" Height="16"
                        RenderOptions.BitmapScalingMode="HighQuality"
                        VerticalAlignment="Center"/>
-                <!-- Title — only visible on active tab -->
+                <!-- Title — visible only when tab is selected -->
                 <TextBlock Grid.Column="2" Text="{Binding Title}"
                            Foreground="{DynamicResource TextPrimary}"
                            FontSize="12" FontFamily="{DynamicResource UIFont}"
@@ -45,8 +45,18 @@
                            TextTrimming="CharacterEllipsis"
                            MaxWidth="160"
                            Margin="6,0,0,0"
-                           Visibility="Collapsed"
-                           x:Name="TabTitle"/>
+                           x:Name="TabTitle">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
                 <!-- Close — appears on hover -->
                 <Button Grid.Column="3" Click="CloseTab_Click" Tag="{Binding}"
                         Style="{DynamicResource TabCloseBtn}" ToolTip="Close tab"
@@ -139,28 +149,26 @@
                         </ListBox.ItemsPanel>
                     </ListBox>
 
-                    <!-- URL label — clickable, shows current domain -->
-                    <Border Grid.Column="2" Margin="4,4,4,4" Cursor="Hand"
-                            Background="{DynamicResource SurfaceBrush}"
-                            CornerRadius="6" Padding="8,0"
-                            MouseLeftButtonDown="UrlLabel_Click"
-                            ToolTip="Click to edit URL (Ctrl+L)">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Path x:Name="SecurityIcon"
-                                  Data="{StaticResource IconGlobe}"
-                                  Stroke="{DynamicResource TextMuted}"
-                                  StrokeThickness="1" Width="11" Height="11"
-                                  Stretch="Uniform" VerticalAlignment="Center"
-                                  Margin="0,0,6,0"/>
-                            <TextBlock x:Name="UrlLabel"
-                                       Text="New Tab"
-                                       Foreground="{DynamicResource TextSecondary}"
-                                       FontSize="12" FontFamily="{DynamicResource UIFont}"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       MaxWidth="240"/>
-                        </StackPanel>
-                    </Border>
+                    <!-- URL domain — bare text, no background. Minimal. -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="4,0,8,0"
+                                Cursor="Hand"
+                                MouseLeftButtonDown="UrlLabel_Click"
+                                ToolTip="Click to edit URL (Ctrl+L)">
+                        <Path x:Name="SecurityIcon"
+                              Data="{StaticResource IconGlobe}"
+                              Stroke="{DynamicResource TextMuted}"
+                              StrokeThickness="1" Width="10" Height="10"
+                              Stretch="Uniform" VerticalAlignment="Center"
+                              Margin="0,0,5,0"/>
+                        <TextBlock x:Name="UrlLabel"
+                                   Text="New Tab"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   FontSize="11.5" FontFamily="{DynamicResource UIFont}"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxWidth="200"/>
+                    </StackPanel>
 
                     <!-- Action buttons: + New Tab, Search -->
                     <StackPanel Grid.Column="3" Orientation="Horizontal"

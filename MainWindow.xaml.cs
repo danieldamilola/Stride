@@ -164,7 +164,8 @@ public partial class MainWindow : Window
                 _oneTabStore.AddGroup(group);
             },
             syncTabsBinding: SyncTabsBinding,
-            openOneTab: OpenOneTabPage);
+            openOneTab: OpenOneTabPage,
+            openSettings: () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; });
     }
 
     private async Task RestoreSessionOrCreateTab()
