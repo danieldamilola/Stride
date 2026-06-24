@@ -22,9 +22,9 @@
                   ToolTip="{Binding Title}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>  <!-- Pin dot -->
-                    <ColumnDefinition Width="20"/>    <!-- Favicon -->
+                    <ColumnDefinition Width="20"/>    <!-- Favicon + close overlay -->
                     <ColumnDefinition Width="Auto"/>  <!-- Title (active only) -->
-                    <ColumnDefinition Width="Auto"/>  <!-- Close -->
+                    <ColumnDefinition Width="Auto"/>  <!-- Close (active only) -->
                 </Grid.ColumnDefinitions>
                 <!-- Pin indicator — 3px amber dot -->
                 <Ellipse Grid.Column="0" Width="3" Height="3"
@@ -32,7 +32,7 @@
                          VerticalAlignment="Center"
                          Visibility="{Binding IsPinned, Converter={StaticResource BoolToVis}}"/>
                 <!-- Favicon — 16×16 with globe fallback -->
-                <Grid Grid.Column="1" Width="16" Height="16" VerticalAlignment="Center">
+                <Grid Grid.Column="1" Width="20" Height="20" VerticalAlignment="Center">
                     <!-- Default globe icon (visible when no favicon) -->
                     <Path Data="{StaticResource IconGlobe}"
                           Stroke="{DynamicResource TextSecondary}"
@@ -43,7 +43,21 @@
                     <Image Source="{Binding Favicon}"
                            Width="16" Height="16"
                            RenderOptions.BitmapScalingMode="HighQuality"
+                           HorizontalAlignment="Center"
                            VerticalAlignment="Center" x:Name="FaviconImage"/>
+                    <!-- Close overlay on favicon — only for inactive tabs -->
+                    <Button Click="CloseTab_Click" Tag="{Binding}"
+                            Style="{DynamicResource TabCloseBtn}" ToolTip="Close tab"
+                            Width="12" Height="12"
+                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Margin="0,-2,-2,0">
+                        <Button.RenderTransform>
+                            <TranslateTransform/>
+                        </Button.RenderTransform>
+                        <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextPrimary}"
+                              StrokeThickness="1.2" Width="5" Height="5" Stretch="Uniform"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                    </Button>
                 </Grid>
                 <!-- Title — visible only when tab is selected -->
                 <TextBlock Grid.Column="2" Text="{Binding Title}"
@@ -66,16 +80,6 @@
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
-                <!-- Close — appears on hover -->
-                <Button Grid.Column="3" Click="CloseTab_Click" Tag="{Binding}"
-                        Style="{DynamicResource TabCloseBtn}" ToolTip="Close tab"
-                        Width="14" Height="14" Margin="4,0,0,0"
-                        Visibility="{Binding RelativeSource={RelativeSource AncestorType=Grid},
-                                     Path=IsMouseOver, Converter={StaticResource BoolToVis}}">
-                    <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextMuted}"
-                          StrokeThickness="1" Width="6" Height="6" Stretch="Uniform"
-                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                </Button>
             </Grid>
         </DataTemplate>
     </Window.Resources>
