@@ -5,58 +5,230 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Tab - Stride</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap');
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background: #0C0C0C;
-            color: #D4D4D4;
-            font-family: 'Segoe UI', Inter, sans-serif;
+            background: #111113;
+            color: #E8E4DF;
+            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
-        .logo {
-            font-size: 42px;
-            font-weight: 700;
-            letter-spacing: -1px;
-            margin-bottom: 32px;
-            background: linear-gradient(135deg, #D4A574, #E8C9A0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+
+        /* ── Ambient glow — subtle warm radial behind the logo ── */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(212,165,116,0.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
         }
-        .search-container {
-            width: 100%;
-            max-width: 560px;
+
+        .content {
             position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
         }
+
+        /* ── Logo — exaggerated minimal: thin weight, large size ── */
+        .logo {
+            font-size: 56px;
+            font-weight: 200;
+            letter-spacing: -2px;
+            margin-bottom: 48px;
+            color: #D4A574;
+            opacity: 0;
+            animation: fadeIn 800ms ease-out 100ms forwards;
+        }
+
+        /* ── Search — minimal line, no heavy borders ── */
+        .search-container {
+            width: 480px;
+            position: relative;
+            opacity: 0;
+            animation: fadeSlideUp 600ms ease-out 300ms forwards;
+        }
+
         .search-input {
             width: 100%;
-            padding: 14px 20px;
-            border-radius: 12px;
-            border: 1px solid #1E1E1E;
-            background: #1A1A1A;
-            color: #D4D4D4;
-            font-size: 15px;
-            font-family: 'Segoe UI', Inter, sans-serif;
+            padding: 14px 20px 14px 44px;
+            border-radius: 10px;
+            border: 1px solid rgba(232,228,223,0.08);
+            background: rgba(255,255,255,0.03);
+            color: #E8E4DF;
+            font-size: 14px;
+            font-weight: 300;
+            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 300ms ease, background 300ms ease, box-shadow 300ms ease;
+            cursor: text;
         }
+
+        .search-input:hover {
+            border-color: rgba(232,228,223,0.12);
+            background: rgba(255,255,255,0.04);
+        }
+
         .search-input:focus {
-            border-color: #D4A574;
+            border-color: rgba(212,165,116,0.3);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 0 0 0 3px rgba(212,165,116,0.06);
         }
+
         .search-input::placeholder {
-            color: #444444;
+            color: rgba(232,228,223,0.25);
+            font-weight: 300;
+        }
+
+        /* Search icon (inline SVG) */
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            opacity: 0.25;
+            pointer-events: none;
+            transition: opacity 200ms ease;
+        }
+
+        .search-input:focus ~ .search-icon {
+            opacity: 0.4;
+        }
+
+        /* ── Time display — ambient, ultra-thin ── */
+        .time-display {
+            position: fixed;
+            bottom: 40px;
+            font-size: 13px;
+            font-weight: 300;
+            color: rgba(232,228,223,0.2);
+            letter-spacing: 1px;
+            opacity: 0;
+            animation: fadeIn 800ms ease-out 600ms forwards;
+        }
+
+        /* ── Shortcut hints — appear on hover ── */
+        .shortcuts {
+            margin-top: 32px;
+            display: flex;
+            gap: 24px;
+            opacity: 0;
+            animation: fadeIn 600ms ease-out 500ms forwards;
+        }
+
+        .shortcut {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 400;
+            color: rgba(232,228,223,0.15);
+            letter-spacing: 0.3px;
+            transition: color 200ms ease;
+        }
+
+        .shortcut:hover {
+            color: rgba(232,228,223,0.35);
+        }
+
+        .shortcut kbd {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-family: 'Inter', monospace;
+            font-weight: 500;
+            color: rgba(232,228,223,0.3);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 4px;
+            line-height: 1;
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── Reduced motion ── */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before { animation-duration: 0.01ms !important; }
         }
     </style>
 </head>
 <body>
-    <div class="logo">Stride</div>
-    <div class="search-container">
-        <input type="text" class="search-input" placeholder="Search the web or enter a URL..."
-               autofocus
-               onkeydown="if(event.key==='Enter'){window.chrome.webview.postMessage('search:'+this.value)}">
+    <div class="content">
+        <div class="logo">Stride</div>
+        <div class="search-container">
+            <input type="text" class="search-input"
+                   placeholder="Search or type a URL"
+                   autofocus
+                   onkeydown="if(event.key==='Enter'){window.chrome.webview.postMessage('search:'+this.value)}">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="7"/>
+                <line x1="16.2" y1="16.2" x2="21" y2="21"/>
+            </svg>
+        </div>
+        <div class="shortcuts">
+            <span class="shortcut"><kbd>Ctrl</kbd><kbd>L</kbd> Address bar</span>
+            <span class="shortcut"><kbd>Ctrl</kbd><kbd>T</kbd> New tab</span>
+            <span class="shortcut"><kbd>Ctrl</kbd><kbd>H</kbd> History</span>
+            <span class="shortcut"><kbd>Ctrl</kbd><kbd>,</kbd> Settings</span>
+        </div>
     </div>
+
+    <div class="time-display" id="clock"></div>
+
+    <script>
+        // Ambient clock — updates every minute
+        function updateClock() {
+            const now = new Date();
+            const h = now.getHours();
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const period = h >= 12 ? 'PM' : 'AM';
+            const h12 = h % 12 || 12;
+            document.getElementById('clock').textContent = `${h12}:${m} ${period}`;
+        }
+        updateClock();
+        setInterval(updateClock, 30000);
+
+        // Focus search on any key press
+        document.addEventListener('keydown', (e) => {
+            const input = document.querySelector('.search-input');
+            if (document.activeElement !== input && !e.ctrlKey && !e.altKey && !e.metaKey && e.key.length === 1) {
+                input.focus();
+            }
+        });
+    </script>
 </body>
 </html>
