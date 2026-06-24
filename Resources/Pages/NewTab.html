@@ -78,9 +78,9 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 12px;
+            gap: 14px;
             margin-top: 24px;
-            max-width: 520px;
+            max-width: 580px;
         }
 
         .shortcut-tile {
@@ -88,15 +88,16 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 72px;
-            height: 72px;
-            border-radius: 10px;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
             background: #1A1A1E;
             border: 1px solid #2A2A2E;
             cursor: pointer;
             transition: background 150ms ease, border-color 150ms ease;
             position: relative;
             text-decoration: none;
+            outline: none;
         }
 
         .shortcut-tile:hover {
@@ -104,19 +105,24 @@
             border-color: #3A3A3E;
         }
 
+        .shortcut-tile:focus-visible {
+            border-color: rgba(var(--accent-rgb), 0.5);
+            background: #222226;
+        }
+
         .shortcut-tile img {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
             margin-bottom: 6px;
             pointer-events: none;
         }
 
         .shortcut-tile .tile-name {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 400;
-            color: #8A8680;
-            max-width: 60px;
+            color: #B0ACA6;
+            max-width: 68px;
             text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -161,13 +167,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 72px;
-            height: 72px;
-            border-radius: 10px;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
             background: transparent;
             border: 1px dashed #2A2A2E;
             cursor: pointer;
             transition: border-color 150ms ease, background 150ms ease;
+            outline: none;
         }
 
         .shortcut-add:hover {
@@ -182,7 +189,13 @@
             transition: color 150ms ease;
         }
 
-        .shortcut-add:hover svg {
+        .shortcut-add:focus-visible {
+            border-color: rgba(var(--accent-rgb), 0.5);
+            background: rgba(var(--accent-rgb), 0.04);
+        }
+
+        .shortcut-add:hover svg,
+        .shortcut-add:focus-visible svg {
             color: var(--accent);
         }
 
@@ -372,6 +385,7 @@
             shortcuts.forEach((sc, i) => {
                 const tile = document.createElement('div');
                 tile.className = 'shortcut-tile';
+                tile.tabIndex = 0;
                 tile.title = sc.Url || sc.url;
 
                 const url = sc.Url || sc.url || '';
@@ -379,14 +393,24 @@
                 const domain = getDomain(url);
 
                 tile.innerHTML = `
-                    <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32"
+                    <img src="https://icons.duckduckgo.com/ip3/${domain}.ico"
                          onerror="this.style.display='none'" alt="">
-                    <span class="tile-name">${name.length > 10 ? name.substring(0, 10) : name}</span>
-                    <button class="tile-remove" data-index="${i}" onclick="event.stopPropagation();removeShortcut(${i})">&times;</button>
+                    <span class="tile-name">${name}</span>
+                    <button class="tile-remove" data-index="${i}" onclick="event.stopPropagation();removeShortcut(${i})" tabindex="-1">&times;</button>
                 `;
 
                 tile.addEventListener('click', () => {
                     window.chrome.webview.postMessage('shortcut-click:' + url);
+                });
+                tile.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        window.chrome.webview.postMessage('shortcut-click:' + url);
+                    }
+                    if (e.key === 'Delete' || e.key === 'Backspace') {
+                        e.preventDefault();
+                        removeShortcut(i);
+                    }
                 });
 
                 grid.appendChild(tile);
@@ -396,9 +420,13 @@
             if (shortcuts.length < 16) {
                 const add = document.createElement('div');
                 add.className = 'shortcut-add';
+                add.tabIndex = 0;
                 add.title = 'Add shortcut';
                 add.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
                 add.addEventListener('click', openDialog);
+                add.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDialog(); }
+                });
                 grid.appendChild(add);
             }
         }
