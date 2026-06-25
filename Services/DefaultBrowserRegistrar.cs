@@ -11,11 +11,11 @@ namespace StrideBrowser.Services;
 /// </summary>
 public static class DefaultBrowserRegistrar
 {
-    private const string AppName = "Stride Browser";
+    private const string AppName = "Stride";
     private const string AppDescription = "A fast, privacy-focused web browser.";
-    private const string ProgIdHtml = "StrideBrowserHTML";
-    private const string ProgIdUrl = "StrideBrowserURL";
-    private const string CapabilitiesPath = @"Software\StrideBrowser\Capabilities";
+    private const string ProgIdHtml = "StrideHTML";
+    private const string ProgIdUrl = "StrideURL";
+    private const string CapabilitiesPath = @"Software\Stride\Capabilities";
 
     /// <summary>
     /// Writes all required registry keys under HKCU so Windows recognises Stride Browser
