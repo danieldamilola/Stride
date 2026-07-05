@@ -10,7 +10,7 @@ Compression=lzma2
 SolidCompression=yes
 OutputDir=C:\dev\SpurBrowser\Output
 OutputBaseFilename=StrideSetup
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
 
 [Files]
 Source: "C:\dev\SpurBrowser\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
