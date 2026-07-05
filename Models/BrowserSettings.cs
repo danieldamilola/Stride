@@ -33,6 +33,14 @@ public sealed partial class BrowserSettings : ObservableObject
     [ObservableProperty]
     private bool _forceHttps = true;
 
+    /// <summary>
+    /// Enables Microsoft Defender SmartScreen (phishing/malware protection). When on,
+    /// navigated URLs are checked with Microsoft — a privacy trade-off the user controls.
+    /// Read at WebView2 environment creation, so changes require a restart to apply.
+    /// </summary>
+    [ObservableProperty]
+    private bool _smartScreenEnabled = true;
+
     [ObservableProperty]
     private bool _clearDataOnExit;
 

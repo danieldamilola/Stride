@@ -33,12 +33,17 @@
         }
         .retry-btn:hover { background: var(--accent); filter: brightness(0.9); }
     </style>
+    <script>
+        // Self-navigate rather than postMessage: the error page runs on about:blank,
+        // which the privileged-IPC gate deliberately rejects. Retrying needs no host logic.
+        function retry() { location.href = decodeURIComponent("{{RETRY_URL_ENC}}"); }
+    </script>
 </head>
 <body>
     <div class="error-icon">⚠️</div>
     <h1>This page can't be reached</h1>
     <p class="message">{{ERROR_MESSAGE}}</p>
     <p class="url">{{URL}}</p>
-    <button class="retry-btn" onclick="window.chrome.webview.postMessage('error-retry:{{RETRY_URL}}')">Retry</button>
+    <button class="retry-btn" onclick="retry()">Retry</button>
 </body>
 </html>

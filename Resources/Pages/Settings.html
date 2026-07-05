@@ -483,6 +483,15 @@
                 </div>
                 <div class="setting-row">
                     <div class="setting-info">
+                        <div class="setting-label">Microsoft Defender SmartScreen</div>
+                        <div class="setting-desc">Warn about malicious sites and downloads. URLs are checked with Microsoft (privacy trade-off). Requires restart to apply.</div>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle"{{CHK_SMARTSCREEN}} onchange="s('smartScreen', this)">
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
                         <div class="setting-label">Clear data on exit</div>
                         <div class="setting-desc">Remove browsing data when you close Stride</div>
                     </div>

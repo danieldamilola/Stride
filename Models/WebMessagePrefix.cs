@@ -17,7 +17,6 @@ public static class WebMessagePrefix
     public const string HistoryOpen = "history-open:";
     public const string HistoryClear = "history-clear";
     public const string SetDefaultBrowser = "set-default-browser";
-    public const string ErrorRetry = "error-retry:";
     public const string ShortcutAdd = "shortcut-add:";
     public const string ShortcutRemove = "shortcut-remove:";
     public const string ShortcutClick = "shortcut-click:";

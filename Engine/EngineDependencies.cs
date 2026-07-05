@@ -14,4 +14,5 @@ public sealed record EngineDependencies(
     BrowserSettings Settings,
     FaviconLoader FaviconLoader,
     InternalPages Pages,
-    IHistoryStore HistoryStore);
+    IHistoryStore HistoryStore,
+    IOneTabStore OneTabStore);

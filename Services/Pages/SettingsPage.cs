@@ -37,6 +37,7 @@ public sealed class SettingsPage
                 ["CHK_RESTORE"] = Chk(settings.RestoreSessionOnStartup),
                 ["CHK_DARK"] = Chk(settings.ForceDarkMode),
                 ["CHK_HTTPS"] = Chk(settings.ForceHttps),
+                ["CHK_SMARTSCREEN"] = Chk(settings.SmartScreenEnabled),
                 ["CHK_CLEAR"] = Chk(settings.ClearDataOnExit),
                 ["CHK_DUPES"] = Chk(settings.BlockDuplicateTabs),
                 ["SIDEBAR_LEFT"] = settings.IsSidebarOnRight ? "" : " selected",

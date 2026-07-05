@@ -13,7 +13,9 @@ public sealed class ErrorPage
             {
                 ["URL"] = WebUtility.HtmlEncode(failedUrl),
                 ["ERROR_MESSAGE"] = WebUtility.HtmlEncode(errorMessage),
-                ["RETRY_URL"] = WebUtility.HtmlEncode(failedUrl),
+                // Percent-encode so the URL is safe inside a JS string literal;
+                // decodeURIComponent reverses it before navigation.
+                ["RETRY_URL_ENC"] = Uri.EscapeDataString(failedUrl),
                 ["ACCENT"] = accentColor,
                 ["ACCENT_RGB"] = accentRgb
             });

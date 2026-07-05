@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -25,6 +26,7 @@ public sealed class TabEngine : IDisposable
     private readonly FaviconLoader _faviconLoader;
     private readonly InternalPages _pages;
     private readonly IHistoryStore _historyStore;
+    private readonly IOneTabStore _oneTabStore;
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _hibernationTimer;
     private readonly Dictionary<Guid, WebView2> _webViews = new();
@@ -72,6 +74,7 @@ public sealed class TabEngine : IDisposable
         _faviconLoader = deps.FaviconLoader;
         _pages = deps.Pages;
         _historyStore = deps.HistoryStore;
+        _oneTabStore = deps.OneTabStore;
         _dispatcher = webViewHost.Dispatcher;
 
         // Check every 60s whether any tabs have exceeded the hibernation timeout
@@ -84,25 +87,27 @@ public sealed class TabEngine : IDisposable
     public async Task InitializeAsync()
     {
         var dataDir = Helpers.AppPaths.WebView2Dir;
+
+        // Register the stride:// scheme so internal pages get a real, secure origin
+        // instead of about:blank. WebResourceRequested is only raised for custom
+        // schemes that are registered here, at environment-creation time.
+        var strideScheme = new CoreWebView2CustomSchemeRegistration("stride")
+        {
+            TreatAsSecure = true,
+            HasAuthorityComponent = true,
+            AllowedOrigins = ["stride://*"]
+        };
+
         var options = new CoreWebView2EnvironmentOptions
         {
             AreBrowserExtensionsEnabled = true,
             // Fluent overlay scrollbar: overlays content without pushing layout, works in Shadow DOM
             ScrollBarStyle = CoreWebView2ScrollbarStyle.FluentOverlay,
             // Reduce telemetry and background activity
-            AdditionalBrowserArguments =
-                "--app-user-model-id=Stride " +
-                "--renderer-process-limit=4 " +
-                "--disable-background-networking " +
-                "--disable-breakpad " +
-                "--disable-component-update " +
-                "--disable-default-apps " +
-                "--disable-domain-reliability " +
-                "--disable-sync " +
-                "--disable-features=msSmartScreenProtection " +
-                "--metrics-recording-only " +
-                "--no-first-run"
+            AdditionalBrowserArguments = BuildBrowserArguments(_settings.SmartScreenEnabled)
         };
+        // CustomSchemeRegistrations is a read-only collection — populate via Add.
+        options.CustomSchemeRegistrations.Add(strideScheme);
         _environment = await CoreWebView2Environment.CreateAsync(null, dataDir, options);
 
         // Handle browser process exit at the environment level
@@ -111,6 +116,32 @@ public sealed class TabEngine : IDisposable
             Trace.WriteLine($"WebView2 browser process exited: Kind={e.BrowserProcessExitKind}");
             _dispatcher.Invoke(HandleBrowserProcessDeath);
         };
+    }
+
+    /// <summary>
+    /// Builds the Chromium command-line flags. Notably:
+    /// - The renderer process-limit flag is gone, restoring Chromium's default Site Isolation
+    ///   (each site in its own process) rather than capping at a shared pool.
+    /// - SmartScreen is ON by default. Disabling it via setting appends the disable flag.
+    ///   Note: this flag is read at environment creation, so toggling requires a restart.
+    /// </summary>
+    private static string BuildBrowserArguments(bool smartScreenEnabled)
+    {
+        var args =
+            "--app-user-model-id=Stride " +
+            "--disable-background-networking " +
+            "--disable-breakpad " +
+            "--disable-component-update " +
+            "--disable-default-apps " +
+            "--disable-domain-reliability " +
+            "--disable-sync " +
+            "--metrics-recording-only " +
+            "--no-first-run";
+
+        if (!smartScreenEnabled)
+            args += " --disable-features=msSmartScreenProtection";
+
+        return args;
     }
 
     // ──── Tab Lifecycle ────
@@ -262,37 +293,23 @@ public sealed class TabEngine : IDisposable
         EvictExcessWebViews(tab);
     }
 
-    /// <summary>Navigates the active tab to a URL.</summary>
+    /// <summary>Navigates the active tab to a URL. Internal stride:// pages are served by the WebResourceRequested handler.</summary>
     public void Navigate(BrowserTab tab, string url)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
 
-        if (url == InternalUrls.NewTab)
-            wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)));
-        else
-        {
-            try { wv.CoreWebView2.Navigate(url); }
-            catch (ArgumentException) { /* Invalid URL */ }
-        }
+        try { wv.CoreWebView2.Navigate(url); }
+        catch (ArgumentException) { /* Invalid URL */ }
     }
 
-    public void NavigateToSettings(BrowserTab tab, BrowserSettings settings)
-    {
-        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        wv.CoreWebView2.NavigateToString(_pages.SettingsPage(settings));
-    }
+    public void NavigateToSettings(BrowserTab tab, BrowserSettings settings) =>
+        Navigate(tab, InternalUrls.Settings);
 
-    public void NavigateToOneTab(BrowserTab tab, List<OneTabGroup> groups)
-    {
-        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        wv.CoreWebView2.NavigateToString(_pages.OneTabPage(groups, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)));
-    }
+    public void NavigateToOneTab(BrowserTab tab, List<OneTabGroup> groups) =>
+        Navigate(tab, InternalUrls.OneTab);
 
-    public void NavigateToHistory(BrowserTab tab, List<Models.HistoryEntry> entries)
-    {
-        if (_webViews.TryGetValue(tab.Id, out var wv))
-            wv.CoreWebView2.NavigateToString(_pages.HistoryPage(entries, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)));
-    }
+    public void NavigateToHistory(BrowserTab tab, List<Models.HistoryEntry> entries) =>
+        Navigate(tab, InternalUrls.History);
 
     public void GoBack()
     {
@@ -419,6 +436,9 @@ public sealed class TabEngine : IDisposable
         WireContextMenuEvents(wv, tab);
         HandleProcessFailure(wv, tab);
 
+        // Serve internal pages (settings, newtab, etc.) from a real stride:// origin
+        WireInternalPageHost(wv);
+
         // Network-level ad blocking — block known ad URLs before they load
         if (_settings.AdBlockEnabled)
             WireAdBlockFilters(wv);
@@ -449,17 +469,19 @@ public sealed class TabEngine : IDisposable
 
     private void NavigateInitialUrl(WebView2 wv, BrowserTab tab)
     {
-        var callerManagedUrls = new HashSet<string> { "stride://settings", "stride://onetab", "stride://history" };
+        // Settings/OneTab/History are navigated by the caller after activation
+        // (see NavigateToSettings/OneTab/History), so skip them here to avoid a double load.
+        var callerManagedUrls = new HashSet<string>
+        {
+            InternalUrls.Settings, InternalUrls.OneTab, InternalUrls.History
+        };
         if (callerManagedUrls.Contains(tab.Url))
             return;
 
-        if (tab.Url == InternalUrls.NewTab)
-            wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)));
-        else
-        {
-            try { wv.CoreWebView2.Navigate(tab.Url); }
-            catch (ArgumentException) { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor))); }
-        }
+        // All other URLs (including stride://newtab) are served directly; internal
+        // pages resolve via the WebResourceRequested host, external via normal navigation.
+        try { wv.CoreWebView2.Navigate(tab.Url); }
+        catch (ArgumentException) { wv.CoreWebView2.Navigate(InternalUrls.NewTab); }
     }
 
     private async Task InjectContentScriptsAsync(WebView2 wv)
@@ -679,6 +701,19 @@ public sealed class TabEngine : IDisposable
         wv.CoreWebView2.WebMessageReceived += (_, e) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
+
+            // SECURITY: only accept privileged commands from our own internal pages,
+            // which now run on a real stride:// origin. Any external website
+            // (https://...) shares window.chrome.webview.postMessage, so without this
+            // gate a malicious site could change settings, inject shortcuts, or wipe
+            // history. e.Source is the document origin; reject anything non-stride://.
+            var source = e.Source ?? "";
+            if (!source.StartsWith("stride://", StringComparison.OrdinalIgnoreCase))
+            {
+                Trace.WriteLine($"WebMessage dropped from untrusted origin: {source}");
+                return;
+            }
+
             var msg = e.TryGetWebMessageAsString();
             if (!string.IsNullOrEmpty(msg))
                 _dispatcher.Invoke(() => WebMessageReceived?.Invoke(msg));
@@ -744,6 +779,51 @@ public sealed class TabEngine : IDisposable
                     "", null, CoreWebView2ContextMenuItemKind.Separator);
                 menuItems.Insert(2, separator);
             }
+        };
+    }
+
+    /// <summary>
+    /// Intercepts <c>stride://</c> requests and serves the matching internal page
+    /// HTML directly from memory, giving internal pages a real, secure origin
+    /// (e.g. <c>stride://settings</c>) instead of <c>about:blank</c>. The origin is
+    /// what <see cref="WireMessageAndWindowEvents"/> later checks to gate IPC.
+    /// </summary>
+    private void WireInternalPageHost(WebView2 wv)
+    {
+        wv.CoreWebView2.AddWebResourceRequestedFilter(
+            "stride://*", CoreWebView2WebResourceContext.All);
+
+        wv.CoreWebView2.WebResourceRequested += (_, e) =>
+        {
+            var requestUri = e.Request?.Uri ?? "";
+            if (!requestUri.StartsWith("stride://", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            // Authority is the host between "stride://" and the next "/" (or end).
+            var authority = requestUri.Substring("stride://".Length);
+            var slash = authority.IndexOf('/');
+            if (slash >= 0) authority = authority[..slash];
+            authority = authority.ToLowerInvariant();
+
+            var html = authority switch
+            {
+                "newtab" => _pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)),
+                "settings" => _pages.SettingsPage(_settings),
+                "onetab" => _pages.OneTabPage(_oneTabStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)),
+                "history" => _pages.HistoryPage(_historyStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)),
+                _ => null
+            };
+
+            if (html is null)
+            {
+                e.Response = wv.CoreWebView2.Environment.CreateWebResourceResponse(
+                    null, 404, "Not Found", "Content-Type: text/html");
+                return;
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(html);
+            e.Response = wv.CoreWebView2.Environment.CreateWebResourceResponse(
+                new MemoryStream(bytes), 200, "OK", "Content-Type: text/html; charset=utf-8");
         };
     }
 

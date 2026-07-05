@@ -51,7 +51,6 @@ public sealed class WebMessageRouter
             [WebMessagePrefix.OneTabReorderTab] = HandleOneTabReorderTab,
             [WebMessagePrefix.OneTabReorderGroup] = HandleOneTabReorderGroup,
             [WebMessagePrefix.HistoryOpen] = HandleOpen,
-            [WebMessagePrefix.ErrorRetry] = HandleErrorRetry,
             [WebMessagePrefix.ShortcutAdd] = HandleShortcutAdd,
             [WebMessagePrefix.ShortcutRemove] = HandleShortcutRemove,
             [WebMessagePrefix.ShortcutClick] = HandleShortcutClick,
@@ -262,13 +261,6 @@ public sealed class WebMessageRouter
         return Task.CompletedTask;
     }
 
-    private Task HandleErrorRetry(string url)
-    {
-        if (_engine.ActiveTab is not null)
-            _engine.Navigate(_engine.ActiveTab, url);
-        return Task.CompletedTask;
-    }
-
     private Task HandleShortcutAdd(string payload)
     {
         try
@@ -327,6 +319,7 @@ public sealed class WebMessageRouter
         ["restoreSession"] = (s, v) => s.RestoreSessionOnStartup = v == "true",
         ["darkMode"] = (s, v) => s.ForceDarkMode = v == "true",
         ["forceHttps"] = (s, v) => s.ForceHttps = v == "true",
+        ["smartScreen"] = (s, v) => s.SmartScreenEnabled = v == "true",
         ["clearOnExit"] = (s, v) => s.ClearDataOnExit = v == "true",
         ["blockDupes"] = (s, v) => s.BlockDuplicateTabs = v == "true",
         ["sidebarPosition"] = (s, v) => s.IsSidebarOnRight = v == "right",
