@@ -1,0 +1,111 @@
+--- STRIDE STARTED ---
+OnWindowLoaded failed: System.NullReferenceException: Object reference not set to an instance of an object.
+   at StrideBrowser.Engine.TabEngine.InitializeAsync() in C:\dev\SpurBrowser\Engine\TabEngine.cs:line 110
+   at StrideBrowser.MainWindow.OnWindowLoaded(Object sender, RoutedEventArgs e) in C:\dev\SpurBrowser\MainWindow.xaml.cs:line 146
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: loaded extension from C:\dev\SpurBrowser\bin\Debug\net9.0-windows\Resources\Extensions\Focus
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+--- STRIDE STARTED ---
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+Downloading focus list: https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt
+Downloading focus list: https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt
+Failed to download https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt: Could not find a part of the path 'C:\Users\Daniel\AppData\Local\StrideBrowser\focus_cache\2733145D6D75DA58857C8E2D2482DC4B.txt'.
+Downloading focus list: https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt
+Failed to download https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt: Response status code does not indicate success: 404 (Not Found).
+Loaded 0 focus domains into memory.
+Failed to download https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt: Could not find a part of the path 'C:\Users\Daniel\AppData\Local\StrideBrowser\focus_cache\2733145D6D75DA58857C8E2D2482DC4B.txt'.
+Downloading focus list: https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt
+Failed to download https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt: Response status code does not indicate success: 404 (Not Found).
+Loaded 0 focus domains into memory.
+--- STRIDE STARTED ---
+Downloading focus list: https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+Downloading focus list: https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt
+Downloading focus list: https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt
+Failed to download https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt: Response status code does not indicate success: 404 (Not Found).
+Loaded 928356 focus domains into memory.
+Downloading focus list: https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt
+Failed to download https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt: Response status code does not indicate success: 404 (Not Found).
+Loaded 928356 focus domains into memory.
+--- STRIDE STARTED ---
+ExtensionManager: downloading uBlock from https://github.com/gorhill/uBlock/releases/download/1.71.0/uBlock0_1.71.0.chromium.zip
+ExtensionManager: first download, stored SHA-256=5313A13FDBE748C23ABDDE6D24671635A3711A7AB0CF53F420BFA4AECDC36BF6
+ExtensionManager: uBlock extracted to C:\Users\Daniel\AppData\Local\StrideBrowser\extensions\uBlock0_1.71.0\uBlock0.chromium
+ExtensionManager: loaded extension from C:\Users\Daniel\AppData\Local\StrideBrowser\extensions\uBlock0_1.71.0\uBlock0.chromium
+ExtensionManager: uBlock Origin loaded successfully.
+Downloading focus list: https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt
+Downloading focus list: https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt
+Downloading focus list: https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt
+Failed to download https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt: Response status code does not indicate success: 404 (Not Found).
+Failed to download https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt: The process cannot access the file 'C:\Users\Daniel\AppData\Local\StrideBrowser\focus_cache\2733145D6D75DA58857C8E2D2482DC4B.txt' because it is being used by another process.
+Downloading focus list: https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt
+Failed to download https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt: Response status code does not indicate success: 404 (Not Found).
+Loaded 928356 focus domains into memory.
+Loaded 928356 focus domains into memory.
+--- STRIDE STARTED ---
+Downloading focus list: https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt
+Failed to download https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt: Response status code does not indicate success: 404 (Not Found).
+ExtensionManager: uBlock Origin already loaded (id=hpjlapjfembngcjlodbpceepeafihiol).
+Loaded 928356 focus domains into memory.
+FocusBlocklistService: Blocked pornhub.com because of match pornhub.com
+--- STRIDE STARTED ---
+ExtensionManager: downloading uBlock from https://github.com/gorhill/uBlock/releases/download/1.71.0/uBlock0_1.71.0.chromium.zip
+ExtensionManager: first download, stored SHA-256=5313A13FDBE748C23ABDDE6D24671635A3711A7AB0CF53F420BFA4AECDC36BF6
+ExtensionManager: uBlock extracted to C:\Users\Daniel\AppData\Local\StrideBrowser\extensions\uBlock0_1.71.0\uBlock0.chromium
+ExtensionManager: loaded extension from C:\Users\Daniel\AppData\Local\StrideBrowser\extensions\uBlock0_1.71.0\uBlock0.chromium
+ExtensionManager: uBlock Origin loaded successfully.
+Downloading focus list: https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt
+Downloading focus list: https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt
+Failed to download https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt: Response status code does not indicate success: 404 (Not Found).
+Loaded 928356 focus domains into memory.
+FocusBlocklistService: Allowed flashscore.com
+FocusBlocklistService: Allowed www.flashscore.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.startpage.com
+FocusBlocklistService: Allowed www.youtube.com
+FocusBlocklistService: Allowed www.youtube.com
+FocusBlocklistService: Allowed accounts.google.com
+FocusBlocklistService: Allowed accounts.google.com
+FocusBlocklistService: Allowed accounts.google.com
+FocusBlocklistService: Allowed accounts.google.com
+FocusBlocklistService: Allowed accounts.youtube.com
+FocusBlocklistService: Allowed accounts.google.com.ng
+FocusBlocklistService: Allowed www.youtube.com
+FocusBlocklistService: Allowed www.youtube.com

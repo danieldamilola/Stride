@@ -34,6 +34,7 @@ public static class ShortcutDefaults
         new("Print",             "Tools",      "Print",                "Print the page",                    "Ctrl+P"),
         new("CopyUrl",           "Tools",      "Copy URL",             "Copy current page URL",             "Ctrl+Shift+C"),
         new("History",           "Tools",      "History",              "Open browsing history",              "Ctrl+H"),
+        new("Downloads",         "Tools",      "Downloads",            "Open downloads",                    "Ctrl+J"),
         new("OpenOneTab",        "Tools",      "OneTab",               "Open saved tabs",                   "Ctrl+Shift+O"),
         new("SendAllToOneTab",   "Tools",      "Send all to OneTab",   "Save and close all tabs",           "Ctrl+Shift+1"),
         new("SaveAllTabs",       "Tools",      "Save all tabs",        "Save session",                      "Ctrl+Shift+S"),

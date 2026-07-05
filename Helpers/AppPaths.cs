@@ -25,12 +25,15 @@ public static class AppPaths
     public static string LogFile => Path.Combine(Base, "stride.log");
     public static string CrashLogFile => Path.Combine(Base, "crash.log");
     public static string UBlockHashFile => Path.Combine(Base, "ublock.sha256");
+    public static string FocusCacheDir => Path.Combine(Base, "focus_cache");
 
     /// <summary>Ensures the data directory exists.</summary>
     public static void EnsureDirectories()
     {
         Directory.CreateDirectory(Base);
         Directory.CreateDirectory(FaviconCacheDir);
-        Directory.CreateDirectory(ExtensionsDir);
+        if (!Directory.Exists(ExtensionsDir)) Directory.CreateDirectory(ExtensionsDir);
+        if (!Directory.Exists(WebViewDataDir)) Directory.CreateDirectory(WebViewDataDir);
+        if (!Directory.Exists(FocusCacheDir)) Directory.CreateDirectory(FocusCacheDir);
     }
 }

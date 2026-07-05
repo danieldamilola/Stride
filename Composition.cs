@@ -31,12 +31,15 @@ public static class Composition
         services.AddSingleton<IHistoryStore>(sp => sp.GetRequiredService<HistoryStore>());
         services.AddSingleton<OneTabStore>();
         services.AddSingleton<IOneTabStore>(sp => sp.GetRequiredService<OneTabStore>());
+        services.AddSingleton<DownloadStore>();
+        services.AddSingleton<IDownloadStore>(sp => sp.GetRequiredService<DownloadStore>());
         services.AddSingleton<SessionStore>();
         services.AddSingleton<ISessionStore>(sp => sp.GetRequiredService<SessionStore>());
         services.AddSingleton<ExtensionManager>();
         services.AddSingleton<InternalPages>();
         services.AddSingleton<YouTubeEnhancer>();
         services.AddSingleton<YouTubeUnhook>();
+        services.AddSingleton<FocusBlocklistService>();
 
         // Engine dependencies record
         services.AddSingleton<EngineDependencies>();

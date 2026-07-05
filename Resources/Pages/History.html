@@ -295,6 +295,7 @@
     </div>
 
     <script>
+        const __T = '{{IPC_TOKEN}}:';
         const entries = JSON.parse('{{ENTRIES}}' || '[]');
 
         function getDomain(url) {
@@ -424,7 +425,7 @@
         }
 
         function openUrl(url) {
-            window.chrome.webview.postMessage('history-open:' + url);
+            window.chrome.webview.postMessage(__T+'history-open:' + url);
         }
 
         // Search
@@ -442,7 +443,7 @@
         }
 
         function confirmClear() {
-            window.chrome.webview.postMessage('history-clear');
+            window.chrome.webview.postMessage(__T+'history-clear');
             closeConfirm();
         }
 

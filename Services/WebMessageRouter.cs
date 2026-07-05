@@ -20,6 +20,8 @@ public sealed class WebMessageRouter
     private readonly IOneTabStore _oneTabStore;
     private readonly IHistoryStore _historyStore;
     private readonly ISettingsStore _settingsStore;
+    private readonly IDownloadStore _downloadStore;
+    private readonly ExtensionManager _extensionManager;
 
     /// <summary>Fires when settings change so the view can apply live effects.</summary>
     public event Action<string, string>? SettingChanged;
@@ -29,13 +31,17 @@ public sealed class WebMessageRouter
         BrowserViewModel vm,
         IOneTabStore oneTabStore,
         IHistoryStore historyStore,
-        ISettingsStore settingsStore)
+        IDownloadStore downloadStore,
+        ISettingsStore settingsStore,
+        ExtensionManager extensionManager)
     {
         _engine = engine;
         _vm = vm;
         _oneTabStore = oneTabStore;
         _historyStore = historyStore;
+        _downloadStore = downloadStore;
         _settingsStore = settingsStore;
+        _extensionManager = extensionManager;
 
         _prefixHandlers = new Dictionary<string, Func<string, Task>>
         {
@@ -54,12 +60,16 @@ public sealed class WebMessageRouter
             [WebMessagePrefix.ShortcutAdd] = HandleShortcutAdd,
             [WebMessagePrefix.ShortcutRemove] = HandleShortcutRemove,
             [WebMessagePrefix.ShortcutClick] = HandleShortcutClick,
+            [WebMessagePrefix.DownloadOpen] = HandleDownloadOpen,
+            [WebMessagePrefix.DownloadFolder] = HandleDownloadFolder,
+            [WebMessagePrefix.DownloadCancel] = HandleDownloadCancel,
         };
 
         _exactHandlers = new Dictionary<string, Func<Task>>
         {
             [WebMessagePrefix.HistoryClear] = HandleHistoryClear,
             [WebMessagePrefix.SetDefaultBrowser] = HandleSetDefaultBrowser,
+            [WebMessagePrefix.DownloadClear] = HandleDownloadClear,
         };
     }
 
@@ -301,6 +311,50 @@ public sealed class WebMessageRouter
         return Task.CompletedTask;
     }
 
+    private Task HandleDownloadOpen(string id)
+    {
+        var item = _downloadStore.Get(id);
+        if (item?.State == DownloadState.Completed && System.IO.File.Exists(item.FilePath))
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(item.FilePath) { UseShellExecute = true });
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task HandleDownloadFolder(string id)
+    {
+        var item = _downloadStore.Get(id);
+        if (item?.State == DownloadState.Completed && System.IO.File.Exists(item.FilePath))
+        {
+            System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{item.FilePath}\"");
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task HandleDownloadCancel(string id)
+    {
+        // For cancelling, we just set the state to Cancelled.
+        // The actual CoreWebView2DownloadOperation is held by TabEngine, which can listen for this,
+        // but for simplicity we'll just update the state here. The WebView2 operation will eventually fault or we can hook it.
+        // Actually, TabEngine needs to cancel the operation.
+        // Let's fire an event or let TabEngine handle the actual cancellation if needed,
+        // or just accept that the state changes here and TabEngine monitors it.
+        var item = _downloadStore.Get(id);
+        if (item?.State == DownloadState.InProgress)
+        {
+            item.State = DownloadState.Cancelled;
+            // The actual cancellation of CoreWebView2DownloadOperation will be handled in TabEngine
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task HandleDownloadClear()
+    {
+        _downloadStore.ClearCompleted();
+        if (_engine.ActiveTab?.Url == InternalUrls.Downloads) _engine.Reload();
+        return Task.CompletedTask;
+    }
+
     private void RefreshOneTabPages()
     {
         var groups = _oneTabStore.Load();
@@ -324,6 +378,8 @@ public sealed class WebMessageRouter
         ["blockDupes"] = (s, v) => s.BlockDuplicateTabs = v == "true",
         ["sidebarPosition"] = (s, v) => s.IsSidebarOnRight = v == "right",
         ["accentColor"] = (s, v) => { if (v.StartsWith('#') && (v.Length == 7 || v.Length == 4)) s.AccentColor = v; },
+        ["focusDomains"] = (s, v) => s.FocusDomains = System.Web.HttpUtility.UrlDecode(v),
+        ["focusLocked"] = (s, v) => s.FocusLocked = v == "true",
 
         ["ytQuality"] = (s, v) => s.YtDefaultQuality = v,
         ["ytAutoplay"] = (s, v) => s.YtDisableAutoplay = v == "true",

@@ -7,7 +7,7 @@ namespace StrideBrowser.Services.Pages;
 /// <summary>Generates the settings page HTML.</summary>
 public sealed class SettingsPage
 {
-    public string Render(BrowserSettings settings)
+    public string Render(BrowserSettings settings, string ipcToken)
     {
         static string SelStr(string current, string value) =>
             current == value ? " selected" : "";
@@ -58,6 +58,9 @@ public sealed class SettingsPage
                 ["YT_SPEED"] = settings.YtDefaultSpeed.ToString(),
                 ["CHK_YT_AUTOPLAY"] = Chk(settings.YtDisableAutoplay),
                 ["CHK_YT_PAUSE"] = Chk(settings.YtPauseOnTabSwitch),
+                ["FOCUS_INPUT_DISPLAY"] = settings.FocusLocked ? "none" : "block",
+                ["FOCUS_LOCKED_DISPLAY"] = settings.FocusLocked ? "block" : "none",
+                ["FOCUS_DOMAINS"] = System.Web.HttpUtility.HtmlEncode(settings.FocusDomains ?? ""),
                 ["CHK_YT_LOOP"] = Chk(settings.YtLoopVideo),
                 ["CHK_UNHOOK_ENABLED"] = Chk(settings.UnhookEnabled),
                 ["CHK_UNHOOK_SIDEBAR"] = Chk(settings.UnhookHideVideoSidebar),
@@ -82,6 +85,7 @@ public sealed class SettingsPage
                 ["CHK_UNHOOK_AUTOPLAY"] = Chk(settings.UnhookDisableAutoplay),
                 ["CHK_UNHOOK_ANNOTATIONS"] = Chk(settings.UnhookDisableAnnotations),
                 ["KEYBOARD_SHORTCUTS_HTML"] = BuildShortcutsHtml(settings.CustomShortcuts),
+                ["IPC_TOKEN"] = ipcToken,
             });
     }
 

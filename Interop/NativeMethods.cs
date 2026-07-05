@@ -111,4 +111,23 @@ internal static class NativeMethods
         SHAppBarMessage(ABM_GETTASKBARPOS, ref abd);
         return abd.uEdge;
     }
+
+    // ── Foreground window activation ──
+    // Window.Activate() alone is unreliable on Windows 10/11 when the app
+    // is in the background. These Win32 calls are the standard pattern used
+    // by Chrome, Firefox, and other single-instance apps.
+
+    internal const int SW_RESTORE = 9;
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool IsIconic(IntPtr hWnd);
 }

@@ -30,6 +30,7 @@ public sealed class ExtensionManager
         try
         {
             var extensions = await webview.Profile.GetBrowserExtensionsAsync();
+            
             var ublock = extensions.FirstOrDefault(e =>
                 e.Name.Contains("uBlock", StringComparison.OrdinalIgnoreCase));
 

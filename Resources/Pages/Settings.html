@@ -287,12 +287,13 @@
         }
     </style>
     <script>
+        const __T = '{{IPC_TOKEN}}:';
         function s(key, el) {
             const val = el.type === 'checkbox' ? el.checked : el.value;
-            window.chrome.webview.postMessage('setting:' + key + ':' + val);
+            window.chrome.webview.postMessage(__T+'setting:' + key + ':' + val);
         }
         function setAccent(hex) {
-            window.chrome.webview.postMessage('setting:accentColor:' + hex);
+            window.chrome.webview.postMessage(__T+'setting:accentColor:' + hex);
             document.querySelectorAll('.color-swatch').forEach(function(sw) {
                 sw.classList.toggle('active', sw.dataset.color === hex);
             });
@@ -324,7 +325,7 @@
             var def = badge.dataset.defaultCombo;
             badge.dataset.combo = def;
             badge.textContent = formatCombo(def);
-            window.chrome.webview.postMessage('setting:shortcutReset:' + actionName);
+            window.chrome.webview.postMessage(__T+'setting:shortcutReset:' + actionName);
         }
 
         document.addEventListener('keydown', function(e) {
@@ -359,8 +360,21 @@
             badge.textContent = formatCombo(combo);
             stopRecording(badge, true);
 
-            window.chrome.webview.postMessage('setting:shortcut:' + actionName + ':' + combo);
+            window.chrome.webview.postMessage(__T+'setting:shortcut:' + actionName + ':' + combo);
         }, true);
+
+        function saveFocusDomains() {
+            var val = document.getElementById('focusDomains').value;
+            window.chrome.webview.postMessage(__T+'setting:focusDomains:' + encodeURIComponent(val));
+        }
+
+        function lockFocus() {
+            if (confirm("Are you sure? This action is PERMANENT. You will not be able to unlock these domains from the UI.")) {
+                window.chrome.webview.postMessage(__T+'setting:focusLocked:true');
+                document.getElementById('focusInputSection').style.display = 'none';
+                document.getElementById('focusLockedSection').style.display = 'block';
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             var current = '{{ACCENT_COLOR}}';
@@ -681,6 +695,25 @@
             </div>
         </div>
 
+        <!-- ════════ IRREVERSIBLE FOCUS ════════ -->
+        <div class="section">
+            <div class="section-header">Irreversible Focus</div>
+            <div class="card" style="padding: 16px;">
+                <div id="focusInputSection" style="display: {{FOCUS_INPUT_DISPLAY}};">
+                    <div style="font-size: 13.5px; color: #D4D4D4; margin-bottom: 8px;">Enter domains to block (one per line)</div>
+                    <textarea id="focusDomains" style="width: 100%; height: 100px; background: #1A1A1A; color: #D4D4D4; border: 1px solid #262626; border-radius: 6px; padding: 10px; font-family: inherit; font-size: 13px; resize: vertical; outline: none; margin-bottom: 12px; transition: border-color 0.15s;">{{FOCUS_DOMAINS}}</textarea>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="action-btn" onclick="saveFocusDomains()">Save Domains</button>
+                        <button class="action-btn" style="background: #E53935; color: white; border-color: #E53935;" onclick="lockFocus()">LOCK PERMANENTLY</button>
+                    </div>
+                </div>
+                <div id="focusLockedSection" style="display: {{FOCUS_LOCKED_DISPLAY}}; text-align: center; padding: 20px 0;">
+                    <div style="font-size: 18px; font-weight: 600; color: #4CAF50; margin-bottom: 8px;">Focus Mode is Permanently Locked</div>
+                    <div style="font-size: 13px; color: #888;">The configured distracting domains are irreversibly blocked.</div>
+                </div>
+            </div>
+        </div>
+
         <!-- ════════ SYSTEM ════════ -->
         <div class="section">
             <div class="section-header">System</div>
@@ -691,7 +724,7 @@
                         <div class="setting-desc">Open web links with Stride</div>
                     </div>
                     <div class="setting-control">
-                        <button class="action-btn" onclick="window.chrome.webview.postMessage('set-default-browser')">
+                        <button class="action-btn" onclick="window.chrome.webview.postMessage(__T+'set-default-browser')">
                             Set Default
                         </button>
                     </div>

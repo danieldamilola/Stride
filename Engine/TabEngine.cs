@@ -27,6 +27,8 @@ public sealed class TabEngine : IDisposable
     private readonly InternalPages _pages;
     private readonly IHistoryStore _historyStore;
     private readonly IOneTabStore _oneTabStore;
+    private readonly IDownloadStore _downloadStore;
+    private readonly FocusBlocklistService _focusBlocklistService;
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _hibernationTimer;
     private readonly Dictionary<Guid, WebView2> _webViews = new();
@@ -39,6 +41,11 @@ public sealed class TabEngine : IDisposable
     private const int MaxClosedTabs = 50;
     private static readonly System.Drawing.Color DarkBackground = System.Drawing.Color.FromArgb(255, 24, 24, 30);
     private bool _disposed;
+
+    // Per-session random token embedded in every internal page. IPC messages that
+    // don't include this token are rejected — this replaces the origin-based check
+    // which broke when internal pages ran on about:blank.
+    private readonly string _ipcToken = Guid.NewGuid().ToString("N");
 
     /// <summary>Max number of live (non-hibernated) WebView2 instances. Beyond this, LRU tabs get hibernated.</summary>
     private const int MaxLiveWebViews = 10;
@@ -75,6 +82,8 @@ public sealed class TabEngine : IDisposable
         _pages = deps.Pages;
         _historyStore = deps.HistoryStore;
         _oneTabStore = deps.OneTabStore;
+        _downloadStore = deps.DownloadStore;
+        _focusBlocklistService = deps.FocusBlocklistService;
         _dispatcher = webViewHost.Dispatcher;
 
         // Check every 60s whether any tabs have exceeded the hibernation timeout
@@ -88,26 +97,13 @@ public sealed class TabEngine : IDisposable
     {
         var dataDir = Helpers.AppPaths.WebView2Dir;
 
-        // Register the stride:// scheme so internal pages get a real, secure origin
-        // instead of about:blank. WebResourceRequested is only raised for custom
-        // schemes that are registered here, at environment-creation time.
-        var strideScheme = new CoreWebView2CustomSchemeRegistration("stride")
-        {
-            TreatAsSecure = true,
-            HasAuthorityComponent = true,
-            AllowedOrigins = ["stride://*"]
-        };
-
         var options = new CoreWebView2EnvironmentOptions
         {
             AreBrowserExtensionsEnabled = true,
             // Fluent overlay scrollbar: overlays content without pushing layout, works in Shadow DOM
             ScrollBarStyle = CoreWebView2ScrollbarStyle.FluentOverlay,
-            // Reduce telemetry and background activity
             AdditionalBrowserArguments = BuildBrowserArguments(_settings.SmartScreenEnabled)
         };
-        // CustomSchemeRegistrations is a read-only collection — populate via Add.
-        options.CustomSchemeRegistrations.Add(strideScheme);
         _environment = await CoreWebView2Environment.CreateAsync(null, dataDir, options);
 
         // Handle browser process exit at the environment level
@@ -302,14 +298,35 @@ public sealed class TabEngine : IDisposable
         catch (ArgumentException) { /* Invalid URL */ }
     }
 
-    public void NavigateToSettings(BrowserTab tab, BrowserSettings settings) =>
-        Navigate(tab, InternalUrls.Settings);
+    public void NavigateToSettings(BrowserTab tab, BrowserSettings settings)
+    {
+        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
+        try { wv.CoreWebView2.NavigateToString(_pages.SettingsPage(settings, _ipcToken)); } catch { }
+    }
 
-    public void NavigateToOneTab(BrowserTab tab, List<OneTabGroup> groups) =>
-        Navigate(tab, InternalUrls.OneTab);
+    public void NavigateToOneTab(BrowserTab tab, List<OneTabGroup> groups)
+    {
+        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
+        try { wv.CoreWebView2.NavigateToString(_pages.OneTabPage(_oneTabStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch { }
+    }
 
-    public void NavigateToHistory(BrowserTab tab, List<Models.HistoryEntry> entries) =>
-        Navigate(tab, InternalUrls.History);
+    public void NavigateToHistory(BrowserTab tab, List<Models.HistoryEntry> entries)
+    {
+        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
+        try { wv.CoreWebView2.NavigateToString(_pages.HistoryPage(_historyStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch { }
+    }
+
+    public void NavigateToDownloads(BrowserTab tab)
+    {
+        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
+        try { wv.CoreWebView2.NavigateToString(_pages.DownloadsPage(_downloadStore.Items.ToList(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch { }
+    }
+
+    public void NavigateToFocus(BrowserTab tab)
+    {
+        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
+        try { wv.CoreWebView2.NavigateToString(_pages.FocusPage()); } catch { }
+    }
 
     public void GoBack()
     {
@@ -437,7 +454,7 @@ public sealed class TabEngine : IDisposable
         HandleProcessFailure(wv, tab);
 
         // Serve internal pages (settings, newtab, etc.) from a real stride:// origin
-        WireInternalPageHost(wv);
+        // Internal pages are served via NavigateToString, no WebResourceRequested host needed.
 
         // Network-level ad blocking — block known ad URLs before they load
         if (_settings.AdBlockEnabled)
@@ -469,8 +486,8 @@ public sealed class TabEngine : IDisposable
 
     private void NavigateInitialUrl(WebView2 wv, BrowserTab tab)
     {
-        // Settings/OneTab/History are navigated by the caller after activation
-        // (see NavigateToSettings/OneTab/History), so skip them here to avoid a double load.
+        // Settings/OneTab/History are navigated by NavigateToSettings/OneTab/History
+        // after activation — skip here to avoid a double load.
         var callerManagedUrls = new HashSet<string>
         {
             InternalUrls.Settings, InternalUrls.OneTab, InternalUrls.History
@@ -478,10 +495,15 @@ public sealed class TabEngine : IDisposable
         if (callerManagedUrls.Contains(tab.Url))
             return;
 
-        // All other URLs (including stride://newtab) are served directly; internal
-        // pages resolve via the WebResourceRequested host, external via normal navigation.
+        // NewTab is served as HTML string so there's no real URL to navigate to.
+        if (tab.Url == InternalUrls.NewTab || string.IsNullOrEmpty(tab.Url))
+        {
+            try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch { }
+            return;
+        }
+
         try { wv.CoreWebView2.Navigate(tab.Url); }
-        catch (ArgumentException) { wv.CoreWebView2.Navigate(InternalUrls.NewTab); }
+        catch (ArgumentException) { try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch { } }
     }
 
     private async Task InjectContentScriptsAsync(WebView2 wv)
@@ -575,6 +597,24 @@ public sealed class TabEngine : IDisposable
                         catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Custom protocol launch failed: {ex.Message}"); }
                     });
                     return;
+                }
+            }
+
+            if (_settings.FocusLocked)
+            {
+                if (e.Uri is string uriStrFocus && Uri.TryCreate(uriStrFocus, UriKind.Absolute, out var parsedFocusUri))
+                {
+                    var host = parsedFocusUri.Host;
+                    if (!string.IsNullOrEmpty(host) && _focusBlocklistService.IsBlocked(host))
+                    {
+                        e.Cancel = true;
+                        _dispatcher.InvokeAsync(() =>
+                        {
+                            tab.Url = InternalUrls.Focus;
+                            NavigateToFocus(tab);
+                        });
+                        return;
+                    }
                 }
             }
 
@@ -702,21 +742,75 @@ public sealed class TabEngine : IDisposable
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
 
-            // SECURITY: only accept privileged commands from our own internal pages,
-            // which now run on a real stride:// origin. Any external website
-            // (https://...) shares window.chrome.webview.postMessage, so without this
-            // gate a malicious site could change settings, inject shortcuts, or wipe
-            // history. e.Source is the document origin; reject anything non-stride://.
-            var source = e.Source ?? "";
-            if (!source.StartsWith("stride://", StringComparison.OrdinalIgnoreCase))
+            // SECURITY: only accept privileged IPC commands from our own internal pages.
+            // Internal pages are loaded via NavigateToString (origin = about:blank) so we
+            // cannot gate on origin. Instead every internal page embeds a per-session secret
+            // token; messages that don't start with that token are silently dropped.
+            var msg = e.TryGetWebMessageAsString();
+            if (string.IsNullOrEmpty(msg) || !msg.StartsWith(_ipcToken + ":", StringComparison.Ordinal))
             {
-                Trace.WriteLine($"WebMessage dropped from untrusted origin: {source}");
+                Trace.WriteLine($"WebMessage dropped: missing or invalid IPC token.");
                 return;
             }
-
-            var msg = e.TryGetWebMessageAsString();
+            // Strip the token prefix before forwarding the payload
+            msg = msg[(_ipcToken.Length + 1)..];
             if (!string.IsNullOrEmpty(msg))
                 _dispatcher.Invoke(() => WebMessageReceived?.Invoke(msg));
+        };
+
+        wv.CoreWebView2.DownloadStarting += (_, e) =>
+        {
+            e.Handled = true; // We don't want the default download dialog
+            var op = e.DownloadOperation;
+            var item = new Models.DownloadItem
+            {
+                FileName = System.IO.Path.GetFileName(op.ResultFilePath),
+                Url = op.Uri,
+                FilePath = op.ResultFilePath,
+                State = Models.DownloadState.InProgress,
+                TotalBytes = op.TotalBytesToReceive.HasValue ? (long)op.TotalBytesToReceive.Value : 0,
+                ReceivedBytes = 0
+            };
+            
+            _dispatcher.Invoke(() => _downloadStore.Add(item));
+
+            op.BytesReceivedChanged += (s, args) =>
+            {
+                _dispatcher.Invoke(() =>
+                {
+                    item.ReceivedBytes = op.BytesReceived;
+                    if (item.TotalBytes <= 0 && op.TotalBytesToReceive.HasValue && op.TotalBytesToReceive.Value > 0)
+                        item.TotalBytes = (long)op.TotalBytesToReceive.Value;
+                });
+            };
+
+            op.StateChanged += (s, args) =>
+            {
+                _dispatcher.Invoke(() =>
+                {
+                    switch (op.State)
+                    {
+                        case Microsoft.Web.WebView2.Core.CoreWebView2DownloadState.InProgress:
+                            item.State = Models.DownloadState.InProgress;
+                            break;
+                        case Microsoft.Web.WebView2.Core.CoreWebView2DownloadState.Interrupted:
+                            item.State = Models.DownloadState.Failed;
+                            break;
+                        case Microsoft.Web.WebView2.Core.CoreWebView2DownloadState.Completed:
+                            item.State = Models.DownloadState.Completed;
+                            break;
+                    }
+                });
+            };
+            
+            // Handle cancel request from UI
+            item.PropertyChanged += (s, args) =>
+            {
+                if (args.PropertyName == nameof(Models.DownloadItem.State) && item.State == Models.DownloadState.Cancelled)
+                {
+                    try { op.Cancel(); } catch { }
+                }
+            };
         };
 
         wv.CoreWebView2.NewWindowRequested += (_, e) =>
@@ -782,50 +876,6 @@ public sealed class TabEngine : IDisposable
         };
     }
 
-    /// <summary>
-    /// Intercepts <c>stride://</c> requests and serves the matching internal page
-    /// HTML directly from memory, giving internal pages a real, secure origin
-    /// (e.g. <c>stride://settings</c>) instead of <c>about:blank</c>. The origin is
-    /// what <see cref="WireMessageAndWindowEvents"/> later checks to gate IPC.
-    /// </summary>
-    private void WireInternalPageHost(WebView2 wv)
-    {
-        wv.CoreWebView2.AddWebResourceRequestedFilter(
-            "stride://*", CoreWebView2WebResourceContext.All);
-
-        wv.CoreWebView2.WebResourceRequested += (_, e) =>
-        {
-            var requestUri = e.Request?.Uri ?? "";
-            if (!requestUri.StartsWith("stride://", StringComparison.OrdinalIgnoreCase))
-                return;
-
-            // Authority is the host between "stride://" and the next "/" (or end).
-            var authority = requestUri.Substring("stride://".Length);
-            var slash = authority.IndexOf('/');
-            if (slash >= 0) authority = authority[..slash];
-            authority = authority.ToLowerInvariant();
-
-            var html = authority switch
-            {
-                "newtab" => _pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)),
-                "settings" => _pages.SettingsPage(_settings),
-                "onetab" => _pages.OneTabPage(_oneTabStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)),
-                "history" => _pages.HistoryPage(_historyStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor)),
-                _ => null
-            };
-
-            if (html is null)
-            {
-                e.Response = wv.CoreWebView2.Environment.CreateWebResourceResponse(
-                    null, 404, "Not Found", "Content-Type: text/html");
-                return;
-            }
-
-            var bytes = System.Text.Encoding.UTF8.GetBytes(html);
-            e.Response = wv.CoreWebView2.Environment.CreateWebResourceResponse(
-                new MemoryStream(bytes), 200, "OK", "Content-Type: text/html; charset=utf-8");
-        };
-    }
 
     /// <summary>
     /// Blocks known ad-serving URLs at the network level.
@@ -939,6 +989,8 @@ public sealed class TabEngine : IDisposable
             InternalUrls.NewTab => "New Tab",
             InternalUrls.Settings => "Settings",
             InternalUrls.OneTab => "OneTab",
+            InternalUrls.Downloads => "Downloads",
+            InternalUrls.Focus => "Focus Locked",
             _ => tab.Title
         };
     }

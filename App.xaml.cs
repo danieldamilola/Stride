@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using StrideBrowser.Services;
 using StrideBrowser.ViewModels;
 
 namespace StrideBrowser;
@@ -12,6 +13,26 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (!SingleInstanceManager.Initialize(e.Args))
+        {
+            Shutdown();
+            return;
+        }
+
+        AppDomain.CurrentDomain.UnhandledException += (s, args) => 
+        {
+            System.IO.File.WriteAllText("crash.log", "AppDomain crash:\n" + args.ExceptionObject?.ToString());
+        };
+        DispatcherUnhandledException += (s, args) =>
+        {
+            System.IO.File.WriteAllText("crash.log", "Dispatcher crash:\n" + args.Exception?.ToString());
+            args.Handled = true;
+        };
+
+        System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.TextWriterTraceListener("trace.log"));
+        System.Diagnostics.Trace.AutoFlush = true;
+        System.Diagnostics.Trace.WriteLine("--- STRIDE STARTED ---");
+
         base.OnStartup(e);
 
         // Set AppUserModelID for taskbar grouping
@@ -33,6 +54,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _serviceProvider?.Dispose();
+        SingleInstanceManager.Shutdown();
         base.OnExit(e);
     }
 

@@ -7,7 +7,7 @@ namespace StrideBrowser.Services.Pages;
 /// <summary>Generates the history page HTML. Entries are passed as JSON for client-side rendering.</summary>
 public sealed class HistoryPage
 {
-    public string Render(List<HistoryEntry> entries, string accentColor, string accentRgb)
+    public string Render(List<HistoryEntry> entries, string accentColor, string accentRgb, string ipcToken)
     {
         var entriesJson = JsonSerializer.Serialize(entries, new JsonSerializerOptions
         {
@@ -22,7 +22,8 @@ public sealed class HistoryPage
             {
                 ["ENTRIES"] = entriesJson,
                 ["ACCENT"] = accentColor,
-                ["ACCENT_RGB"] = accentRgb
+                ["ACCENT_RGB"] = accentRgb,
+                ["IPC_TOKEN"] = ipcToken
             });
     }
 }

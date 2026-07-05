@@ -1,0 +1,4 @@
+--- STRIDE STARTED ---
+OnWindowLoaded failed: System.NullReferenceException: Object reference not set to an instance of an object.
+   at StrideBrowser.Engine.TabEngine.InitializeAsync() in C:\dev\SpurBrowser\Engine\TabEngine.cs:line 110
+   at StrideBrowser.MainWindow.OnWindowLoaded(Object sender, RoutedEventArgs e) in C:\dev\SpurBrowser\MainWindow.xaml.cs:line 146

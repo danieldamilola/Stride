@@ -25,6 +25,7 @@ public sealed class KeyboardShortcutMap
         Func<bool> isFullscreen,
         Func<Task> updateZoomIndicator,
         Func<Task> openHistory,
+        Func<Task> openDownloads,
         Func<int, Task> switchToTabIndex,
         Action<string> copyUrl,
         Func<List<(string url, string title)>> sendAllToOneTab,
@@ -87,6 +88,7 @@ public sealed class KeyboardShortcutMap
             return Task.CompletedTask;
         };
         _actions["History"] = openHistory;
+        _actions["Downloads"] = openDownloads;
         _actions["OpenOneTab"] = openOneTab;
         _actions["OpenSettings"] = openSettings;
 

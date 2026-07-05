@@ -15,4 +15,6 @@ public sealed record EngineDependencies(
     FaviconLoader FaviconLoader,
     InternalPages Pages,
     IHistoryStore HistoryStore,
-    IOneTabStore OneTabStore);
+    IOneTabStore OneTabStore,
+    IDownloadStore DownloadStore,
+    FocusBlocklistService FocusBlocklistService);

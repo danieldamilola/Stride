@@ -20,4 +20,9 @@ public static class WebMessagePrefix
     public const string ShortcutAdd = "shortcut-add:";
     public const string ShortcutRemove = "shortcut-remove:";
     public const string ShortcutClick = "shortcut-click:";
+    public const string DownloadOpen = "download-open:";
+    public const string DownloadFolder = "download-folder:";
+    public const string DownloadCancel = "download-cancel:";
+    public const string DownloadClear = "download-clear";
+    public const string FocusSettings = "focus-settings";
 }

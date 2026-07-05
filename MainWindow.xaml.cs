@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private readonly ISettingsStore _settingsStore;
     private readonly ISessionStore _sessionStore;
     private readonly IHistoryStore _historyStore;
+    private readonly IDownloadStore _downloadStore;
     private readonly WebMessageRouter _router;
     private KeyboardShortcutMap? _shortcuts;
 
@@ -51,11 +52,13 @@ public partial class MainWindow : Window
         _oneTabStore = services.GetRequiredService<IOneTabStore>();
         _sessionStore = services.GetRequiredService<ISessionStore>();
         _historyStore = services.GetRequiredService<IHistoryStore>();
+        _downloadStore = services.GetRequiredService<IDownloadStore>();
 
         var deps = services.GetRequiredService<EngineDependencies>();
         _engine = new TabEngine(WebViewHost, deps);
 
-        _router = new WebMessageRouter(_engine, _vm, _oneTabStore, _historyStore, _settingsStore);
+        var extManager = services.GetRequiredService<ExtensionManager>();
+        _router = new WebMessageRouter(_engine, _vm, _oneTabStore, _historyStore, _downloadStore, _settingsStore, extManager);
         _router.SettingChanged += OnSettingChanged;
 
         DataContext = _vm;
@@ -154,6 +157,8 @@ public partial class MainWindow : Window
 
             await HandleCommandLineUrls();
 
+            SingleInstanceManager.InstanceMessageReceived += OnInstanceMessageReceived;
+
             if (!DefaultBrowserRegistrar.IsRegistered())
                 DefaultBrowserRegistrar.Register();
 
@@ -163,6 +168,43 @@ public partial class MainWindow : Window
         {
             Trace.WriteLine($"OnWindowLoaded failed: {ex}");
         }
+    }
+
+    private void OnInstanceMessageReceived(string[] args)
+    {
+        Dispatcher.InvokeAsync(async () =>
+        {
+            foreach (var arg in args)
+            {
+                if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                    arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    var tab = _engine.CreateTab(arg);
+                    _engine.SwitchTo(tab);
+                    await _engine.ActivateAsync(tab);
+                    break;
+                }
+            }
+
+            // Win32 foreground activation — WPF's Activate() alone is unreliable
+            // on Windows 10/11 when the app is in the background. Windows enforces
+            // strict foreground rules, so a background process calling Activate()
+            // often just flashes the taskbar icon. Using the native APIs first
+            // ensures the window actually comes to the front.
+            var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+            if (hwnd != IntPtr.Zero)
+            {
+                if (NativeMethods.IsIconic(hwnd))
+                    NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
+
+                NativeMethods.SetForegroundWindow(hwnd);
+            }
+
+            if (WindowState == WindowState.Minimized)
+                WindowState = WindowState.Normal;
+
+            Activate();
+        });
     }
 
     private KeyboardShortcutMap BuildShortcutMap()
@@ -176,6 +218,7 @@ public partial class MainWindow : Window
             isFullscreen: () => _isFullscreen,
             updateZoomIndicator: () => { UpdateZoomIndicator(); return Task.CompletedTask; },
             openHistory: OpenHistoryTab,
+            openDownloads: OpenDownloadsTab,
             switchToTabIndex: SwitchToTabByIndex,
             copyUrl: CopyUrlToClipboard,
             sendAllToOneTab: () => _engine.SendAllToOneTab(),
@@ -1021,6 +1064,19 @@ public partial class MainWindow : Window
             _engine.NavigateToHistory(tab, entries);
         }
         catch (Exception ex) { Trace.WriteLine($"History open failed: {ex}"); }
+    }
+
+    private async Task OpenDownloadsTab()
+    {
+        try
+        {
+            var tab = _engine.CreateTab(InternalUrls.Downloads);
+            tab.Title = "Downloads";
+            _engine.SwitchTo(tab);
+            await _engine.ActivateAsync(tab);
+            _engine.NavigateToDownloads(tab);
+        }
+        catch (Exception ex) { Trace.WriteLine($"Downloads open failed: {ex}"); }
     }
 
     private System.Windows.Threading.DispatcherTimer? _copyTimer;

@@ -342,7 +342,7 @@
             <input type="text" class="search-input"
                    placeholder="Search or type a URL"
                    autofocus
-                   onkeydown="if(event.key==='Enter'){window.chrome.webview.postMessage('search:'+this.value)}">
+                   onkeydown="if(event.key==='Enter'){window.chrome.webview.postMessage(__T+'search:'+this.value)}">
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <circle cx="11" cy="11" r="7"/>
                 <line x1="16.2" y1="16.2" x2="21" y2="21"/>
@@ -372,6 +372,7 @@
     </div>
 
     <script>
+        const __T = '{{IPC_TOKEN}}:';
         const shortcuts = JSON.parse('{{SHORTCUTS}}' || '[]');
 
         function getDomain(url) {
@@ -400,12 +401,12 @@
                 `;
 
                 tile.addEventListener('click', () => {
-                    window.chrome.webview.postMessage('shortcut-click:' + url);
+                    window.chrome.webview.postMessage(__T+'shortcut-click:' + url);
                 });
                 tile.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        window.chrome.webview.postMessage('shortcut-click:' + url);
+                        window.chrome.webview.postMessage(__T+'shortcut-click:' + url);
                     }
                     if (e.key === 'Delete' || e.key === 'Backspace') {
                         e.preventDefault();
@@ -451,12 +452,12 @@
             if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
             const payload = JSON.stringify({ name: name || getDomain(url), url: url });
-            window.chrome.webview.postMessage('shortcut-add:' + payload);
+            window.chrome.webview.postMessage(__T+'shortcut-add:' + payload);
             closeDialog();
         }
 
         function removeShortcut(index) {
-            window.chrome.webview.postMessage('shortcut-remove:' + index);
+            window.chrome.webview.postMessage(__T+'shortcut-remove:' + index);
         }
 
         // Dialog keyboard handling

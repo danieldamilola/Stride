@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Downloads - Stride</title>
+    <style>
+        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0C0C0C;
+            color: #D4D4D4;
+            font-family: 'Segoe UI', Inter, sans-serif;
+            padding: 48px 64px;
+            min-height: 100vh;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #E8E8E8;
+        }
+        .clear-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid #2A2A2A;
+            color: #888;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .clear-btn:hover { border-color: #444; color: #ccc; }
+
+        .empty {
+            text-align: center;
+            color: #555;
+            font-size: 15px;
+            margin-top: 120px;
+        }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+
+        .download-list { display: flex; flex-direction: column; gap: 2px; }
+
+        .download-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: #141416;
+            border-radius: 10px;
+            transition: background 0.15s;
+        }
+        .download-item:hover { background: #1A1A1E; }
+
+        .file-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(var(--accent-rgb), 0.12);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        .download-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .download-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #E0E0E0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .download-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .download-meta .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .status-dot.completed { background: #4CAF50; }
+        .status-dot.in-progress { background: var(--accent); }
+        .status-dot.paused { background: #FFA726; }
+        .status-dot.failed { background: #EF5350; }
+        .status-dot.cancelled { background: #666; }
+
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: #1E1E22;
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .download-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: #666;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+        .action-btn:hover { background: #222; color: #ccc; }
+        .action-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Confirm dialog (reusing history page pattern) */
+        .confirm-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .confirm-overlay.open { display: flex; }
+        .confirm-dialog {
+            background: #1A1A1E;
+            border: 1px solid #2A2A2A;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 360px;
+            text-align: center;
+        }
+        .confirm-dialog h3 { font-size: 16px; color: #E0E0E0; margin-bottom: 8px; }
+        .confirm-dialog p { font-size: 13px; color: #888; margin-bottom: 20px; }
+        .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+        .confirm-actions button {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: opacity 0.15s;
+        }
+        .confirm-actions .cancel-btn { background: #2A2A2A; color: #ccc; }
+        .confirm-actions .danger-btn { background: #EF5350; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Downloads</h1>
+        <button class="clear-btn" id="clearBtn">Clear completed</button>
+    </div>
+    <div class="download-list" id="downloadList"></div>
+
+    <div class="confirm-overlay" id="confirmDialog">
+        <div class="confirm-dialog">
+            <h3>Clear completed downloads?</h3>
+            <p>This only removes them from this list — files stay on your computer.</p>
+            <div class="confirm-actions">
+                <button class="cancel-btn" onclick="closeConfirm()">Cancel</button>
+                <button class="danger-btn" onclick="confirmClear()">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const __T = '{{IPC_TOKEN}}:';
+        const downloads = JSON.parse('{{DOWNLOADS}}' || '[]');
+
+        function formatBytes(bytes) {
+            if (bytes <= 0) return '0 B';
+            const units = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+            return (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+        }
+
+        function formatTime(iso) {
+            const d = new Date(iso);
+            const now = new Date();
+            const isToday = d.toDateString() === now.toDateString();
+            const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return isToday ? time : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + time;
+        }
+
+        function getExtension(name) {
+            const dot = name.lastIndexOf('.');
+            return dot > 0 ? name.substring(dot + 1).toUpperCase() : '?';
+        }
+
+        function stateLabel(state) {
+            switch (state) {
+                case 'Completed': return 'Completed';
+                case 'InProgress': return 'Downloading';
+                case 'Paused': return 'Paused';
+                case 'Cancelled': return 'Cancelled';
+                case 'Failed': return 'Failed';
+                default: return state;
+            }
+        }
+
+        function stateClass(state) {
+            switch (state) {
+                case 'Completed': return 'completed';
+                case 'InProgress': return 'in-progress';
+                case 'Paused': return 'paused';
+                case 'Cancelled': return 'cancelled';
+                case 'Failed': return 'failed';
+                default: return '';
+            }
+        }
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function render() {
+            const container = document.getElementById('downloadList');
+
+            if (downloads.length === 0) {
+                container.innerHTML = `<div class="empty"><div class="empty-icon">↓</div>No downloads yet.</div>`;
+                return;
+            }
+
+            let html = '';
+            for (const dl of downloads) {
+                const ext = getExtension(dl.FileName);
+                const sc = stateClass(dl.State);
+                const size = dl.TotalBytes > 0
+                    ? (dl.State === 'InProgress' ? formatBytes(dl.ReceivedBytes) + ' / ' + formatBytes(dl.TotalBytes) : formatBytes(dl.TotalBytes))
+                    : (dl.ReceivedBytes > 0 ? formatBytes(dl.ReceivedBytes) : '');
+                const progress = dl.TotalBytes > 0 ? Math.round(dl.ReceivedBytes * 100 / dl.TotalBytes) : 0;
+
+                html += `<div class="download-item" data-id="${escapeHtml(dl.Id)}">`;
+                html += `<div class="file-icon">${escapeHtml(ext)}</div>`;
+                html += `<div class="download-info">`;
+                html += `<div class="download-name" title="${escapeHtml(dl.FileName)}">${escapeHtml(dl.FileName)}</div>`;
+                html += `<div class="download-meta">`;
+                html += `<span class="status-dot ${sc}"></span>`;
+                html += `<span>${stateLabel(dl.State)}</span>`;
+                if (size) html += `<span>·</span><span>${size}</span>`;
+                html += `<span>·</span><span>${formatTime(dl.StartedAt)}</span>`;
+                html += `</div>`;
+                if (dl.State === 'InProgress') {
+                    html += `<div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>`;
+                }
+                html += `</div>`;
+                html += `<div class="download-actions">`;
+
+                if (dl.State === 'Completed') {
+                    // Open file
+                    html += `<button class="action-btn" title="Open file" onclick="openFile('${escapeHtml(dl.Id)}')">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </button>`;
+                    // Open folder
+                    html += `<button class="action-btn" title="Show in folder" onclick="openFolder('${escapeHtml(dl.Id)}')">
+                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    </button>`;
+                }
+                if (dl.State === 'InProgress') {
+                    // Cancel
+                    html += `<button class="action-btn" title="Cancel" onclick="cancelDownload('${escapeHtml(dl.Id)}')">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>`;
+                }
+
+                html += `</div></div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function openFile(id) {
+            window.chrome.webview.postMessage(__T + 'download-open:' + id);
+        }
+        function openFolder(id) {
+            window.chrome.webview.postMessage(__T + 'download-folder:' + id);
+        }
+        function cancelDownload(id) {
+            window.chrome.webview.postMessage(__T + 'download-cancel:' + id);
+        }
+
+        // Clear completed
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            document.getElementById('confirmDialog').classList.add('open');
+        });
+        function closeConfirm() {
+            document.getElementById('confirmDialog').classList.remove('open');
+        }
+        function confirmClear() {
+            window.chrome.webview.postMessage(__T + 'download-clear');
+            closeConfirm();
+        }
+        document.getElementById('confirmDialog').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeConfirm();
+        });
+
+        render();
+    </script>
+</body>
+</html>
