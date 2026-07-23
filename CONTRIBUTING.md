@@ -6,11 +6,11 @@ This document serves as a set of guidelines for contributing to Stride. These ar
 
 ---
 
-## 🧭 Code of Conduct
+## Code of Conduct
 
 By participating in this project, you are expected to uphold a welcoming, inclusive, and professional environment. Please ensure that all communication in issues, pull requests, and discussions remains respectful.
 
-## 🐛 How Can I Contribute?
+## How Can I Contribute?
 
 ### Reporting Bugs
 
@@ -27,7 +27,7 @@ When reporting a bug, please include:
 We are always looking for ways to make Stride better! If you have an idea for a new feature or an improvement to the UI/UX:
 1. Check the issue tracker for similar suggestions.
 2. Open a "Feature Request" issue.
-3. Describe the problem your feature solves and propose a solution. Include mockups or reference images if possible!
+3. Describe the problem your feature solves and propose a solution. Include mockups or reference images if possible.
 
 ### Contributing Code
 
@@ -72,7 +72,7 @@ dotnet run --project SpurBrowser.csproj -c Debug
    - How to test it.
 6. A maintainer will review your code. We may suggest some changes or improvements before merging.
 
-## 🔮 The Future of Stride
+## The Future of Stride
 
 If you are looking for things to work on, here are a few major milestones we are actively looking for help with:
 
@@ -80,4 +80,4 @@ If you are looking for things to work on, here are a few major milestones we are
 - **Extension API:** Expanding our internal `IExtensionManager` to support standard browser extension manifests.
 - **Performance Profiling:** Identifying and fixing memory bottlenecks in the `TabEngine` lifecycle.
 
-Thank you for helping us build a better browser! 🚀
+Thank you for helping us build a better browser!
