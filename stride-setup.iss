@@ -94,16 +94,44 @@ begin
   end;
 end;
 
-function InitializeSetup(): Boolean;
+var
+  DownloadPage: TDownloadWizardPage;
+
+procedure InitializeWizard;
+begin
+  DownloadPage := CreateDownloadPage(SetupMessage(msgWizardPreparing), SetupMessage(msgPreparingDesc), nil);
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   Result := True;
-  // Warn if .NET 9 might not be installed
+  if (CurPageID = wpReady) and not IsDotNet9Installed() then
+  begin
+    DownloadPage.Clear;
+    DownloadPage.Add('https://aka.ms/dotnet/9.0/windowsdesktop-runtime-win-x64.exe', 'dotnet9.exe', '');
+    DownloadPage.Show;
+    try
+      try
+        DownloadPage.Download;
+      except
+        SuppressibleMsgBox(AddPeriod(GetExceptionMessage), mbCriticalError, MB_OK, IDOK);
+        Result := False;
+      end;
+    finally
+      DownloadPage.Hide;
+    end;
+  end;
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  ResultCode: Integer;
+begin
   if not IsDotNet9Installed() then
   begin
-    if MsgBox('Stride requires the .NET 9 Desktop Runtime.' + #13#10 + #13#10 +
-              'If Stride fails to start, download it from:' + #13#10 +
-              'https://dotnet.microsoft.com/download/dotnet/9.0' + #13#10 + #13#10 +
-              'Continue installation?', mbConfirmation, MB_YESNO) = IDNO then
-      Result := False;
+    if not Exec(ExpandConstant('{tmp}\dotnet9.exe'), '/install /quiet /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+    begin
+      Result := 'Failed to install .NET 9 Desktop Runtime automatically. Please install it manually.';
+    end;
   end;
 end;
