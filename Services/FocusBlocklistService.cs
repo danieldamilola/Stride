@@ -14,9 +14,9 @@ namespace StrideBrowser.Services;
 public sealed class FocusBlocklistService
 {
     private static readonly HttpClient _http = new();
-    
+
     // Hardcoded URLs provided by user context
-    private static readonly string[] ListUrls = 
+    private static readonly string[] ListUrls =
     {
         "https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt",
         "https://raw.githubusercontent.com/Telegreat/blocklist/master/telegram.txt"
@@ -30,7 +30,7 @@ public sealed class FocusBlocklistService
     public FocusBlocklistService(ISettingsStore settingsStore)
     {
         _settingsStore = settingsStore;
-        
+
         // Load domains asynchronously if Focus mode is currently locked
         var settings = _settingsStore.Load();
         if (settings.FocusLocked)
@@ -47,48 +47,33 @@ public sealed class FocusBlocklistService
     {
         if (string.IsNullOrEmpty(host)) return false;
 
-        // Check custom user domains first (from settings)
         var settings = _settingsStore.Load();
-        if (settings.FocusLocked)
-        {
-            if (!string.IsNullOrWhiteSpace(settings.FocusDomains))
-            {
-                var custom = settings.FocusDomains.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                if (custom.Any(d => host.Equals(d.Trim(), StringComparison.OrdinalIgnoreCase) || host.EndsWith("." + d.Trim(), StringComparison.OrdinalIgnoreCase)))
-                {
-                    return true;
-                }
-            }
+        if (!settings.FocusLocked) return false;
 
-            // Trigger initialization if locked but not loaded
-            if (!_isLoaded)
-            {
-                _ = InitializeAsync();
-                return false; // Will block on subsequent requests once loaded
-            }
-        }
-        else
+        // Check custom user domains first (from settings)
+        if (!string.IsNullOrWhiteSpace(settings.FocusDomains))
         {
-            return false;
+            var custom = settings.FocusDomains
+                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(d => d.Trim());
+            if (FocusDomainMatcher.MatchesCustomDomain(host, custom))
+                return true;
+        }
+
+        // Trigger initialization if locked but not loaded
+        if (!_isLoaded)
+        {
+            _ = InitializeAsync();
+            return false; // Will block on subsequent requests once loaded
         }
 
         // Fast host splitting lookup against the massive 500k HashSet
-        // e.g., for "m.images.badsite.com", checks:
-        // 1. "m.images.badsite.com"
-        // 2. "images.badsite.com"
-        // 3. "badsite.com"
-        var parts = host.Split('.');
-        for (int i = 0; i < parts.Length - 1; i++)
+        if (FocusDomainMatcher.MatchesBlockedDomain(host, _compiledDomains, out var matchedSuffix))
         {
-            var subHost = string.Join(".", parts.Skip(i));
-            if (_compiledDomains.Contains(subHost)) 
-            {
-                System.Diagnostics.Trace.WriteLine($"FocusBlocklistService: Blocked {host} because of match {subHost}");
-                return true;
-            }
+            Trace.WriteLine($"FocusBlocklistService: Blocked {host} because of match {matchedSuffix}");
+            return true;
         }
 
-        System.Diagnostics.Trace.WriteLine($"FocusBlocklistService: Allowed {host}");
         return false;
     }
 
@@ -145,11 +130,11 @@ public sealed class FocusBlocklistService
                     // Skip comments and empty lines
                     if (string.IsNullOrEmpty(clean) || clean.StartsWith('#')) continue;
 
-                    // Some lists like BlocklistProject have "0.0.0.0 badsite.com" format sometimes, 
+                    // Some lists like BlocklistProject have "0.0.0.0 badsite.com" format sometimes,
                     // or just "badsite.com". Handle simple cases:
                     var parts = clean.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                     var domain = parts.LastOrDefault();
-                    
+
                     if (!string.IsNullOrEmpty(domain) && !domain.StartsWith('#'))
                     {
                         tempSet.Add(domain);
@@ -163,7 +148,7 @@ public sealed class FocusBlocklistService
             _compiledDomains = tempSet;
             _isLoaded = true;
         }
-        
+
         Trace.WriteLine($"Loaded {_compiledDomains.Count} focus domains into memory.");
     }
 
@@ -176,8 +161,8 @@ public sealed class FocusBlocklistService
         {
             var fileName = GetCacheFileName(url);
             var filePath = Path.Combine(AppPaths.FocusCacheDir, fileName);
-            
-            var needsDownload = !File.Exists(filePath) || 
+
+            var needsDownload = !File.Exists(filePath) ||
                                 (DateTime.UtcNow - File.GetLastWriteTimeUtc(filePath)) > expiration;
 
             if (needsDownload)

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using StrideBrowser.Models;
 using StrideBrowser.Services.Input;
@@ -47,6 +48,7 @@ public sealed class SettingsPage
                 ["ACCENT_RGB"] = HexToRgb(settings.AccentColor),
                 ["YT_QUALITY_AUTO"] = SelStr(settings.YtDefaultQuality, "auto"),
                 ["YT_QUALITY_HIGHEST"] = SelStr(settings.YtDefaultQuality, "highest"),
+                ["YT_QUALITY_LOWEST"] = SelStr(settings.YtDefaultQuality, "lowest"),
                 ["YT_QUALITY_TINY"] = SelStr(settings.YtDefaultQuality, "tiny"),
                 ["YT_QUALITY_SMALL"] = SelStr(settings.YtDefaultQuality, "small"),
                 ["YT_QUALITY_MEDIUM"] = SelStr(settings.YtDefaultQuality, "medium"),
@@ -55,7 +57,7 @@ public sealed class SettingsPage
                 ["YT_QUALITY_1080"] = SelStr(settings.YtDefaultQuality, "hd1080"),
                 ["YT_QUALITY_1440"] = SelStr(settings.YtDefaultQuality, "hd1440"),
                 ["YT_QUALITY_4K"] = SelStr(settings.YtDefaultQuality, "highres"),
-                ["YT_SPEED"] = settings.YtDefaultSpeed.ToString(),
+                ["YT_SPEED"] = settings.YtDefaultSpeed.ToString(CultureInfo.InvariantCulture),
                 ["CHK_YT_AUTOPLAY"] = Chk(settings.YtDisableAutoplay),
                 ["CHK_YT_PAUSE"] = Chk(settings.YtPauseOnTabSwitch),
                 ["FOCUS_INPUT_DISPLAY"] = settings.FocusLocked ? "none" : "block",

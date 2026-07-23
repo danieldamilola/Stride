@@ -1,737 +1,1100 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Settings - Stride</title>
     <style>
-        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+      :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-            background: #0C0C0C;
-            color: #D4D4D4;
-            font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
-            line-height: 1.5;
-        }
+      body {
+          background: #0C0C0C;
+          color: #D4D4D4;
+          font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+          line-height: 1.5;
+      }
 
-        .settings-container {
-            max-width: 680px;
-            margin: 0 auto;
-            padding: 40px 32px 60px;
-        }
+      .settings-container {
+          max-width: 680px;
+          margin: 0 auto;
+          padding: 40px 32px 60px;
+      }
 
-        /* ── Page header ── */
-        .page-header {
-            margin-bottom: 32px;
-        }
-        .page-header h1 {
-            font-size: 28px;
-            font-weight: 600;
-            color: #E0E0E0;
-            letter-spacing: -0.3px;
-        }
+      /* ── Page header ── */
+      .page-header {
+          margin-bottom: 32px;
+      }
+      .page-header h1 {
+          font-size: 28px;
+          font-weight: 600;
+          color: #E0E0E0;
+          letter-spacing: -0.3px;
+      }
 
-        /* ── Section ── */
-        .section {
-            margin-bottom: 28px;
-        }
-        .section-header {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #5A5A5A;
-            margin-bottom: 8px;
-            padding: 0 4px;
-        }
+      /* ── Section ── */
+      .section {
+          margin-bottom: 28px;
+      }
+      .section-header {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          color: #5A5A5A;
+          margin-bottom: 8px;
+          padding: 0 4px;
+      }
 
-        /* ── Card (groups settings) ── */
-        .card {
-            background: #141414;
-            border: 1px solid #1E1E1E;
-            border-radius: 10px;
-            overflow: hidden;
-        }
+      /* ── Card (groups settings) ── */
+      .card {
+          background: #141414;
+          border: 1px solid #1E1E1E;
+          border-radius: 10px;
+          overflow: hidden;
+      }
 
-        /* ── Setting row ── */
-        .setting-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 16px;
-            gap: 16px;
-            transition: background 0.15s;
-        }
-        .setting-row:hover {
-            background: #1A1A1A;
-        }
-        .setting-row + .setting-row {
-            border-top: 1px solid #1A1A1A;
-        }
-        .setting-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .setting-label {
-            font-size: 13.5px;
-            font-weight: 400;
-            color: #D4D4D4;
-        }
-        .setting-desc {
-            font-size: 12px;
-            color: #555;
-            margin-top: 2px;
-        }
-        .setting-control {
-            flex-shrink: 0;
-        }
+      /* ── Setting row ── */
+      .setting-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 16px;
+          gap: 16px;
+          transition: background 0.15s;
+      }
+      .setting-row:hover {
+          background: #1A1A1A;
+      }
+      .setting-row + .setting-row {
+          border-top: 1px solid #1A1A1A;
+      }
+      .setting-info {
+          flex: 1;
+          min-width: 0;
+      }
+      .setting-label {
+          font-size: 13.5px;
+          font-weight: 400;
+          color: #D4D4D4;
+      }
+      .setting-desc {
+          font-size: 12px;
+          color: #555;
+          margin-top: 2px;
+      }
+      .setting-control {
+          flex-shrink: 0;
+      }
 
-        /* ── Toggle switch ── */
-        .toggle {
-            position: relative;
-            width: 36px;
-            height: 20px;
-            appearance: none;
-            -webkit-appearance: none;
-            background: #333;
-            border-radius: 10px;
-            outline: none;
-            cursor: pointer;
-            transition: background 0.2s;
-            border: none;
-        }
-        .toggle::before {
-            content: '';
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 14px;
-            height: 14px;
-            background: #888;
-            border-radius: 50%;
-            transition: transform 0.2s, background 0.2s;
-        }
-        .toggle:checked {
-            background: var(--accent);
-        }
-        .toggle:checked::before {
-            transform: translateX(16px);
-            background: #0C0C0C;
-        }
+      /* ── Toggle switch ── */
+      .toggle {
+          position: relative;
+          width: 36px;
+          height: 20px;
+          appearance: none;
+          -webkit-appearance: none;
+          background: #333;
+          border-radius: 10px;
+          outline: none;
+          cursor: pointer;
+          transition: background 0.2s;
+          border: none;
+      }
+      .toggle::before {
+          content: '';
+          position: absolute;
+          top: 3px;
+          left: 3px;
+          width: 14px;
+          height: 14px;
+          background: #888;
+          border-radius: 50%;
+          transition: transform 0.2s, background 0.2s;
+      }
+      .toggle:checked {
+          background: var(--accent);
+      }
+      .toggle:checked::before {
+          transform: translateX(16px);
+          background: #0C0C0C;
+      }
 
-        /* ── Select dropdown ── */
-        .select {
-            background: #1A1A1A;
-            color: #D4D4D4;
-            border: 1px solid #262626;
-            border-radius: 6px;
-            padding: 6px 28px 6px 10px;
-            font-size: 13px;
-            font-family: inherit;
-            outline: none;
-            cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            transition: border-color 0.15s;
-        }
-        .select:hover {
-            border-color: #333;
-        }
-        .select:focus {
-            border-color: var(--accent);
-        }
+      /* ── Select dropdown ── */
+      .select {
+          background: #1A1A1A;
+          color: #D4D4D4;
+          border: 1px solid #262626;
+          border-radius: 6px;
+          padding: 6px 28px 6px 10px;
+          font-size: 13px;
+          font-family: inherit;
+          outline: none;
+          cursor: pointer;
+          appearance: none;
+          -webkit-appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          transition: border-color 0.15s;
+      }
+      .select:hover {
+          border-color: #333;
+      }
+      .select:focus {
+          border-color: var(--accent);
+      }
 
-        /* ── Number input ── */
-        .input-number {
-            background: #1A1A1A;
-            color: #D4D4D4;
-            border: 1px solid #262626;
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 13px;
-            font-family: inherit;
-            outline: none;
-            width: 72px;
-            text-align: center;
-            transition: border-color 0.15s;
-        }
-        .input-number:focus {
-            border-color: var(--accent);
-        }
+      /* ── Number input ── */
+      .input-number {
+          background: #1A1A1A;
+          color: #D4D4D4;
+          border: 1px solid #262626;
+          border-radius: 6px;
+          padding: 6px 10px;
+          font-size: 13px;
+          font-family: inherit;
+          outline: none;
+          width: 72px;
+          text-align: center;
+          transition: border-color 0.15s;
+      }
+      .input-number:focus {
+          border-color: var(--accent);
+      }
 
-        /* ── Action button ── */
-        .action-btn {
-            padding: 9px 20px;
-            background: transparent;
-            color: var(--accent);
-            border: 1px solid var(--accent);
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: inherit;
-            transition: background 0.15s, color 0.15s;
-        }
-        .action-btn:hover {
-            background: var(--accent);
-            color: #0C0C0C;
-        }
+      /* ── Action button ── */
+      .action-btn {
+          padding: 9px 20px;
+          background: transparent;
+          color: var(--accent);
+          border: 1px solid var(--accent);
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          font-family: inherit;
+          transition: background 0.15s, color 0.15s;
+      }
+      .action-btn:hover {
+          background: var(--accent);
+          color: #0C0C0C;
+      }
 
-        /* ── Subsection label inside a card ── */
-        .subsection-label {
-            padding: 10px 16px 2px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            color: #444;
-        }
-        .subsection-label + .setting-row {
-            border-top: none;
-        }
+      /* ── Subsection label inside a card ── */
+      .subsection-label {
+          padding: 10px 16px 2px;
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.6px;
+          color: #444;
+      }
+      .subsection-label + .setting-row {
+          border-top: none;
+      }
 
-        /* ── Color swatches ── */
-        .color-swatches {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .color-swatch {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: transform 0.15s, border-color 0.15s;
-            position: relative;
-        }
-        .color-swatch:hover {
-            transform: scale(1.15);
-        }
-        .color-swatch.active {
-            border-color: #fff;
-        }
-        .color-swatch.active::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #0C0C0C;
-        }
+      /* ── Color swatches ── */
+      .color-swatches {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+      }
+      .color-swatch {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          border: 2px solid transparent;
+          cursor: pointer;
+          transition: transform 0.15s, border-color 0.15s;
+          position: relative;
+      }
+      .color-swatch:hover {
+          transform: scale(1.15);
+      }
+      .color-swatch.active {
+          border-color: #fff;
+      }
+      .color-swatch.active::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #0C0C0C;
+      }
 
-        /* ── Scrollbar ── */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #333; }
+      /* ── Scrollbar ── */
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #333; }
 
-        /* ── Shortcut key badge ── */
-        .shortcut-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            background: #1A1A1A;
-            border: 1px solid #262626;
-            border-radius: 6px;
-            font-size: 12px;
-            font-family: 'Segoe UI Variable', monospace;
-            font-weight: 500;
-            color: #999;
-            cursor: pointer;
-            transition: border-color 0.15s, background 0.15s;
-            min-width: 60px;
-            text-align: center;
-            justify-content: center;
-            user-select: none;
-        }
-        .shortcut-badge:hover {
-            border-color: #444;
-            background: #222;
-        }
-        .shortcut-badge.recording {
-            border-color: var(--accent);
-            background: #1A1510;
-            color: var(--accent);
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        .shortcut-reset {
-            background: none;
-            border: none;
-            color: #555;
-            font-size: 11px;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 4px;
-            transition: color 0.15s;
-            font-family: inherit;
-        }
-        .shortcut-reset:hover {
-            color: var(--accent);
-        }
-        .shortcut-controls {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+      /* ── Shortcut key badge ── */
+      .shortcut-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 10px;
+          background: #1A1A1A;
+          border: 1px solid #262626;
+          border-radius: 6px;
+          font-size: 12px;
+          font-family: 'Segoe UI Variable', monospace;
+          font-weight: 500;
+          color: #999;
+          cursor: pointer;
+          transition: border-color 0.15s, background 0.15s;
+          min-width: 60px;
+          text-align: center;
+          justify-content: center;
+          user-select: none;
+      }
+      .shortcut-badge:hover {
+          border-color: #444;
+          background: #222;
+      }
+      .shortcut-badge.recording {
+          border-color: var(--accent);
+          background: #1A1510;
+          color: var(--accent);
+          animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+      }
+      .shortcut-reset {
+          background: none;
+          border: none;
+          color: #555;
+          font-size: 11px;
+          cursor: pointer;
+          padding: 2px 6px;
+          border-radius: 4px;
+          transition: color 0.15s;
+          font-family: inherit;
+      }
+      .shortcut-reset:hover {
+          color: var(--accent);
+      }
+      .shortcut-controls {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+      }
     </style>
     <script>
-        const __T = '{{IPC_TOKEN}}:';
-        function s(key, el) {
-            const val = el.type === 'checkbox' ? el.checked : el.value;
-            window.chrome.webview.postMessage(__T+'setting:' + key + ':' + val);
-        }
-        function setAccent(hex) {
-            window.chrome.webview.postMessage(__T+'setting:accentColor:' + hex);
-            document.querySelectorAll('.color-swatch').forEach(function(sw) {
-                sw.classList.toggle('active', sw.dataset.color === hex);
-            });
-        }
-        // ── Shortcut recording ──
-        var activeRecorder = null;
-
-        function startRecording(badge) {
-            if (activeRecorder) stopRecording(activeRecorder, false);
-            activeRecorder = badge;
-            badge.classList.add('recording');
-            badge.textContent = 'Press keys...';
-            badge.dataset.oldCombo = badge.dataset.combo;
-        }
-
-        function stopRecording(badge, save) {
-            badge.classList.remove('recording');
-            if (!save) badge.textContent = formatCombo(badge.dataset.combo);
-            activeRecorder = null;
-        }
-
-        function formatCombo(combo) {
-            return combo.split('+').map(function(p) {
-                return p.charAt(0).toUpperCase() + p.slice(1);
-            }).join(' + ');
-        }
-
-        function resetShortcut(actionName, badge) {
-            var def = badge.dataset.defaultCombo;
-            badge.dataset.combo = def;
-            badge.textContent = formatCombo(def);
-            window.chrome.webview.postMessage(__T+'setting:shortcutReset:' + actionName);
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (!activeRecorder) return;
-            e.preventDefault();
-            e.stopPropagation();
-
-            // Ignore lone modifier keys
-            if (['Control','Shift','Alt','Meta'].includes(e.key)) return;
-
-            var parts = [];
-            if (e.ctrlKey) parts.push('Ctrl');
-            if (e.shiftKey) parts.push('Shift');
-            if (e.altKey) parts.push('Alt');
-
-            // Map key name
-            var keyName = e.key;
-            if (keyName === ' ') keyName = 'Space';
-            else if (keyName === 'ArrowLeft') keyName = 'Left';
-            else if (keyName === 'ArrowRight') keyName = 'Right';
-            else if (keyName === 'ArrowUp') keyName = 'Up';
-            else if (keyName === 'ArrowDown') keyName = 'Down';
-            else if (keyName === 'Escape') { stopRecording(activeRecorder, false); return; }
-            else if (keyName.length === 1) keyName = keyName.toUpperCase();
-
-            parts.push(keyName);
-            var combo = parts.join('+');
-
-            var badge = activeRecorder;
-            var actionName = badge.dataset.action;
-            badge.dataset.combo = combo;
-            badge.textContent = formatCombo(combo);
-            stopRecording(badge, true);
-
-            window.chrome.webview.postMessage(__T+'setting:shortcut:' + actionName + ':' + combo);
-        }, true);
-
-        function saveFocusDomains() {
-            var val = document.getElementById('focusDomains').value;
-            window.chrome.webview.postMessage(__T+'setting:focusDomains:' + encodeURIComponent(val));
-        }
-
-        function lockFocus() {
-            if (confirm("Are you sure? This action is PERMANENT. You will not be able to unlock these domains from the UI.")) {
-                window.chrome.webview.postMessage(__T+'setting:focusLocked:true');
-                document.getElementById('focusInputSection').style.display = 'none';
-                document.getElementById('focusLockedSection').style.display = 'block';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            var current = '{{ACCENT_COLOR}}';
-            document.querySelectorAll('.color-swatch').forEach(function(sw) {
-                if (sw.dataset.color === current) sw.classList.add('active');
-            });
-            var style = document.createElement('style');
-            style.textContent = '.toggle:checked { background: ' + current + ' !important; }';
-            document.head.appendChild(style);
+      const __T = "{{IPC_TOKEN}}:";
+      function s(key, el) {
+        const val = el.type === "checkbox" ? el.checked : el.value;
+        window.chrome.webview.postMessage(__T + "setting:" + key + ":" + val);
+      }
+      function setAccent(hex) {
+        window.chrome.webview.postMessage(__T + "setting:accentColor:" + hex);
+        document.querySelectorAll(".color-swatch").forEach(function (sw) {
+          sw.classList.toggle("active", sw.dataset.color === hex);
         });
+      }
+      // ── Shortcut recording ──
+      var activeRecorder = null;
+
+      function startRecording(badge) {
+        if (activeRecorder) stopRecording(activeRecorder, false);
+        activeRecorder = badge;
+        badge.classList.add("recording");
+        badge.textContent = "Press keys...";
+        badge.dataset.oldCombo = badge.dataset.combo;
+      }
+
+      function stopRecording(badge, save) {
+        badge.classList.remove("recording");
+        if (!save) badge.textContent = formatCombo(badge.dataset.combo);
+        activeRecorder = null;
+      }
+
+      function formatCombo(combo) {
+        return combo
+          .split("+")
+          .map(function (p) {
+            return p.charAt(0).toUpperCase() + p.slice(1);
+          })
+          .join(" + ");
+      }
+
+      function resetShortcut(actionName, badge) {
+        var def = badge.dataset.defaultCombo;
+        badge.dataset.combo = def;
+        badge.textContent = formatCombo(def);
+        window.chrome.webview.postMessage(
+          __T + "setting:shortcutReset:" + actionName,
+        );
+      }
+
+      document.addEventListener(
+        "keydown",
+        function (e) {
+          if (!activeRecorder) return;
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Ignore lone modifier keys
+          if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return;
+
+          var parts = [];
+          if (e.ctrlKey) parts.push("Ctrl");
+          if (e.shiftKey) parts.push("Shift");
+          if (e.altKey) parts.push("Alt");
+
+          // Map key name
+          var keyName = e.key;
+          if (keyName === " ") keyName = "Space";
+          else if (keyName === "ArrowLeft") keyName = "Left";
+          else if (keyName === "ArrowRight") keyName = "Right";
+          else if (keyName === "ArrowUp") keyName = "Up";
+          else if (keyName === "ArrowDown") keyName = "Down";
+          else if (keyName === "Escape") {
+            stopRecording(activeRecorder, false);
+            return;
+          } else if (keyName.length === 1) keyName = keyName.toUpperCase();
+
+          parts.push(keyName);
+          var combo = parts.join("+");
+
+          var badge = activeRecorder;
+          var actionName = badge.dataset.action;
+          badge.dataset.combo = combo;
+          badge.textContent = formatCombo(combo);
+          stopRecording(badge, true);
+
+          window.chrome.webview.postMessage(
+            __T + "setting:shortcut:" + actionName + ":" + combo,
+          );
+        },
+        true,
+      );
+
+      function saveFocusDomains() {
+        var val = document.getElementById("focusDomains").value;
+        window.chrome.webview.postMessage(
+          __T + "setting:focusDomains:" + encodeURIComponent(val),
+        );
+      }
+
+      function lockFocus() {
+        if (
+          confirm(
+            "Are you sure? This action is PERMANENT. You will not be able to unlock these domains from the UI.",
+          )
+        ) {
+          window.chrome.webview.postMessage(__T + "setting:focusLocked:true");
+          document.getElementById("focusInputSection").style.display = "none";
+          document.getElementById("focusLockedSection").style.display = "block";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        var current = "{{ACCENT_COLOR}}";
+        document.querySelectorAll(".color-swatch").forEach(function (sw) {
+          if (sw.dataset.color === current) sw.classList.add("active");
+        });
+        var style = document.createElement("style");
+        style.textContent =
+          ".toggle:checked { background: " + current + " !important; }";
+        document.head.appendChild(style);
+      });
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="settings-container">
+      <div class="page-header">
+        <h1>Settings</h1>
+      </div>
 
-        <div class="page-header">
-            <h1>Settings</h1>
-        </div>
-
-        <!-- ════════ GENERAL ════════ -->
-        <div class="section">
-            <div class="section-header">General</div>
-            <div class="card">
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Search engine</div>
-                        <div class="setting-desc">Used for address bar searches</div>
-                    </div>
-                    <div class="setting-control">
-                        <select class="select" onchange="s('search', this)">
-                            <option value="DuckDuckGo"{{SEARCH_DUCKDUCKGO}}>DuckDuckGo</option>
-                            <option value="Brave"{{SEARCH_BRAVE}}>Brave</option>
-                            <option value="Google"{{SEARCH_GOOGLE}}>Google</option>
-                            <option value="Bing"{{SEARCH_BING}}>Bing</option>
-                            <option value="Yahoo"{{SEARCH_YAHOO}}>Yahoo</option>
-                            <option value="Startpage"{{SEARCH_STARTPAGE}}>Startpage</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Default zoom</div>
-                    </div>
-                    <div class="setting-control">
-                        <select class="select" onchange="s('zoom', this)">
-                            <option value="75"{{ZOOM_75}}>75%</option>
-                            <option value="80"{{ZOOM_80}}>80%</option>
-                            <option value="90"{{ZOOM_90}}>90%</option>
-                            <option value="100"{{ZOOM_100}}>100%</option>
-                            <option value="110"{{ZOOM_110}}>110%</option>
-                            <option value="125"{{ZOOM_125}}>125%</option>
-                            <option value="150"{{ZOOM_150}}>150%</option>
-                            <option value="175"{{ZOOM_175}}>175%</option>
-                            <option value="200"{{ZOOM_200}}>200%</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Sidebar position</div>
-                    </div>
-                    <div class="setting-control">
-                        <select class="select" onchange="s('sidebarPosition', this)">
-                            <option value="left"{{SIDEBAR_LEFT}}>Left</option>
-                            <option value="right"{{SIDEBAR_RIGHT}}>Right</option>
-                        </select>
-                    </div>
-                </div>
+      <!-- ════════ GENERAL ════════ -->
+      <div class="section">
+        <div class="section-header">General</div>
+        <div class="card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Search engine</div>
+              <div class="setting-desc">Used for address bar searches</div>
             </div>
-        </div>
-
-        <!-- ════════ APPEARANCE ════════ -->
-        <div class="section">
-            <div class="section-header">Appearance</div>
-            <div class="card">
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Accent color</div>
-                        <div class="setting-desc">Applied to toggles, buttons, and highlights</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="color" id="accentPicker" value="{{ACCENT_COLOR}}"
-                               style="width:36px;height:36px;border:none;background:transparent;cursor:pointer;padding:0;"
-                               oninput="setAccent(this.value)">
-                    </div>
-                </div>
+            <div class="setting-control">
+              <select class="select" onchange="s('search', this)">
+                <option value="DuckDuckGo" {{SEARCH_DUCKDUCKGO}}>
+                  DuckDuckGo
+                </option>
+                <option value="Brave" {{SEARCH_BRAVE}}>Brave</option>
+                <option value="Google" {{SEARCH_GOOGLE}}>Google</option>
+                <option value="Bing" {{SEARCH_BING}}>Bing</option>
+                <option value="Yahoo" {{SEARCH_YAHOO}}>Yahoo</option>
+                <option value="Startpage" {{SEARCH_STARTPAGE}}>
+                  Startpage
+                </option>
+              </select>
             </div>
-        </div>
-
-        <!-- ════════ PRIVACY & BROWSING ════════ -->
-        <div class="section">
-            <div class="section-header">Privacy & Browsing</div>
-            <div class="card">
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Restore session on startup</div>
-                        <div class="setting-desc">Reopen your tabs from last session</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle"{{CHK_RESTORE}} onchange="s('restoreSession', this)">
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Force dark mode on websites</div>
-                        <div class="setting-desc">Apply dark theme to all pages</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle"{{CHK_DARK}} onchange="s('darkMode', this)">
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Force HTTPS</div>
-                        <div class="setting-desc">Upgrade insecure connections automatically</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle"{{CHK_HTTPS}} onchange="s('forceHttps', this)">
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Microsoft Defender SmartScreen</div>
-                        <div class="setting-desc">Warn about malicious sites and downloads. URLs are checked with Microsoft (privacy trade-off). Requires restart to apply.</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle"{{CHK_SMARTSCREEN}} onchange="s('smartScreen', this)">
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Clear data on exit</div>
-                        <div class="setting-desc">Remove browsing data when you close Stride</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle"{{CHK_CLEAR}} onchange="s('clearOnExit', this)">
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Block duplicate tabs</div>
-                        <div class="setting-desc">Switch to existing tab instead of opening a new one</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle"{{CHK_DUPES}} onchange="s('blockDupes', this)">
-                    </div>
-                </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Default zoom</div>
             </div>
-        </div>
-
-        <!-- ════════ KEYBOARD SHORTCUTS ════════ -->
-        {{KEYBOARD_SHORTCUTS_HTML}}
-
-        <!-- ════════ YOUTUBE ENHANCER ════════ -->
-        <div class="section">
-            <div class="section-header">YouTube Enhancer</div>
-            <div class="card">
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Default quality</div>
-                    </div>
-                    <div class="setting-control">
-                        <select class="select" onchange="s('ytQuality', this)">
-                            <option value="auto"{{YT_QUALITY_AUTO}}>Auto</option>
-                            <option value="highest"{{YT_QUALITY_HIGHEST}}>Highest available</option>
-                            <option value="tiny"{{YT_QUALITY_TINY}}>144p</option>
-                            <option value="small"{{YT_QUALITY_SMALL}}>240p</option>
-                            <option value="medium"{{YT_QUALITY_MEDIUM}}>360p</option>
-                            <option value="large"{{YT_QUALITY_LARGE}}>480p</option>
-                            <option value="hd720"{{YT_QUALITY_720}}>720p</option>
-                            <option value="hd1080"{{YT_QUALITY_1080}}>1080p</option>
-                            <option value="hd1440"{{YT_QUALITY_1440}}>1440p</option>
-                            <option value="highres"{{YT_QUALITY_4K}}>4K</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Default playback speed</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="number" class="input-number" value="{{YT_SPEED}}" min="0.25" max="3" step="0.25" onchange="s('ytSpeed', this)">
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Disable autoplay</div>
-                        <div class="setting-desc">Stop videos from auto-playing next</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle"{{CHK_YT_AUTOPLAY}} onchange="s('ytAutoplay', this)">
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Pause on tab switch</div>
-                        <div class="setting-desc">Pause video when you switch to another tab</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle"{{CHK_YT_PAUSE}} onchange="s('ytPauseTab', this)">
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Loop video</div>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle"{{CHK_YT_LOOP}} onchange="s('ytLoop', this)">
-                    </div>
-                </div>
+            <div class="setting-control">
+              <select class="select" onchange="s('zoom', this)">
+                <option value="75" {{ZOOM_75}}>75%</option>
+                <option value="80" {{ZOOM_80}}>80%</option>
+                <option value="90" {{ZOOM_90}}>90%</option>
+                <option value="100" {{ZOOM_100}}>100%</option>
+                <option value="110" {{ZOOM_110}}>110%</option>
+                <option value="125" {{ZOOM_125}}>125%</option>
+                <option value="150" {{ZOOM_150}}>150%</option>
+                <option value="175" {{ZOOM_175}}>175%</option>
+                <option value="200" {{ZOOM_200}}>200%</option>
+              </select>
             </div>
-        </div>
-
-        <!-- ════════ YOUTUBE UNHOOK ════════ -->
-        <div class="section">
-            <div class="section-header">YouTube Unhook</div>
-            <div class="card">
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Enable YouTube Unhook</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_ENABLED}} onchange="s('unhookEnabled', this)"></div>
-                </div>
-
-                <!-- Feed -->
-                <div class="subsection-label">Feed</div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide home feed</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_HOMEFEED}} onchange="s('unhookHomeFeed', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide Shorts</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_SHORTS}} onchange="s('unhookShorts', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide mixes</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_MIXES}} onchange="s('unhookMixes', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide Explore</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_EXPLORE}} onchange="s('unhookExplore', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide Subscriptions feed</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_SUBSCRIPTIONS}} onchange="s('unhookSubscriptions', this)"></div>
-                </div>
-
-                <!-- Watch page -->
-                <div class="subsection-label">Watch page</div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide video sidebar</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_SIDEBAR}} onchange="s('unhookSidebar', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide recommended videos</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_RECOMMENDED}} onchange="s('unhookRecommended', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide comments</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_COMMENTS}} onchange="s('unhookComments', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide video info</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_VIDEOINFO}} onchange="s('unhookVideoInfo', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide live chat</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_LIVECHAT}} onchange="s('unhookLiveChat', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide playlist panel</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_PLAYLIST}} onchange="s('unhookPlaylist', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide merch & tickets</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_MERCH}} onchange="s('unhookMerch', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide fundraiser</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_FUNDRAISER}} onchange="s('unhookFundraiser', this)"></div>
-                </div>
-
-                <!-- Player -->
-                <div class="subsection-label">Player</div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide end screen suggestions</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_ENDFEED}} onchange="s('unhookEndFeed', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide end screen cards</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_ENDCARDS}} onchange="s('unhookEndCards', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Disable annotations</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_ANNOTATIONS}} onchange="s('unhookAnnotations', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Disable autoplay</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_AUTOPLAY}} onchange="s('unhookAutoplay', this)"></div>
-                </div>
-
-                <!-- Interface -->
-                <div class="subsection-label">Interface</div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide top header bar</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_TOPHEADER}} onchange="s('unhookTopHeader', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide notifications bell</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_NOTIFICATIONS}} onchange="s('unhookNotifications', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide More from YouTube</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_MOREYT}} onchange="s('unhookMoreYT', this)"></div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info"><div class="setting-label">Hide irrelevant search results</div></div>
-                    <div class="setting-control"><input type="checkbox" class="toggle"{{CHK_UNHOOK_INAPTSEARCH}} onchange="s('unhookInaptSearch', this)"></div>
-                </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Sidebar position</div>
             </div>
-        </div>
-
-        <!-- ════════ IRREVERSIBLE FOCUS ════════ -->
-        <div class="section">
-            <div class="section-header">Irreversible Focus</div>
-            <div class="card" style="padding: 16px;">
-                <div id="focusInputSection" style="display: {{FOCUS_INPUT_DISPLAY}};">
-                    <div style="font-size: 13.5px; color: #D4D4D4; margin-bottom: 8px;">Enter domains to block (one per line)</div>
-                    <textarea id="focusDomains" style="width: 100%; height: 100px; background: #1A1A1A; color: #D4D4D4; border: 1px solid #262626; border-radius: 6px; padding: 10px; font-family: inherit; font-size: 13px; resize: vertical; outline: none; margin-bottom: 12px; transition: border-color 0.15s;">{{FOCUS_DOMAINS}}</textarea>
-                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                        <button class="action-btn" onclick="saveFocusDomains()">Save Domains</button>
-                        <button class="action-btn" style="background: #E53935; color: white; border-color: #E53935;" onclick="lockFocus()">LOCK PERMANENTLY</button>
-                    </div>
-                </div>
-                <div id="focusLockedSection" style="display: {{FOCUS_LOCKED_DISPLAY}}; text-align: center; padding: 20px 0;">
-                    <div style="font-size: 18px; font-weight: 600; color: #4CAF50; margin-bottom: 8px;">Focus Mode is Permanently Locked</div>
-                    <div style="font-size: 13px; color: #888;">The configured distracting domains are irreversibly blocked.</div>
-                </div>
+            <div class="setting-control">
+              <select class="select" onchange="s('sidebarPosition', this)">
+                <option value="left" {{SIDEBAR_LEFT}}>Left</option>
+                <option value="right" {{SIDEBAR_RIGHT}}>Right</option>
+              </select>
             </div>
+          </div>
         </div>
+      </div>
 
-        <!-- ════════ SYSTEM ════════ -->
-        <div class="section">
-            <div class="section-header">System</div>
-            <div class="card">
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Set as default browser</div>
-                        <div class="setting-desc">Open web links with Stride</div>
-                    </div>
-                    <div class="setting-control">
-                        <button class="action-btn" onclick="window.chrome.webview.postMessage(__T+'set-default-browser')">
-                            Set Default
-                        </button>
-                    </div>
-                </div>
+      <!-- ════════ APPEARANCE ════════ -->
+      <div class="section">
+        <div class="section-header">Appearance</div>
+        <div class="card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Accent color</div>
+              <div class="setting-desc">
+                Applied to toggles, buttons, and highlights
+              </div>
             </div>
+            <div class="setting-control">
+              <input
+                type="color"
+                id="accentPicker"
+                value="{{ACCENT_COLOR}}"
+                style="
+                  width: 36px;
+                  height: 36px;
+                  border: none;
+                  background: transparent;
+                  cursor: pointer;
+                  padding: 0;
+                "
+                oninput="setAccent(this.value)"
+              />
+            </div>
+          </div>
         </div>
+      </div>
 
+      <!-- ════════ PRIVACY & BROWSING ════════ -->
+      <div class="section">
+        <div class="section-header">Privacy & Browsing</div>
+        <div class="card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Restore session on startup</div>
+              <div class="setting-desc">Reopen your tabs from last session</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_RESTORE}}
+                onchange="s('restoreSession', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Force dark mode on websites</div>
+              <div class="setting-desc">Apply dark theme to all pages</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_DARK}}
+                onchange="s('darkMode', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Force HTTPS</div>
+              <div class="setting-desc">
+                Upgrade insecure connections automatically
+              </div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_HTTPS}}
+                onchange="s('forceHttps', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Microsoft Defender SmartScreen</div>
+              <div class="setting-desc">
+                Warn about malicious sites and downloads. URLs are checked with
+                Microsoft (privacy trade-off). Requires restart to apply.
+              </div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_SMARTSCREEN}}
+                onchange="s('smartScreen', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Clear data on exit</div>
+              <div class="setting-desc">
+                Remove browsing data when you close Stride
+              </div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_CLEAR}}
+                onchange="s('clearOnExit', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Block duplicate tabs</div>
+              <div class="setting-desc">
+                Switch to existing tab instead of opening a new one
+              </div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_DUPES}}
+                onchange="s('blockDupes', this)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ KEYBOARD SHORTCUTS ════════ -->
+      {{KEYBOARD_SHORTCUTS_HTML}}
+
+      <!-- ════════ YOUTUBE ENHANCER ════════ -->
+      <div class="section">
+        <div class="section-header">YouTube Enhancer</div>
+        <div class="card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Default quality</div>
+            </div>
+            <div class="setting-control">
+              <select class="select" onchange="s('ytQuality', this)">
+                <option value="auto" {{YT_QUALITY_AUTO}}>Auto</option>
+                <option value="highest" {{YT_QUALITY_HIGHEST}}>
+                  Highest available
+                </option>
+                <option value="lowest" {{YT_QUALITY_LOWEST}}>
+                  Lowest available
+                </option>
+                <option value="tiny" {{YT_QUALITY_TINY}}>144p</option>
+                <option value="small" {{YT_QUALITY_SMALL}}>240p</option>
+                <option value="medium" {{YT_QUALITY_MEDIUM}}>360p</option>
+                <option value="large" {{YT_QUALITY_LARGE}}>480p</option>
+                <option value="hd720" {{YT_QUALITY_720}}>720p</option>
+                <option value="hd1080" {{YT_QUALITY_1080}}>1080p</option>
+                <option value="hd1440" {{YT_QUALITY_1440}}>1440p</option>
+                <option value="highres" {{YT_QUALITY_4K}}>4K</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Default playback speed</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="number"
+                class="input-number"
+                value="{{YT_SPEED}}"
+                min="0.25"
+                max="3"
+                step="0.25"
+                onchange="s('ytSpeed', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Disable autoplay</div>
+              <div class="setting-desc">Stop videos from auto-playing next</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_YT_AUTOPLAY}}
+                onchange="s('ytAutoplay', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Pause on tab switch</div>
+              <div class="setting-desc">
+                Pause video when you switch to another tab
+              </div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_YT_PAUSE}}
+                onchange="s('ytPauseTab', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Loop video</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_YT_LOOP}}
+                onchange="s('ytLoop', this)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ YOUTUBE UNHOOK ════════ -->
+      <div class="section">
+        <div class="section-header">YouTube Unhook</div>
+        <div class="card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Enable YouTube Unhook</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_ENABLED}}
+                onchange="s('unhookEnabled', this)"
+              />
+            </div>
+          </div>
+
+          <!-- Feed -->
+          <div class="subsection-label">Feed</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide home feed</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_HOMEFEED}}
+                onchange="s('unhookHomeFeed', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide Shorts</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_SHORTS}}
+                onchange="s('unhookShorts', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide mixes</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_MIXES}}
+                onchange="s('unhookMixes', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide Explore</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_EXPLORE}}
+                onchange="s('unhookExplore', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide Subscriptions feed</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_SUBSCRIPTIONS}}
+                onchange="s('unhookSubscriptions', this)"
+              />
+            </div>
+          </div>
+
+          <!-- Watch page -->
+          <div class="subsection-label">Watch page</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide video sidebar</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_SIDEBAR}}
+                onchange="s('unhookSidebar', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide recommended videos</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_RECOMMENDED}}
+                onchange="s('unhookRecommended', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide comments</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_COMMENTS}}
+                onchange="s('unhookComments', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide video info</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_VIDEOINFO}}
+                onchange="s('unhookVideoInfo', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide live chat</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_LIVECHAT}}
+                onchange="s('unhookLiveChat', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide playlist panel</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_PLAYLIST}}
+                onchange="s('unhookPlaylist', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide merch & tickets</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_MERCH}}
+                onchange="s('unhookMerch', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide fundraiser</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_FUNDRAISER}}
+                onchange="s('unhookFundraiser', this)"
+              />
+            </div>
+          </div>
+
+          <!-- Player -->
+          <div class="subsection-label">Player</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide end screen suggestions</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_ENDFEED}}
+                onchange="s('unhookEndFeed', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide end screen cards</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_ENDCARDS}}
+                onchange="s('unhookEndCards', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Disable annotations</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_ANNOTATIONS}}
+                onchange="s('unhookAnnotations', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Disable autoplay</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_AUTOPLAY}}
+                onchange="s('unhookAutoplay', this)"
+              />
+            </div>
+          </div>
+
+          <!-- Interface -->
+          <div class="subsection-label">Interface</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide top header bar</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_TOPHEADER}}
+                onchange="s('unhookTopHeader', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide notifications bell</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_NOTIFICATIONS}}
+                onchange="s('unhookNotifications', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide More from YouTube</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_MOREYT}}
+                onchange="s('unhookMoreYT', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Hide irrelevant search results</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_UNHOOK_INAPTSEARCH}}
+                onchange="s('unhookInaptSearch', this)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ IRREVERSIBLE FOCUS ════════ -->
+      <div class="section">
+        <div class="section-header">Irreversible Focus</div>
+        <div class="card" style="padding: 16px">
+          <div
+            style="
+              font-size: 12.5px;
+              color: #999;
+              margin-bottom: 14px;
+              line-height: 1.5;
+            "
+          >
+            When locked, Stride also blocks known adult-content and Telegram
+            domains using community-maintained blocklists, in addition to any
+            domains you enter below. These categories are always on while Focus
+            Mode is locked and cannot be toggled individually.
+          </div>
+          <div id="focusInputSection" style="display: {{FOCUS_INPUT_DISPLAY}};">
+            <div style="font-size: 13.5px; color: #d4d4d4; margin-bottom: 8px">
+              Enter domains to block (one per line)
+            </div>
+            <textarea
+              id="focusDomains"
+              style="
+                width: 100%;
+                height: 100px;
+                background: #1a1a1a;
+                color: #d4d4d4;
+                border: 1px solid #262626;
+                border-radius: 6px;
+                padding: 10px;
+                font-family: inherit;
+                font-size: 13px;
+                resize: vertical;
+                outline: none;
+                margin-bottom: 12px;
+                transition: border-color 0.15s;
+              "
+            >
+{{FOCUS_DOMAINS}}</textarea>
+            <div style="display: flex; gap: 10px; justify-content: flex-end">
+              <button class="action-btn" onclick="saveFocusDomains()">
+                Save Domains
+              </button>
+              <button
+                class="action-btn"
+                style="background: #e53935; color: white; border-color: #e53935"
+                onclick="lockFocus()"
+              >
+                LOCK PERMANENTLY
+              </button>
+            </div>
+          </div>
+          <div
+            id="focusLockedSection"
+            style="display: {{FOCUS_LOCKED_DISPLAY}}; text-align: center; padding: 20px 0;"
+          >
+            <div
+              style="
+                font-size: 18px;
+                font-weight: 600;
+                color: #4caf50;
+                margin-bottom: 8px;
+              "
+            >
+              Focus Mode is Permanently Locked
+            </div>
+            <div style="font-size: 13px; color: #888">
+              Your configured domains, plus the adult-content and Telegram
+              blocklists, are locked in and cannot be disabled from here.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ SYSTEM ════════ -->
+      <div class="section">
+        <div class="section-header">System</div>
+        <div class="card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Set as default browser</div>
+              <div class="setting-desc">Open web links with Stride</div>
+            </div>
+            <div class="setting-control">
+              <button
+                class="action-btn"
+                onclick="
+                  window.chrome.webview.postMessage(__T + 'set-default-browser')
+                "
+              >
+                Set Default
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

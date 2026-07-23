@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using StrideBrowser.Engine;
 using StrideBrowser.Models;
@@ -384,7 +385,7 @@ public sealed class WebMessageRouter
         ["ytQuality"] = (s, v) => s.YtDefaultQuality = v,
         ["ytAutoplay"] = (s, v) => s.YtDisableAutoplay = v == "true",
         ["ytPauseTab"] = (s, v) => s.YtPauseOnTabSwitch = v == "true",
-        ["ytSpeed"] = (s, v) => { if (double.TryParse(v, out var spd)) s.YtDefaultSpeed = spd; },
+        ["ytSpeed"] = (s, v) => { if (double.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out var spd)) s.YtDefaultSpeed = spd; },
         ["ytLoop"] = (s, v) => s.YtLoopVideo = v == "true",
 
         ["unhookEnabled"] = (s, v) => s.UnhookEnabled = v == "true",

@@ -20,7 +20,6 @@ public sealed class TabEngine : IDisposable
 {
     private readonly Panel _webViewHost;
     private readonly ExtensionManager _extensionManager;
-    private readonly YouTubeEnhancer _youtubeEnhancer;
     private readonly YouTubeUnhook _youtubeUnhook;
     private readonly BrowserSettings _settings;
     private readonly FaviconLoader _faviconLoader;
@@ -29,6 +28,7 @@ public sealed class TabEngine : IDisposable
     private readonly IOneTabStore _oneTabStore;
     private readonly IDownloadStore _downloadStore;
     private readonly FocusBlocklistService _focusBlocklistService;
+    private readonly ContentScriptInjector _contentScriptInjector;
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _hibernationTimer;
     private readonly Dictionary<Guid, WebView2> _webViews = new();
@@ -75,7 +75,6 @@ public sealed class TabEngine : IDisposable
     {
         _webViewHost = webViewHost;
         _extensionManager = deps.ExtensionManager;
-        _youtubeEnhancer = deps.YouTubeEnhancer;
         _youtubeUnhook = deps.YouTubeUnhook;
         _settings = deps.Settings;
         _faviconLoader = deps.FaviconLoader;
@@ -84,6 +83,7 @@ public sealed class TabEngine : IDisposable
         _oneTabStore = deps.OneTabStore;
         _downloadStore = deps.DownloadStore;
         _focusBlocklistService = deps.FocusBlocklistService;
+        _contentScriptInjector = deps.ContentScriptInjector;
         _dispatcher = webViewHost.Dispatcher;
 
         // Check every 60s whether any tabs have exceeded the hibernation timeout
@@ -145,11 +145,11 @@ public sealed class TabEngine : IDisposable
     public BrowserTab CreateTab(string? url = null)
     {
         var resolvedUrl = url ?? InternalUrls.NewTab;
-    
+
         // Block duplicate tabs — switch to existing tab if URL matches
         if (_settings.BlockDuplicateTabs && !InternalUrls.IsInternal(resolvedUrl))
         {
-            var existing = Tabs.FirstOrDefault(t => 
+            var existing = Tabs.FirstOrDefault(t =>
                 string.Equals(t.Url, resolvedUrl, StringComparison.OrdinalIgnoreCase));
             if (existing is not null)
             {
@@ -157,7 +157,7 @@ public sealed class TabEngine : IDisposable
                 return existing;
             }
         }
-    
+
         var tab = new BrowserTab { Url = resolvedUrl, Title = "New Tab" };
         Tabs.Add(tab);
         SwitchTo(tab);
@@ -350,10 +350,10 @@ public sealed class TabEngine : IDisposable
     {
         if (ActiveTab is not null && _webViews.TryGetValue(ActiveTab.Id, out var wv) && wv.CoreWebView2 is not null)
         {
-            try 
-            { 
+            try
+            {
                 var script = Helpers.ResourceLoader.Load("Resources.Scripts.find-in-page.js");
-                await wv.CoreWebView2.ExecuteScriptAsync(script); 
+                await wv.CoreWebView2.ExecuteScriptAsync(script);
             }
             catch (Exception ex) { Trace.WriteLine($"FindInPage failed: {ex.Message}"); }
         }
@@ -458,7 +458,7 @@ public sealed class TabEngine : IDisposable
 
         // Network-level ad blocking — block known ad URLs before they load
         if (_settings.AdBlockEnabled)
-            WireAdBlockFilters(wv);
+            AdBlockFilter.Apply(wv.CoreWebView2);
 
         if (!_extensionsLoaded)
         {
@@ -473,7 +473,7 @@ public sealed class TabEngine : IDisposable
             }
         }
 
-        await InjectContentScriptsAsync(wv);
+        await _contentScriptInjector.InjectAsync(wv.CoreWebView2, _settings);
 
         if (_settings.DefaultZoom != 100)
             wv.ZoomFactor = _settings.DefaultZoom / 100.0;
@@ -506,34 +506,6 @@ public sealed class TabEngine : IDisposable
         catch (ArgumentException) { try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch { } }
     }
 
-    private async Task InjectContentScriptsAsync(WebView2 wv)
-    {
-        // YouTube ad nuker — injected first so ads are killed before anything else
-        if (_settings.AdBlockEnabled)
-        {
-            await wv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-                ResourceLoader.Load("Resources.Scripts.youtube-adnuke.js"));
-        }
-
-        // YouTube enhancer (quality, speed, loop — self-guards)
-        var enhancer = _youtubeEnhancer.GetScript(_settings);
-        if (!string.IsNullOrEmpty(enhancer))
-            await wv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(enhancer);
-
-        // YouTube unhook (hide distractions — self-guards)
-        var unhook = _youtubeUnhook.GetScript(_settings);
-        if (!string.IsNullOrEmpty(unhook))
-            await wv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(unhook);
-
-        // Force dark mode via Dark Reader (MIT License — github.com/darkreader/darkreader)
-        if (_settings.ForceDarkMode)
-        {
-            await wv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-                ResourceLoader.Load("Resources.Scripts.darkreader.min.js"));
-            await wv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-                ResourceLoader.Load("Resources.Scripts.force-dark-mode.js"));
-        }
-    }
 
 
 
@@ -582,12 +554,23 @@ public sealed class TabEngine : IDisposable
             if (e.Uri is string uriForCustom && Uri.TryCreate(uriForCustom, UriKind.Absolute, out var parsedCustomUri))
             {
                 var scheme = parsedCustomUri.Scheme.ToLowerInvariant();
-                if (scheme != "http" && scheme != "https" && scheme != "file" && scheme != "data" && 
+                if (scheme != "http" && scheme != "https" && scheme != "file" && scheme != "data" &&
                     scheme != "about" && scheme != "edge" && scheme != "chrome" && scheme != "stride" && scheme != "javascript")
                 {
                     e.Cancel = true;
                     _dispatcher.InvokeAsync(() =>
                     {
+                        // SECURITY: confirm before handing off to an external app — unprompted
+                        // protocol-handler invocation is a known RCE vector for some installed apps.
+                        var confirmed = System.Windows.MessageBox.Show(
+                            $"This page wants to open an external application to handle this link:\n\n{uriForCustom}\n\nOnly continue if you trust this site.",
+                            "Open External Application?",
+                            System.Windows.MessageBoxButton.YesNo,
+                            System.Windows.MessageBoxImage.Warning,
+                            System.Windows.MessageBoxResult.No) == System.Windows.MessageBoxResult.Yes;
+
+                        if (!confirmed) return;
+
                         try
                         {
                             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uriForCustom) { UseShellExecute = true });
@@ -623,14 +606,14 @@ public sealed class TabEngine : IDisposable
                 var isLocalHostOrIp = false;
                 if (Uri.TryCreate(uriStr, UriKind.Absolute, out var parsedUri))
                 {
-                    isLocalHostOrIp = parsedUri.IsLoopback || 
-                                      parsedUri.HostNameType == UriHostNameType.IPv4 || 
-                                      parsedUri.HostNameType == UriHostNameType.IPv6 || 
+                    isLocalHostOrIp = parsedUri.IsLoopback ||
+                                      parsedUri.HostNameType == UriHostNameType.IPv4 ||
+                                      parsedUri.HostNameType == UriHostNameType.IPv6 ||
                                       parsedUri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase);
                 }
                 else
                 {
-                    isLocalHostOrIp = uriStr.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) || 
+                    isLocalHostOrIp = uriStr.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
                                       uriStr.StartsWith("http://127.", StringComparison.OrdinalIgnoreCase);
                 }
 
@@ -659,7 +642,7 @@ public sealed class TabEngine : IDisposable
                 {
                     if (!_webViews.ContainsKey(tab.Id)) return;
 
-                    if (!e.IsSuccess && 
+                    if (!e.IsSuccess &&
                         e.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled &&
                         e.WebErrorStatus != CoreWebView2WebErrorStatus.Unknown &&
                         e.WebErrorStatus != CoreWebView2WebErrorStatus.ConnectionAborted)
@@ -771,7 +754,7 @@ public sealed class TabEngine : IDisposable
                 TotalBytes = op.TotalBytesToReceive.HasValue ? (long)op.TotalBytesToReceive.Value : 0,
                 ReceivedBytes = 0
             };
-            
+
             _dispatcher.Invoke(() => _downloadStore.Add(item));
 
             op.BytesReceivedChanged += (s, args) =>
@@ -802,7 +785,7 @@ public sealed class TabEngine : IDisposable
                     }
                 });
             };
-            
+
             // Handle cancel request from UI
             item.PropertyChanged += (s, args) =>
             {
@@ -838,7 +821,7 @@ public sealed class TabEngine : IDisposable
         wv.CoreWebView2.ContextMenuRequested += (_, e) =>
         {
             var menuItems = e.MenuItems;
-    
+
             if (e.ContextMenuTarget.HasLinkUri)
             {
                 var linkUri = e.ContextMenuTarget.LinkUri;
@@ -857,7 +840,7 @@ public sealed class TabEngine : IDisposable
                     });
                 };
                 menuItems.Insert(0, openInNewTab);
-    
+
                 var copyLink = wv.CoreWebView2.Environment.CreateContextMenuItem(
                     "Copy Link Address", null, CoreWebView2ContextMenuItemKind.Command);
                 copyLink.CustomItemSelected += (_, _) =>
@@ -868,7 +851,7 @@ public sealed class TabEngine : IDisposable
                     });
                 };
                 menuItems.Insert(1, copyLink);
-    
+
                 var separator = wv.CoreWebView2.Environment.CreateContextMenuItem(
                     "", null, CoreWebView2ContextMenuItemKind.Separator);
                 menuItems.Insert(2, separator);
@@ -877,45 +860,6 @@ public sealed class TabEngine : IDisposable
     }
 
 
-    /// <summary>
-    /// Blocks known ad-serving URLs at the network level.
-    /// Requests matching these patterns are cancelled before loading.
-    /// </summary>
-    private void WireAdBlockFilters(WebView2 wv)
-    {
-        // YouTube ad video/tracking URL patterns
-        string[] adPatterns =
-        [
-            "*://*.doubleclick.net/*",
-            "*://*.googlesyndication.com/*",
-            "*://*.googleadservices.com/*",
-            "*://*.google-analytics.com/*",
-            "*://www.youtube.com/api/stats/ads*",
-            "*://www.youtube.com/pagead/*",
-            "*://www.youtube.com/get_midroll_info*",
-            "*://*.youtube.com/ptracking*",
-            "*://*.youtube.com/api/stats/qoe*",
-            "*://yt3.ggpht.com/*/ads/*",
-            "*://*.googleads.g.doubleclick.net/*",
-            "*://ad.youtube.com/*",
-            "*://ads.youtube.com/*",
-            "*://*.moatads.com/*",
-            "*://*.adsafeprotected.com/*"
-        ];
-
-        foreach (var pattern in adPatterns)
-        {
-            wv.CoreWebView2.AddWebResourceRequestedFilter(
-                pattern, CoreWebView2WebResourceContext.All);
-        }
-
-        wv.CoreWebView2.WebResourceRequested += (_, e) =>
-        {
-            // Block the request by returning an empty response
-            e.Response = wv.CoreWebView2.Environment.CreateWebResourceResponse(
-                null, 200, "OK", "");
-        };
-    }
 
     private void HandleProcessFailure(WebView2 wv, BrowserTab tab)
     {

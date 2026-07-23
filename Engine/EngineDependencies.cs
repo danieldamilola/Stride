@@ -9,7 +9,6 @@ namespace StrideBrowser.Engine;
 /// </summary>
 public sealed record EngineDependencies(
     ExtensionManager ExtensionManager,
-    YouTubeEnhancer YouTubeEnhancer,
     YouTubeUnhook YouTubeUnhook,
     BrowserSettings Settings,
     FaviconLoader FaviconLoader,
@@ -17,4 +16,5 @@ public sealed record EngineDependencies(
     IHistoryStore HistoryStore,
     IOneTabStore OneTabStore,
     IDownloadStore DownloadStore,
-    FocusBlocklistService FocusBlocklistService);
+    FocusBlocklistService FocusBlocklistService,
+    ContentScriptInjector ContentScriptInjector);

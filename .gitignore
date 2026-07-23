@@ -1,6 +1,8 @@
 ## .NET
 bin/
 obj/
+**/bin/
+**/obj/
 *.user
 *.suo
 *.cache
@@ -29,3 +31,8 @@ nul
 
 Output/
 publish/
+
+## Logs (written to %LocalAppData%\StrideBrowser at runtime — never repo-local)
+*.log
+crash.log
+trace.log

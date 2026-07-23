@@ -17,6 +17,16 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.*" />
   </ItemGroup>
 
+  <!-- Nested projects; exclude from this project's default globs -->
+  <ItemGroup>
+    <Compile Remove="SpurBrowser.Tests\**" />
+    <Compile Remove="src\**" />
+    <EmbeddedResource Remove="SpurBrowser.Tests\**" />
+    <EmbeddedResource Remove="src\**" />
+    <None Remove="SpurBrowser.Tests\**" />
+    <None Remove="src\**" />
+  </ItemGroup>
+
   <!-- Embedded HTML templates and JS scripts -->
   <ItemGroup>
     <EmbeddedResource Include="Resources\Pages\*.html" />

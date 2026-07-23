@@ -51,7 +51,28 @@
 
     // ── Quality Forcing ──────────────────────────────────────────────
 
-    var _qualityListenerAdded = false;
+    // Tracks which player object the quality-change listener is already attached
+    // to. YouTube's SPA usually reuses the same #movie_player across videos, so
+    // this identity check (rather than a plain boolean) prevents re-adding a
+    // duplicate listener on every navigation while still attaching a fresh one
+    // if the player object is ever actually replaced.
+    var _qualityListenerPlayer = null;
+
+    // Resolves "highest"/"lowest" meta-values against the live quality list.
+    // Called both when forcing quality up-front and when re-forcing after
+    // YouTube changes it, so it never relies on a stale snapshot.
+    function resolveTargetQuality(available) {
+        var target = QUALITY;
+        if (target === 'highest' && available.length > 0) {
+            target = available[0];
+        } else if (target === 'lowest' && available.length > 0) {
+            target = available[available.length - 1];
+        }
+        if (available.length > 0 && available.indexOf(target) === -1) {
+            target = available[0]; // fallback to highest available
+        }
+        return target;
+    }
 
     function applyQuality() {
         if (QUALITY === 'auto') return;
@@ -65,39 +86,31 @@
                 ? player.getAvailableQualityLevels()
                 : [];
 
-            var target = QUALITY;
-
-            // Support "highest" and "lowest" meta-values
-            if (target === 'highest' && available.length > 0) {
-                target = available[0];
-            } else if (target === 'lowest' && available.length > 0) {
-                target = available[available.length - 1];
-            }
-
-            // Validate: if target quality isn't available, pick the best available
-            if (available.length > 0 && available.indexOf(target) === -1) {
-                target = available[0]; // fallback to highest available
-            }
-
+            var target = resolveTargetQuality(available);
             player.setPlaybackQualityRange(target, target);
 
             // Listen for quality changes and re-force (adaptive streaming override)
-            if (!_qualityListenerAdded && player.addEventListener) {
+            if (player.addEventListener && _qualityListenerPlayer !== player) {
                 player.addEventListener('onPlaybackQualityChange', function(newQuality) {
                     if (!shouldApply()) return;
-                    var desired = QUALITY === 'highest' ? (available[0] || QUALITY) : QUALITY;
+                    var currentAvailable = player.getAvailableQualityLevels
+                        ? player.getAvailableQualityLevels()
+                        : [];
+                    var desired = resolveTargetQuality(currentAvailable);
                     if (newQuality !== desired) {
                         try { player.setPlaybackQualityRange(desired, desired); } catch(e) {}
                     }
                 });
-                _qualityListenerAdded = true;
+                _qualityListenerPlayer = player;
             }
         } catch(e) {}
     }
 
     // ── Speed Control ────────────────────────────────────────────────
 
-    var _speedListenerAdded = false;
+    // Same identity-tracking approach as quality: avoids stacking duplicate
+    // 'ratechange' listeners on the same <video> element across SPA navigations.
+    var _speedListenerVideo = null;
 
     function applySpeed() {
         if (!SPEED || SPEED === 1.0) return;
@@ -114,14 +127,14 @@
         }
 
         // Listen for YouTube resetting the speed and re-apply
-        if (!_speedListenerAdded) {
+        if (_speedListenerVideo !== video) {
             video.addEventListener('ratechange', function() {
                 if (!shouldApply()) return;
                 if (Math.abs(video.playbackRate - SPEED) > 0.01) {
                     video.playbackRate = SPEED;
                 }
             });
-            _speedListenerAdded = true;
+            _speedListenerVideo = video;
         }
     }
 
@@ -215,9 +228,6 @@
     // ── SPA Navigation ───────────────────────────────────────────────
 
     window.addEventListener('yt-navigate-finish', function() {
-        // Reset listener flags — new video, new player instance
-        _qualityListenerAdded = false;
-        _speedListenerAdded = false;
         applyWhenReady();
     });
 
@@ -234,8 +244,6 @@
         _srcObserver = new MutationObserver(function(mutations) {
             for (var m = 0; m < mutations.length; m++) {
                 if (mutations[m].attributeName === 'src') {
-                    _qualityListenerAdded = false;
-                    _speedListenerAdded = false;
                     applyWhenReady();
                     return;
                 }

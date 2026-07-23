@@ -19,17 +19,14 @@ public partial class App : Application
             return;
         }
 
-        AppDomain.CurrentDomain.UnhandledException += (s, args) => 
-        {
-            System.IO.File.WriteAllText("crash.log", "AppDomain crash:\n" + args.ExceptionObject?.ToString());
-        };
-        DispatcherUnhandledException += (s, args) =>
-        {
-            System.IO.File.WriteAllText("crash.log", "Dispatcher crash:\n" + args.Exception?.ToString());
-            args.Handled = true;
-        };
+        // Register crash handlers once, as early as possible — before anything else can throw.
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
+        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
-        System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.TextWriterTraceListener("trace.log"));
+        // Trace log lives under %LocalAppData%\StrideBrowser — never repo/working-directory local.
+        Directory.CreateDirectory(Path.GetDirectoryName(Helpers.AppPaths.LogFile)!);
+        System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Helpers.AppPaths.LogFile));
         System.Diagnostics.Trace.AutoFlush = true;
         System.Diagnostics.Trace.WriteLine("--- STRIDE STARTED ---");
 
@@ -37,10 +34,6 @@ public partial class App : Application
 
         // Set AppUserModelID for taskbar grouping
         Interop.NativeMethods.SetCurrentProcessExplicitAppUserModelID("Stride");
-
-        DispatcherUnhandledException += OnDispatcherUnhandledException;
-        AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
-        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
         // Build DI container
         _serviceProvider = Composition.BuildServiceProvider();

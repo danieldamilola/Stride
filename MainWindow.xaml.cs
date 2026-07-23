@@ -540,7 +540,7 @@ public partial class MainWindow : Window
         CommandBarPanel.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slideIn);
 
         // Focus after layout pass to ensure TextBox is in visual tree
-        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () =>
+        _ = Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () =>
         {
             AddressBar.Focus();
             Keyboard.Focus(AddressBar);

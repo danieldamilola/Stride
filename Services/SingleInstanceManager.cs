@@ -15,6 +15,7 @@ public static class SingleInstanceManager
     
     private static Mutex? _mutex;
     private static CancellationTokenSource? _cts;
+    private static bool _ownsMutex;
 
     public static event Action<string[]>? InstanceMessageReceived;
 
@@ -27,6 +28,7 @@ public static class SingleInstanceManager
     {
         bool isFirstInstance;
         _mutex = new Mutex(true, MutexName, out isFirstInstance);
+        _ownsMutex = isFirstInstance;
 
         if (isFirstInstance)
         {
@@ -46,7 +48,10 @@ public static class SingleInstanceManager
     public static void Shutdown()
     {
         _cts?.Cancel();
-        _mutex?.ReleaseMutex();
+        if (_ownsMutex)
+        {
+            try { _mutex?.ReleaseMutex(); } catch { }
+        }
         _mutex?.Dispose();
     }
 
