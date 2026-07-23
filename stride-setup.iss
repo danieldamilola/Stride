@@ -107,18 +107,26 @@ begin
   Result := True;
   if (CurPageID = wpReady) and not IsDotNet9Installed() then
   begin
-    DownloadPage.Clear;
-    DownloadPage.Add('https://aka.ms/dotnet/9.0/windowsdesktop-runtime-win-x64.exe', 'dotnet9.exe', '');
-    DownloadPage.Show;
-    try
+    if MsgBox('Stride requires the Microsoft .NET 9 Desktop Runtime (~58 MB) to work fully.' + #13#10 + #13#10 +
+              'Would you like to download and install it now?', mbConfirmation, MB_YESNO) = IDYES then
+    begin
+      DownloadPage.Clear;
+      DownloadPage.Add('https://aka.ms/dotnet/9.0/windowsdesktop-runtime-win-x64.exe', 'dotnet9.exe', '');
+      DownloadPage.Show;
       try
-        DownloadPage.Download;
-      except
-        SuppressibleMsgBox(AddPeriod(GetExceptionMessage), mbCriticalError, MB_OK, IDOK);
-        Result := False;
+        try
+          DownloadPage.Download;
+        except
+          SuppressibleMsgBox(AddPeriod(GetExceptionMessage), mbCriticalError, MB_OK, IDOK);
+          Result := False;
+        end;
+      finally
+        DownloadPage.Hide;
       end;
-    finally
-      DownloadPage.Hide;
+    end
+    else
+    begin
+      Result := False;
     end;
   end;
 end;
