@@ -80,17 +80,15 @@ Type: files; Name: "{localappdata}\StrideBrowser\favicons\*"
 Type: dirifempty; Name: "{localappdata}\StrideBrowser\favicons"
 
 [Code]
-// Check if .NET 9 Desktop Runtime is installed
 function IsDotNet9Installed(): Boolean;
 var
-  ResultCode: Integer;
+  FindRec: TFindRec;
 begin
-  Result := RegKeyExists(HKLM, 'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App') or
-            RegKeyExists(HKCU, 'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App');
-  if Result then
+  Result := False;
+  if FindFirst(ExpandConstant('{pf64}\dotnet\shared\Microsoft.WindowsDesktop.App\9.*'), FindRec) then
   begin
-    // Check for version 9.x specifically
-    Result := Exec('dotnet', '--list-runtimes', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+    Result := True;
+    FindClose(FindRec);
   end;
 end;
 
