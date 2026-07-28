@@ -2,7 +2,7 @@
 ; Requires Inno Setup 6+
 
 #define MyAppName "Stride"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "Stride"
 #define MyAppURL "https://stride.browser"
 #define MyAppExeName "Stride.exe"
