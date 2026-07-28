@@ -320,7 +320,7 @@ public partial class MainWindow : Window
 
     private void WireEngineEvents()
     {
-        _engine.TabStateChanged += tab =>
+        _engine.TabStateChanged += async tab =>
         {
             if (tab.IsActive)
             {
@@ -335,6 +335,15 @@ public partial class MainWindow : Window
                         TabList.SelectedItem = tab;
                 }
                 finally { _isUpdatingSelection = false; }
+
+                try
+                {
+                    await _engine.ActivateAsync(tab);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Trace.WriteLine($"TabStateChanged activation failed: {ex}");
+                }
             }
         };
 
