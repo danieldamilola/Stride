@@ -6,7 +6,7 @@
 #define MyAppPublisher "Stride"
 #define MyAppURL "https://stride.browser"
 #define MyAppExeName "Stride.exe"
-#define MySourceDir "publish"
+#define MySourceDir "bin\Release\net9.0-windows\publish"
 
 [Setup]
 AppId={{B8F2A9D1-3E7C-4A5B-9D6F-1C2E8F4A7B3D}
@@ -58,13 +58,13 @@ Source: "{#MySourceDir}\Microsoft.Extensions.DependencyInjection.Abstractions.dl
 Source: "{#MySourceDir}\Microsoft.Web.WebView2.Core.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MySourceDir}\Microsoft.Web.WebView2.Wpf.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MySourceDir}\Microsoft.Web.WebView2.WinForms.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MySourceDir}\WebView2Loader.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Native runtime
 Source: "{#MySourceDir}\runtimes\win-x64\native\*"; DestDir: "{app}\runtimes\win-x64\native"; Flags: ignoreversion recursesubdirs
 
 ; Icons
 Source: "{#MySourceDir}\icons\*"; DestDir: "{app}\icons"; Flags: ignoreversion recursesubdirs
+Source: "{#MySourceDir}\Resources\*"; DestDir: "{app}\Resources"; Flags: ignoreversion recursesubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -89,6 +89,55 @@ begin
   begin
     Result := True;
     FindClose(FindRec);
+  end;
+end;
+
+function GetInstalledVersion(): String;
+var
+  InstalledVersion: String;
+begin
+  Result := '';
+  if RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{B8F2A9D1-3E7C-4A5B-9D6F-1C2E8F4A7B3D}_is1', 'DisplayVersion', InstalledVersion) then
+    Result := InstalledVersion
+  else if RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{B8F2A9D1-3E7C-4A5B-9D6F-1C2E8F4A7B3D}_is1', 'DisplayVersion', InstalledVersion) then
+    Result := InstalledVersion;
+end;
+
+function CompareVersionStr(V1, V2: string): Integer;
+var
+  P1, P2: Integer;
+  N1, N2: Integer;
+begin
+  Result := 0;
+  while (V1 <> '') or (V2 <> '') do
+  begin
+    P1 := Pos('.', V1);
+    if P1 > 0 then begin N1 := StrToIntDef(Copy(V1, 1, P1 - 1), 0); Delete(V1, 1, P1); end
+    else begin N1 := StrToIntDef(V1, 0); V1 := ''; end;
+
+    P2 := Pos('.', V2);
+    if P2 > 0 then begin N2 := StrToIntDef(Copy(V2, 1, P2 - 1), 0); Delete(V2, 1, P2); end
+    else begin N2 := StrToIntDef(V2, 0); V2 := ''; end;
+
+    if N1 > N2 then begin Result := 1; Exit; end;
+    if N1 < N2 then begin Result := -1; Exit; end;
+  end;
+end;
+
+function InitializeSetup(): Boolean;
+var
+  InstalledVersion: String;
+begin
+  Result := True;
+  InstalledVersion := GetInstalledVersion();
+  if InstalledVersion <> '' then
+  begin
+    if CompareVersionStr(InstalledVersion, '{#MyAppVersion}') > 0 then
+    begin
+      MsgBox('A newer version (' + InstalledVersion + ') of {#MyAppName} is already installed.' + #13#13 +
+             'This installer is for an older version ({#MyAppVersion}). Setup will now exit.', mbInformation, MB_OK);
+      Result := False;
+    end;
   end;
 end;
 
@@ -125,6 +174,17 @@ begin
     else
     begin
       Result := False;
+    end;
+  end;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = wpReady then
+  begin
+    if GetInstalledVersion() <> '' then
+    begin
+      WizardForm.NextButton.Caption := 'Upgrade';
     end;
   end;
 end;
