@@ -72,6 +72,9 @@ public sealed partial class BrowserSettings : ObservableObject
     // ── YouTube Enhancer ──
 
     [ObservableProperty]
+    private bool _ytEnhancerEnabled = true;
+
+    [ObservableProperty]
     private string _ytDefaultQuality = "hd1080";
 
     [ObservableProperty]

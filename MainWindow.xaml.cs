@@ -159,6 +159,8 @@ public partial class MainWindow : Window
 
             SingleInstanceManager.InstanceMessageReceived += OnInstanceMessageReceived;
 
+            _ = CheckForUpdatesInBackgroundAsync();
+
             if (!DefaultBrowserRegistrar.IsRegistered())
                 DefaultBrowserRegistrar.Register();
 
@@ -234,7 +236,42 @@ public partial class MainWindow : Window
             },
             syncTabsBinding: SyncTabsBinding,
             openOneTab: OpenOneTabPage,
-            openSettings: () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; });
+            openSettings: () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
+            launchTCLens: LaunchTCLensAsync);
+    }
+
+    private async Task LaunchTCLensAsync()
+    {
+        var wv = _engine.GetCoreWebView2();
+        if (wv != null)
+        {
+            try
+            {
+                var exts = await wv.Profile.GetBrowserExtensionsAsync();
+                var tcLens = exts.FirstOrDefault(e => e.Name.Contains("T&C Lens", StringComparison.OrdinalIgnoreCase) || e.Name.Contains("T-C", StringComparison.OrdinalIgnoreCase));
+                if (tcLens != null)
+                {
+                    var url = $"chrome-extension://{tcLens.Id}/options/options.html";
+                    
+                    // Look for existing tab
+                    var existing = _engine.Tabs.FirstOrDefault(t => t.Url != null && t.Url.StartsWith($"chrome-extension://{tcLens.Id}/options"));
+                    if (existing != null)
+                    {
+                        _engine.SwitchTo(existing);
+                    }
+                    else
+                    {
+                        var tab = _engine.CreateTab(url);
+                        _engine.SwitchTo(tab);
+                        await _engine.ActivateAsync(tab);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"Failed to launch T&C Lens: {ex.Message}");
+            }
+        }
     }
 
     private async Task RestoreSessionOrCreateTab()
@@ -873,9 +910,48 @@ public partial class MainWindow : Window
 
     // ──── Keyboard shortcuts ────
 
-    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    private async void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        // No sidebar toggle needed — Stride has no sidebar
+        try
+        {
+            if (_shortcuts is not null)
+            {
+                var modifiers = Keyboard.Modifiers;
+                var actualKey = e.Key == Key.System ? e.SystemKey : e.Key;
+                
+                var handled = await _shortcuts.TryExecuteAsync(modifiers, actualKey);
+                if (handled)
+                {
+                    e.Handled = true;
+                    return;
+                }
+
+                if (modifiers == ModifierKeys.Control && actualKey >= Key.D1 && actualKey <= Key.D9)
+                {
+                    var tabIndex = actualKey - Key.D1;
+                    if (actualKey == Key.D9)
+                        tabIndex = _engine.Tabs.Count - 1;
+                    await SwitchToTabByIndex(tabIndex);
+                    e.Handled = true;
+                    return;
+                }
+
+                // Alt+1–9: also switch tabs (user preference)
+                if (modifiers == ModifierKeys.Alt && actualKey >= Key.D1 && actualKey <= Key.D9)
+                {
+                    var tabIndex = actualKey - Key.D1;
+                    if (actualKey == Key.D9)
+                        tabIndex = _engine.Tabs.Count - 1;
+                    await SwitchToTabByIndex(tabIndex);
+                    e.Handled = true;
+                    return;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"PreviewKeyDown failed: {ex}");
+        }
     }
 
     private async void Settings_Click(object sender, RoutedEventArgs e)
@@ -892,6 +968,31 @@ public partial class MainWindow : Window
         {
             Trace.WriteLine($"Settings_Click failed: {ex}");
         }
+    }
+
+    private async Task CheckForUpdatesInBackgroundAsync()
+    {
+        try
+        {
+            using var client = new System.Net.Http.HttpClient();
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("StrideBrowser");
+            var response = await client.GetAsync("https://api.github.com/repos/danieldamilola/Stride/releases/latest");
+            if (!response.IsSuccessStatusCode) return;
+
+            var json = await response.Content.ReadAsStringAsync();
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("tag_name", out var tagProp))
+            {
+                var latest = tagProp.GetString()?.TrimStart('v');
+                var current = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";
+                
+                if (!string.IsNullOrEmpty(latest) && latest != current)
+                {
+                    Dispatcher.Invoke(() => UpdateBadge.Visibility = Visibility.Visible);
+                }
+            }
+        }
+        catch { /* Silently fail on network/parsing issues */ }
     }
 
     // ───────────────────── Title Bar ─────────────────────
@@ -999,49 +1100,7 @@ public partial class MainWindow : Window
         _engine.ResetZoom();
     }
 
-    protected override async void OnKeyDown(KeyEventArgs e)
-    {
-        try
-        {
-            if (_shortcuts is not null)
-            {
-                var modifiers = Keyboard.Modifiers;
-                var handled = await _shortcuts.TryExecuteAsync(modifiers, e.Key);
-                if (handled)
-                {
-                    e.Handled = true;
-                    return;
-                }
-
-                if (modifiers == ModifierKeys.Control && e.Key >= Key.D1 && e.Key <= Key.D9)
-                {
-                    var tabIndex = e.Key - Key.D1;
-                    if (e.Key == Key.D9)
-                        tabIndex = _engine.Tabs.Count - 1;
-                    await SwitchToTabByIndex(tabIndex);
-                    e.Handled = true;
-                    return;
-                }
-
-                // Alt+1–9: also switch tabs (user preference)
-                if (modifiers == ModifierKeys.Alt && e.Key >= Key.D1 && e.Key <= Key.D9)
-                {
-                    var tabIndex = e.Key - Key.D1;
-                    if (e.Key == Key.D9)
-                        tabIndex = _engine.Tabs.Count - 1;
-                    await SwitchToTabByIndex(tabIndex);
-                    e.Handled = true;
-                    return;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"OnKeyDown failed: {ex}");
-        }
-
-        base.OnKeyDown(e);
-    }
+    // OnKeyDown logic moved to Window_PreviewKeyDown to handle WebView2 focus
 
     private async Task SwitchToTabByIndex(int tabIndex)
     {

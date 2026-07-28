@@ -439,6 +439,8 @@ public sealed class TabEngine : IDisposable
 
             if (_settings.ForceDarkMode)
                 wv.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Dark;
+
+            wv.CoreWebView2.SetVirtualHostNameToFolderMapping("local.assets", System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages"), Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
         }
         catch
         {
@@ -462,21 +464,21 @@ public sealed class TabEngine : IDisposable
 
         if (!_extensionsLoaded)
         {
-            try
+            _extensionsLoaded = true;
+            _ = Task.Run(async () =>
             {
-                await _extensionManager.InitializeAsync(wv.CoreWebView2);
-                _extensionsLoaded = true;
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"Extension init failed (will retry): {ex.Message}");
-            }
+                try
+                {
+                    await _extensionManager.InitializeAsync(wv.CoreWebView2);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"Extension init failed: {ex.Message}");
+                }
+            });
         }
 
         await _contentScriptInjector.InjectAsync(wv.CoreWebView2, _settings);
-
-        if (_settings.DefaultZoom != 100)
-            wv.ZoomFactor = _settings.DefaultZoom / 100.0;
 
         _webViews[tab.Id] = wv;
         tab.IsHibernated = false;
@@ -498,12 +500,12 @@ public sealed class TabEngine : IDisposable
         // NewTab is served as HTML string so there's no real URL to navigate to.
         if (tab.Url == InternalUrls.NewTab || string.IsNullOrEmpty(tab.Url))
         {
-            try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch { }
+            try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom)); } catch { }
             return;
         }
 
         try { wv.CoreWebView2.Navigate(tab.Url); }
-        catch (ArgumentException) { try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch { } }
+        catch (ArgumentException) { try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom)); } catch { } }
     }
 
 
@@ -641,6 +643,9 @@ public sealed class TabEngine : IDisposable
                 try
                 {
                     if (!_webViews.ContainsKey(tab.Id)) return;
+
+                    if (_settings.DefaultZoom != 100)
+                        wv.ZoomFactor = _settings.DefaultZoom / 100.0;
 
                     if (!e.IsSuccess &&
                         e.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled &&

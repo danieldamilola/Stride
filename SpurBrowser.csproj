@@ -33,6 +33,13 @@
     <EmbeddedResource Include="Resources\Scripts\*.js" />
   </ItemGroup>
 
+  <!-- Local Assets for Virtual Host -->
+  <ItemGroup>
+    <Content Include="Resources\Pages\*.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <!-- App icons — copied to output for Window.Icon and taskbar -->
   <ItemGroup>
     <Content Include="icons\stride-browser-*.png">

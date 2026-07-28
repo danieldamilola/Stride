@@ -16,6 +16,8 @@ public sealed class YouTubeEnhancer
     /// <summary>Returns the JS to inject on youtube.com pages.</summary>
     public string GetScript(BrowserSettings settings)
     {
+        if (!settings.YtEnhancerEnabled) return "";
+
         var replacements = new Dictionary<string, string>
         {
             ["QUALITY"]         = settings.YtDefaultQuality ?? "auto",

@@ -75,7 +75,7 @@
         <Geometry x:Key="IconLock">M 19 11 L 5 11 L 5 21 L 19 21 Z M 8 11 L 8 7 A 4 4 0 0 1 16 7 L 16 11</Geometry>
         <Geometry x:Key="IconMinimize">M 5 12 L 19 12</Geometry>
         <Geometry x:Key="IconMaximize">M 5 5 L 19 5 L 19 19 L 5 19 Z</Geometry>
-        <Geometry x:Key="IconSettings">M 12 15 A 3 3 0 1 0 12 9 A 3 3 0 0 0 12 15 Z</Geometry>
+        <Geometry x:Key="IconSettings">M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6z</Geometry>
         <Geometry x:Key="IconTabList">M 4 6 L 20 6 M 4 12 L 20 12 M 4 18 L 14 18</Geometry>
         <Geometry x:Key="IconCollapseTabs">M 8 6 L 21 6 M 8 12 L 21 12 M 8 18 L 21 18 M 3 6 L 3.01 6 M 3 12 L 3.01 12 M 3 18 L 3.01 18</Geometry>
         <Geometry x:Key="IconPin">M 12 2 L 12 22 M 5 6 L 12 2 L 19 6</Geometry>

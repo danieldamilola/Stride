@@ -4,7 +4,7 @@ namespace StrideBrowser.Abstractions;
 
 public interface IInternalPageHost
 {
-    string NewTabPage(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, string backgroundPath = "");
+    string NewTabPage(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "");
     string BlankPage();
     string OneTabPage(List<OneTabGroup> groups, string accentColor, string accentRgb, string ipcToken);
     string SettingsPage(BrowserSettings settings, string ipcToken);

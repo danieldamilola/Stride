@@ -6,14 +6,17 @@
     <title>New Tab - Stride</title>
     <style>
         :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: #111113;
+            background-color: #111113;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             color: #E8E4DF;
-            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            font-family: 'Outfit', -apple-system, 'Segoe UI', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -22,55 +25,75 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* ── Background Overlay to ensure text readability ── */
+        .bg-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+        }
+
         .content {
+            position: relative;
+            z-index: 10;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-top: 22vh;
             gap: 0;
             opacity: 0;
-            animation: fadeSlideUp 400ms ease-out 100ms forwards;
+            animation: fadeSlideUp 600ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            width: 100%;
+            margin-top: 20vh; /* Moved to top */
         }
 
-        /* ── Search — clean, single border, no decoration ── */
+        /* ── Search — Glassmorphic ── */
         .search-container {
-            width: 460px;
+            width: 540px;
             position: relative;
+            z-index: 10;
         }
 
         .search-input {
             width: 100%;
-            padding: 12px 16px 12px 40px;
-            border-radius: 8px;
-            border: 1px solid #2A2A2E;
-            background: #1A1A1E;
-            color: #E8E4DF;
-            font-size: 14px;
-            font-weight: 300;
-            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            padding: 16px 20px 16px 48px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(20, 20, 24, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 400;
+            font-family: inherit;
             outline: none;
-            transition: border-color 200ms ease;
-            cursor: text;
+            transition: all 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .search-input:focus {
-            border-color: rgba(var(--accent-rgb),0.35);
+            border-color: rgba(var(--accent-rgb), 0.6);
+            background: rgba(20, 20, 24, 0.7);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(var(--accent-rgb), 0.15);
         }
 
         .search-input::placeholder {
-            color: #4A4844;
-            font-weight: 300;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .search-icon {
             position: absolute;
-            left: 14px;
+            left: 18px;
             top: 50%;
             transform: translateY(-50%);
-            width: 14px;
-            height: 14px;
-            color: #4A4844;
+            width: 18px;
+            height: 18px;
+            color: rgba(255, 255, 255, 0.7);
             pointer-events: none;
+            transition: color 300ms ease;
+        }
+
+        .search-input:focus ~ .search-icon {
+            color: var(--accent);
         }
 
         /* ── Shortcut Tiles ── */
@@ -78,9 +101,10 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 14px;
-            margin-top: 24px;
-            max-width: 580px;
+            gap: 16px;
+            margin-top: 36px;
+            max-width: 640px;
+            z-index: 5;
         }
 
         .shortcut-tile {
@@ -88,65 +112,77 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 80px;
-            height: 80px;
-            border-radius: 12px;
-            background: #1A1A1E;
-            border: 1px solid #2A2A2E;
+            width: 90px;
+            height: 90px;
+            border-radius: 16px;
+            background: rgba(20, 20, 24, 0.3);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
-            transition: background 150ms ease, border-color 150ms ease;
+            transition: all 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
             position: relative;
             text-decoration: none;
             outline: none;
         }
 
         .shortcut-tile:hover {
-            background: #222226;
-            border-color: #3A3A3E;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
         }
 
         .shortcut-tile:focus-visible {
-            border-color: rgba(var(--accent-rgb), 0.5);
-            background: #222226;
+            border-color: rgba(var(--accent-rgb), 0.7);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px);
         }
 
         .shortcut-tile img {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            margin-bottom: 6px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            margin-bottom: 8px;
             pointer-events: none;
+            transition: transform 250ms ease;
+        }
+
+        .shortcut-tile:hover img {
+            transform: scale(1.08);
         }
 
         .shortcut-tile .tile-name {
-            font-size: 11px;
-            font-weight: 400;
-            color: #B0ACA6;
-            max-width: 68px;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 74px;
             text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             line-height: 1;
             pointer-events: none;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
 
         .shortcut-tile .tile-remove {
             position: absolute;
-            top: 3px;
-            right: 3px;
-            width: 16px;
-            height: 16px;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             background: #333338;
-            border: none;
-            color: #8A8680;
-            font-size: 10px;
-            line-height: 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #E8E4DF;
+            font-size: 14px;
+            line-height: 18px;
             text-align: center;
             cursor: pointer;
             opacity: 0;
-            transition: opacity 120ms ease;
+            transform: scale(0.8);
+            transition: all 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
             padding: 0;
             display: flex;
             align-items: center;
@@ -155,11 +191,13 @@
 
         .shortcut-tile:hover .tile-remove {
             opacity: 1;
+            transform: scale(1);
         }
 
         .shortcut-tile .tile-remove:hover {
             background: var(--accent);
             color: #111113;
+            border-color: var(--accent);
         }
 
         .shortcut-add {
@@ -167,36 +205,64 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 80px;
-            height: 80px;
-            border-radius: 12px;
+            width: 90px;
+            height: 90px;
+            border-radius: 16px;
             background: transparent;
-            border: 1px dashed #2A2A2E;
+            border: 1px dashed rgba(255, 255, 255, 0.25);
             cursor: pointer;
-            transition: border-color 150ms ease, background 150ms ease;
+            transition: all 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
             outline: none;
         }
 
         .shortcut-add:hover {
-            border-color: rgba(var(--accent-rgb),0.35);
-            background: rgba(var(--accent-rgb),0.04);
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-4px);
         }
 
         .shortcut-add svg {
-            width: 18px;
-            height: 18px;
-            color: #4A4844;
-            transition: color 150ms ease;
-        }
-
-        .shortcut-add:focus-visible {
-            border-color: rgba(var(--accent-rgb), 0.5);
-            background: rgba(var(--accent-rgb), 0.04);
+            width: 20px;
+            height: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: color 250ms ease;
         }
 
         .shortcut-add:hover svg,
         .shortcut-add:focus-visible svg {
-            color: var(--accent);
+            color: #fff;
+        }
+
+        /* ── Keyboard Shortcuts ── */
+        .shortcuts {
+            position: fixed;
+            bottom: 30px;
+            display: flex;
+            gap: 24px;
+            opacity: 0;
+            animation: fadeSlideUp 600ms cubic-bezier(0.2, 0.8, 0.2, 1) 300ms forwards;
+            z-index: 10;
+        }
+
+        .shortcut {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: default;
+        }
+
+        .shortcut kbd {
+            padding: 3px 6px;
+            font-size: 10px;
+            font-family: 'Outfit', monospace;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
         }
 
         /* ── Add Dialog ── */
@@ -205,142 +271,120 @@
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 100;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            transition: opacity 200ms ease;
         }
 
         .dialog-overlay.open {
             display: flex;
+            opacity: 1;
         }
 
         .dialog {
-            background: #1A1A1E;
-            border: 1px solid #2A2A2E;
-            border-radius: 12px;
-            padding: 24px;
-            width: 340px;
-            animation: fadeSlideUp 200ms ease-out forwards;
+            background: rgba(20, 20, 24, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 28px;
+            width: 360px;
+            transform: scale(0.95);
+            transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+        }
+
+        .dialog-overlay.open .dialog {
+            transform: scale(1);
         }
 
         .dialog h3 {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 500;
-            color: #E8E4DF;
-            margin-bottom: 16px;
+            color: #fff;
+            margin-bottom: 20px;
         }
 
         .dialog label {
             display: block;
-            font-size: 11px;
-            font-weight: 400;
-            color: #8A8680;
-            margin-bottom: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 6px;
         }
 
         .dialog input {
             width: 100%;
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid #2A2A2E;
-            background: #111113;
-            color: #E8E4DF;
-            font-size: 13px;
-            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
             outline: none;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             transition: border-color 200ms ease;
         }
 
         .dialog input:focus {
-            border-color: rgba(var(--accent-rgb),0.35);
-        }
-
-        .dialog input::placeholder {
-            color: #4A4844;
+            border-color: rgba(var(--accent-rgb), 0.6);
         }
 
         .dialog-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 8px;
-            margin-top: 4px;
+            gap: 12px;
+            margin-top: 8px;
         }
 
         .dialog-actions button {
-            padding: 6px 16px;
-            border-radius: 6px;
-            border: 1px solid #2A2A2E;
-            background: #1A1A1E;
-            color: #8A8680;
-            font-size: 12px;
-            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
             cursor: pointer;
-            transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+            transition: all 200ms ease;
         }
 
         .dialog-actions button:hover {
-            background: #222226;
-            color: #E8E4DF;
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .dialog-actions button.primary {
-            background: rgba(var(--accent-rgb),0.12);
-            border-color: rgba(var(--accent-rgb),0.25);
-            color: var(--accent);
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #111113;
         }
 
         .dialog-actions button.primary:hover {
-            background: rgba(var(--accent-rgb),0.2);
-        }
-
-        /* ── Keyboard Shortcuts — barely visible, functional ── */
-        .shortcuts {
-            margin-top: 20px;
-            display: flex;
-            gap: 20px;
-        }
-
-        .shortcut {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 11px;
-            font-weight: 400;
-            color: #4A4844;
-            cursor: default;
-        }
-
-        .shortcut kbd {
-            padding: 1px 5px;
-            font-size: 10px;
-            font-family: 'Inter', monospace;
-            font-weight: 500;
-            color: #8A8680;
-            background: #1A1A1E;
-            border: 1px solid #2A2A2E;
-            border-radius: 3px;
+            filter: brightness(1.1);
         }
 
         /* ── Animations ── */
         @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(6px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            * { animation-duration: 0.01ms !important; }
+            * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
     </style>
-    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAD50lEQVR4AbxXaWxNaRh+zk0zRjKSc29mGKMjDGaaDqmIWkIINzSKSMQWa2ii9ia22hIRErvYooj2ByGp2IqoEkSClIqQWhoqrVbtmv6g1482x/t87vnc3tvTe3Dr5rzf93zPuz2n39nqQdjP5zNneL3e816v+V7MipFJLe951g5rBy3ANM3upmnetCxkA1aKBPrEYnVILSuFtdlDrLtdWAkgYRi4JNbLdjTXzB5il9iTPZQAAfvERKWMP+dgL/aEh/siipr9zMPPiz3Z22NZxrhw589as7dsgZXstmHPHklYMCcN61ZnImfvNhTkHcHhnN1o+2drtyXC4qxkEQDuR5gjcpkhjXduWYsJY0Zh8MB+SPi3M1q1+g0dO7RH3949IxPcMT6Pm7jcg3sxXhqHxtbV1eFJaRk2b8/Cibxzoa5vwlEFZO3YgL/j/9JFrxcWIX1BJlJHT8G0mRk4eTpf+74HNClgZOoQJHVL1HVXrdmIJSvWovj+I3z48FHzPwIcBXRNTMDyxfN17RmzFuLy1et6HSvgKMA/qL/ukXe2ACWPS/U6lsBRQOitlX/hckTPuLg4cItoxBEBLglnAW3a6BKlT8s1JmDD7Kytaou4TcTk6Au1Fi1+Qad/OsDnNUPpBthZQPDhUlFZhdpAoEHSsKGD0KVTR80Rk9NEEKSm+HHowE6cPX4wyEROjgIsy1LR9fX1av6eITGhi05rH99O41DgKKDq5SsVxyddy5a/KmwP+Reu4MnTMnupMDlNBEFSt/8Vqq0NoOJ5lcLhg6OAFy9f69jOso96IYBPwbTZi7B+yy5lxOTEpY+uif8hvl1btW7qDnIU8ObtO5XMYeqksZwaGBueOXcRNOIGTllMm/z1JVtWXiFM44ejgBuFt3VGvz7J6gWkiSiALyvm2GFXrxXaMGJ2FHD7zj3kHsvTCXwF8w2oCQfAGMbabtZgLXsdPjsKYOCOPdmofP6CUBm/ATIXzgUf04oIGcjRxxibZi5r2OvG5iYFMGH81Fm4V/wQ9m/UiBTs370Jp3JzsGblYmXE5Oiz45jDXHvtNEcVwMTZGcvU1U5sW+s/fscQ/wBlxDbPmXcHc4ijGQVURwuin1f7zHlL1fu/+EEJAoFPpJURk+O3AWMYqxzRh2oRYBRFj/sScf9hifoCSp+/FP7h4zBx+lxlxOQ2y9cRY75EuxmNIo9hWEfdhDYWU/6sErTGfG449vZUV9fkyGP/lpuEWMawJ3vLFqiy6TK6uhYkLhYHe7EnlICampq7osgv1ux/CfYQ87Mnz0QJICAh1lv+ZUoDjAIAVCnTjx3BbKllFLA2e4jdDfL4DAAA///AhAxQAAAABklEQVQDAKYgZwIinfcbAAAAAElFTkSuQmCC">
 </head>
 <body>
+    <div class="bg-overlay"></div>
+
     <div class="content">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAD50lEQVR4AbxXaWxNaRh+zk0zRjKSc29mGKMjDGaaDqmIWkIINzSKSMQWa2ii9ia22hIRErvYooj2ByGp2IqoEkSClIqQWhoqrVbtmv6g1482x/t87vnc3tvTe3Dr5rzf93zPuz2n39nqQdjP5zNneL3e816v+V7MipFJLe951g5rBy3ANM3upmnetCxkA1aKBPrEYnVILSuFtdlDrLtdWAkgYRi4JNbLdjTXzB5il9iTPZQAAfvERKWMP+dgL/aEh/siipr9zMPPiz3Z22NZxrhw589as7dsgZXstmHPHklYMCcN61ZnImfvNhTkHcHhnN1o+2drtyXC4qxkEQDuR5gjcpkhjXduWYsJY0Zh8MB+SPi3M1q1+g0dO7RH3949IxPcMT6Pm7jcg3sxXhqHxtbV1eFJaRk2b8/Cibxzoa5vwlEFZO3YgL/j/9JFrxcWIX1BJlJHT8G0mRk4eTpf+74HNClgZOoQJHVL1HVXrdmIJSvWovj+I3z48FHzPwIcBXRNTMDyxfN17RmzFuLy1et6HSvgKMA/qL/ukXe2ACWPS/U6lsBRQOitlX/hckTPuLg4cItoxBEBLglnAW3a6BKlT8s1JmDD7Kytaou4TcTk6Au1Fi1+Qad/OsDnNUPpBthZQPDhUlFZhdpAoEHSsKGD0KVTR80Rk9NEEKSm+HHowE6cPX4wyEROjgIsy1LR9fX1av6eITGhi05rH99O41DgKKDq5SsVxyddy5a/KmwP+Reu4MnTMnupMDlNBEFSt/8Vqq0NoOJ5lcLhg6OAFy9f69jOso96IYBPwbTZi7B+yy5lxOTEpY+uif8hvl1btW7qDnIU8ObtO5XMYeqksZwaGBueOXcRNOIGTllMm/z1JVtWXiFM44ejgBuFt3VGvz7J6gWkiSiALyvm2GFXrxXaMGJ2FHD7zj3kHsvTCXwF8w2oCQfAGMbabtZgLXsdPjsKYOCOPdmofP6CUBm/ATIXzgUf04oIGcjRxxibZi5r2OvG5iYFMGH81Fm4V/wQ9m/UiBTs370Jp3JzsGblYmXE5Oiz45jDXHvtNEcVwMTZGcvU1U5sW+s/fscQ/wBlxDbPmXcHc4ijGQVURwuin1f7zHlL1fu/+EEJAoFPpJURk+O3AWMYqxzRh2oRYBRFj/sScf9hifoCSp+/FP7h4zBx+lxlxOQ2y9cRY75EuxmNIo9hWEfdhDYWU/6sErTGfG449vZUV9fkyGP/lpuEWMawJ3vLFqiy6TK6uhYkLhYHe7EnlICampq7osgv1ux/CfYQ87Mnz0QJICAh1lv+ZUoDjAIAVCnTjx3BbKllFLA2e4jdDfL4DAAA///AhAxQAAAABklEQVQDAKYgZwIinfcbAAAAAElFTkSuQmCC"
-             alt="Stride" style="width: 40px; height: 40px; opacity: 0.25; margin-bottom: 24px;">
         <div class="search-container">
             <input type="text" class="search-input"
-                   placeholder="Search or type a URL"
+                   placeholder="Search the web or type a URL"
                    autofocus
                    onkeydown="if(event.key==='Enter'){window.chrome.webview.postMessage(__T+'search:'+this.value)}">
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -349,11 +393,12 @@
             </svg>
         </div>
         <div class="shortcut-grid" id="shortcutGrid"></div>
-        <div class="shortcuts">
-            <span class="shortcut"><kbd>Ctrl</kbd><kbd>L</kbd> URL</span>
-            <span class="shortcut"><kbd>Ctrl</kbd><kbd>T</kbd> Tab</span>
-            <span class="shortcut"><kbd>Ctrl</kbd><kbd>H</kbd> History</span>
-        </div>
+    </div>
+
+    <div class="shortcuts">
+        <span class="shortcut"><kbd>Ctrl</kbd><kbd>L</kbd> URL</span>
+        <span class="shortcut"><kbd>Ctrl</kbd><kbd>T</kbd> Tab</span>
+        <span class="shortcut"><kbd>Ctrl</kbd><kbd>H</kbd> History</span>
     </div>
 
     <!-- Add Shortcut Dialog -->
@@ -372,8 +417,37 @@
     </div>
 
     <script>
+        document.body.style.zoom = '{{ZOOM}}%';
         const __T = '{{IPC_TOKEN}}:';
         const shortcuts = JSON.parse('{{SHORTCUTS}}' || '[]');
+
+        // Local high-quality backgrounds (instant load!)
+        const BACKGROUNDS = [
+            "https://local.assets/bg1.jpg",
+            "https://local.assets/bg2.jpg",
+            "https://local.assets/bg3.jpg"
+        ];
+
+        function initBackground() {
+            // Pick a random background index from cache to avoid showing the same one twice in a row if possible
+            let lastIdx = -1;
+            try {
+                lastIdx = parseInt(localStorage.getItem('stride_ntp_bg_idx') || '-1');
+            } catch (e) {}
+
+            let nextIdx = Math.floor(Math.random() * BACKGROUNDS.length);
+            if (nextIdx === lastIdx && BACKGROUNDS.length > 1) {
+                nextIdx = (nextIdx + 1) % BACKGROUNDS.length;
+            }
+
+            try {
+                localStorage.setItem('stride_ntp_bg_idx', nextIdx.toString());
+            } catch (e) {}
+
+            document.body.style.backgroundImage = `url(${BACKGROUNDS[nextIdx]})`;
+        }
+
+        initBackground();
 
         function getDomain(url) {
             try { return new URL(url).hostname; } catch { return url; }
@@ -417,8 +491,8 @@
                 grid.appendChild(tile);
             });
 
-            // Add button (max 16 shortcuts)
-            if (shortcuts.length < 16) {
+            // Add button (max 10 shortcuts)
+            if (shortcuts.length < 10) {
                 const add = document.createElement('div');
                 add.className = 'shortcut-add';
                 add.tabIndex = 0;
@@ -436,7 +510,7 @@
             document.getElementById('scName').value = '';
             document.getElementById('scUrl').value = '';
             document.getElementById('dialogOverlay').classList.add('open');
-            setTimeout(() => document.getElementById('scName').focus(), 50);
+            setTimeout(() => document.getElementById('scName').focus(), 100);
         }
 
         function closeDialog() {

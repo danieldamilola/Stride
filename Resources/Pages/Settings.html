@@ -8,16 +8,89 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
 
       body {
-          background: #0C0C0C;
-          color: #D4D4D4;
-          font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
-          line-height: 1.5;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+        background-color: #121212;
+        color: #E0E0E0;
+        user-select: none;
       }
-
+      
+      .settings-layout {
+          display: flex;
+          height: 100vh;
+          overflow: hidden;
+      }
+      
+      .sidebar {
+          padding: 40px 20px;
+          display: flex;
+          flex-direction: column;
+      }
+      .sidebar .page-header {
+          margin-bottom: 24px;
+          padding: 0 12px;
+      }
+      .nav {
+          list-style: none;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+      }
+      .sidebar-nav-item {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          color: #A3A3A3;
+          font-size: 14px;
+          font-weight: 500;
+          transition: background 0.15s, color 0.15s;
+      }
+      .sidebar-nav-item svg {
+          width: 18px;
+          height: 18px;
+          opacity: 0.7;
+          transition: opacity 0.15s, color 0.15s;
+      }
+      .sidebar-nav-item:hover {
+          background: #1A1A1A;
+          color: #D4D4D4;
+      }
+      .sidebar-nav-item:hover svg {
+          opacity: 1;
+      }
+      .sidebar-nav-item.active {
+          background: rgba(var(--accent-rgb), 0.15);
+          color: var(--accent);
+          font-weight: 600;
+      }
+      .sidebar-nav-item.active svg {
+          opacity: 1;
+          color: var(--accent);
+      }
+      .sidebar-nav-item.active::before {
+          content: '';
+          position: absolute;
+          left: -20px;
+          top: 15%;
+          bottom: 15%;
+          width: 4px;
+          background: var(--accent);
+          border-radius: 0 4px 4px 0;
+      }
+      .content-area {
+          flex: 1;
+          overflow-y: auto;
+          background: #0C0C0C;
+      }
       .settings-container {
-          max-width: 680px;
+          max-width: 720px;
           margin: 0 auto;
-          padding: 40px 32px 60px;
+          padding: 40px 40px 60px;
       }
 
       /* ── Page header ── */
@@ -34,6 +107,15 @@
       /* ── Section ── */
       .section {
           margin-bottom: 28px;
+          display: none;
+      }
+      .section.active {
+          display: block;
+          animation: fadeIn 0.2s ease;
+      }
+      @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
       }
       .section-header {
           font-size: 11px;
@@ -404,17 +486,104 @@
         style.textContent =
           ".toggle:checked { background: " + current + " !important; }";
         document.head.appendChild(style);
+
+        // Sidebar Navigation Logic
+        var navItems = document.querySelectorAll(".sidebar-nav-item");
+        var sections = document.querySelectorAll(".section");
+
+        function activateTab(targetId) {
+          navItems.forEach(function(item) {
+            if (item.dataset.target === targetId) {
+              item.classList.add("active");
+            } else {
+              item.classList.remove("active");
+            }
+          });
+
+          sections.forEach(function(sec) {
+            if (sec.id === targetId) {
+              sec.classList.add("active");
+            } else {
+              sec.classList.remove("active");
+            }
+          });
+
+          // Save active tab to localStorage safely
+          try {
+            localStorage.setItem("stride_active_settings_tab", targetId);
+          } catch (e) {
+            // Ignore if localStorage is blocked
+          }
+        }
+
+        navItems.forEach(function(item) {
+          item.addEventListener("click", function() {
+            activateTab(this.dataset.target);
+          });
+        });
+
+        // Restore active tab or default to first safely
+        var savedTab = null;
+        try {
+          savedTab = localStorage.getItem("stride_active_settings_tab");
+        } catch (e) {
+          // Ignore
+        }
+
+        if (savedTab && document.getElementById(savedTab)) {
+          activateTab(savedTab);
+        } else if (navItems.length > 0) {
+          activateTab(navItems[0].dataset.target);
+        }
       });
     </script>
   </head>
   <body>
-    <div class="settings-container">
-      <div class="page-header">
-        <h1>Settings</h1>
-      </div>
+    <div class="settings-layout">
+      <aside class="sidebar">
+        <div class="page-header">
+          <h1>Settings</h1>
+        </div>
+        <ul class="nav">
+          <li class="sidebar-nav-item" data-target="section-general">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            General
+          </li>
+          <li class="sidebar-nav-item" data-target="section-appearance">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+            Appearance
+          </li>
+          <li class="sidebar-nav-item" data-target="section-privacy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Privacy & Browsing
+          </li>
+          <li class="sidebar-nav-item" data-target="section-shortcuts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M10 16h4"/></svg>
+            Keyboard Shortcuts
+          </li>
+          <li class="sidebar-nav-item" data-target="section-yt-enhancer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            YouTube Enhancer
+          </li>
+          <li class="sidebar-nav-item" data-target="section-yt-unhook">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"/><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/></svg>
+            YouTube Unhook
+          </li>
+          <li class="sidebar-nav-item" data-target="section-focus">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            Irreversible Focus
+          </li>
+          <li class="sidebar-nav-item" data-target="section-system">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+            System
+          </li>
+        </ul>
+      </aside>
+      <main class="content-area">
+        <div class="settings-container">
 
       <!-- ════════ GENERAL ════════ -->
-      <div class="section">
+      <div class="section" id="section-general">
         <div class="section-header">General</div>
         <div class="card">
           <div class="setting-row">
@@ -470,7 +639,7 @@
       </div>
 
       <!-- ════════ APPEARANCE ════════ -->
-      <div class="section">
+      <div class="section" id="section-appearance">
         <div class="section-header">Appearance</div>
         <div class="card">
           <div class="setting-row">
@@ -501,7 +670,7 @@
       </div>
 
       <!-- ════════ PRIVACY & BROWSING ════════ -->
-      <div class="section">
+      <div class="section" id="section-privacy">
         <div class="section-header">Privacy & Browsing</div>
         <div class="card">
           <div class="setting-row">
@@ -515,6 +684,20 @@
                 class="toggle"
                 {{CHK_RESTORE}}
                 onchange="s('restoreSession', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Native ad & tracker blocking</div>
+              <div class="setting-desc">Block ads and trackers natively</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_ADBLOCK}}
+                onchange="s('adBlock', this)"
               />
             </div>
           </div>
@@ -604,9 +787,22 @@
       {{KEYBOARD_SHORTCUTS_HTML}}
 
       <!-- ════════ YOUTUBE ENHANCER ════════ -->
-      <div class="section">
+      <div class="section" id="section-yt-enhancer">
         <div class="section-header">YouTube Enhancer</div>
         <div class="card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Enable YouTube Enhancer</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_YT_ENHANCER}}
+                onchange="s('ytEnhancerEnabled', this)"
+              />
+            </div>
+          </div>
           <div class="setting-row">
             <div class="setting-info">
               <div class="setting-label">Default quality</div>
@@ -694,7 +890,7 @@
       </div>
 
       <!-- ════════ YOUTUBE UNHOOK ════════ -->
-      <div class="section">
+      <div class="section" id="section-yt-unhook">
         <div class="section-header">YouTube Unhook</div>
         <div class="card">
           <div class="setting-row">
@@ -999,7 +1195,7 @@
       </div>
 
       <!-- ════════ IRREVERSIBLE FOCUS ════════ -->
-      <div class="section">
+      <div class="section" id="section-focus">
         <div class="section-header">Irreversible Focus</div>
         <div class="card" style="padding: 16px">
           <div
@@ -1074,7 +1270,7 @@
       </div>
 
       <!-- ════════ SYSTEM ════════ -->
-      <div class="section">
+      <div class="section" id="section-system">
         <div class="section-header">System</div>
         <div class="card">
           <div class="setting-row">
@@ -1093,8 +1289,49 @@
               </button>
             </div>
           </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Browser Updates</div>
+              <div class="setting-desc" id="updateStatus">Current version: {{CURRENT_VERSION}}</div>
+            </div>
+            <div class="setting-control">
+              <button
+                class="action-btn"
+                id="checkUpdateBtn"
+                onclick="
+                  this.innerText = 'Checking...';
+                  this.disabled = true;
+                  fetch('https://api.github.com/repos/danieldamilola/Stride/releases/latest')
+                    .then(r => r.json())
+                    .then(data => {
+                      const latest = data.tag_name;
+                      const current = 'v{{CURRENT_VERSION}}';
+                      if (latest && latest !== current) {
+                        document.getElementById('updateStatus').innerText = 'New version available: ' + latest;
+                        this.innerText = 'Download';
+                        this.disabled = false;
+                        this.onclick = () => window.open(data.html_url);
+                      } else {
+                        document.getElementById('updateStatus').innerText = 'Stride is up to date (v{{CURRENT_VERSION}}).';
+                        this.innerText = 'Check for Updates';
+                        this.disabled = false;
+                      }
+                    })
+                    .catch(e => {
+                      document.getElementById('updateStatus').innerText = 'Failed to check for updates.';
+                      this.innerText = 'Try Again';
+                      this.disabled = false;
+                    });
+                "
+              >
+                Check for Updates
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+      </main>
     </div>
   </body>
 </html>

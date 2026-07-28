@@ -286,6 +286,18 @@
                                   Stretch="Uniform" StrokeStartLineCap="Round"
                                   StrokeEndLineCap="Round"/>
                         </Button>
+                        <Grid>
+                            <Button Click="Settings_Click" Style="{DynamicResource IconBtn}"
+                                    ToolTip="Settings" Width="26" Height="26" Margin="4,0" Cursor="Hand" FocusVisualStyle="{x:Null}">
+                                <Path Data="{StaticResource IconSettings}" 
+                                      Stroke="{DynamicResource TextSecondary}" Fill="Transparent"
+                                      StrokeThickness="1.4" Width="14" Height="14" 
+                                      Stretch="Uniform" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                            </Button>
+                            <Ellipse x:Name="UpdateBadge" Width="8" Height="8" Fill="#F85149" 
+                                     HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                     Margin="0,4,4,0" Visibility="Collapsed" IsHitTestVisible="False"/>
+                        </Grid>
                     </StackPanel>
 
                     <!-- Window controls: — □ × -->

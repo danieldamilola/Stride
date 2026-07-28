@@ -39,10 +39,12 @@ public sealed class SettingsPage
                 ["CHK_DARK"] = Chk(settings.ForceDarkMode),
                 ["CHK_HTTPS"] = Chk(settings.ForceHttps),
                 ["CHK_SMARTSCREEN"] = Chk(settings.SmartScreenEnabled),
+                ["CHK_ADBLOCK"] = Chk(settings.AdBlockEnabled),
                 ["CHK_CLEAR"] = Chk(settings.ClearDataOnExit),
                 ["CHK_DUPES"] = Chk(settings.BlockDuplicateTabs),
                 ["SIDEBAR_LEFT"] = settings.IsSidebarOnRight ? "" : " selected",
                 ["SIDEBAR_RIGHT"] = settings.IsSidebarOnRight ? " selected" : "",
+                ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0",
                 ["ACCENT_COLOR"] = settings.AccentColor,
                 ["ACCENT"] = settings.AccentColor,
                 ["ACCENT_RGB"] = HexToRgb(settings.AccentColor),
@@ -58,6 +60,7 @@ public sealed class SettingsPage
                 ["YT_QUALITY_1440"] = SelStr(settings.YtDefaultQuality, "hd1440"),
                 ["YT_QUALITY_4K"] = SelStr(settings.YtDefaultQuality, "highres"),
                 ["YT_SPEED"] = settings.YtDefaultSpeed.ToString(CultureInfo.InvariantCulture),
+                ["CHK_YT_ENHANCER"] = Chk(settings.YtEnhancerEnabled),
                 ["CHK_YT_AUTOPLAY"] = Chk(settings.YtDisableAutoplay),
                 ["CHK_YT_PAUSE"] = Chk(settings.YtPauseOnTabSwitch),
                 ["FOCUS_INPUT_DISPLAY"] = settings.FocusLocked ? "none" : "block",
@@ -94,7 +97,7 @@ public sealed class SettingsPage
     private static string BuildShortcutsHtml(Dictionary<string, string> customShortcuts)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("<div class=\"section\">");
+        sb.AppendLine("<div class=\"section\" id=\"section-shortcuts\">");
         sb.AppendLine("    <div class=\"section-header\">Keyboard Shortcuts</div>");
         sb.AppendLine("    <div class=\"card\">");
 

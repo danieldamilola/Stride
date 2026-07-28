@@ -32,9 +32,11 @@ public sealed class KeyboardShortcutMap
         Action<List<(string url, string title)>> saveOneTabGroup,
         Action syncTabsBinding,
         Func<Task> openOneTab,
-        Func<Task> openSettings)
+        Func<Task> openSettings,
+        Func<Task> launchTCLens)
     {
         // Register all actions by name (these never change, only the key bindings do)
+        _actions["TCLens"] = launchTCLens;
         _actions["RestoreClosedTab"] = async () =>
         {
             var tab = engine.RestoreClosedTab();

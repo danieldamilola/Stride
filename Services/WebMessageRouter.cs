@@ -134,6 +134,15 @@ public sealed class WebMessageRouter
                 _vm.Settings.CustomShortcuts[subParts[0]] = subParts[1];
                 _settingsStore.Save(_vm.Settings);
                 SettingChanged?.Invoke("shortcut", subParts[0]);
+
+                if (subParts[0] == "TCLens")
+                {
+                    var coreWv = _engine.GetCoreWebView2();
+                    if (coreWv != null)
+                    {
+                        _ = _extensionManager.UpdateTCLensShortcutAsync(coreWv, subParts[1]);
+                    }
+                }
             }
             return;
         }
@@ -144,6 +153,16 @@ public sealed class WebMessageRouter
             _vm.Settings.CustomShortcuts.Remove(value);
             _settingsStore.Save(_vm.Settings);
             SettingChanged?.Invoke("shortcutReset", value);
+
+            if (value == "TCLens")
+            {
+                var coreWv = _engine.GetCoreWebView2();
+                if (coreWv != null)
+                {
+                    var def = StrideBrowser.Services.Input.ShortcutDefaults.All.FirstOrDefault(x => x.Name == "TCLens");
+                    if (def != null) _ = _extensionManager.UpdateTCLensShortcutAsync(coreWv, def.DefaultCombo);
+                }
+            }
             return;
         }
 
@@ -375,6 +394,7 @@ public sealed class WebMessageRouter
         ["darkMode"] = (s, v) => s.ForceDarkMode = v == "true",
         ["forceHttps"] = (s, v) => s.ForceHttps = v == "true",
         ["smartScreen"] = (s, v) => s.SmartScreenEnabled = v == "true",
+        ["adBlock"] = (s, v) => s.AdBlockEnabled = v == "true",
         ["clearOnExit"] = (s, v) => s.ClearDataOnExit = v == "true",
         ["blockDupes"] = (s, v) => s.BlockDuplicateTabs = v == "true",
         ["sidebarPosition"] = (s, v) => s.IsSidebarOnRight = v == "right",
@@ -382,6 +402,7 @@ public sealed class WebMessageRouter
         ["focusDomains"] = (s, v) => s.FocusDomains = System.Web.HttpUtility.UrlDecode(v),
         ["focusLocked"] = (s, v) => s.FocusLocked = v == "true",
 
+        ["ytEnhancerEnabled"] = (s, v) => s.YtEnhancerEnabled = v == "true",
         ["ytQuality"] = (s, v) => s.YtDefaultQuality = v,
         ["ytAutoplay"] = (s, v) => s.YtDisableAutoplay = v == "true",
         ["ytPauseTab"] = (s, v) => s.YtPauseOnTabSwitch = v == "true",

@@ -19,6 +19,7 @@ public static class ShortcutDefaults
 
         // ── Navigation ──
         new("FocusAddressBar",   "Navigation", "Address bar",          "Focus the command bar",             "Ctrl+L"),
+        new("TCLens",            "Extensions", "Analyze this page with T&C Lens", "Analyze this page with T&C Lens", "Alt+T"),
         new("GoBack",            "Navigation", "Go back",              "Navigate back",                     "Alt+Left"),
         new("GoForward",         "Navigation", "Go forward",           "Navigate forward",                  "Alt+Right"),
         new("Reload",            "Navigation", "Reload",               "Reload current page",               "F5"),

@@ -20,6 +20,8 @@ public sealed class ExtensionManager
     private const string UBlockDownloadUrl =
         $"https://github.com/gorhill/uBlock/releases/download/{UBlockVersion}/uBlock0_{UBlockVersion}.chromium.zip";
 
+    private const string TCLensUrl = "https://github.com/danieldamilola/T-C/archive/refs/heads/main.zip";
+
     /// <summary>Path to the stored SHA-256 hash for TOFU (Trust On First Use) verification.</summary>
     private static readonly string HashFilePath = AppPaths.UBlockHashFile;
 
@@ -41,14 +43,23 @@ public sealed class ExtensionManager
             }
 
             var folderPath = await EnsureUBlockDownloadedAsync();
-            if (folderPath is null)
+            if (folderPath is not null)
             {
-                Trace.WriteLine("ExtensionManager: failed to obtain uBlock folder.");
-                return;
+                await LoadUnpackedAsync(webview, folderPath);
+                Trace.WriteLine("ExtensionManager: uBlock Origin loaded successfully.");
             }
 
-            await LoadUnpackedAsync(webview, folderPath);
-            Trace.WriteLine("ExtensionManager: uBlock Origin loaded successfully.");
+            var tcLens = extensions.FirstOrDefault(e =>
+                e.Name.Contains("T&C Lens", StringComparison.OrdinalIgnoreCase) || e.Name.Contains("T-C", StringComparison.OrdinalIgnoreCase));
+            if (tcLens == null)
+            {
+                var tcFolder = await EnsureTCLensDownloadedAsync();
+                if (tcFolder != null)
+                {
+                    await LoadUnpackedAsync(webview, tcFolder);
+                    Trace.WriteLine("ExtensionManager: T&C Lens loaded successfully.");
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -123,6 +134,141 @@ public sealed class ExtensionManager
         {
             Trace.WriteLine($"ExtensionManager.EnsureUBlockDownloadedAsync failed: {ex.Message}");
             return null;
+        }
+    }
+
+    public async Task<string?> EnsureTCLensDownloadedAsync()
+    {
+        try
+        {
+            var targetDir = Path.Combine(ExtensionsDir, "T-C-main");
+            var existingManifest = FindManifestDirectory(targetDir);
+            if (existingManifest is not null)
+                return existingManifest;
+
+            Directory.CreateDirectory(ExtensionsDir);
+            var zipPath = Path.Combine(ExtensionsDir, "T-C-main.zip");
+
+            Trace.WriteLine($"ExtensionManager: downloading T-C Lens from {TCLensUrl}");
+            using var response = await Http.GetAsync(TCLensUrl);
+            response.EnsureSuccessStatusCode();
+
+            await using (var fs = File.Create(zipPath))
+            {
+                await response.Content.CopyToAsync(fs);
+            }
+
+            if (Directory.Exists(targetDir))
+            {
+                var tempDir = Path.Combine(ExtensionsDir, $"T-C-main_{Guid.NewGuid():N}");
+                Directory.Move(targetDir, tempDir);
+                _ = Task.Run(() => { try { Directory.Delete(tempDir, recursive: true); } catch { } });
+            }
+
+            ZipFile.ExtractToDirectory(zipPath, targetDir);
+            try { File.Delete(zipPath); } catch { }
+
+            var manifestDir = FindManifestDirectory(targetDir);
+            if (manifestDir is null)
+            {
+                Trace.WriteLine("ExtensionManager: manifest.json not found for T-C.");
+                return null;
+            }
+
+            // Patch manifest.json to inject hotkey
+            var manifestPath = Path.Combine(manifestDir, "manifest.json");
+            var manifestContent = await File.ReadAllTextAsync(manifestPath);
+            if (!manifestContent.Contains("\"commands\""))
+            {
+                var lastBrace = manifestContent.LastIndexOf('}');
+                if (lastBrace > -1)
+                {
+                    var patched = manifestContent.Substring(0, lastBrace) + 
+                        ",\n  \"commands\": {\n    \"_execute_action\": {\n      \"suggested_key\": {\n        \"default\": \"Alt+T\"\n      },\n      \"description\": \"Analyze this page\"\n    }\n  }\n}";
+                    await File.WriteAllTextAsync(manifestPath, patched);
+                }
+            }
+
+            Trace.WriteLine($"ExtensionManager: T-C extracted to {manifestDir}");
+            return manifestDir;
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"ExtensionManager.EnsureTCLensDownloadedAsync failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task UpdateTCLensShortcutAsync(CoreWebView2 webview, string newCombo)
+    {
+        try
+        {
+            var targetDir = Path.Combine(ExtensionsDir, "T-C-main");
+            var manifestDir = FindManifestDirectory(targetDir);
+            if (manifestDir == null) return;
+
+            var manifestPath = Path.Combine(manifestDir, "manifest.json");
+            var content = await File.ReadAllTextAsync(manifestPath);
+            
+            try
+            {
+                var doc = System.Text.Json.Nodes.JsonNode.Parse(content)?.AsObject();
+                if (doc != null)
+                {
+                    if (!doc.ContainsKey("commands"))
+                    {
+                        doc["commands"] = new System.Text.Json.Nodes.JsonObject();
+                    }
+                    var commands = doc["commands"]?.AsObject();
+                    if (commands != null)
+                    {
+                        if (!commands.ContainsKey("_execute_action"))
+                        {
+                            commands["_execute_action"] = new System.Text.Json.Nodes.JsonObject
+                            {
+                                ["description"] = "Analyze this page",
+                                ["suggested_key"] = new System.Text.Json.Nodes.JsonObject
+                                {
+                                    ["default"] = newCombo
+                                }
+                            };
+                        }
+                        else
+                        {
+                            var executeAction = commands["_execute_action"]?.AsObject();
+                            if (executeAction != null)
+                            {
+                                if (!executeAction.ContainsKey("suggested_key"))
+                                {
+                                    executeAction["suggested_key"] = new System.Text.Json.Nodes.JsonObject();
+                                }
+                                var suggestedKey = executeAction["suggested_key"]?.AsObject();
+                                if (suggestedKey != null)
+                                {
+                                    suggestedKey["default"] = newCombo;
+                                }
+                            }
+                        }
+                        content = doc.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                    }
+                }
+            }
+            catch { }
+            
+            await File.WriteAllTextAsync(manifestPath, content);
+            
+            var extensions = await webview.Profile.GetBrowserExtensionsAsync();
+            var tcLens = extensions.FirstOrDefault(e => e.Name.Contains("T&C Lens", StringComparison.OrdinalIgnoreCase) || e.Name.Contains("T-C", StringComparison.OrdinalIgnoreCase));
+            if (tcLens != null)
+            {
+                await tcLens.RemoveAsync();
+            }
+            await webview.Profile.AddBrowserExtensionAsync(manifestDir);
+            Trace.WriteLine($"ExtensionManager: T&C Lens shortcut updated to {newCombo} and reloaded.");
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"ExtensionManager.UpdateTCLensShortcutAsync failed: {ex.Message}");
         }
     }
 
