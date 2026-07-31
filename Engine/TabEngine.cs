@@ -431,8 +431,6 @@ public sealed class TabEngine : IDisposable
 
     public async void ApplyDarkModeToAll(bool enabled)
     {
-        var scheme = enabled ? CoreWebView2PreferredColorScheme.Dark : CoreWebView2PreferredColorScheme.Light;
-        
         foreach (var (id, wv) in _webViews)
         {
             var isInternal = Tabs.FirstOrDefault(t => t.Id == id)?.Url?.StartsWith("internal://") ?? true;
@@ -443,7 +441,6 @@ public sealed class TabEngine : IDisposable
             
             wv.DefaultBackgroundColor = bgColor;
             if (wv.CoreWebView2 is null) continue;
-            wv.CoreWebView2.Profile.PreferredColorScheme = scheme;
             await ApplyDarkModeToWebViewAsync(id, wv.CoreWebView2, enabled);
         }
     }
