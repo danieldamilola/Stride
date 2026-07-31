@@ -3088,3 +3088,7 @@
 [IPC] Forwarding 'download-sync'
 [IPC] Received 'e81b9b5c938749a5bf31cb6b44b8ce7b:setting:darkMode:false' from 'about:blank'
 [IPC] Forwarding 'setting:darkMode:false'
+[IPC] Received 'e81b9b5c938749a5bf31cb6b44b8ce7b:setting:appTheme:dark' from 'about:blank'
+[IPC] Forwarding 'setting:appTheme:dark'
+[IPC] Received 'e81b9b5c938749a5bf31cb6b44b8ce7b:setting:appTheme:system' from 'about:blank'
+[IPC] Forwarding 'setting:appTheme:system'

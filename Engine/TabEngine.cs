@@ -1181,6 +1181,31 @@ public sealed class TabEngine : IDisposable
 
     // ──── Memory Management ────
 
+    private bool IsTabSafeToHibernate(BrowserTab tab)
+    {
+        if (tab.IsActive || tab.IsHibernated) return false;
+        if (tab.IsPinned) return false;
+        if (InternalUrls.IsInternal(tab.Url)) return false;
+
+        // Check if tab is playing audio
+        if (_webViews.TryGetValue(tab.Id, out var wv))
+        {
+            try
+            {
+                if (wv.CoreWebView2 != null && wv.CoreWebView2.IsDocumentPlayingAudio)
+                    return false;
+            }
+            catch { }
+        }
+
+        // If there are ANY active downloads, disable all hibernation to be safe,
+        // because destroying a WebView might abort downloads originating from it.
+        if (_downloadStore.Items.Any(d => d.State == Models.DownloadState.InProgress))
+            return false;
+
+        return true;
+    }
+
     private void SuspendBackgroundTabs(BrowserTab activeTab)
     {
         foreach (var (id, wv) in _webViews)
@@ -1206,7 +1231,7 @@ public sealed class TabEngine : IDisposable
 
         var candidates = Tabs
             .Where(t => t.Id != activeTab.Id && !t.IsHibernated && _webViews.ContainsKey(t.Id))
-            .Where(t => !InternalUrls.IsInternal(t.Url))
+            .Where(t => IsTabSafeToHibernate(t))
             .OrderBy(t => t.LastActiveTime)
             .ToList();
 
@@ -1234,9 +1259,8 @@ public sealed class TabEngine : IDisposable
 
         foreach (var tab in Tabs.ToList())
         {
-            if (tab.IsActive || tab.IsHibernated) continue;
+            if (!IsTabSafeToHibernate(tab)) continue;
             if (tab.LastActiveTime > cutoff) continue;
-            if (InternalUrls.IsInternal(tab.Url)) continue;
 
             HibernateTab(tab);
         }
