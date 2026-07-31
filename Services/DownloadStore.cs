@@ -31,10 +31,9 @@ public sealed class DownloadStore : IDownloadStore
                 {
                     foreach (var item in items)
                     {
-                        // WebView2 cannot resume downloads after the app is completely closed.
-                        // Mark any incomplete downloads (InProgress or Paused) as Failed.
-                        if (item.State == DownloadState.InProgress || item.State == DownloadState.Paused)
-                            item.State = DownloadState.Failed;
+                        // InProgress downloads are marked as Paused so they can be resumed cross-session by CustomDownloadManager
+                        if (item.State == DownloadState.InProgress)
+                            item.State = DownloadState.Paused;
                         
                         item.PropertyChanged += Item_PropertyChanged;
                         Items.Add(item);

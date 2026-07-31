@@ -43,6 +43,7 @@ public static class Composition
         services.AddSingleton<YouTubeUnhook>();
         services.AddSingleton<FocusBlocklistService>();
         services.AddSingleton<Engine.ContentScriptInjector>();
+        services.AddSingleton<CustomDownloadManager>();
 
         // Engine dependencies record
         services.AddSingleton<EngineDependencies>();

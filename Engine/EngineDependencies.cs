@@ -17,4 +17,5 @@ public sealed record EngineDependencies(
     IOneTabStore OneTabStore,
     IDownloadStore DownloadStore,
     FocusBlocklistService FocusBlocklistService,
-    ContentScriptInjector ContentScriptInjector);
+    ContentScriptInjector ContentScriptInjector,
+    CustomDownloadManager CustomDownloadManager);

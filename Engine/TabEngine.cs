@@ -72,6 +72,9 @@ public sealed class TabEngine : IDisposable
     /// <summary>Fires when WebView2 initialization fails.</summary>
     public event Action<Exception>? InitializationFailed;
 
+    private readonly Services.CustomDownloadManager _customDownloadManager;
+    private readonly HashSet<string> _activeNativeDownloads = new();
+
     public TabEngine(Panel webViewHost, EngineDependencies deps)
     {
         _webViewHost = webViewHost;
@@ -85,12 +88,48 @@ public sealed class TabEngine : IDisposable
         _downloadStore = deps.DownloadStore;
         _focusBlocklistService = deps.FocusBlocklistService;
         _contentScriptInjector = deps.ContentScriptInjector;
+        _customDownloadManager = deps.CustomDownloadManager;
         _dispatcher = webViewHost.Dispatcher;
 
         // Check every 60s whether any tabs have exceeded the hibernation timeout
         _hibernationTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
         _hibernationTimer.Tick += (_, _) => HibernateInactiveTabs();
         _hibernationTimer.Start();
+
+        foreach (var item in _downloadStore.Items)
+        {
+            AttachCustomResumeHandler(item);
+        }
+
+        _downloadStore.Items.CollectionChanged += (s, e) =>
+        {
+            if (e.NewItems != null)
+            {
+                foreach (Models.DownloadItem item in e.NewItems)
+                {
+                    AttachCustomResumeHandler(item);
+                }
+            }
+        };
+    }
+
+    private void AttachCustomResumeHandler(Models.DownloadItem item)
+    {
+        item.PropertyChanged += async (s, args) =>
+        {
+            if (args.PropertyName == nameof(Models.DownloadItem.State) && item.State == Models.DownloadState.InProgress)
+            {
+                // If it's in the active native set, do nothing. Native handles it.
+                if (_activeNativeDownloads.Contains(item.Id)) return;
+
+                // Try to get a cookie manager from any active WebView2 instance
+                var anyWv = _webViews.Values.FirstOrDefault(w => w.CoreWebView2 != null);
+                if (anyWv?.CoreWebView2 != null)
+                {
+                    await _customDownloadManager.ResumeDownloadAsync(item, anyWv.CoreWebView2.CookieManager);
+                }
+            }
+        };
     }
 
     /// <summary>Must be called once at startup to create the WebView2 environment.</summary>
@@ -890,6 +929,8 @@ public sealed class TabEngine : IDisposable
                 TotalBytes = op.TotalBytesToReceive.HasValue ? (long)op.TotalBytesToReceive.Value : 0,
                 ReceivedBytes = 0
             };
+
+            _activeNativeDownloads.Add(item.Id);
 
             _dispatcher.Invoke(() => _downloadStore.Add(item));
 
