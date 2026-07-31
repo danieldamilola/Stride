@@ -911,6 +911,7 @@ public sealed class TabEngine : IDisposable
                         var cookieManager = wv.CoreWebView2.CookieManager;
                         var cookies = await cookieManager.GetCookiesAsync(uri);
                         var cookieHeader = string.Join("; ", cookies.Select(c => $"{c.Name}={c.Value}"));
+                        var userAgent = wv.CoreWebView2.Settings.UserAgent ?? "";
 
                         var idmType = Type.GetTypeFromProgID("IDMan.CIDMLinkTransmitter");
                         if (idmType != null)
@@ -920,7 +921,7 @@ public sealed class TabEngine : IDisposable
                                 uri,
                                 referer,
                                 cookieHeader,
-                                "", "", "", "", "", 0, "", null
+                                "", "", "", "", "", 0, userAgent, ""
                             );
                             return;
                         }
