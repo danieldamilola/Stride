@@ -29,17 +29,14 @@
             overflow: hidden;
         }
 
-        /* ── Layout ── */
         .shell {
             display: flex;
             flex-direction: column;
             height: 100%;
         }
 
-        /* Drag region at top (matches WPF title bar drag) */
         .drag-bar {
-            height: 36px;
-            -webkit-app-region: drag;
+            height: 32px;
             flex-shrink: 0;
         }
 
@@ -48,63 +45,81 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 0 20px;
+            padding: 0 44px 24px;
         }
 
-        /* ── Step container ── */
         .step {
             display: none;
-            width: 380px;
-            animation: rise 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+            width: 100%;
+            animation: rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
         }
 
         .step.active { display: block; }
 
         @keyframes rise {
-            from { opacity: 0; transform: translateY(12px); }
+            from { opacity: 0; transform: translateY(8px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── Wordmark ── */
-        .wordmark {
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--accent);
-            margin-bottom: 32px;
-            opacity: 0.9;
+        /* Dots */
+        .dots {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 24px;
         }
 
-        /* ── Heading ── */
+        .dot {
+            height: 2px;
+            width: 16px;
+            border-radius: 2px;
+            background: var(--border);
+            transition: background 0.2s, width 0.2s;
+        }
+
+        .dot.active {
+            background: var(--accent);
+            width: 24px;
+        }
+
+        /* Wordmark */
+        .wordmark {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 20px;
+            opacity: 0.85;
+        }
+
         h1 {
-            font-size: 26px;
+            font-size: 22px;
             font-weight: 500;
-            line-height: 1.2;
-            letter-spacing: -0.3px;
+            line-height: 1.25;
+            letter-spacing: -0.2px;
             color: var(--text);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .sub {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--muted);
             line-height: 1.6;
-            margin-bottom: 36px;
+            margin-bottom: 28px;
         }
 
-        /* ── Theme options ── */
+        /* Theme options */
         .theme-row {
             display: flex;
-            gap: 10px;
-            margin-bottom: 36px;
+            gap: 8px;
+            margin-bottom: 28px;
         }
 
         .theme-opt {
             flex: 1;
-            padding: 14px 12px 12px;
+            padding: 12px 8px 10px;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 7px;
             background: var(--surface);
             cursor: pointer;
             transition: border-color 0.15s, background 0.15s;
@@ -113,134 +128,97 @@
 
         .theme-opt:hover {
             border-color: #3A3A3E;
-            background: #222226;
         }
 
         .theme-opt.selected {
             border-color: var(--accent);
-            background: rgba(212, 165, 116, 0.08);
+            background: rgba(212, 165, 116, 0.07);
         }
 
-        .theme-icon {
-            font-size: 18px;
-            margin-bottom: 6px;
-            display: block;
-        }
+        .theme-icon { font-size: 16px; margin-bottom: 5px; display: block; }
 
         .theme-label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             color: var(--muted);
-            letter-spacing: 0.02em;
+            letter-spacing: 0.03em;
         }
 
-        .theme-opt.selected .theme-label {
-            color: var(--accent);
-        }
+        .theme-opt.selected .theme-label { color: var(--accent); }
 
-        /* ── Primary button ── */
+        /* Buttons */
         .btn-primary {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background: var(--accent);
             color: #111113;
             border: none;
-            border-radius: 7px;
-            font-size: 14px;
+            border-radius: 6px;
+            font-size: 13px;
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
-            letter-spacing: 0.01em;
-            transition: opacity 0.15s, transform 0.1s;
+            letter-spacing: 0.02em;
+            transition: opacity 0.15s;
         }
 
-        .btn-primary:hover  { opacity: 0.9; }
-        .btn-primary:active { transform: scale(0.99); }
+        .btn-primary:hover { opacity: 0.88; }
 
-        /* ── Ghost button (step 1 only) ── */
-        .btn-ghost {
+        .btn-skip {
             display: block;
             width: 100%;
-            margin-top: 10px;
-            padding: 10px;
+            margin-top: 8px;
+            padding: 8px;
             background: transparent;
             color: var(--dim);
-            border: 1px solid var(--border);
-            border-radius: 7px;
-            font-size: 13px;
+            border: none;
+            font-size: 12px;
             font-family: inherit;
             cursor: pointer;
-            transition: color 0.15s, border-color 0.15s;
+            transition: color 0.15s;
         }
 
-        .btn-ghost:hover { color: var(--muted); border-color: #3A3A3E; }
-
-        /* ── Divider ── */
-        .divider {
-            border: none;
-            border-top: 1px solid var(--border);
-            margin: 28px 0;
-        }
-
-        /* ── Step dots ── */
-        .dots {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 28px;
-        }
-
-        .dot {
-            width: 20px; height: 3px;
-            border-radius: 2px;
-            background: var(--border);
-            transition: background 0.2s, width 0.2s;
-        }
-
-        .dot.active {
-            background: var(--accent);
-            width: 28px;
-        }
+        .btn-skip:hover { color: var(--muted); }
     </style>
 </head>
 <body>
 <div class="shell">
     <div class="drag-bar"></div>
-
     <div class="content">
 
-        <!-- Step 1: Welcome -->
+        <!-- Step 1 -->
         <div id="step-1" class="step active">
             <div class="dots">
-                <div class="dot active" id="dot-1"></div>
-                <div class="dot" id="dot-2"></div>
+                <div class="dot active"></div>
+                <div class="dot"></div>
             </div>
             <div class="wordmark">Stride</div>
             <h1>A browser built<br>for focus.</h1>
             <p class="sub">No bloat. No distractions.<br>Just the web, the way you want it.</p>
             <button class="btn-primary" onclick="goStep(2)">Get Started</button>
-            <button class="btn-ghost" onclick="skip()">Skip setup</button>
+            <button class="btn-skip" onclick="skip()">Skip setup</button>
         </div>
 
-        <!-- Step 2: Theme -->
+        <!-- Step 2 -->
         <div id="step-2" class="step">
             <div class="dots">
-                <div class="dot" id="dot-1b"></div>
-                <div class="dot active" id="dot-2b"></div>
+                <div class="dot"></div>
+                <div class="dot active"></div>
             </div>
             <div class="wordmark">Stride</div>
             <h1>Choose your look</h1>
-            <p class="sub">Stride follows your OS by default.<br>You can change this later in Settings.</p>
+            <p class="sub">Stride follows your OS by default.<br>Change this anytime in Settings.</p>
 
             <div class="theme-row">
-                <div class="theme-opt" id="opt-light" onclick="setTheme(1, this)">
+                <div class="theme-opt" onclick="setTheme(1, this)">
                     <span class="theme-icon">☀️</span>
                     <span class="theme-label">Light</span>
                 </div>
-                <div class="theme-opt selected" id="opt-system" onclick="setTheme(0, this)">
+                <div class="theme-opt selected" onclick="setTheme(0, this)">
                     <span class="theme-icon">💻</span>
                     <span class="theme-label">System</span>
                 </div>
-                <div class="theme-opt" id="opt-dark" onclick="setTheme(2, this)">
+                <div class="theme-opt" onclick="setTheme(2, this)">
                     <span class="theme-icon">🌙</span>
                     <span class="theme-label">Dark</span>
                 </div>
@@ -251,7 +229,6 @@
 
     </div>
 </div>
-
 <script>
     var settings = Object.assign({ isFirstRun: false, appTheme: 0 }, window.initialSettings || {});
     settings.isFirstRun = false;
@@ -272,9 +249,7 @@
             window.chrome.webview.postMessage('save:' + JSON.stringify(settings));
     }
 
-    function skip() {
-        finish();
-    }
+    function skip() { finish(); }
 </script>
 </body>
 </html>
