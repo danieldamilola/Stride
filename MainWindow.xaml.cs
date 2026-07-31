@@ -462,7 +462,18 @@ public partial class MainWindow : Window
         {
             Header = tab.IsPinned ? "Unpin Tab" : "Pin Tab",
         };
-        pinItem.Click += (_, _) => tab.IsPinned = !tab.IsPinned;
+        pinItem.Click += (_, _) => 
+        {
+            tab.IsPinned = !tab.IsPinned;
+            if (tab.IsPinned)
+            {
+                var index = _tabEngine.Tabs.IndexOf(tab);
+                if (index > 0)
+                {
+                    _tabEngine.Tabs.Move(index, 0);
+                }
+            }
+        };
         menu.Items.Add(pinItem);
 
         var dupeItem = new MenuItem
