@@ -831,15 +831,47 @@ public sealed class TabEngine : IDisposable
         wv.CoreWebView2.NewWindowRequested += (_, e) =>
         {
             e.Handled = true;
-            _ = _dispatcher.InvokeAsync(async () =>
+            
+            // Treat as popup if it requests specific dimensions or isn't explicitly user-initiated (e.g. OAuth flows)
+            if (e.WindowFeatures.HasPosition || e.WindowFeatures.HasSize || !e.IsUserInitiated)
             {
-                try
+                var deferral = e.GetDeferral();
+                _ = _dispatcher.InvokeAsync(async () =>
                 {
-                    var newTab = CreateTab(e.Uri);
-                    await ActivateAsync(newTab);
-                }
-                catch (Exception ex) { Trace.WriteLine($"NewWindowRequested error: {ex.Message}"); }
-            });
+                    try
+                    {
+                        // Ensure environment is initialized
+                        if (_environment == null) throw new InvalidOperationException("WebView2 Environment is null");
+                        
+                        var popup = new PopupWindow(_environment);
+                        popup.Show();
+                        
+                        // Wait for WebView2 to be ready inside the popup
+                        await popup.InitializeAsync();
+                        
+                        // Pass the CoreWebView2 back to the original request
+                        e.NewWindow = popup.PopupWebView.CoreWebView2;
+                        deferral.Complete();
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"NewWindowRequested popup error: {ex.Message}");
+                        deferral.Complete();
+                    }
+                });
+            }
+            else
+            {
+                _ = _dispatcher.InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        var newTab = CreateTab(e.Uri);
+                        await ActivateAsync(newTab);
+                    }
+                    catch (Exception ex) { Trace.WriteLine($"NewWindowRequested error: {ex.Message}"); }
+                });
+            }
         };
 
         wv.CoreWebView2.WindowCloseRequested += (_, _) =>

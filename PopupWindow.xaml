@@ -1,0 +1,11 @@
+<Window x:Class="StrideBrowser.PopupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Popup" Height="600" Width="500"
+        WindowStartupLocation="CenterOwner"
+        Background="#18181E">
+    <Grid>
+        <wv2:WebView2 Name="PopupWebView" />
+    </Grid>
+</Window>
