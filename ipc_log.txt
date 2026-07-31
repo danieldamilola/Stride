@@ -4378,3 +4378,5 @@
 [IPC] Forwarding 'download-sync'
 [IPC] Received '63564215ef6546deb1164746506bfe67:setting:idm:true' from 'about:blank'
 [IPC] Forwarding 'setting:idm:true'
+[IPC] Received '93392f78bf6049b2ae4933b261db5858:shortcut-click:http://192.168.3.2:8002/index.php?zone=hotspot&redirurl=http%3A%2F%2Fwww.msftconnecttest.com%2Fredirect' from 'about:blank'
+[IPC] Forwarding 'shortcut-click:http://192.168.3.2:8002/index.php?zone=hotspot&redirurl=http%3A%2F%2Fwww.msftconnecttest.com%2Fredirect'
