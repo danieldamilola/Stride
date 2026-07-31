@@ -64,6 +64,8 @@ public sealed class WebMessageRouter
             [WebMessagePrefix.DownloadOpen] = HandleDownloadOpen,
             [WebMessagePrefix.DownloadFolder] = HandleDownloadFolder,
             [WebMessagePrefix.DownloadCancel] = HandleDownloadCancel,
+            [WebMessagePrefix.DownloadPause] = HandleDownloadPause,
+            [WebMessagePrefix.DownloadResume] = HandleDownloadResume,
             [WebMessagePrefix.TCLensGetText] = HandleTCLensGetText,
         };
 
@@ -72,6 +74,7 @@ public sealed class WebMessageRouter
             [WebMessagePrefix.HistoryClear] = HandleHistoryClear,
             [WebMessagePrefix.SetDefaultBrowser] = HandleSetDefaultBrowser,
             [WebMessagePrefix.DownloadClear] = HandleDownloadClear,
+            [WebMessagePrefix.DownloadRequestSync] = HandleDownloadSync,
         };
     }
 
@@ -335,17 +338,30 @@ public sealed class WebMessageRouter
 
     private Task HandleDownloadCancel(string id)
     {
-        // For cancelling, we just set the state to Cancelled.
-        // The actual CoreWebView2DownloadOperation is held by TabEngine, which can listen for this,
-        // but for simplicity we'll just update the state here. The WebView2 operation will eventually fault or we can hook it.
-        // Actually, TabEngine needs to cancel the operation.
-        // Let's fire an event or let TabEngine handle the actual cancellation if needed,
-        // or just accept that the state changes here and TabEngine monitors it.
+        var item = _downloadStore.Get(id);
+        if (item?.State == DownloadState.InProgress || item?.State == DownloadState.Paused)
+        {
+            item.State = DownloadState.Cancelled;
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task HandleDownloadPause(string id)
+    {
         var item = _downloadStore.Get(id);
         if (item?.State == DownloadState.InProgress)
         {
-            item.State = DownloadState.Cancelled;
-            // The actual cancellation of CoreWebView2DownloadOperation will be handled in TabEngine
+            item.State = DownloadState.Paused;
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task HandleDownloadResume(string id)
+    {
+        var item = _downloadStore.Get(id);
+        if (item?.State == DownloadState.Paused)
+        {
+            item.State = DownloadState.InProgress;
         }
         return Task.CompletedTask;
     }
@@ -355,6 +371,19 @@ public sealed class WebMessageRouter
         _downloadStore.ClearCompleted();
         if (_engine.ActiveTab?.Url == InternalUrls.Downloads) _engine.Reload();
         return Task.CompletedTask;
+    }
+
+    private async Task HandleDownloadSync()
+    {
+        if (_engine.ActiveTab?.Url != InternalUrls.Downloads) return;
+        var wv = _engine.GetCoreWebView2();
+        if (wv == null) return;
+        
+        var items = _downloadStore.Items.ToList();
+        var json = JsonSerializer.Serialize(items, new JsonSerializerOptions { PropertyNamingPolicy = null });
+        json = json.Replace("\\", "\\\\").Replace("'", "\\'");
+        
+        await wv.ExecuteScriptAsync($"if (typeof updateDownloads === 'function') updateDownloads('{json}');");
     }
 
     private void RefreshOneTabPages()
@@ -369,10 +398,13 @@ public sealed class WebMessageRouter
 
     private static readonly Dictionary<string, Action<BrowserSettings, string>> SettingSetters = new()
     {
+        ["appTheme"] = (s, v) => s.AppTheme = Enum.TryParse<AppThemeMode>(v, true, out var mode) ? mode : AppThemeMode.System,
         ["search"] = (s, v) => s.SearchEngine = v,
         ["zoom"] = (s, v) => { if (int.TryParse(v, out var z)) s.DefaultZoom = z; },
 
         ["restoreSession"] = (s, v) => s.RestoreSessionOnStartup = v == "true",
+        ["idm"] = (s, v) => s.UseIDMForDownloads = v == "true",
+        ["hwAccel"] = (s, v) => s.HardwareAccelerationEnabled = v == "true",
         ["darkMode"] = (s, v) => s.ForceDarkMode = v == "true",
         ["forceHttps"] = (s, v) => s.ForceHttps = v == "true",
         ["smartScreen"] = (s, v) => s.SmartScreenEnabled = v == "true",

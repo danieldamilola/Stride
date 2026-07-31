@@ -1,74 +1,132 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{THEME}}">
 <head>
     <meta charset="UTF-8">
     <title>Downloads - Stride</title>
     <style>
         :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background: #0C0C0C;
-            color: #D4D4D4;
-            font-family: 'Segoe UI', Inter, sans-serif;
-            padding: 48px 64px;
-            min-height: 100vh;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            user-select: none;
+            overflow: hidden;
         }
-        .header {
+
+        .settings-layout {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            width: 240px;
+            flex-shrink: 0;
+            background: #181818;
+            border-right: 1px solid #2A2A2A;
+        }
+        .sidebar .page-header {
+            margin-bottom: 24px;
+            padding: 0 12px;
+        }
+        .sidebar .page-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .nav {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .sidebar-nav-item {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 32px;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
         }
-        h1 {
-            font-size: 28px;
-            font-weight: 600;
-            color: #E8E8E8;
+        .sidebar-nav-item.active {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .content-container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 24px;
         }
         .clear-btn {
             padding: 8px 16px;
-            background: transparent;
-            border: 1px solid #2A2A2A;
-            color: #888;
-            border-radius: 8px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 6px;
             font-size: 13px;
             cursor: pointer;
             font-family: inherit;
             transition: all 0.2s;
         }
-        .clear-btn:hover { border-color: #444; color: #ccc; }
+        .clear-btn:hover { background: #2A2A2A; border-color: var(--text-muted); }
 
         .empty {
             text-align: center;
-            color: #555;
+            color: #666;
             font-size: 15px;
             margin-top: 120px;
         }
-        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.2; }
 
-        .download-list { display: flex; flex-direction: column; gap: 2px; }
+        .download-list { display: flex; flex-direction: column; gap: 8px; }
 
         .download-item {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 14px 16px;
-            background: #141416;
-            border-radius: 10px;
-            transition: background 0.15s;
+            gap: 16px;
+            padding: 16px 20px;
+            background: #18181B;
+            border: 1px solid #27272A;
+            border-radius: 12px;
+            transition: border-color 0.15s;
         }
-        .download-item:hover { background: #1A1A1E; }
+        .download-item:hover { border-color: #3F3F46; }
 
         .file-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            background: rgba(var(--accent-rgb), 0.12);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(var(--accent-rgb), 0.15);
             color: var(--accent);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             font-size: 14px;
+            font-weight: 600;
         }
 
         .download-info {
@@ -76,72 +134,73 @@
             min-width: 0;
         }
         .download-name {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
-            color: #E0E0E0;
+            color: #F4F4F5;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            margin-bottom: 4px;
         }
         .download-meta {
-            font-size: 12px;
-            color: #666;
-            margin-top: 3px;
+            font-size: 13px;
+            color: #A1A1AA;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        .download-meta .status-dot {
-            width: 6px;
-            height: 6px;
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             display: inline-block;
             flex-shrink: 0;
         }
-        .status-dot.completed { background: #4CAF50; }
-        .status-dot.in-progress { background: var(--accent); }
-        .status-dot.paused { background: #FFA726; }
-        .status-dot.failed { background: #EF5350; }
-        .status-dot.cancelled { background: #666; }
+        .status-dot.completed { background: #10B981; }
+        .status-dot.in-progress { background: var(--accent); box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5); }
+        .status-dot.paused { background: #F59E0B; }
+        .status-dot.failed { background: #EF4444; }
+        .status-dot.cancelled { background: #71717A; }
 
-        .progress-bar {
+        .progress-bar-bg {
             width: 100%;
-            height: 3px;
-            background: #1E1E22;
+            height: 4px;
+            background: #27272A;
             border-radius: 2px;
-            margin-top: 6px;
+            margin-top: 10px;
             overflow: hidden;
         }
-        .progress-fill {
+        .progress-bar-fill {
             height: 100%;
             background: var(--accent);
             border-radius: 2px;
-            transition: width 0.3s ease;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .download-actions {
             display: flex;
-            gap: 4px;
+            gap: 8px;
             flex-shrink: 0;
+            align-items: center;
         }
         .action-btn {
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: transparent;
-            color: #666;
-            border-radius: 6px;
+            width: 36px;
+            height: 36px;
+            border: 1px solid #27272A;
+            background: #18181B;
+            color: #A1A1AA;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.15s;
         }
-        .action-btn:hover { background: #222; color: #ccc; }
+        .action-btn:hover { background: #27272A; color: #F4F4F5; }
         .action-btn svg {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             stroke: currentColor;
             fill: none;
             stroke-width: 2;
@@ -149,62 +208,165 @@
             stroke-linejoin: round;
         }
 
-        /* Confirm dialog (reusing history page pattern) */
+        /* Confirm dialog */
         .confirm-overlay {
             display: none;
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
             z-index: 100;
             align-items: center;
             justify-content: center;
         }
         .confirm-overlay.open { display: flex; }
         .confirm-dialog {
-            background: #1A1A1E;
-            border: 1px solid #2A2A2A;
+            background: #18181B;
+            border: 1px solid #27272A;
             border-radius: 12px;
             padding: 24px;
             max-width: 360px;
             text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .confirm-dialog h3 { font-size: 16px; color: #E0E0E0; margin-bottom: 8px; }
-        .confirm-dialog p { font-size: 13px; color: #888; margin-bottom: 20px; }
-        .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+        .confirm-dialog h3 { font-size: 16px; color: #F4F4F5; margin-bottom: 8px; }
+        .confirm-dialog p { font-size: 13px; color: #A1A1AA; margin-bottom: 24px; }
+        .confirm-actions { display: flex; gap: 12px; justify-content: center; }
         .confirm-actions button {
-            padding: 8px 20px;
-            border-radius: 8px;
+            padding: 8px 24px;
+            border-radius: 6px;
             border: none;
-            font-size: 13px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
             font-family: inherit;
             transition: opacity 0.15s;
         }
-        .confirm-actions .cancel-btn { background: #2A2A2A; color: #ccc; }
-        .confirm-actions .danger-btn { background: #EF5350; color: #fff; }
+        .confirm-actions .cancel-btn { background: #27272A; color: #F4F4F5; }
+        .confirm-actions .cancel-btn:hover { background: #3F3F46; }
+        .confirm-actions .danger-btn { background: #EF4444; color: #fff; }
+        .confirm-actions .danger-btn:hover { opacity: 0.9; }
+
     </style>
+<style>
+:root, :root[data-theme="dark"] {
+    --bg-base: var(--bg-base);
+    --bg-dark: var(--bg-dark);
+    --bg-surface: var(--bg-surface);
+    --bg-hover: var(--bg-hover);
+    --border: var(--border);
+    --text-main: var(--text-main);
+    --text-bright: var(--text-bright);
+    --text-muted: var(--text-muted);
+    --text-dim: var(--text-dim);
+    --white: var(--white);
+}
+:root[data-theme="light"] {
+    --bg-base: #F5F5F3;
+    --bg-dark: #EFEFEE;
+    --bg-surface: var(--white);
+    --bg-hover: #E6E6E5;
+    --border: #D4D4D2;
+    --text-main: #111113;
+    --text-bright: #000000;
+    --text-muted: #666461;
+    --text-dim: #A5A3A0;
+    --white: #000000;
+}
+@media (prefers-color-scheme: light) {
+    :root[data-theme="system"] {
+        --bg-base: #F5F5F3;
+        --bg-dark: #EFEFEE;
+        --bg-surface: var(--white);
+        --bg-hover: #E6E6E5;
+        --border: #D4D4D2;
+        --text-main: #111113;
+        --text-bright: #000000;
+        --text-muted: #666461;
+        --text-dim: #A5A3A0;
+        --white: #000000;
+    }
+}
+</style>
+<style>
+:root, :root[data-theme="dark"] {
+    --bg-base: #121212;
+    --bg-dark: #0C0C0C;
+    --bg-surface: #1A1A1A;
+    --bg-hover: #242424;
+    --border: var(--border)333;
+    --text-main: #E0E0E0;
+    --text-bright: #D4D4D4;
+    --text-muted: #A3A3A3;
+    --text-dim: #808080;
+    --white: #FFFFFF;
+}
+:root[data-theme="light"] {
+    --bg-base: #F5F5F3;
+    --bg-dark: #EFEFEE;
+    --bg-surface: #FFFFFF;
+    --bg-hover: #E6E6E5;
+    --border: #D4D4D2;
+    --text-main: #111113;
+    --text-bright: #000000;
+    --text-muted: #666461;
+    --text-dim: #A5A3A0;
+    --white: #000000;
+}
+@media (prefers-color-scheme: light) {
+    :root[data-theme="system"] {
+        --bg-base: #F5F5F3;
+        --bg-dark: #EFEFEE;
+        --bg-surface: #FFFFFF;
+        --bg-hover: #E6E6E5;
+        --border: #D4D4D2;
+        --text-main: #111113;
+        --text-bright: #000000;
+        --text-muted: #666461;
+        --text-dim: #A5A3A0;
+        --white: #000000;
+    }
+}
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>Downloads</h1>
-        <button class="clear-btn" id="clearBtn">Clear completed</button>
+    <div class="settings-layout">
+        <div class="sidebar">
+            <div class="page-header">
+                <h1>Downloads</h1>
+            </div>
+            <ul class="nav">
+                <li class="sidebar-nav-item active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    All Downloads
+                </li>
+            </ul>
+        </div>
+        
+        <div class="main-content">
+            <div class="content-container">
+                <div class="header-actions">
+                    <button class="clear-btn" id="clearBtn">Clear completed</button>
+                </div>
+                <div class="download-list" id="downloadList"></div>
+            </div>
+        </div>
     </div>
-    <div class="download-list" id="downloadList"></div>
 
     <div class="confirm-overlay" id="confirmDialog">
         <div class="confirm-dialog">
             <h3>Clear completed downloads?</h3>
-            <p>This only removes them from this list — files stay on your computer.</p>
+            <p>This only removes them from this list — your files will remain safe on your computer.</p>
             <div class="confirm-actions">
                 <button class="cancel-btn" onclick="closeConfirm()">Cancel</button>
-                <button class="danger-btn" onclick="confirmClear()">Clear</button>
+                <button class="danger-btn" onclick="confirmClear()">Clear All</button>
             </div>
         </div>
     </div>
 
     <script>
         const __T = '{{IPC_TOKEN}}:';
-        const downloads = JSON.parse('{{DOWNLOADS}}' || '[]');
+        let downloads = JSON.parse('{{DOWNLOADS}}' || '[]');
 
         function formatBytes(bytes) {
             if (bytes <= 0) return '0 B';
@@ -223,13 +385,19 @@
 
         function getExtension(name) {
             const dot = name.lastIndexOf('.');
-            return dot > 0 ? name.substring(dot + 1).toUpperCase() : '?';
+            return dot > 0 ? name.substring(dot + 1).toUpperCase().slice(0, 4) : '?';
         }
 
         function stateLabel(state) {
             switch (state) {
+                case 2: return 'Completed';
+                case 0: return 'Downloading...';
+                case 1: return 'Paused';
+                case 3: return 'Cancelled';
+                case 4: return 'Failed'; 
+                // Fallbacks for string enum
                 case 'Completed': return 'Completed';
-                case 'InProgress': return 'Downloading';
+                case 'InProgress': return 'Downloading...';
                 case 'Paused': return 'Paused';
                 case 'Cancelled': return 'Cancelled';
                 case 'Failed': return 'Failed';
@@ -239,10 +407,15 @@
 
         function stateClass(state) {
             switch (state) {
+                case 2:
                 case 'Completed': return 'completed';
+                case 0:
                 case 'InProgress': return 'in-progress';
+                case 1:
                 case 'Paused': return 'paused';
+                case 3:
                 case 'Cancelled': return 'cancelled';
+                case 4:
                 case 'Failed': return 'failed';
                 default: return '';
             }
@@ -258,7 +431,7 @@
             const container = document.getElementById('downloadList');
 
             if (downloads.length === 0) {
-                container.innerHTML = `<div class="empty"><div class="empty-icon">↓</div>No downloads yet.</div>`;
+                container.innerHTML = `<div class="empty"><div class="empty-icon">📂</div>No downloads yet.</div>`;
                 return;
             }
 
@@ -266,10 +439,17 @@
             for (const dl of downloads) {
                 const ext = getExtension(dl.FileName);
                 const sc = stateClass(dl.State);
-                const size = dl.TotalBytes > 0
-                    ? (dl.State === 'InProgress' ? formatBytes(dl.ReceivedBytes) + ' / ' + formatBytes(dl.TotalBytes) : formatBytes(dl.TotalBytes))
-                    : (dl.ReceivedBytes > 0 ? formatBytes(dl.ReceivedBytes) : '');
-                const progress = dl.TotalBytes > 0 ? Math.round(dl.ReceivedBytes * 100 / dl.TotalBytes) : 0;
+                const isActive = dl.State === 'InProgress' || dl.State === 0 || dl.State === 'Paused' || dl.State === 1;
+                
+                let sizeText = '';
+                if (dl.TotalBytes > 0) {
+                    if (isActive) sizeText = `${formatBytes(dl.ReceivedBytes)} / ${formatBytes(dl.TotalBytes)}`;
+                    else sizeText = formatBytes(dl.TotalBytes);
+                } else if (dl.ReceivedBytes > 0) {
+                    sizeText = formatBytes(dl.ReceivedBytes);
+                }
+
+                const progress = dl.TotalBytes > 0 ? Math.min(100, Math.round(dl.ReceivedBytes * 100 / dl.TotalBytes)) : 0;
 
                 html += `<div class="download-item" data-id="${escapeHtml(dl.Id)}">`;
                 html += `<div class="file-icon">${escapeHtml(ext)}</div>`;
@@ -278,27 +458,39 @@
                 html += `<div class="download-meta">`;
                 html += `<span class="status-dot ${sc}"></span>`;
                 html += `<span>${stateLabel(dl.State)}</span>`;
-                if (size) html += `<span>·</span><span>${size}</span>`;
+                if (sizeText) html += `<span>·</span><span>${sizeText}</span>`;
                 html += `<span>·</span><span>${formatTime(dl.StartedAt)}</span>`;
                 html += `</div>`;
-                if (dl.State === 'InProgress') {
-                    html += `<div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>`;
+                
+                if (isActive) {
+                    html += `<div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${progress}%"></div></div>`;
                 }
+                
                 html += `</div>`;
                 html += `<div class="download-actions">`;
 
-                if (dl.State === 'Completed') {
-                    // Open file
+                if (dl.State === 'Completed' || dl.State === 2) {
                     html += `<button class="action-btn" title="Open file" onclick="openFile('${escapeHtml(dl.Id)}')">
                         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     </button>`;
-                    // Open folder
                     html += `<button class="action-btn" title="Show in folder" onclick="openFolder('${escapeHtml(dl.Id)}')">
                         <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                     </button>`;
                 }
-                if (dl.State === 'InProgress') {
-                    // Cancel
+                
+                if (dl.State === 'InProgress' || dl.State === 0) {
+                    html += `<button class="action-btn" title="Pause" onclick="pauseDownload('${escapeHtml(dl.Id)}')">
+                        <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    </button>`;
+                }
+                
+                if (dl.State === 'Paused' || dl.State === 1) {
+                    html += `<button class="action-btn" title="Resume" onclick="resumeDownload('${escapeHtml(dl.Id)}')">
+                        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    </button>`;
+                }
+
+                if (isActive) {
                     html += `<button class="action-btn" title="Cancel" onclick="cancelDownload('${escapeHtml(dl.Id)}')">
                         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>`;
@@ -310,23 +502,40 @@
             container.innerHTML = html;
         }
 
-        function openFile(id) {
-            window.chrome.webview.postMessage(__T + 'download-open:' + id);
-        }
-        function openFolder(id) {
-            window.chrome.webview.postMessage(__T + 'download-folder:' + id);
-        }
-        function cancelDownload(id) {
-            window.chrome.webview.postMessage(__T + 'download-cancel:' + id);
+        function pauseDownload(id) {
+            if (window.chrome?.webview) {
+                window.chrome.webview.postMessage(__T + 'download-pause:' + id);
+            }
         }
 
-        // Clear completed
+        function resumeDownload(id) {
+            if (window.chrome?.webview) {
+                window.chrome.webview.postMessage(__T + 'download-resume:' + id);
+            }
+        }
+
+        function cancelDownload(id) {
+            if (window.chrome?.webview) {
+                window.chrome.webview.postMessage(__T + 'download-cancel:' + id);
+            }
+        }
+
+        function openFile(id) {
+            if (window.chrome?.webview) {
+                window.chrome.webview.postMessage(__T + 'download-open:' + id);
+            }
+        }
+
+        function openFolder(id) {
+            if (window.chrome?.webview) {
+                window.chrome.webview.postMessage(__T + 'download-show:' + id);
+            }
+        } 
+        
         document.getElementById('clearBtn').addEventListener('click', () => {
             document.getElementById('confirmDialog').classList.add('open');
         });
-        function closeConfirm() {
-            document.getElementById('confirmDialog').classList.remove('open');
-        }
+        function closeConfirm() { document.getElementById('confirmDialog').classList.remove('open'); }
         function confirmClear() {
             window.chrome.webview.postMessage(__T + 'download-clear');
             closeConfirm();
@@ -335,7 +544,25 @@
             if (e.target === e.currentTarget) closeConfirm();
         });
 
+        // Live polling from backend
+        window.updateDownloads = function(json) {
+            try {
+                downloads = JSON.parse(json);
+                render();
+            } catch (e) { }
+        };
+
+        setInterval(() => {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage(__T + 'download-sync');
+            }
+        }, 500);
+
         render();
     </script>
 </body>
 </html>
+
+
+
+

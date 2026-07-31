@@ -40,13 +40,5 @@ public sealed class ContentScriptInjector
         if (!string.IsNullOrEmpty(unhook))
             await core.AddScriptToExecuteOnDocumentCreatedAsync(unhook);
 
-        // Force dark mode via Dark Reader (MIT License — github.com/darkreader/darkreader)
-        if (settings.ForceDarkMode)
-        {
-            await core.AddScriptToExecuteOnDocumentCreatedAsync(
-                ResourceLoader.Load("Resources.Scripts.darkreader.min.js"));
-            await core.AddScriptToExecuteOnDocumentCreatedAsync(
-                ResourceLoader.Load("Resources.Scripts.force-dark-mode.js"));
-        }
     }
 }

@@ -1,5 +1,5 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-theme="{{THEME}}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,7 +26,7 @@
     }
     
     .focus-text {
-      color: #ffffff;
+      color: var(--white);
       font-size: 120px;
       font-weight: 700;
       letter-spacing: 20px;
@@ -58,9 +58,93 @@
       }
     }
   </style>
+<style>
+:root, :root[data-theme="dark"] {
+    --bg-base: var(--bg-base);
+    --bg-dark: var(--bg-dark);
+    --bg-surface: var(--bg-surface);
+    --bg-hover: var(--bg-hover);
+    --border: var(--border);
+    --text-main: var(--text-main);
+    --text-bright: var(--text-bright);
+    --text-muted: var(--text-muted);
+    --text-dim: var(--text-dim);
+    --white: var(--white);
+}
+:root[data-theme="light"] {
+    --bg-base: #F5F5F3;
+    --bg-dark: #EFEFEE;
+    --bg-surface: var(--white);
+    --bg-hover: #E6E6E5;
+    --border: #D4D4D2;
+    --text-main: #111113;
+    --text-bright: #000000;
+    --text-muted: #666461;
+    --text-dim: #A5A3A0;
+    --white: #000000;
+}
+@media (prefers-color-scheme: light) {
+    :root[data-theme="system"] {
+        --bg-base: #F5F5F3;
+        --bg-dark: #EFEFEE;
+        --bg-surface: var(--white);
+        --bg-hover: #E6E6E5;
+        --border: #D4D4D2;
+        --text-main: #111113;
+        --text-bright: #000000;
+        --text-muted: #666461;
+        --text-dim: #A5A3A0;
+        --white: #000000;
+    }
+}
+</style>
+<style>
+:root, :root[data-theme="dark"] {
+    --bg-base: #121212;
+    --bg-dark: #0C0C0C;
+    --bg-surface: #1A1A1A;
+    --bg-hover: #242424;
+    --border: var(--border)333;
+    --text-main: #E0E0E0;
+    --text-bright: #D4D4D4;
+    --text-muted: #A3A3A3;
+    --text-dim: #808080;
+    --white: #FFFFFF;
+}
+:root[data-theme="light"] {
+    --bg-base: #F5F5F3;
+    --bg-dark: #EFEFEE;
+    --bg-surface: #FFFFFF;
+    --bg-hover: #E6E6E5;
+    --border: #D4D4D2;
+    --text-main: #111113;
+    --text-bright: #000000;
+    --text-muted: #666461;
+    --text-dim: #A5A3A0;
+    --white: #000000;
+}
+@media (prefers-color-scheme: light) {
+    :root[data-theme="system"] {
+        --bg-base: #F5F5F3;
+        --bg-dark: #EFEFEE;
+        --bg-surface: #FFFFFF;
+        --bg-hover: #E6E6E5;
+        --border: #D4D4D2;
+        --text-main: #111113;
+        --text-bright: #000000;
+        --text-muted: #666461;
+        --text-dim: #A5A3A0;
+        --white: #000000;
+    }
+}
+</style>
 </head>
 <body>
   <div class="focus-text">FOCUS.</div>
 </body>
 </html>
+
+
+
+
 

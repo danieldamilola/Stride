@@ -29,11 +29,9 @@ public sealed class ExtensionManager
 
     public async Task InitializeAsync(CoreWebView2 webview)
     {
-        System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", "InitializeAsync started\n");
         try
         {
             var extensions = await webview.Profile.GetBrowserExtensionsAsync();
-            System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"InitializeAsync found {extensions.Count} extensions\n");
             
             var ublock = extensions.FirstOrDefault(e =>
                 e.Name.Contains("uBlock", StringComparison.OrdinalIgnoreCase));

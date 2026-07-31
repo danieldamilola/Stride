@@ -24,6 +24,9 @@ public static class WebMessagePrefix
     public const string DownloadFolder = "download-folder:";
     public const string DownloadCancel = "download-cancel:";
     public const string DownloadClear = "download-clear";
+    public const string DownloadRequestSync = "download-sync";
+    public const string DownloadPause = "download-pause:";
+    public const string DownloadResume = "download-resume:";
     public const string FocusSettings = "focus-settings";
     public const string TCLensGetText = "tclens-get-text:";
 }

@@ -36,3 +36,4 @@ publish/
 *.log
 crash.log
 trace.log
+ipc_log.txt

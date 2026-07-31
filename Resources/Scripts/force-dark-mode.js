@@ -14,9 +14,26 @@
     ];
     if (excludeDomains.includes(location.hostname)) return;
 
+    // Prevent white flash by hiding the document completely until Dark Reader is ready
+    const antiFouc = document.createElement('style');
+    antiFouc.id = 'stride-anti-fouc';
+    antiFouc.textContent = 'html { opacity: 0 !important; transition: none !important; }';
+    
+    if (document.head || document.documentElement) {
+        (document.head || document.documentElement).appendChild(antiFouc);
+    } else {
+        const observer = new MutationObserver(() => {
+            if (document.head || document.documentElement) {
+                (document.head || document.documentElement).appendChild(antiFouc);
+                observer.disconnect();
+            }
+        });
+        observer.observe(document, { childList: true, subtree: true });
+    }
+
     function tryEnable() {
         if (typeof DarkReader === 'undefined' || !DarkReader.enable) {
-            setTimeout(tryEnable, 50);
+            setTimeout(tryEnable, 10);
             return;
         }
 
@@ -25,11 +42,18 @@
             contrast: 100,
             sepia: 0
         });
+
+        // Allow one animation frame for DarkReader CSS to apply, then reveal document
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const style = document.getElementById('stride-anti-fouc');
+                if (style && style.parentNode) {
+                    style.parentNode.removeChild(style);
+                }
+            });
+        });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', tryEnable);
-    } else {
-        tryEnable();
-    }
+    // Call immediately to prevent white flash (FOUC)
+    tryEnable();
 })();

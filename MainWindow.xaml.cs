@@ -60,16 +60,65 @@ public partial class MainWindow : Window
         var extManager = services.GetRequiredService<ExtensionManager>();
         _router = new WebMessageRouter(_engine, _vm, _oneTabStore, _historyStore, _downloadStore, _settingsStore, extManager);
         _router.SettingChanged += OnSettingChanged;
+        Services.ThemeManager.ThemeChanged += () =>
+        {
+            var themeStr = Services.ThemeManager.GetThemeString();
+            var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
+            foreach (var tab in _engine.Tabs)
+            {
+                if (tab.Url?.StartsWith("internal://") == true || string.IsNullOrEmpty(tab.Url))
+                {
+                    _engine.ExecuteScript(tab.Id, js);
+                }
+            }
+            _engine.ApplyAppThemeToWebViews();
+        };
 
         DataContext = _vm;
 
+        // Attach event handlers
         WireEngineEvents();
 
         // Apply saved accent color
         if (_vm.Settings.AccentColor != "#D4A574")
             ApplyAccentColor(_vm.Settings.AccentColor);
 
+        _downloadStore.Items.CollectionChanged += OnDownloadsCollectionChanged;
+        foreach (var item in _downloadStore.Items)
+            item.PropertyChanged += OnDownloadItemPropertyChanged;
+        UpdateDownloadActiveDot();
+
         Loaded += OnWindowLoaded;
+    }
+
+    private void OnDownloadsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems != null)
+        {
+            foreach (DownloadItem item in e.NewItems)
+                item.PropertyChanged += OnDownloadItemPropertyChanged;
+        }
+        if (e.OldItems != null)
+        {
+            foreach (DownloadItem item in e.OldItems)
+                item.PropertyChanged -= OnDownloadItemPropertyChanged;
+        }
+        UpdateDownloadActiveDot();
+    }
+
+    private void OnDownloadItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DownloadItem.State))
+            UpdateDownloadActiveDot();
+    }
+
+    private void UpdateDownloadActiveDot()
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            bool hasActive = _downloadStore.Items.Any(i => i.State == DownloadState.InProgress);
+            DownloadActiveDot.Visibility = hasActive ? Visibility.Visible : Visibility.Collapsed;
+        });
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -242,22 +291,18 @@ public partial class MainWindow : Window
 
     private async Task LaunchTCLensAsync()
     {
-        System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"LaunchTCLensAsync triggered at {DateTime.Now}\n");
         var wv = _engine.GetCoreWebView2();
         if (wv != null)
         {
             try
             {
                 var exts = await wv.Profile.GetBrowserExtensionsAsync();
-                System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"Found {exts.Count} extensions\n");
                 foreach (var ex in exts) {
-                    System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"- {ex.Name} (ID: {ex.Id})\n");
                 }
                 var tcLens = exts.FirstOrDefault(e => e.Name.Contains("T&C Lens", StringComparison.OrdinalIgnoreCase) || e.Name.Contains("T-C", StringComparison.OrdinalIgnoreCase));
                 if (tcLens != null)
                 {
                     var url = $"extension://{tcLens.Id}/options/options.html";
-                    System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"TCLens found, ID: {tcLens.Id}, opening URL: {url}\n");
                     
                     // Look for existing tab
                     var existing = _engine.Tabs.FirstOrDefault(t => t.Url != null && t.Url.StartsWith($"extension://{tcLens.Id}/options"));
@@ -274,12 +319,10 @@ public partial class MainWindow : Window
                 }
                 else
                 {
-                    System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"TCLens not found in loaded extensions\n");
                 }
             }
             catch (Exception ex)
             {
-                System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"Exception: {ex.Message}\n");
                 System.Diagnostics.Trace.WriteLine($"Failed to launch T&C Lens: {ex.Message}");
             }
         }
@@ -438,6 +481,11 @@ public partial class MainWindow : Window
             if (tab.IsPinned) return;
             _engine.CloseTab(tab);
         }
+    }
+
+    private async void Downloads_Click(object sender, RoutedEventArgs e)
+    {
+        await OpenDownloadsTab();
     }
 
     private void TabItem_RightClick(object sender, MouseButtonEventArgs e)
@@ -913,6 +961,20 @@ public partial class MainWindow : Window
     {
         if (key == "darkMode")
             _engine.ApplyDarkModeToAll(_vm.Settings.ForceDarkMode);
+
+        if (key == "appTheme")
+        {
+            var themeStr = Services.ThemeManager.GetThemeString();
+            var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
+            foreach (var tab in _engine.Tabs)
+            {
+                if (tab.Url?.StartsWith("internal://") == true || string.IsNullOrEmpty(tab.Url))
+                {
+                    _engine.ExecuteScript(tab.Id, js);
+                }
+            }
+            _engine.ApplyAppThemeToWebViews();
+        }
 
         if (key == "accentColor")
             ApplyAccentColor(_vm.Settings.AccentColor);

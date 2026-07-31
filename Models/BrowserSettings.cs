@@ -3,11 +3,16 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace StrideBrowser.Models;
 
+public enum AppThemeMode { System, Light, Dark }
+
 /// <summary>User-configurable browser settings.</summary>
 public sealed partial class BrowserSettings : ObservableObject
 {
     [ObservableProperty]
     private string _searchEngine = "DuckDuckGo";
+
+    [ObservableProperty]
+    private AppThemeMode _appTheme = AppThemeMode.System;
 
     [ObservableProperty]
     private bool _isSidebarOnRight;
@@ -26,6 +31,12 @@ public sealed partial class BrowserSettings : ObservableObject
 
     [ObservableProperty]
     private bool _restoreSessionOnStartup = true;
+
+    [ObservableProperty]
+    private bool _hardwareAccelerationEnabled = true;
+
+    [ObservableProperty]
+    private bool _useIDMForDownloads = true;
 
     [ObservableProperty]
     private bool _forceDarkMode = true;

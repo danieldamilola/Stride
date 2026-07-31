@@ -32,6 +32,7 @@ public sealed class TabEngine : IDisposable
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _hibernationTimer;
     private readonly Dictionary<Guid, WebView2> _webViews = new();
+    private readonly Dictionary<Guid, (string darkReaderId, string forceDarkId)> _darkScripts = new();
     private readonly LinkedList<(string url, string title)> _closedTabs = new();
 
     private CoreWebView2Environment? _environment;
@@ -102,7 +103,8 @@ public sealed class TabEngine : IDisposable
             AreBrowserExtensionsEnabled = true,
             // Fluent overlay scrollbar: overlays content without pushing layout, works in Shadow DOM
             ScrollBarStyle = CoreWebView2ScrollbarStyle.FluentOverlay,
-            AdditionalBrowserArguments = BuildBrowserArguments(_settings.SmartScreenEnabled)
+            AdditionalBrowserArguments = BuildBrowserArguments(_settings.SmartScreenEnabled) + 
+                (!_settings.HardwareAccelerationEnabled ? " --disable-gpu" : ""),
         };
         _environment = await CoreWebView2Environment.CreateAsync(null, dataDir, options);
 
@@ -237,9 +239,8 @@ public sealed class TabEngine : IDisposable
         _activationCts?.Cancel();
         var cts = _activationCts = new CancellationTokenSource();
 
-        // Immediately hide all WebViews — gives instant visual feedback
-        foreach (var (_, wv) in _webViews)
-            wv.Visibility = Visibility.Collapsed;
+        // Removed immediate Visibility.Collapsed to prevent a blank screen flash 
+        // while the new tab's WebView2 is booting up or waking from hibernation.
 
         // If the tab already has a live WebView, show it immediately (no semaphore needed)
         if (_webViews.ContainsKey(tab.Id) && !tab.IsHibernated)
@@ -389,30 +390,59 @@ public sealed class TabEngine : IDisposable
 
     public async void ApplyDarkModeToAll(bool enabled)
     {
-        var scheme = enabled ? CoreWebView2PreferredColorScheme.Dark : CoreWebView2PreferredColorScheme.Auto;
-        foreach (var (_, wv) in _webViews)
+        var scheme = enabled ? CoreWebView2PreferredColorScheme.Dark : CoreWebView2PreferredColorScheme.Light;
+        
+        foreach (var (id, wv) in _webViews)
         {
+            var isInternal = Tabs.FirstOrDefault(t => t.Id == id)?.Url?.StartsWith("internal://") ?? true;
+            
+            // For internal pages, use Transparent to let WPF ThemeManager handle the background color
+            // For external pages, rely on Dark Reader (ForceDarkMode)
+            var bgColor = isInternal ? System.Drawing.Color.Transparent : (enabled ? DarkBackground : System.Drawing.Color.White);
+            
+            wv.DefaultBackgroundColor = bgColor;
             if (wv.CoreWebView2 is null) continue;
             wv.CoreWebView2.Profile.PreferredColorScheme = scheme;
+            await ApplyDarkModeToWebViewAsync(id, wv.CoreWebView2, enabled);
+        }
+    }
 
-            // Also inject/remove Dark Reader on already-loaded pages
-            try
+    private async Task ApplyDarkModeToWebViewAsync(Guid tabId, CoreWebView2 core, bool enabled)
+    {
+        try
+        {
+            if (enabled)
             {
-                if (enabled)
+                if (!_darkScripts.ContainsKey(tabId))
                 {
                     var darkReaderJs = ResourceLoader.Load("Resources.Scripts.darkreader.min.js");
                     var forceDarkJs = ResourceLoader.Load("Resources.Scripts.force-dark-mode.js");
-                    await wv.CoreWebView2.ExecuteScriptAsync(darkReaderJs);
-                    await wv.CoreWebView2.ExecuteScriptAsync(forceDarkJs);
-                }
-                else
-                {
-                    await wv.CoreWebView2.ExecuteScriptAsync(
-                        "if(typeof DarkReader!=='undefined')DarkReader.disable();");
+                    
+                    // Add permanently to all future navigations in this tab
+                    var id1 = await core.AddScriptToExecuteOnDocumentCreatedAsync(darkReaderJs);
+                    var id2 = await core.AddScriptToExecuteOnDocumentCreatedAsync(forceDarkJs);
+                    _darkScripts[tabId] = (id1, id2);
+                    
+                    // Apply immediately to current page
+                    await core.ExecuteScriptAsync(darkReaderJs);
+                    await core.ExecuteScriptAsync(forceDarkJs);
                 }
             }
-            catch { /* Page may not be ready */ }
+            else
+            {
+                if (_darkScripts.TryGetValue(tabId, out var ids))
+                {
+                    // Remove from future navigations
+                    core.RemoveScriptToExecuteOnDocumentCreated(ids.darkReaderId);
+                    core.RemoveScriptToExecuteOnDocumentCreated(ids.forceDarkId);
+                    _darkScripts.Remove(tabId);
+                }
+                
+                // Disable immediately on current page
+                await core.ExecuteScriptAsync("if(typeof DarkReader!=='undefined')DarkReader.disable();");
+            }
         }
+        catch { /* Page may not be ready or context destroyed */ }
     }
 
     public CoreWebView2? GetCoreWebView2()
@@ -422,23 +452,56 @@ public sealed class TabEngine : IDisposable
         return null;
     }
 
+    public void ExecuteScript(Guid tabId, string script)
+    {
+        if (_webViews.TryGetValue(tabId, out var wv) && wv.CoreWebView2 is not null)
+        {
+            _ = wv.CoreWebView2.ExecuteScriptAsync(script);
+        }
+    }
+
+    public void ApplyAppThemeToWebViews()
+    {
+        // PreferredColorScheme is a profile-level setting, so setting it on one active WebView updates it for all
+        var firstActive = _webViews.Values.FirstOrDefault(wv => wv.CoreWebView2 is not null);
+        if (firstActive?.CoreWebView2 is not null)
+        {
+            firstActive.CoreWebView2.Profile.PreferredColorScheme = Services.ThemeManager.IsCurrentlyDark() 
+                ? CoreWebView2PreferredColorScheme.Dark 
+                : CoreWebView2PreferredColorScheme.Light;
+        }
+
+        // Also update background colors for external tabs if they are transparent/white
+        foreach (var (id, wv) in _webViews)
+        {
+            var url = Tabs.FirstOrDefault(t => t.Id == id)?.Url ?? "";
+            bool isInternal = url.StartsWith("internal://") || string.IsNullOrEmpty(url);
+            wv.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
+        }
+    }
+
     // ──── WebView2 Creation ────
 
     private async Task CreateWebViewForTab(BrowserTab tab)
     {
+        var isInternal = tab.Url?.StartsWith("internal://") ?? true;
+        
         var wv = new WebView2
         {
-            DefaultBackgroundColor = DarkBackground,
-            Visibility = Visibility.Collapsed
+            DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
+            Visibility = Visibility.Hidden
         };
 
         _webViewHost.Children.Add(wv);
         try
         {
             await wv.EnsureCoreWebView2Async(_environment);
-
-            if (_settings.ForceDarkMode)
-                wv.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Dark;
+            
+            wv.CoreWebView2.Profile.PreferredColorScheme = Services.ThemeManager.IsCurrentlyDark() 
+                ? CoreWebView2PreferredColorScheme.Dark 
+                : CoreWebView2PreferredColorScheme.Light;
+            
+            await ApplyDarkModeToWebViewAsync(tab.Id, wv.CoreWebView2, _settings.ForceDarkMode);
 
             wv.CoreWebView2.SetVirtualHostNameToFolderMapping("local.assets", System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages"), Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
         }
@@ -464,13 +527,11 @@ public sealed class TabEngine : IDisposable
 
         if (!_extensionsLoaded)
         {
-            System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", "TabEngine: _extensionsLoaded was false, setting to true\n");
             _extensionsLoaded = true;
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", "TabEngine: about to call ExtensionManager.InitializeAsync\n");
                     
                     // MUST dispatch to UI thread!
                     await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
@@ -479,7 +540,6 @@ public sealed class TabEngine : IDisposable
                 }
                 catch (Exception ex)
                 {
-                    System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"TabEngine Extension init failed: {ex}\n");
                     Trace.WriteLine($"Extension init failed: {ex.Message}");
                 }
             });
@@ -560,12 +620,33 @@ public sealed class TabEngine : IDisposable
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
 
+            if (e.Uri is string urlStr)
+            {
+                var isInternal = urlStr.StartsWith("internal://") || urlStr.StartsWith("https://local.assets/");
+                wv.DefaultBackgroundColor = isInternal 
+                    ? System.Drawing.Color.Transparent 
+                    : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
+            }
+
+            if (_settings.DefaultZoom != 100)
+            {
+                try 
+                { 
+                    var targetZoom = _settings.DefaultZoom / 100.0;
+                    if (Math.Abs(wv.ZoomFactor - targetZoom) > 0.01)
+                    {
+                        wv.ZoomFactor = targetZoom; 
+                    }
+                } 
+                catch { }
+            }
+
             if (e.Uri is string uriForCustom && Uri.TryCreate(uriForCustom, UriKind.Absolute, out var parsedCustomUri))
             {
                 var scheme = parsedCustomUri.Scheme.ToLowerInvariant();
                 if (scheme != "http" && scheme != "https" && scheme != "file" && scheme != "data" &&
                     scheme != "about" && scheme != "edge" && scheme != "chrome" && scheme != "stride" && scheme != "javascript" &&
-                    scheme != "extension" && scheme != "chrome-extension")
+                    scheme != "extension" && scheme != "chrome-extension" && scheme != "internal")
                 {
                     e.Cancel = true;
                     _dispatcher.InvokeAsync(() =>
@@ -651,9 +732,6 @@ public sealed class TabEngine : IDisposable
                 try
                 {
                     if (!_webViews.ContainsKey(tab.Id)) return;
-
-                    if (_settings.DefaultZoom != 100)
-                        wv.ZoomFactor = _settings.DefaultZoom / 100.0;
 
                     if (!e.IsSuccess &&
                         e.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled &&
@@ -777,6 +855,30 @@ public sealed class TabEngine : IDisposable
         {
             e.Handled = true; // We don't want the default download dialog
             var op = e.DownloadOperation;
+
+            if (_settings.UseIDMForDownloads)
+            {
+                var idmPath = @"C:\Program Files (x86)\Internet Download Manager\IDMan.exe";
+                if (System.IO.File.Exists(idmPath))
+                {
+                    e.Cancel = true;
+                    try
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = idmPath,
+                            Arguments = $"/d \"{op.Uri}\"",
+                            UseShellExecute = true
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"Failed to start IDM: {ex.Message}");
+                    }
+                    return;
+                }
+            }
+
             var item = new Models.DownloadItem
             {
                 FileName = System.IO.Path.GetFileName(op.ResultFilePath),
@@ -818,12 +920,17 @@ public sealed class TabEngine : IDisposable
                 });
             };
 
-            // Handle cancel request from UI
+            // Handle requests from UI
             item.PropertyChanged += (s, args) =>
             {
-                if (args.PropertyName == nameof(Models.DownloadItem.State) && item.State == Models.DownloadState.Cancelled)
+                if (args.PropertyName == nameof(Models.DownloadItem.State))
                 {
-                    try { op.Cancel(); } catch { }
+                    try 
+                    {
+                        if (item.State == Models.DownloadState.Cancelled) op.Cancel();
+                        else if (item.State == Models.DownloadState.Paused) op.Pause();
+                        else if (item.State == Models.DownloadState.InProgress) op.Resume();
+                    } catch { }
                 }
             };
         };
@@ -886,6 +993,25 @@ public sealed class TabEngine : IDisposable
         {
             var menuItems = e.MenuItems;
 
+            // Remove specific unwanted default items
+            var toRemove = new List<CoreWebView2ContextMenuItem>();
+            foreach (var item in menuItems)
+            {
+                if (item.Name == "collections" ||
+                    item.Name == "webSelect" ||
+                    item.Name == "webCapture" ||
+                    item.Name == "searchWebFor" ||
+                    item.Name == "readAloud" ||
+                    item.Name == "share")
+                {
+                    toRemove.Add(item);
+                }
+            }
+            foreach (var item in toRemove)
+            {
+                menuItems.Remove(item);
+            }
+
             if (e.ContextMenuTarget.HasLinkUri)
             {
                 var linkUri = e.ContextMenuTarget.LinkUri;
@@ -920,6 +1046,48 @@ public sealed class TabEngine : IDisposable
                     "", null, CoreWebView2ContextMenuItemKind.Separator);
                 menuItems.Insert(2, separator);
             }
+
+            if (e.ContextMenuTarget.HasSelection)
+            {
+                var selection = e.ContextMenuTarget.SelectionText;
+                if (!string.IsNullOrWhiteSpace(selection))
+                {
+                    // Truncate long selections
+                    var displaySelection = selection.Length > 20 ? selection.Substring(0, 17) + "..." : selection;
+                    var searchItem = wv.CoreWebView2.Environment.CreateContextMenuItem(
+                        $"Search Stride for '{displaySelection}'", null, CoreWebView2ContextMenuItemKind.Command);
+                    searchItem.CustomItemSelected += (_, _) =>
+                    {
+                        _ = _dispatcher.InvokeAsync(async () =>
+                        {
+                            var url = $"https://duckduckgo.com/?q={Uri.EscapeDataString(selection)}";
+                            if (_settings.SearchEngine == "Google")
+                                url = $"https://www.google.com/search?q={Uri.EscapeDataString(selection)}";
+                            else if (_settings.SearchEngine == "Bing")
+                                url = $"https://www.bing.com/search?q={Uri.EscapeDataString(selection)}";
+
+                            var newTab = CreateTab(url);
+                            await ActivateAsync(newTab);
+                        });
+                    };
+                    menuItems.Add(searchItem);
+                }
+            }
+
+            var separator2 = wv.CoreWebView2.Environment.CreateContextMenuItem(
+                "", null, CoreWebView2ContextMenuItemKind.Separator);
+            menuItems.Add(separator2);
+
+            var darkModeItem = wv.CoreWebView2.Environment.CreateContextMenuItem(
+                _settings.ForceDarkMode ? "Disable Dark Mode" : "Enable Dark Mode", null, CoreWebView2ContextMenuItemKind.Command);
+            darkModeItem.CustomItemSelected += (_, _) =>
+            {
+                _dispatcher.Invoke(() =>
+                {
+                    _settings.ForceDarkMode = !_settings.ForceDarkMode;
+                });
+            };
+            menuItems.Add(darkModeItem);
         };
     }
 
@@ -966,6 +1134,7 @@ public sealed class TabEngine : IDisposable
             try { wv.Dispose(); } catch { }
         }
         _webViews.Clear();
+        _darkScripts.Clear();
     }
 
     private void UpdateTabFromWebView(WebView2 wv, BrowserTab tab)
@@ -1081,8 +1250,12 @@ public sealed class TabEngine : IDisposable
         foreach (var (id, wv) in _webViews)
         {
             var isActive = id == activeTab.Id;
-            wv.Visibility = isActive ? Visibility.Visible : Visibility.Collapsed;
-
+            
+            // Use Hidden instead of Collapsed to prevent HWND layout teardown (flicker)
+            // Do not use Margin=-10000 because WPF Grids will try to allocate massive D3D surfaces.
+            wv.Visibility = isActive ? Visibility.Visible : Visibility.Hidden;
+            Panel.SetZIndex(wv, isActive ? 1 : 0);
+            
             if (wv.CoreWebView2 is null) continue;
 
             // Active tab: normal memory budget. Background tabs: aggressive GC
@@ -1102,6 +1275,7 @@ public sealed class TabEngine : IDisposable
         _webViewHost.Children.Remove(wv);
         try { wv.Dispose(); } catch { }
         _webViews.Remove(tabId);
+        _darkScripts.Remove(tabId);
     }
 
     public void Shutdown()
@@ -1115,6 +1289,7 @@ public sealed class TabEngine : IDisposable
             try { wv.Dispose(); } catch { }
         }
         _webViews.Clear();
+        _darkScripts.Clear();
         _activationGate.Dispose();
     }
 

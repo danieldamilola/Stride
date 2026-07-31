@@ -2,7 +2,7 @@
 ; Requires Inno Setup 6+
 
 #define MyAppName "Stride"
-#define MyAppVersion "1.0.2"
+#define MyAppVersion "1.0.3"
 #define MyAppPublisher "Daniel Damilola"
 #define MyAppURL "https://stride.browser"
 #define MyAppExeName "Stride.exe"
@@ -11,6 +11,7 @@
 [Setup]
 AppId={{B8F2A9D1-3E7C-4A5B-9D6F-1C2E8F4A7B3D}
 AppName={#MyAppName}
+UninstallDisplayName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}

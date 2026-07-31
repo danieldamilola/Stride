@@ -20,6 +20,10 @@ public sealed class SettingsPage
         return Helpers.ResourceLoader.LoadTemplate("Resources.Pages.Settings.html",
             new Dictionary<string, string>
             {
+                ["THEME"] = settings.AppTheme.ToString().ToLowerInvariant(),
+                ["THEME_SYSTEM"] = settings.AppTheme == AppThemeMode.System ? " selected" : "",
+                ["THEME_LIGHT"] = settings.AppTheme == AppThemeMode.Light ? " selected" : "",
+                ["THEME_DARK"] = settings.AppTheme == AppThemeMode.Dark ? " selected" : "",
                 ["SEARCH_DUCKDUCKGO"] = SelStr(settings.SearchEngine, "DuckDuckGo"),
                 ["SEARCH_BRAVE"] = SelStr(settings.SearchEngine, "Brave"),
                 ["SEARCH_GOOGLE"] = SelStr(settings.SearchEngine, "Google"),
@@ -36,7 +40,9 @@ public sealed class SettingsPage
                 ["ZOOM_175"] = SelInt(settings.DefaultZoom, 175),
                 ["ZOOM_200"] = SelInt(settings.DefaultZoom, 200),
                 ["CHK_RESTORE"] = Chk(settings.RestoreSessionOnStartup),
+                ["CHK_IDM"] = Chk(settings.UseIDMForDownloads),
                 ["CHK_DARK"] = Chk(settings.ForceDarkMode),
+                ["CHK_HWACCEL"] = Chk(settings.HardwareAccelerationEnabled),
                 ["CHK_HTTPS"] = Chk(settings.ForceHttps),
                 ["CHK_SMARTSCREEN"] = Chk(settings.SmartScreenEnabled),
                 ["CHK_ADBLOCK"] = Chk(settings.AdBlockEnabled),

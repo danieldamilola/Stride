@@ -16,32 +16,34 @@ public sealed class InternalPages
     private readonly DownloadPage _downloads = new();
     private readonly ErrorPage _error = new();
 
+    private static string ApplyTheme(string html) => html.Replace("{{THEME}}", ThemeManager.GetThemeString());
+
     /// <summary>Returns the new tab page HTML.</summary>
     public string NewTabPage(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "") =>
-        _newTab.Render(shortcuts, accentColor, accentRgb, ipcToken, zoom, backgroundPath);
+        ApplyTheme(_newTab.Render(shortcuts, accentColor, accentRgb, ipcToken, zoom, backgroundPath));
 
     /// <summary>Returns a minimal blank dark page.</summary>
     public string BlankPage() =>
-        """<html><body style="background:#101012"></body></html>""";
+        ApplyTheme("""<html data-theme="{{THEME}}"><body style="background:var(--bg-base)"></body></html>""");
 
     /// <summary>Returns the OneTab page HTML.</summary>
     public string OneTabPage(List<OneTabGroup> groups, string accentColor, string accentRgb, string ipcToken) =>
-        _oneTab.Render(groups, accentColor, accentRgb, ipcToken);
+        ApplyTheme(_oneTab.Render(groups, accentColor, accentRgb, ipcToken));
 
     /// <summary>Returns the settings page HTML.</summary>
-    public string SettingsPage(BrowserSettings settings, string ipcToken) => _settings.Render(settings, ipcToken);
+    public string SettingsPage(BrowserSettings settings, string ipcToken) => ApplyTheme(_settings.Render(settings, ipcToken));
 
     /// <summary>Returns the history page HTML.</summary>
     public string HistoryPage(List<HistoryEntry> entries, string accentColor, string accentRgb, string ipcToken) =>
-        _history.Render(entries, accentColor, accentRgb, ipcToken);
+        ApplyTheme(_history.Render(entries, accentColor, accentRgb, ipcToken));
 
     /// <summary>Returns the downloads page HTML.</summary>
     public string DownloadsPage(List<DownloadItem> items, string accentColor, string accentRgb, string ipcToken) =>
-        _downloads.Render(items, accentColor, accentRgb, ipcToken);
+        ApplyTheme(_downloads.Render(items, accentColor, accentRgb, ipcToken));
 
     /// <summary>Returns the error page HTML.</summary>
     public string ErrorPage(string url, string errorMessage, string accentColor, string accentRgb) =>
-        _error.Render(url, errorMessage, accentColor, accentRgb);
+        ApplyTheme(_error.Render(url, errorMessage, accentColor, accentRgb));
 
     /// <summary>Returns the focus block page HTML.</summary>
     public string FocusPage() => Helpers.ResourceLoader.Load("Resources.Pages.Focus.html");

@@ -21,6 +21,8 @@ public static class Composition
         var settingsStore = new SettingsStore();
         var settings = settingsStore.Load();
 
+        ThemeManager.Initialize(settings);
+
         services.AddSingleton<ISettingsStore>(settingsStore);
         services.AddSingleton(settings);
 
