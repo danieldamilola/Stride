@@ -43,8 +43,8 @@ Clone the repository and build:
 ```bash
 git clone https://github.com/danieldamilola/Stride.git
 cd Stride
-dotnet build SpurBrowser.csproj -c Debug
-dotnet run --project SpurBrowser.csproj -c Debug
+dotnet build Stride.csproj -c Debug
+dotnet run --project Stride.csproj -c Debug
 ```
 
 #### 2. Branching Strategy

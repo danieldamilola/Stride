@@ -41,9 +41,9 @@ The easiest way to install Stride is by downloading the pre-compiled installer.
 
 1. Go to the [Releases Page](https://github.com/danieldamilola/Stride/releases).
 2. Download the latest `Stride-Setup.exe`.
-3. Double-click to run the installer.
-   > **Note:** Stride requires the Microsoft .NET 9 Desktop Runtime. If you do not have it installed, our smart installer will automatically download and configure it for you.
-4. Launch Stride and enjoy a cleaner web!
+4. Double-click to run the installer.
+   > **Note:** Stride is shipped as a self-contained executable. It natively bundles the Microsoft .NET 9 Desktop Runtime, so you can install and run it immediately without downloading any extra frameworks.
+5. Launch Stride and enjoy a cleaner web!
 
 ## Development & Building from Source
 
@@ -61,11 +61,11 @@ If you want to build Stride yourself, you'll need the following prerequisites:
    ```
 2. **Build the project:**
    ```bash
-   dotnet build SpurBrowser.csproj -c Release
+   dotnet build Stride.csproj -c Release
    ```
 3. **Run the browser:**
    ```bash
-   dotnet run --project SpurBrowser.csproj -c Release
+   dotnet run --project Stride.csproj -c Release
    ```
 4. **Run Unit Tests:**
    ```bash
@@ -75,7 +75,7 @@ If you want to build Stride yourself, you'll need the following prerequisites:
 ### Building the Installer
 To generate the `.exe` installer yourself, publish the app and use **Inno Setup 6+**:
 ```bash
-dotnet publish SpurBrowser.csproj -c Release -o publish
+dotnet publish Stride.csproj -c Release -r win-x64 --self-contained true
 iscc stride-setup.iss
 ```
 
