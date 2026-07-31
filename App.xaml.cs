@@ -44,7 +44,7 @@ public partial class App : Application
         
         if (vm.Settings.IsFirstRun)
         {
-            var welcomeWindow = new WelcomeWindow();
+            var welcomeWindow = new WelcomeWindow(_serviceProvider);
             welcomeWindow.Show();
         }
         else
