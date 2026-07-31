@@ -94,9 +94,21 @@ public partial class MainWindow : Window
         source?.AddHook(WndProc);
     }
 
+    private const int WM_MOUSEHWHEEL = 0x020E;
+
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (msg == NativeMethods.WM_GETMINMAXINFO)
+        if (msg == WM_MOUSEHWHEEL)
+        {
+            int delta = (short)((wParam.ToInt64() >> 16) & 0xFFFF);
+            var scrollViewer = GetScrollViewer(TabList);
+            if (scrollViewer != null)
+            {
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + (delta * 0.5));
+                handled = true;
+            }
+        }
+        else if (msg == NativeMethods.WM_GETMINMAXINFO)
         {
             var mmi = Marshal.PtrToStructure<NativeMethods.MINMAXINFO>(lParam);
             var monitor = NativeMethods.MonitorFromWindow(hwnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
