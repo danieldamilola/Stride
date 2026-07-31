@@ -404,10 +404,9 @@ public partial class MainWindow : Window
         var scrollViewer = GetScrollViewer(TabList);
         if (scrollViewer != null)
         {
-            if (e.Delta > 0)
-                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - 60);
-            else
-                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + 60);
+            // Use e.Delta to support smooth precision trackpad scrolling
+            // e.Delta is typically 120 for a mouse wheel notch, and smaller values for trackpads.
+            scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - (e.Delta * 0.5));
             e.Handled = true;
         }
     }
