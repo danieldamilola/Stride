@@ -405,9 +405,9 @@ public partial class MainWindow : Window
         if (scrollViewer != null)
         {
             if (e.Delta > 0)
-                scrollViewer.LineLeft();
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - 60);
             else
-                scrollViewer.LineRight();
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + 60);
             e.Handled = true;
         }
     }
