@@ -22,19 +22,19 @@ public sealed class DownloadItem : INotifyPropertyChanged
     public long ReceivedBytes
     {
         get => _receivedBytes;
-        set { _receivedBytes = value; OnPropertyChanged(); }
+        set { if (_receivedBytes != value) { _receivedBytes = value; OnPropertyChanged(); OnPropertyChanged(nameof(ProgressPercent)); } }
     }
 
     public long TotalBytes
     {
         get => _totalBytes;
-        set { _totalBytes = value; OnPropertyChanged(); }
+        set { if (_totalBytes != value) { _totalBytes = value; OnPropertyChanged(); OnPropertyChanged(nameof(ProgressPercent)); } }
     }
 
     public DownloadState State
     {
         get => _state;
-        set { _state = value; OnPropertyChanged(); }
+        set { if (_state != value) { _state = value; OnPropertyChanged(); } }
     }
 
     /// <summary>Progress as 0–100, or -1 if total size is unknown.</summary>

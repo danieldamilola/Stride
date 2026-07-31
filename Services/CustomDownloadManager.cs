@@ -63,24 +63,28 @@ public class CustomDownloadManager
             }
 
             using var contentStream = await response.Content.ReadAsStreamAsync();
-            using var fileStream = new FileStream(item.FilePath, FileMode.Append, FileAccess.Write, FileShare.None, 8192, true);
-
-            var buffer = new byte[8192];
-            int bytesRead;
-            while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            
+            // Offload the heavy stream reading to a background thread to prevent UI thread lockups
+            await Task.Run(async () => 
             {
-                if (item.State != DownloadState.InProgress)
+                using var fileStream = new FileStream(item.FilePath, FileMode.Append, FileAccess.Write, FileShare.None, 81920, true);
+                var buffer = new byte[81920]; // 80KB buffer
+                int bytesRead;
+                while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
                 {
-                    // If state changed (e.g. user paused or cancelled), exit the loop
-                    break;
-                }
+                    if (item.State != DownloadState.InProgress)
+                    {
+                        break;
+                    }
 
-                await fileStream.WriteAsync(buffer, 0, bytesRead);
-                existingBytes += bytesRead;
-                
-                // Update UI Model
-                item.ReceivedBytes = existingBytes;
-            }
+                    await fileStream.WriteAsync(buffer, 0, bytesRead).ConfigureAwait(false);
+                    existingBytes += bytesRead;
+                    
+                    // Safe to update because DownloadItem properties now check for changes 
+                    // and WPF safely marshals PropertyChanged for simple bindings
+                    item.ReceivedBytes = existingBytes;
+                }
+            });
 
             if (item.State == DownloadState.InProgress)
             {
