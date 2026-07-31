@@ -203,8 +203,7 @@
                 <Grid x:Name="ToolbarRow" Margin="8,0,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>    <!-- Nav buttons -->
-                        <ColumnDefinition Width="*"/>       <!-- Tab strip (fills) -->
-                        <ColumnDefinition Width="Auto"/>    <!-- URL label -->
+                        <ColumnDefinition Width="*"/>       <!-- DockPanel for Tabs + Address Bar -->
                         <ColumnDefinition Width="Auto"/>    <!-- Action buttons -->
                         <ColumnDefinition Width="Auto"/>    <!-- Window controls -->
                     </Grid.ColumnDefinitions>
@@ -240,83 +239,76 @@
                         </Button>
                     </StackPanel>
 
-                    <!-- Horizontal tab strip — favicon pills -->
-                    <ListBox x:Name="TabList"
-                             SelectionChanged="TabList_SelectionChanged"
-                             ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                             Background="Transparent" BorderThickness="0"
-                             Margin="4,0,4,0"
-                             VerticalAlignment="Center"
-                             PreviewMouseWheel="TabList_PreviewMouseWheel"
-                             PreviewMouseLeftButtonDown="TabList_PreviewMouseLeftButtonDown"
-                             PreviewMouseMove="TabList_PreviewMouseMove"
-                             Drop="TabList_Drop" AllowDrop="True"
-                             ItemTemplate="{StaticResource TabItemTemplate}">
-                        <ListBox.Style>
-                            <Style TargetType="ListBox" BasedOn="{StaticResource FaviconTabListStyle}">
-                                <Setter Property="Grid.Column" Value="1"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Settings.AddressBarOnLeft}" Value="True">
-                                        <Setter Property="Grid.Column" Value="2"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ListBox.Style>
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                    </ListBox>
+                    <DockPanel Grid.Column="1" LastChildFill="True">
+                        <!-- URL domain and New Tab (+) Grouping -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="DockPanel.Dock" Value="Right"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Settings.AddressBarOnLeft}" Value="True">
+                                            <Setter Property="DockPanel.Dock" Value="Left"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            
+                            <!-- URL domain — bare text, no background. Minimal. -->
+                            <StackPanel Orientation="Horizontal"
+                                        VerticalAlignment="Center" Margin="4,0,8,0"
+                                        Cursor="Hand"
+                                        MouseLeftButtonDown="UrlLabel_Click"
+                                        ToolTip="Click to edit URL (Ctrl+L)">
+                                <Path x:Name="SecurityIcon"
+                                      Data="{StaticResource IconGlobe}"
+                                      Stroke="{DynamicResource TextMuted}"
+                                      StrokeThickness="1" Width="10" Height="10"
+                                      Stretch="Uniform" VerticalAlignment="Center"
+                                      Margin="0,0,5,0"/>
+                                <TextBlock x:Name="UrlLabel"
+                                           Text="New Tab"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           FontSize="11.5" FontFamily="{DynamicResource UIFont}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxWidth="200"/>
+                            </StackPanel>
 
-                    <!-- URL domain and New Tab (+) Grouping -->
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Setter Property="Grid.Column" Value="2"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Settings.AddressBarOnLeft}" Value="True">
-                                        <Setter Property="Grid.Column" Value="1"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        
-                        <!-- URL domain — bare text, no background. Minimal. -->
-                        <StackPanel Orientation="Horizontal"
-                                    VerticalAlignment="Center" Margin="4,0,8,0"
-                                    Cursor="Hand"
-                                    MouseLeftButtonDown="UrlLabel_Click"
-                                    ToolTip="Click to edit URL (Ctrl+L)">
-                            <Path x:Name="SecurityIcon"
-                                  Data="{StaticResource IconGlobe}"
-                                  Stroke="{DynamicResource TextMuted}"
-                                  StrokeThickness="1" Width="10" Height="10"
-                                  Stretch="Uniform" VerticalAlignment="Center"
-                                  Margin="0,0,5,0"/>
-                            <TextBlock x:Name="UrlLabel"
-                                       Text="New Tab"
-                                       Foreground="{DynamicResource TextMuted}"
-                                       FontSize="11.5" FontFamily="{DynamicResource UIFont}"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       MaxWidth="200"/>
+                            <!-- Action buttons: + New Tab -->
+                            <Button Click="NewTab_Click" Style="{DynamicResource IconBtn}"
+                                    Width="26" Height="26" ToolTip="New Tab (Ctrl+T)" Margin="0,0,4,0">
+                                <Path Data="{StaticResource IconPlus}"
+                                      Stroke="{DynamicResource TextSecondary}"
+                                      StrokeThickness="1.4" Width="10" Height="10"
+                                      Stretch="Uniform" StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round"/>
+                            </Button>
                         </StackPanel>
-
-                        <!-- Action buttons: + New Tab -->
-                        <Button Click="NewTab_Click" Style="{DynamicResource IconBtn}"
-                                Width="26" Height="26" ToolTip="New Tab (Ctrl+T)" Margin="0,0,4,0">
-                            <Path Data="{StaticResource IconPlus}"
-                                  Stroke="{DynamicResource TextSecondary}"
-                                  StrokeThickness="1.4" Width="10" Height="10"
-                                  Stretch="Uniform" StrokeStartLineCap="Round"
-                                  StrokeEndLineCap="Round"/>
-                        </Button>
-                    </StackPanel>
+                        
+                        <!-- Horizontal tab strip — favicon pills -->
+                        <ListBox x:Name="TabList"
+                                 Style="{DynamicResource FaviconTabListStyle}"
+                                 SelectionChanged="TabList_SelectionChanged"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 Background="Transparent" BorderThickness="0"
+                                 Margin="4,0,4,0"
+                                 VerticalAlignment="Center"
+                                 PreviewMouseWheel="TabList_PreviewMouseWheel"
+                                 PreviewMouseLeftButtonDown="TabList_PreviewMouseLeftButtonDown"
+                                 PreviewMouseMove="TabList_PreviewMouseMove"
+                                 Drop="TabList_Drop" AllowDrop="True"
+                                 ItemTemplate="{StaticResource TabItemTemplate}">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                        </ListBox>
+                    </DockPanel>
 
                     <!-- Action buttons: Downloads, Settings -->
-                    <StackPanel Grid.Column="3" Orientation="Horizontal"
+                    <StackPanel Grid.Column="2" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="0,0,4,0">
                         <!-- ──── Downloads Button ──── -->
                         <Grid Width="26" Height="26" Margin="4,0" Cursor="Hand" ToolTip="Downloads (Ctrl+J)"
@@ -354,7 +346,7 @@
                     </StackPanel>
 
                     <!-- Window controls: — □ × -->
-                    <StackPanel Grid.Column="4" Orientation="Horizontal"
+                    <StackPanel Grid.Column="3" Orientation="Horizontal"
                                 VerticalAlignment="Stretch">
                         <Button Click="Minimize_Click" Style="{DynamicResource TitleBtn}"
                                 Width="42" Height="36">
