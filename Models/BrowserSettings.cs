@@ -62,6 +62,24 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _isSidebarPinned;
 
     [ObservableProperty]
+    private bool _showSettingsIcon = true;
+
+    [ObservableProperty]
+    private bool _showDownloadsIcon = true;
+
+    [ObservableProperty]
+    private bool _showNavArrows = true;
+
+    [ObservableProperty]
+    private bool _showRefreshButton = true;
+
+    [ObservableProperty]
+    private bool _showTabNames;
+
+    [ObservableProperty]
+    private bool _addressBarOnLeft;
+
+    [ObservableProperty]
     private string _newTabBackground = "";
 
     [ObservableProperty]

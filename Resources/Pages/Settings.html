@@ -719,6 +719,68 @@
               />
             </div>
           </div>
+          
+          <div class="subsection-label">Toolbar &amp; Tabs Layout</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Address Bar Position</div>
+              <div class="setting-desc">Move the address bar and new tab button</div>
+            </div>
+            <div class="setting-control">
+              <select class="select" onchange="s('addressBarOnLeft', this)">
+                <option value="false" {{ADDR_RIGHT}}>Right (Default)</option>
+                <option value="true" {{ADDR_LEFT}}>Left</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Tab Style</div>
+              <div class="setting-desc">Show full names for all tabs or compact mode</div>
+            </div>
+            <div class="setting-control">
+              <select class="select" onchange="s('showTabNames', this)">
+                <option value="false" {{TAB_COMPACT}}>Compact (Icons Only)</option>
+                <option value="true" {{TAB_FULL}}>Full Names</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Show Navigation Arrows</div>
+              <div class="setting-desc">Back and Forward buttons</div>
+            </div>
+            <div class="setting-control">
+              <input type="checkbox" class="toggle" {{CHK_NAVARROWS}} onchange="s('showNavArrows', this)" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Show Refresh Button</div>
+              <div class="setting-desc">Reload page button</div>
+            </div>
+            <div class="setting-control">
+              <input type="checkbox" class="toggle" {{CHK_REFRESH}} onchange="s('showRefreshButton', this)" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Show Downloads Icon</div>
+              <div class="setting-desc">Downloads button in toolbar</div>
+            </div>
+            <div class="setting-control">
+              <input type="checkbox" class="toggle" {{CHK_DOWNLOADS}} onchange="s('showDownloadsIcon', this)" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Show Settings Icon</div>
+              <div class="setting-desc">Settings gear button in toolbar</div>
+            </div>
+            <div class="setting-control">
+              <input type="checkbox" class="toggle" {{CHK_SETTINGSICON}} onchange="s('showSettingsIcon', this)" />
+            </div>
+          </div>
         </div>
       </div>
 

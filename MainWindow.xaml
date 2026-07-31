@@ -132,6 +132,9 @@
                                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                                     <Setter Property="Visibility" Value="Visible"/>
                                 </DataTrigger>
+                                <DataTrigger Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </TextBlock.Style>
@@ -210,6 +213,7 @@
                     <StackPanel Grid.Column="0" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="0,0,4,0">
                         <Button Click="GoBack_Click" Style="{DynamicResource IconBtn}"
+                                Visibility="{Binding Settings.ShowNavArrows, Converter={StaticResource BoolToVis}}"
                                 Width="26" Height="26" ToolTip="Back (Alt+Left)">
                             <Path Data="{StaticResource IconBack}"
                                   Stroke="{DynamicResource TextSecondary}"
@@ -218,6 +222,7 @@
                                   StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                         </Button>
                         <Button Click="GoForward_Click" Style="{DynamicResource IconBtn}"
+                                Visibility="{Binding Settings.ShowNavArrows, Converter={StaticResource BoolToVis}}"
                                 Width="26" Height="26" ToolTip="Forward (Alt+Right)">
                             <Path Data="{StaticResource IconForward}"
                                   Stroke="{DynamicResource TextSecondary}"
@@ -226,6 +231,7 @@
                                   StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                         </Button>
                         <Button Click="Refresh_Click" Style="{DynamicResource IconBtn}"
+                                Visibility="{Binding Settings.ShowRefreshButton, Converter={StaticResource BoolToVis}}"
                                 Width="26" Height="26" ToolTip="Refresh (F5)">
                             <Path Data="{StaticResource IconRefresh}"
                                   Fill="{DynamicResource TextSecondary}"
@@ -235,8 +241,7 @@
                     </StackPanel>
 
                     <!-- Horizontal tab strip — favicon pills -->
-                    <ListBox x:Name="TabList" Grid.Column="1"
-                             Style="{DynamicResource FaviconTabListStyle}"
+                    <ListBox x:Name="TabList"
                              SelectionChanged="TabList_SelectionChanged"
                              ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                              ScrollViewer.VerticalScrollBarVisibility="Disabled"
@@ -247,6 +252,16 @@
                              PreviewMouseMove="TabList_PreviewMouseMove"
                              Drop="TabList_Drop" AllowDrop="True"
                              ItemTemplate="{StaticResource TabItemTemplate}">
+                        <ListBox.Style>
+                            <Style TargetType="ListBox" BasedOn="{StaticResource FaviconTabListStyle}">
+                                <Setter Property="Grid.Column" Value="1"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Settings.AddressBarOnLeft}" Value="True">
+                                        <Setter Property="Grid.Column" Value="2"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.Style>
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Horizontal"/>
@@ -254,40 +269,57 @@
                         </ListBox.ItemsPanel>
                     </ListBox>
 
-                    <!-- URL domain — bare text, no background. Minimal. -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal"
-                                VerticalAlignment="Center" Margin="4,0,8,0"
-                                Cursor="Hand"
-                                MouseLeftButtonDown="UrlLabel_Click"
-                                ToolTip="Click to edit URL (Ctrl+L)">
-                        <Path x:Name="SecurityIcon"
-                              Data="{StaticResource IconGlobe}"
-                              Stroke="{DynamicResource TextMuted}"
-                              StrokeThickness="1" Width="10" Height="10"
-                              Stretch="Uniform" VerticalAlignment="Center"
-                              Margin="0,0,5,0"/>
-                        <TextBlock x:Name="UrlLabel"
-                                   Text="New Tab"
-                                   Foreground="{DynamicResource TextMuted}"
-                                   FontSize="11.5" FontFamily="{DynamicResource UIFont}"
-                                   VerticalAlignment="Center"
-                                   TextTrimming="CharacterEllipsis"
-                                   MaxWidth="200"/>
-                    </StackPanel>
+                    <!-- URL domain and New Tab (+) Grouping -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Grid.Column" Value="2"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Settings.AddressBarOnLeft}" Value="True">
+                                        <Setter Property="Grid.Column" Value="1"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        
+                        <!-- URL domain — bare text, no background. Minimal. -->
+                        <StackPanel Orientation="Horizontal"
+                                    VerticalAlignment="Center" Margin="4,0,8,0"
+                                    Cursor="Hand"
+                                    MouseLeftButtonDown="UrlLabel_Click"
+                                    ToolTip="Click to edit URL (Ctrl+L)">
+                            <Path x:Name="SecurityIcon"
+                                  Data="{StaticResource IconGlobe}"
+                                  Stroke="{DynamicResource TextMuted}"
+                                  StrokeThickness="1" Width="10" Height="10"
+                                  Stretch="Uniform" VerticalAlignment="Center"
+                                  Margin="0,0,5,0"/>
+                            <TextBlock x:Name="UrlLabel"
+                                       Text="New Tab"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       FontSize="11.5" FontFamily="{DynamicResource UIFont}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxWidth="200"/>
+                        </StackPanel>
 
-                    <!-- Action buttons: + New Tab, Search -->
-                    <StackPanel Grid.Column="3" Orientation="Horizontal"
-                                VerticalAlignment="Center" Margin="0,0,4,0">
+                        <!-- Action buttons: + New Tab -->
                         <Button Click="NewTab_Click" Style="{DynamicResource IconBtn}"
-                                Width="26" Height="26" ToolTip="New Tab (Ctrl+T)">
+                                Width="26" Height="26" ToolTip="New Tab (Ctrl+T)" Margin="0,0,4,0">
                             <Path Data="{StaticResource IconPlus}"
                                   Stroke="{DynamicResource TextSecondary}"
                                   StrokeThickness="1.4" Width="10" Height="10"
                                   Stretch="Uniform" StrokeStartLineCap="Round"
                                   StrokeEndLineCap="Round"/>
                         </Button>
+                    </StackPanel>
+
+                    <!-- Action buttons: Downloads, Settings -->
+                    <StackPanel Grid.Column="3" Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="0,0,4,0">
                         <!-- ──── Downloads Button ──── -->
-                        <Grid Width="26" Height="26" Margin="4,0" Cursor="Hand" ToolTip="Downloads (Ctrl+J)">
+                        <Grid Width="26" Height="26" Margin="4,0" Cursor="Hand" ToolTip="Downloads (Ctrl+J)"
+                              Visibility="{Binding Settings.ShowDownloadsIcon, Converter={StaticResource BoolToVis}}">
                             <Ellipse Width="24" Height="24" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" 
                                      Visibility="{Binding HasActiveDownloads, Converter={StaticResource BoolToVis}}" />
                             <Ellipse Width="24" Height="24" Stroke="#10B981" StrokeThickness="2" 
@@ -306,7 +338,7 @@
                                       Stretch="Uniform" StrokeStartLineCap="Round" StrokeLineJoin="Round" />
                             </Button>
                         </Grid>
-                        <Grid>
+                        <Grid Visibility="{Binding Settings.ShowSettingsIcon, Converter={StaticResource BoolToVis}}">
                             <Button Click="Settings_Click" Style="{DynamicResource IconBtn}"
                                     ToolTip="Settings" Width="26" Height="26" Margin="4,0" Cursor="Hand" FocusVisualStyle="{x:Null}">
                                 <Path Data="{StaticResource IconSettings}" 
