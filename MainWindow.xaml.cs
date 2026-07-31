@@ -993,8 +993,8 @@ public partial class MainWindow : Window
         if (key is "shortcut" or "shortcutReset")
             _shortcuts?.RebuildBindings(_vm.Settings.CustomShortcuts);
 
-        if (_engine.ActiveTab?.Url == InternalUrls.Settings)
-            _engine.NavigateToSettings(_engine.ActiveTab, _vm.Settings);
+        // Removed: Reloading the settings page here causes it to jump back to the General tab
+        // whenever the user changes any setting. The frontend UI updates itself.
 
         // Live-refresh new tab pages when shortcuts are added/removed
         if (key == "shortcuts")
