@@ -892,7 +892,7 @@ public sealed class TabEngine : IDisposable
             }
         };
 
-        wv.CoreWebView2.DownloadStarting += (_, e) =>
+        wv.CoreWebView2.DownloadStarting += async (_, e) =>
         {
             e.Handled = true; // We don't want the default download dialog
             var op = e.DownloadOperation;
@@ -903,12 +903,40 @@ public sealed class TabEngine : IDisposable
                 if (System.IO.File.Exists(idmPath))
                 {
                     e.Cancel = true;
+                    var uri = op.Uri;
+                    
+                    try
+                    {
+                        var referer = wv.CoreWebView2.Source ?? "";
+                        var cookieManager = wv.CoreWebView2.CookieManager;
+                        var cookies = await cookieManager.GetCookiesAsync(uri);
+                        var cookieHeader = string.Join("; ", cookies.Select(c => $"{c.Name}={c.Value}"));
+
+                        var idmType = Type.GetTypeFromProgID("IDMan.CIDMLinkTransmitter");
+                        if (idmType != null)
+                        {
+                            dynamic idm = Activator.CreateInstance(idmType)!;
+                            idm.SendLinkToIDM2(
+                                uri,
+                                referer,
+                                cookieHeader,
+                                "", "", "", "", "", 0, "", null
+                            );
+                            return;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"COM IDM failed: {ex.Message}");
+                    }
+                    
+                    // Fallback to CLI
                     try
                     {
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
                             FileName = idmPath,
-                            Arguments = $"/d \"{op.Uri}\"",
+                            Arguments = $"/d \"{uri}\"",
                             UseShellExecute = true
                         });
                     }
