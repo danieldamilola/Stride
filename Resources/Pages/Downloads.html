@@ -528,7 +528,7 @@
 
         function openFolder(id) {
             if (window.chrome?.webview) {
-                window.chrome.webview.postMessage(__T + 'download-show:' + id);
+                window.chrome.webview.postMessage(__T + 'download-folder:' + id);
             }
         } 
         

@@ -321,7 +321,15 @@ public sealed class WebMessageRouter
         var item = _downloadStore.Get(id);
         if (item?.State == DownloadState.Completed && System.IO.File.Exists(item.FilePath))
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(item.FilePath) { UseShellExecute = true });
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(item.FilePath) { UseShellExecute = true });
+            }
+            catch
+            {
+                // If there's no default application associated with the file or it fails to launch, fallback to opening the folder
+                _ = HandleDownloadFolder(id);
+            }
         }
         return Task.CompletedTask;
     }
