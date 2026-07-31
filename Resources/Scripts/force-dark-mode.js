@@ -31,27 +31,43 @@
         observer.observe(document, { childList: true, subtree: true });
     }
 
+    let retries = 0;
+
+    function removeFouc() {
+        const style = document.getElementById('stride-anti-fouc');
+        if (style && style.parentNode) {
+            style.parentNode.removeChild(style);
+        }
+    }
+
     function tryEnable() {
         if (typeof DarkReader === 'undefined' || !DarkReader.enable) {
+            if (retries > 100) { // 1 second timeout
+                console.warn('Stride: DarkReader failed to load within 1 second. Aborting force dark mode.');
+                removeFouc();
+                return;
+            }
+            retries++;
             setTimeout(tryEnable, 10);
             return;
         }
 
-        DarkReader.enable({
-            brightness: 100,
-            contrast: 100,
-            sepia: 0
-        });
-
-        // Allow one animation frame for DarkReader CSS to apply, then reveal document
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                const style = document.getElementById('stride-anti-fouc');
-                if (style && style.parentNode) {
-                    style.parentNode.removeChild(style);
-                }
+        try {
+            DarkReader.enable({
+                brightness: 100,
+                contrast: 100,
+                sepia: 0
             });
-        });
+        } catch (e) {
+            console.error('Stride: DarkReader.enable threw an error:', e);
+        } finally {
+            // Allow one animation frame for DarkReader CSS to apply, then reveal document
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    removeFouc();
+                });
+            });
+        }
     }
 
     // Call immediately to prevent white flash (FOUC)

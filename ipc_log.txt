@@ -4632,3 +4632,5 @@
 [IPC] Forwarding 'setting:showTabNames:true'
 [IPC] Received 'd23117733df54401a625928eda87d6e2:setting:showTabNames:false' from 'about:blank'
 [IPC] Forwarding 'setting:showTabNames:false'
+[IPC] Received 'f4df0a54653841eb9d99e58b2cf570db:setting:showTabNames:true' from 'about:blank'
+[IPC] Forwarding 'setting:showTabNames:true'
