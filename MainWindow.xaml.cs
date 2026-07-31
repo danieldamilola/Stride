@@ -399,6 +399,30 @@ public partial class MainWindow : Window
 
     // ───────────────────── Tab Events ─────────────────────
 
+    private void TabList_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        var scrollViewer = GetScrollViewer(TabList);
+        if (scrollViewer != null)
+        {
+            if (e.Delta > 0)
+                scrollViewer.LineLeft();
+            else
+                scrollViewer.LineRight();
+            e.Handled = true;
+        }
+    }
+
+    private ScrollViewer? GetScrollViewer(DependencyObject depObj)
+    {
+        if (depObj is ScrollViewer sv) return sv;
+        for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(depObj); i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(depObj, i);
+            var result = GetScrollViewer(child);
+            if (result != null) return result;
+        }
+        return null;
+    }
     private async void TabList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isUpdatingSelection) return;
