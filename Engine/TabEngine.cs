@@ -134,6 +134,8 @@ public sealed class TabEngine : IDisposable
             "--disable-domain-reliability " +
             "--disable-sync " +
             "--metrics-recording-only " +
+            "--renderer-process-limit=2 " + // Drastically cuts down memory by forcing Chromium to reuse renderer processes
+            "--process-per-site " + // Groups pages from the same site into the same process
             "--no-first-run";
 
         if (!smartScreenEnabled)
