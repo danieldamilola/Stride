@@ -9,7 +9,7 @@
     <RootNamespace>StrideBrowser</RootNamespace>
     <AssemblyName>Stride</AssemblyName>
     <ApplicationIcon>icons\stride.ico</ApplicationIcon>
-    <Version>1.0.3</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,14 +47,14 @@
     </Content>
   </ItemGroup>
 
-  <!-- App icons — copied to output for Window.Icon and taskbar -->
+  <!-- App icons - embedded as Resource for WPF single-file compatibility -->
   <ItemGroup>
-    <Content Include="icons\stride-browser-*.png">
+    <Resource Include="icons\stride-browser-*.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="icons\stride.ico">
+    </Resource>
+    <Resource Include="icons\stride.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </Resource>
   </ItemGroup>
 
 </Project>

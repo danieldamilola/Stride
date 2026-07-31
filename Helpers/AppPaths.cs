@@ -18,6 +18,7 @@ public static class AppPaths
     public static string HistoryFile => Path.Combine(Base, "history.json");
     public static string OneTabFile => Path.Combine(Base, "onetab.json");
     public static string SessionFile => Path.Combine(Base, "session.json");
+    public static string DownloadsFile => Path.Combine(Base, "downloads.json");
     public static string FaviconCacheDir => Path.Combine(Base, "favicons");
     public static string ExtensionsDir => Path.Combine(Base, "extensions");
     public static string WebViewDataDir => Path.Combine(Base, "WebView2");

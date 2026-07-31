@@ -2,11 +2,11 @@
 ; Requires Inno Setup 6+
 
 #define MyAppName "Stride"
-#define MyAppVersion "1.0.3"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "Daniel Damilola"
 #define MyAppURL "https://stride.browser"
 #define MyAppExeName "Stride.exe"
-#define MySourceDir "bin\Release\net9.0-windows\publish"
+#define MySourceDir "bin\Release\net9.0-windows\win-x64\publish"
 
 [Setup]
 AppId={{B8F2A9D1-3E7C-4A5B-9D6F-1C2E8F4A7B3D}
@@ -48,23 +48,11 @@ Name: "taskbarpin"; Description: "Pin to taskbar"; GroupDescription: "{cm:Additi
 [Files]
 ; Main application files
 Source: "{#MySourceDir}\Stride.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MySourceDir}\Stride.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MySourceDir}\Stride.deps.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MySourceDir}\Stride.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
-
-; Dependencies
-Source: "{#MySourceDir}\CommunityToolkit.Mvvm.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MySourceDir}\Microsoft.Extensions.DependencyInjection.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MySourceDir}\Microsoft.Extensions.DependencyInjection.Abstractions.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MySourceDir}\Microsoft.Web.WebView2.Core.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MySourceDir}\Microsoft.Web.WebView2.Wpf.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MySourceDir}\Microsoft.Web.WebView2.WinForms.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Native runtime
-Source: "{#MySourceDir}\runtimes\win-x64\native\*"; DestDir: "{app}\runtimes\win-x64\native"; Flags: ignoreversion recursesubdirs
+Source: "{#MySourceDir}\runtimes\win-x64\native\*"; DestDir: "{app}\runtimes\win-x64\native"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
 
-; Icons
-Source: "{#MySourceDir}\icons\*"; DestDir: "{app}\icons"; Flags: ignoreversion recursesubdirs
+; Resources
 Source: "{#MySourceDir}\Resources\*"; DestDir: "{app}\Resources"; Flags: ignoreversion recursesubdirs
 
 [Icons]

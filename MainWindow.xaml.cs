@@ -83,44 +83,8 @@ public partial class MainWindow : Window
         if (_vm.Settings.AccentColor != "#D4A574")
             ApplyAccentColor(_vm.Settings.AccentColor);
 
-        _downloadStore.Items.CollectionChanged += OnDownloadsCollectionChanged;
-        foreach (var item in _downloadStore.Items)
-            item.PropertyChanged += OnDownloadItemPropertyChanged;
-        UpdateDownloadActiveDot();
-
         Loaded += OnWindowLoaded;
     }
-
-    private void OnDownloadsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        if (e.NewItems != null)
-        {
-            foreach (DownloadItem item in e.NewItems)
-                item.PropertyChanged += OnDownloadItemPropertyChanged;
-        }
-        if (e.OldItems != null)
-        {
-            foreach (DownloadItem item in e.OldItems)
-                item.PropertyChanged -= OnDownloadItemPropertyChanged;
-        }
-        UpdateDownloadActiveDot();
-    }
-
-    private void OnDownloadItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(DownloadItem.State))
-            UpdateDownloadActiveDot();
-    }
-
-    private void UpdateDownloadActiveDot()
-    {
-        Dispatcher.InvokeAsync(() =>
-        {
-            bool hasActive = _downloadStore.Items.Any(i => i.State == DownloadState.InProgress);
-            DownloadActiveDot.Visibility = hasActive ? Visibility.Visible : Visibility.Collapsed;
-        });
-    }
-
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);

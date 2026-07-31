@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:StrideBrowser.Controls"
         Title="Stride"
-        Icon="icons/stride.ico"
+        Icon="pack://application:,,,/icons/stride.ico"
         Width="1280" Height="800"
         MinWidth="600" MinHeight="400"
         WindowStyle="None"
@@ -35,7 +35,7 @@
                 <!-- Favicon — 20×20 area with 16×16 icon -->
                 <Grid Grid.Column="1" Width="20" Height="20" VerticalAlignment="Center">
                     <!-- Default Stride icon — greyed out, hidden when site favicon loads -->
-                    <Image Source="icons/stride-browser-32x32.png"
+                    <Image Source="pack://application:,,,/icons/stride-browser-32x32.png"
                            Width="14" Height="14" Opacity="0.3"
                            RenderOptions.BitmapScalingMode="HighQuality"
                            HorizontalAlignment="Center"
@@ -286,17 +286,25 @@
                                   Stretch="Uniform" StrokeStartLineCap="Round"
                                   StrokeEndLineCap="Round"/>
                         </Button>
-                        <Grid>
-                            <Button Click="Downloads_Click" Style="{DynamicResource IconBtn}"
-                                    ToolTip="Downloads (Ctrl+J)" Width="26" Height="26" Margin="4,0" Cursor="Hand" FocusVisualStyle="{x:Null}">
+                        <!-- ──── Downloads Button ──── -->
+                        <Grid Width="26" Height="26" Margin="4,0" Cursor="Hand" ToolTip="Downloads (Ctrl+J)">
+                            <Ellipse Width="24" Height="24" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" 
+                                     Visibility="{Binding HasActiveDownloads, Converter={StaticResource BoolToVis}}" />
+                            <Ellipse Width="24" Height="24" Stroke="#10B981" StrokeThickness="2" 
+                                     StrokeDashArray="{Binding ActiveDownloadsProgress, Converter={StaticResource ProgressToDashArray}}"
+                                     StrokeDashCap="Round"
+                                     RenderTransformOrigin="0.5,0.5" 
+                                     Visibility="{Binding HasActiveDownloads, Converter={StaticResource BoolToVis}}">
+                                <Ellipse.RenderTransform>
+                                    <RotateTransform Angle="-90"/>
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
+                            <Button Click="Downloads_Click" Style="{DynamicResource IconBtn}" Width="26" Height="26" FocusVisualStyle="{x:Null}">
                                 <Path Data="{StaticResource IconDownload}" 
                                       Stroke="{DynamicResource TextSecondary}" Fill="Transparent"
                                       StrokeThickness="1.4" Width="12" Height="12" 
                                       Stretch="Uniform" StrokeStartLineCap="Round" StrokeLineJoin="Round" />
                             </Button>
-                            <Ellipse x:Name="DownloadActiveDot" Width="6" Height="6" 
-                                     Fill="#10B981" HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                     Margin="0,4,4,0" Visibility="Collapsed" IsHitTestVisible="False"/>
                         </Grid>
                         <Grid>
                             <Button Click="Settings_Click" Style="{DynamicResource IconBtn}"

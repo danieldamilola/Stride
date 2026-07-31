@@ -21,10 +21,86 @@ public sealed partial class BrowserViewModel : ObservableObject
     [ObservableProperty]
     private bool _isLoading;
 
-    public BrowserViewModel(BrowserSettings settings, NavigationService navigation)
+    [ObservableProperty]
+    private bool _hasActiveDownloads;
+
+    [ObservableProperty]
+    private double _activeDownloadsProgress;
+
+    public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore)
     {
         Settings = settings;
         _navigation = navigation;
+        
+        downloadStore.Items.CollectionChanged += (s, e) => 
+        {
+            if (e.NewItems != null)
+            {
+                foreach (DownloadItem item in e.NewItems)
+                    item.PropertyChanged += OnDownloadItemChanged;
+            }
+            if (e.OldItems != null)
+            {
+                foreach (DownloadItem item in e.OldItems)
+                    item.PropertyChanged -= OnDownloadItemChanged;
+            }
+            UpdateDownloadProgress(downloadStore.Items);
+        };
+        
+        foreach (var item in downloadStore.Items)
+            item.PropertyChanged += OnDownloadItemChanged;
+            
+        UpdateDownloadProgress(downloadStore.Items);
+
+        void OnDownloadItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(DownloadItem.ReceivedBytes) or nameof(DownloadItem.TotalBytes) or nameof(DownloadItem.State))
+            {
+                UpdateDownloadProgress(downloadStore.Items);
+            }
+        }
+    }
+
+    private void UpdateDownloadProgress(IEnumerable<DownloadItem> items)
+    {
+        var active = items.Where(i => i.State == DownloadState.InProgress).ToList();
+        HasActiveDownloads = active.Count > 0;
+
+        if (!HasActiveDownloads)
+        {
+            ActiveDownloadsProgress = 0;
+            return;
+        }
+
+        long totalBytes = 0;
+        long receivedBytes = 0;
+        bool allUnknown = true;
+
+        foreach (var item in active)
+        {
+            if (item.TotalBytes > 0)
+            {
+                totalBytes += item.TotalBytes;
+                receivedBytes += item.ReceivedBytes;
+                allUnknown = false;
+            }
+            else
+            {
+                // If we don't know the size, just add some arbitrary amount so the progress bar isn't empty
+                totalBytes += 100;
+                receivedBytes += 10; 
+            }
+        }
+
+        if (allUnknown)
+        {
+            // Indeterminate-like tiny sliver
+            ActiveDownloadsProgress = 0.1;
+        }
+        else
+        {
+            ActiveDownloadsProgress = (double)receivedBytes / totalBytes;
+        }
     }
 
     /// <summary>Resolves a raw input string into a URL.</summary>

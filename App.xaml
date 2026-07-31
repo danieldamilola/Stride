@@ -1,16 +1,15 @@
 <Application x:Class="StrideBrowser.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:StrideBrowser.Converters">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Themes/DarkTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- ═══════════════════════════════════════════════════════ -->
-            <!--  CONVERTERS                                            -->
-            <!-- ═══════════════════════════════════════════════════════ -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <conv:ProgressToDashArrayConverter x:Key="ProgressToDashArray"/>
 
             <!-- ═══════════════════════════════════════════════════════ -->
             <!--  TYPOGRAPHY                                            -->

@@ -911,7 +911,12 @@ public sealed class TabEngine : IDisposable
                             item.State = Models.DownloadState.InProgress;
                             break;
                         case Microsoft.Web.WebView2.Core.CoreWebView2DownloadState.Interrupted:
-                            item.State = Models.DownloadState.Failed;
+                            if (op.InterruptReason == Microsoft.Web.WebView2.Core.CoreWebView2DownloadInterruptReason.UserPaused)
+                                item.State = Models.DownloadState.Paused;
+                            else if (op.InterruptReason == Microsoft.Web.WebView2.Core.CoreWebView2DownloadInterruptReason.UserCanceled)
+                                item.State = Models.DownloadState.Cancelled;
+                            else
+                                item.State = Models.DownloadState.Failed;
                             break;
                         case Microsoft.Web.WebView2.Core.CoreWebView2DownloadState.Completed:
                             item.State = Models.DownloadState.Completed;
