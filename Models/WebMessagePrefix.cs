@@ -25,4 +25,5 @@ public static class WebMessagePrefix
     public const string DownloadCancel = "download-cancel:";
     public const string DownloadClear = "download-clear";
     public const string FocusSettings = "focus-settings";
+    public const string TCLensGetText = "tclens-get-text:";
 }

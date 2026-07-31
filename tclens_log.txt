@@ -1,0 +1,443 @@
+LaunchTCLensAsync triggered at 7/28/2026 4:57:28 PM
+Found 3 extensions
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:57:28 PM
+Found 3 extensions
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:57:28 PM
+Found 3 extensions
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:57:29 PM
+Found 3 extensions
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:57:29 PM
+Found 3 extensions
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:57:30 PM
+Found 3 extensions
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:59:27 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:59:30 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:59:30 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:59:31 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:59:31 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:59:32 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:59:32 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:59:32 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:59:34 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 4:59:34 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:02:57 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:02:57 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:02:57 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:02:59 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:02:59 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:02:59 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:02:59 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:02:59 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:00 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:00 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:00 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:00 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:01 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+LaunchTCLensAsync triggered at 7/28/2026 5:03:02 PM
+Found 3 extensions
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens not found in loaded extensions
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 3 extensions
+InitializeAsync tcLens exists? False
+InitializeAsync: calling EnsureTCLensDownloadedAsync
+InitializeAsync: EnsureTCLensDownloadedAsync returned C:\Users\Daniel\AppData\Local\StrideBrowser\extensions\T-C-main\T-C-main
+LaunchTCLensAsync triggered at 7/28/2026 5:04:09 PM
+Found 4 extensions
+- T&C Lens (ID: cikegidcomblenollcnckgandckememo)
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens found, ID: cikegidcomblenollcnckgandckememo, opening URL: extension://cikegidcomblenollcnckgandckememo/options/options.html
+LaunchTCLensAsync triggered at 7/28/2026 5:04:25 PM
+Found 4 extensions
+- T&C Lens (ID: cikegidcomblenollcnckgandckememo)
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens found, ID: cikegidcomblenollcnckgandckememo, opening URL: extension://cikegidcomblenollcnckgandckememo/options/options.html
+LaunchTCLensAsync triggered at 7/28/2026 5:04:29 PM
+Found 4 extensions
+- T&C Lens (ID: cikegidcomblenollcnckgandckememo)
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens found, ID: cikegidcomblenollcnckgandckememo, opening URL: extension://cikegidcomblenollcnckgandckememo/options/options.html
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 3 extensions
+InitializeAsync tcLens exists? False
+InitializeAsync: calling EnsureTCLensDownloadedAsync
+ExtensionManager: checking local T-C Lens zip at C:\dev\SpurBrowser\bin\Debug\net9.0-windows\Resources\Extensions\T-C-main.zip
+ExtensionManager: T-C extracted to C:\Users\Daniel\AppData\Local\StrideBrowser\extensions\T-C-main\T-C-main
+InitializeAsync: EnsureTCLensDownloadedAsync returned C:\Users\Daniel\AppData\Local\StrideBrowser\extensions\T-C-main\T-C-main
+LaunchTCLensAsync triggered at 7/28/2026 5:05:41 PM
+Found 4 extensions
+- T&C Lens (ID: cikegidcomblenollcnckgandckememo)
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens found, ID: cikegidcomblenollcnckgandckememo, opening URL: extension://cikegidcomblenollcnckgandckememo/options/options.html
+LaunchTCLensAsync triggered at 7/28/2026 5:05:51 PM
+Found 4 extensions
+- T&C Lens (ID: cikegidcomblenollcnckgandckememo)
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens found, ID: cikegidcomblenollcnckgandckememo, opening URL: extension://cikegidcomblenollcnckgandckememo/options/options.html
+LaunchTCLensAsync triggered at 7/28/2026 5:06:00 PM
+Found 4 extensions
+- T&C Lens (ID: cikegidcomblenollcnckgandckememo)
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens found, ID: cikegidcomblenollcnckgandckememo, opening URL: extension://cikegidcomblenollcnckgandckememo/options/options.html
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+InitializeAsync tcLens exists? True
+LaunchTCLensAsync triggered at 7/28/2026 5:07:17 PM
+Found 4 extensions
+- T&C Lens (ID: cikegidcomblenollcnckgandckememo)
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens found, ID: cikegidcomblenollcnckgandckememo, opening URL: extension://cikegidcomblenollcnckgandckememo/options/options.html
+LaunchTCLensAsync triggered at 7/28/2026 5:07:38 PM
+Found 4 extensions
+- T&C Lens (ID: cikegidcomblenollcnckgandckememo)
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens found, ID: cikegidcomblenollcnckgandckememo, opening URL: extension://cikegidcomblenollcnckgandckememo/options/options.html
+LaunchTCLensAsync triggered at 7/28/2026 5:07:42 PM
+Found 4 extensions
+- T&C Lens (ID: cikegidcomblenollcnckgandckememo)
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens found, ID: cikegidcomblenollcnckgandckememo, opening URL: extension://cikegidcomblenollcnckgandckememo/options/options.html
+LaunchTCLensAsync triggered at 7/28/2026 5:07:52 PM
+Found 4 extensions
+- T&C Lens (ID: cikegidcomblenollcnckgandckememo)
+- Microsoft Clipboard Extension (ID: dgiklkfkllikcanfonkcabmbdfmgleag)
+- uBlock Origin (ID: hpjlapjfembngcjlodbpceepeafihiol)
+- Microsoft Edge PDF Viewer (ID: mhjfbmdgcfjbbpaeojofohoefgiehjai)
+TCLens found, ID: cikegidcomblenollcnckgandckememo, opening URL: extension://cikegidcomblenollcnckgandckememo/options/options.html
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+InitializeAsync tcLens exists? True
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+InitializeAsync tcLens exists? True
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions
+TabEngine: _extensionsLoaded was false, setting to true
+TabEngine: about to call ExtensionManager.InitializeAsync
+InitializeAsync started
+InitializeAsync found 4 extensions

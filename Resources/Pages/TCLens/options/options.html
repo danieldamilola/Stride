@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>T&C Lens</title>
+    <link rel="stylesheet" href="options.css" />
+    <script type="module" src="options.js?v=2"></script>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <div class="brand">T&C Lens</div>
+        <div class="nav-links">
+          <button
+            data-view-button="dashboard-view"
+            class="nav-button nav-button--active"
+          >
+            Dashboard
+          </button>
+          <button data-view-button="settings-view" class="nav-button">
+            Settings
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <!-- ── DASHBOARD VIEW ───────────────────────────────── -->
+      <section id="dashboard-view" class="view">
+        <h1 class="page-title">Inspect</h1>
+
+        <div class="status-grid">
+          <div class="status-cell">
+            <div class="cell-label">
+              Target
+              <span id="target-status" class="status-dot"></span>
+            </div>
+            <div id="target-title" class="cell-value">No page selected</div>
+            <div id="target-url" class="cell-sub">
+              Open a Terms or Privacy page, then click the extension icon.
+            </div>
+          </div>
+
+          <div class="status-cell">
+            <div class="cell-label">
+              Provider
+              <span id="api-status" class="status-dot"></span>
+            </div>
+            <div id="provider-name" class="cell-value">Google Gemini</div>
+            <div id="provider-status" class="cell-sub">
+              No API key configured.
+            </div>
+            <button
+              id="btn-open-settings"
+              class="btn-ghost"
+              style="margin-top: 14px"
+              type="button"
+            >
+              Configure →
+            </button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btn-analyze" class="btn" type="button">
+            Run Analysis
+          </button>
+          <div id="last-analysis" class="actions-meta"></div>
+        </div>
+
+        <div id="dashboard-message" class="message hidden" role="status"></div>
+      </section>
+
+      <!-- ── ANALYSIS VIEW ────────────────────────────────── -->
+      <section id="analysis-view" class="view hidden">
+        <div class="analysis-nav">
+          <button id="btn-back-dashboard" class="btn-ghost" type="button">
+            ← Back
+          </button>
+          <div style="display: flex; gap: 16px">
+            <button id="btn-export" class="btn-export" type="button">
+              Export text
+            </button>
+            <button id="btn-reanalyze" class="btn-ghost" type="button">
+              Re-analyze
+            </button>
+          </div>
+        </div>
+        <div id="analysis-results"></div>
+      </section>
+
+      <!-- ── SETTINGS VIEW ────────────────────────────────── -->
+      <section id="settings-view" class="view hidden">
+        <h1 class="page-title">Settings</h1>
+
+        <form id="settings-form" class="settings-form">
+          <div class="form-group">
+            <label class="form-label" for="provider-select">Provider</label>
+            <select id="provider-select" name="provider"></select>
+          </div>
+
+          <!-- Coming soon banner — shown when T&C Lens AI is selected -->
+          <div id="coming-soon-banner" class="coming-soon hidden">
+            <div class="coming-soon-badge">Coming Soon</div>
+            <p class="coming-soon-title">T&C Lens AI</p>
+            <p class="coming-soon-description">
+              No API key needed. We handle everything — just click analyze.<br />
+              A simple, affordable hosted option for everyone.
+            </p>
+            <p class="coming-soon-cta">
+              Want early access? <a href="https://github.com/danieldamilola/T-C" target="_blank" rel="noopener noreferrer">Star the repo</a> to stay updated.
+            </p>
+          </div>
+
+          <!-- BYOK fields — hidden when T&C Lens AI is selected -->
+          <div id="byok-fields">
+          <div class="form-group">
+            <label class="form-label" for="model-select">Model</label>
+            <select id="model-select" name="model"></select>
+            <button
+              id="btn-refresh-models"
+              class="btn-ghost"
+              style="margin-top: 6px"
+              type="button"
+            >
+              Refresh available models
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="api-key-input">API Key</label>
+            <input
+              id="api-key-input"
+              name="apiKey"
+              type="password"
+              autocomplete="off"
+              placeholder="Paste your key here"
+            />
+          </div>
+
+          <div class="form-footer">
+            <button class="btn" type="submit">Save</button>
+            <span id="cost-estimate" class="cost-estimate"></span>
+          </div>
+          </div>
+
+          <div id="settings-message" class="message hidden" role="status"></div>
+        </form>
+
+        <div class="history-section">
+          <div class="history-header">
+            <span class="history-header-title">History</span>
+            <button id="btn-clear-history" class="btn-ghost" type="button">
+              Clear all
+            </button>
+          </div>
+          <div id="history-list" class="history-list"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ── LOADING OVERLAY ──────────────────────────────────── -->
+    <div
+      id="loading-overlay"
+      class="loading-overlay hidden"
+      role="status"
+      aria-live="polite"
+    >
+      <div class="loading-spinner"></div>
+      <div id="loading-message" class="loading-text">Analyzing…</div>
+    </div>
+
+    <!-- ── CONFIRM MODAL ────────────────────────────────────── -->
+    <div
+      id="confirm-overlay"
+      class="confirm-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-message"
+    >
+      <div class="confirm-box">
+        <p id="confirm-message" class="confirm-message"></p>
+        <div class="confirm-actions">
+          <button id="confirm-no" class="btn-ghost" type="button">Cancel</button>
+          <button id="confirm-yes" class="btn" type="button">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

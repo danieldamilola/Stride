@@ -1,0 +1,6 @@
+[IPC] Received 'tclens-get-text:' from 'https://local.assets/TCLens/options/options.html'
+[IPC] Forwarding 'tclens-get-text:'
+[IPC] Received 'tclens-get-text:' from 'https://local.assets/TCLens/options/options.html'
+[IPC] Forwarding 'tclens-get-text:'
+[IPC] Received 'tclens-get-text:' from 'https://local.assets/TCLens/options/options.html'
+[IPC] Forwarding 'tclens-get-text:'

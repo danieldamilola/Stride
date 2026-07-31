@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "T&C Lens",
+  "version": "1.0.0",
+  "description": "AI-powered Terms & Conditions analyzer. Understand what you're agreeing to.",
+  "permissions": ["activeTab", "contextMenus", "scripting", "storage", "tabs"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; connect-src https://api.openai.com https://api.groq.com https://api.deepseek.com https://api.mistral.ai https://openrouter.ai https://api.x.ai https://api.together.xyz https://api.anthropic.com https://generativelanguage.googleapis.com; object-src 'self'"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tc-lens@danieldamilola.com",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "T&C Lens — Analyze this page"
+  }
+}

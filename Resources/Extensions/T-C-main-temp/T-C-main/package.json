@@ -1,0 +1,13 @@
+{
+  "name": "tc-lens",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-powered Terms & Conditions analyzer browser extension.",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "eslint": "^10.4.1"
+  }
+}

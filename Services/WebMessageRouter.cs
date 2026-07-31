@@ -64,6 +64,7 @@ public sealed class WebMessageRouter
             [WebMessagePrefix.DownloadOpen] = HandleDownloadOpen,
             [WebMessagePrefix.DownloadFolder] = HandleDownloadFolder,
             [WebMessagePrefix.DownloadCancel] = HandleDownloadCancel,
+            [WebMessagePrefix.TCLensGetText] = HandleTCLensGetText,
         };
 
         _exactHandlers = new Dictionary<string, Func<Task>>
@@ -134,15 +135,6 @@ public sealed class WebMessageRouter
                 _vm.Settings.CustomShortcuts[subParts[0]] = subParts[1];
                 _settingsStore.Save(_vm.Settings);
                 SettingChanged?.Invoke("shortcut", subParts[0]);
-
-                if (subParts[0] == "TCLens")
-                {
-                    var coreWv = _engine.GetCoreWebView2();
-                    if (coreWv != null)
-                    {
-                        _ = _extensionManager.UpdateTCLensShortcutAsync(coreWv, subParts[1]);
-                    }
-                }
             }
             return;
         }
@@ -153,16 +145,6 @@ public sealed class WebMessageRouter
             _vm.Settings.CustomShortcuts.Remove(value);
             _settingsStore.Save(_vm.Settings);
             SettingChanged?.Invoke("shortcutReset", value);
-
-            if (value == "TCLens")
-            {
-                var coreWv = _engine.GetCoreWebView2();
-                if (coreWv != null)
-                {
-                    var def = StrideBrowser.Services.Input.ShortcutDefaults.All.FirstOrDefault(x => x.Name == "TCLens");
-                    if (def != null) _ = _extensionManager.UpdateTCLensShortcutAsync(coreWv, def.DefaultCombo);
-                }
-            }
             return;
         }
 
@@ -440,5 +422,24 @@ public sealed class WebMessageRouter
         id = payload[..sep];
         value = payload[(sep + 1)..];
         return true;
+    }
+
+    private async Task HandleTCLensGetText(string _)
+    {
+        var activeTab = _engine.ActiveTab;
+        if (activeTab == null) return;
+        var wv = _engine.GetCoreWebView2();
+        if (wv == null) return;
+
+        var payload = new Dictionary<string, string>
+        {
+            ["type"] = "tclens-text",
+            ["text"] = MainWindow.PendingTCLensText ?? "",
+            ["url"] = MainWindow.PendingTCLensUrl ?? "",
+            ["title"] = MainWindow.PendingTCLensTitle ?? ""
+        };
+        
+        var jsonPayload = JsonSerializer.Serialize(payload);
+        await wv.ExecuteScriptAsync($"if (window.tclensProcessInjection) window.tclensProcessInjection({jsonPayload});");
     }
 }

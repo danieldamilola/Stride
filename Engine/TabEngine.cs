@@ -464,15 +464,22 @@ public sealed class TabEngine : IDisposable
 
         if (!_extensionsLoaded)
         {
+            System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", "TabEngine: _extensionsLoaded was false, setting to true\n");
             _extensionsLoaded = true;
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await _extensionManager.InitializeAsync(wv.CoreWebView2);
+                    System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", "TabEngine: about to call ExtensionManager.InitializeAsync\n");
+                    
+                    // MUST dispatch to UI thread!
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
+                        await _extensionManager.InitializeAsync(wv.CoreWebView2);
+                    });
                 }
                 catch (Exception ex)
                 {
+                    System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"TabEngine Extension init failed: {ex}\n");
                     Trace.WriteLine($"Extension init failed: {ex.Message}");
                 }
             });
@@ -557,7 +564,8 @@ public sealed class TabEngine : IDisposable
             {
                 var scheme = parsedCustomUri.Scheme.ToLowerInvariant();
                 if (scheme != "http" && scheme != "https" && scheme != "file" && scheme != "data" &&
-                    scheme != "about" && scheme != "edge" && scheme != "chrome" && scheme != "stride" && scheme != "javascript")
+                    scheme != "about" && scheme != "edge" && scheme != "chrome" && scheme != "stride" && scheme != "javascript" &&
+                    scheme != "extension" && scheme != "chrome-extension")
                 {
                     e.Cancel = true;
                     _dispatcher.InvokeAsync(() =>
@@ -730,20 +738,39 @@ public sealed class TabEngine : IDisposable
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
 
-            // SECURITY: only accept privileged IPC commands from our own internal pages.
-            // Internal pages are loaded via NavigateToString (origin = about:blank) so we
-            // cannot gate on origin. Instead every internal page embeds a per-session secret
-            // token; messages that don't start with that token are silently dropped.
             var msg = e.TryGetWebMessageAsString();
-            if (string.IsNullOrEmpty(msg) || !msg.StartsWith(_ipcToken + ":", StringComparison.Ordinal))
+            var src = e.Source ?? "null";
+            System.IO.File.AppendAllText("ipc_log.txt", $"[IPC] Received '{msg}' from '{src}'\n");
+
+            if (string.IsNullOrEmpty(msg)) return;
+
+            bool isTrustedLocalAsset = false;
+            try 
+            { 
+                if (e.Source.StartsWith("http://local.assets/", StringComparison.OrdinalIgnoreCase) || 
+                    e.Source.StartsWith("https://local.assets/", StringComparison.OrdinalIgnoreCase)) 
+                {
+                    isTrustedLocalAsset = true; 
+                }
+            } catch { }
+
+            if (!isTrustedLocalAsset)
             {
-                Trace.WriteLine($"WebMessage dropped: missing or invalid IPC token.");
-                return;
+                // SECURITY: Internal pages loaded via NavigateToString (origin = about:blank) embed a per-session secret token
+                if (!msg.StartsWith(_ipcToken + ":", StringComparison.Ordinal))
+                {
+                    System.IO.File.AppendAllText("ipc_log.txt", $"[IPC] Dropped because not trusted and missing token.\n");
+                    return;
+                }
+                // Strip the token prefix before forwarding the payload
+                msg = msg[(_ipcToken.Length + 1)..];
             }
-            // Strip the token prefix before forwarding the payload
-            msg = msg[(_ipcToken.Length + 1)..];
+
             if (!string.IsNullOrEmpty(msg))
+            {
+                System.IO.File.AppendAllText("ipc_log.txt", $"[IPC] Forwarding '{msg}'\n");
                 _dispatcher.Invoke(() => WebMessageReceived?.Invoke(msg));
+            }
         };
 
         wv.CoreWebView2.DownloadStarting += (_, e) =>

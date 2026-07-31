@@ -242,19 +242,25 @@ public partial class MainWindow : Window
 
     private async Task LaunchTCLensAsync()
     {
+        System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"LaunchTCLensAsync triggered at {DateTime.Now}\n");
         var wv = _engine.GetCoreWebView2();
         if (wv != null)
         {
             try
             {
                 var exts = await wv.Profile.GetBrowserExtensionsAsync();
+                System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"Found {exts.Count} extensions\n");
+                foreach (var ex in exts) {
+                    System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"- {ex.Name} (ID: {ex.Id})\n");
+                }
                 var tcLens = exts.FirstOrDefault(e => e.Name.Contains("T&C Lens", StringComparison.OrdinalIgnoreCase) || e.Name.Contains("T-C", StringComparison.OrdinalIgnoreCase));
                 if (tcLens != null)
                 {
-                    var url = $"chrome-extension://{tcLens.Id}/options/options.html";
+                    var url = $"extension://{tcLens.Id}/options/options.html";
+                    System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"TCLens found, ID: {tcLens.Id}, opening URL: {url}\n");
                     
                     // Look for existing tab
-                    var existing = _engine.Tabs.FirstOrDefault(t => t.Url != null && t.Url.StartsWith($"chrome-extension://{tcLens.Id}/options"));
+                    var existing = _engine.Tabs.FirstOrDefault(t => t.Url != null && t.Url.StartsWith($"extension://{tcLens.Id}/options"));
                     if (existing != null)
                     {
                         _engine.SwitchTo(existing);
@@ -266,9 +272,14 @@ public partial class MainWindow : Window
                         await _engine.ActivateAsync(tab);
                     }
                 }
+                else
+                {
+                    System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"TCLens not found in loaded extensions\n");
+                }
             }
             catch (Exception ex)
             {
+                System.IO.File.AppendAllText("c:\\dev\\SpurBrowser\\tclens_log.txt", $"Exception: {ex.Message}\n");
                 System.Diagnostics.Trace.WriteLine($"Failed to launch T&C Lens: {ex.Message}");
             }
         }
@@ -522,7 +533,38 @@ public partial class MainWindow : Window
         }
     }
 
-    // ───────────────────── Helpers ─────────────────────
+    public static string PendingTCLensText = "";
+    public static string PendingTCLensUrl = "";
+    public static string PendingTCLensTitle = "";
+
+    private async Task HandleNativeTCLensShortcutAsync()
+    {
+        try
+        {
+            var activeTab = _engine.ActiveTab;
+            if (activeTab == null) return;
+            var wv = _engine.GetCoreWebView2();
+            if (wv == null) return;
+
+            var rawJson = await wv.ExecuteScriptAsync("document.body.innerText");
+            if (!string.IsNullOrEmpty(rawJson) && rawJson != "null")
+            {
+                PendingTCLensText = System.Text.Json.JsonSerializer.Deserialize<string>(rawJson) ?? "";
+            }
+            PendingTCLensUrl = activeTab.Url ?? "";
+            PendingTCLensTitle = activeTab.Title ?? "";
+
+            var newTab = _engine.CreateTab("http://local.assets/TCLens/options/options.html");
+            _engine.SwitchTo(newTab);
+            await _engine.ActivateAsync(newTab);
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"HandleNativeTCLensShortcutAsync failed: {ex}");
+        }
+    }
+
+    // ───────────────────── Interop Helpers ─────────────────────
 
     private bool _isCommandBarOpen;
 
@@ -928,13 +970,19 @@ public partial class MainWindow : Window
                 var modifiers = Keyboard.Modifiers;
                 var actualKey = e.Key == Key.System ? e.SystemKey : e.Key;
                 
+                if (modifiers == ModifierKeys.Alt && actualKey == Key.T)
+                {
+                    await HandleNativeTCLensShortcutAsync();
+                    e.Handled = true;
+                    return;
+                }
+
                 var handled = await _shortcuts.TryExecuteAsync(modifiers, actualKey);
                 if (handled)
                 {
                     e.Handled = true;
                     return;
                 }
-
                 if (modifiers == ModifierKeys.Control && actualKey >= Key.D1 && actualKey <= Key.D9)
                 {
                     var tabIndex = actualKey - Key.D1;
