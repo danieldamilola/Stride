@@ -467,10 +467,10 @@ public partial class MainWindow : Window
             tab.IsPinned = !tab.IsPinned;
             if (tab.IsPinned)
             {
-                var index = _tabEngine.Tabs.IndexOf(tab);
+                var index = _engine.Tabs.IndexOf(tab);
                 if (index > 0)
                 {
-                    _tabEngine.Tabs.Move(index, 0);
+                    _engine.Tabs.Move(index, 0);
                 }
             }
         };
