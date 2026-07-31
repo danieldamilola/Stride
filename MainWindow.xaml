@@ -123,9 +123,11 @@
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Opacity" Value="0.5"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                                     <Setter Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Opacity" Value="1.0"/>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
                                     <Setter Property="Visibility" Value="Visible"/>
@@ -437,14 +439,75 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <TextBox x:Name="AddressBar"
+                             Grid.Row="0"
                              Style="{DynamicResource CommandBarInputStyle}"
                              Text="{Binding AddressText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              KeyDown="AddressBar_KeyDown"
                              GotFocus="AddressBar_GotFocus"
                              LostFocus="AddressBar_LostFocus"
-                             PreviewMouseLeftButtonDown="AddressBar_PreviewMouseDown"/>
+                             PreviewMouseLeftButtonDown="AddressBar_PreviewMouseDown"
+                             TextChanged="AddressBar_TextChanged"/>
+
+                    <!-- Suggestions Dropdown -->
+                    <ListBox x:Name="SuggestionsList"
+                             Grid.Row="1"
+                             ItemsSource="{Binding Suggestions}"
+                             SelectedIndex="{Binding SelectedSuggestionIndex, Mode=TwoWay}"
+                             Visibility="{Binding ShowSuggestions, Converter={StaticResource BoolToVis}}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Margin="0,4,0,4"
+                             MaxHeight="300"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             KeyboardNavigation.DirectionalNavigation="Cycle"
+                             PreviewMouseLeftButtonUp="SuggestionsList_MouseUp">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="12,7"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="6"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#1AFFFFFF"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="#2AFFFFFF"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconSearch}"
+                                          Fill="{DynamicResource TextMuted}"
+                                          Width="12" Height="12"
+                                          Margin="0,0,10,0"
+                                          VerticalAlignment="Center"
+                                          Stretch="Uniform"/>
+                                    <TextBlock Text="{Binding}"
+                                               FontSize="13"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Grid>
             </Border>
         </Grid>

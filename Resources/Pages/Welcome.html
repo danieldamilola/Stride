@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Stride</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-base: #111113;
+            --bg-surface: #1C1C1F;
+            --text-main: #E8E4DF;
+            --text-muted: #A5A3A0;
+            --accent: #E3B341;
+            --border: #2A2A2E;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: 'Outfit', -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            text-align: center;
+            background: var(--bg-surface);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        p {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--accent);
+            color: #111113;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(227, 179, 65, 0.3);
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .option-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-card:hover {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .option-card.selected {
+            border-color: var(--accent);
+            background: rgba(227, 179, 65, 0.1);
+        }
+
+        .option-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .option-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <button class="close-btn" onclick="closeSetup()">&times;</button>
+
+        <div id="step-1" class="step active">
+            <h1>Welcome to Stride</h1>
+            <p>A beautifully minimalist browser designed to keep you focused. Let's get things set up exactly how you like them.</p>
+            <button class="btn" onclick="nextStep(2)">Get Started</button>
+        </div>
+
+        <div id="step-2" class="step">
+            <h1>Choose your look</h1>
+            <p>Select a theme for the browser interface.</p>
+            
+            <div class="option-grid">
+                <div class="option-card" onclick="setTheme(1, this)">
+                    <div class="option-icon">☀️</div>
+                    <div class="option-label">Light</div>
+                </div>
+                <div class="option-card" onclick="setTheme(2, this)">
+                    <div class="option-icon">🌙</div>
+                    <div class="option-label">Dark</div>
+                </div>
+                <div class="option-card selected" onclick="setTheme(0, this)">
+                    <div class="option-icon">💻</div>
+                    <div class="option-label">System</div>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="finishSetup()">Start Browsing</button>
+        </div>
+    </div>
+
+    <script>
+        let settings = {
+            isFirstRun: false,
+            appTheme: 0
+        };
+
+        // Initialize from C#
+        if (window.initialSettings) {
+            settings = window.initialSettings;
+            settings.isFirstRun = false; // We flip it so it doesn't show again
+        }
+
+        function nextStep(step) {
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+            document.getElementById('step-' + step).classList.add('active');
+        }
+
+        function setTheme(val, el) {
+            settings.appTheme = val;
+            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function finishSetup() {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage("save:" + JSON.stringify(settings));
+            }
+        }
+
+        function closeSetup() {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage("close");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1406,6 +1406,22 @@
         <div class="card">
           <div class="setting-row">
             <div class="setting-info">
+              <div class="setting-label">Hardware Acceleration</div>
+              <div class="setting-desc">Uses GPU to render graphics. Turn off if experiencing graphical glitches. Requires restart.</div>
+            </div>
+            <div class="setting-control">
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  {{CHK_HWACCEL}}
+                  onchange="window.chrome.webview.postMessage(__T + 'hwAccel:' + this.checked)"
+                />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
               <div class="setting-label">Set as default browser</div>
               <div class="setting-desc">Open web links with Stride</div>
             </div>

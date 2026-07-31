@@ -10,6 +10,7 @@ namespace StrideBrowser;
 public partial class App : Application
 {
     private ServiceProvider? _serviceProvider;
+    public IServiceProvider Services => _serviceProvider!;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -40,8 +41,17 @@ public partial class App : Application
 
         // Create and show MainWindow via DI
         var vm = _serviceProvider.GetRequiredService<BrowserViewModel>();
-        var window = new MainWindow(_serviceProvider, vm);
-        window.Show();
+        
+        if (vm.Settings.IsFirstRun)
+        {
+            var welcomeWindow = new WelcomeWindow();
+            welcomeWindow.Show();
+        }
+        else
+        {
+            var window = new MainWindow(_serviceProvider, vm);
+            window.Show();
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

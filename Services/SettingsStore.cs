@@ -25,7 +25,11 @@ public sealed class SettingsStore : ISettingsStore
         try
         {
             if (!File.Exists(FilePath))
-                return new BrowserSettings();
+            {
+                var freshSettings = new BrowserSettings();
+                freshSettings.NewTabShortcuts = DataImporter.ImportBookmarksToShortcuts(10);
+                return freshSettings;
+            }
 
             var json = File.ReadAllText(FilePath);
             return JsonSerializer.Deserialize<BrowserSettings>(json, JsonOpts) ?? new BrowserSettings();

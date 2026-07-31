@@ -9,6 +9,9 @@ public enum AppThemeMode { System, Light, Dark }
 public sealed partial class BrowserSettings : ObservableObject
 {
     [ObservableProperty]
+    private bool _isFirstRun = true;
+
+    [ObservableProperty]
     private string _searchEngine = "DuckDuckGo";
 
     [ObservableProperty]

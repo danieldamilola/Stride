@@ -910,14 +910,18 @@ public sealed class TabEngine : IDisposable
                         var cookieHeader = string.Join("; ", cookies.Select(c => $"{c.Name}={c.Value}"));
                         var userAgent = wv.CoreWebView2.Settings.UserAgent ?? "";
 
-                        var idm = new global::Interop.IDManTypeInfo.CIDMLinkTransmitterClass();
-                        idm.SendLinkToIDM2(
-                            uri,
-                            referer,
-                            cookieHeader,
-                            "", "", "", "", "", 0, userAgent, ""
-                        );
-                        return;
+                        Type idmType = Type.GetTypeFromProgID("IDMan.CIDMLinkTransmitter");
+                        if (idmType != null)
+                        {
+                            dynamic idm = Activator.CreateInstance(idmType);
+                            idm.SendLinkToIDM2(
+                                uri,
+                                referer,
+                                cookieHeader,
+                                "", "", "", "", "", 0, userAgent, ""
+                            );
+                            return;
+                        }
                     }
                     catch (Exception ex)
                     {

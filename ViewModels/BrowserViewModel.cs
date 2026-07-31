@@ -1,3 +1,7 @@
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
@@ -10,12 +14,23 @@ namespace StrideBrowser.ViewModels;
 /// </summary>
 public sealed partial class BrowserViewModel : ObservableObject
 {
+    private static readonly HttpClient _http = new();
+    private CancellationTokenSource? _suggestionCts;
     private readonly NavigationService _navigation;
 
     public BrowserSettings Settings { get; }
 
     [ObservableProperty]
     private string _addressText = "";
+
+    [ObservableProperty]
+    private System.Collections.ObjectModel.ObservableCollection<string> _suggestions = new();
+
+    [ObservableProperty]
+    private int _selectedSuggestionIndex = -1;
+
+    [ObservableProperty]
+    private bool _showSuggestions;
 
     /// <summary>True while the active tab is navigating — drives the address bar loading cues.</summary>
     [ObservableProperty]
@@ -110,5 +125,66 @@ public sealed partial class BrowserViewModel : ObservableObject
     public void SyncAddressBar(BrowserTab tab)
     {
         AddressText = InternalUrls.IsInternal(tab.Url) ? "" : tab.Url;
+    }
+
+    public async Task UpdateSuggestionsAsync(string query)
+    {
+        _suggestionCts?.Cancel();
+        _suggestionCts = new CancellationTokenSource();
+        var token = _suggestionCts.Token;
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            Suggestions.Clear();
+            ShowSuggestions = false;
+            return;
+        }
+
+        try
+        {
+            await Task.Delay(150, token); // Debounce
+            
+            var url = $"https://duckduckgo.com/ac/?q={Uri.EscapeDataString(query)}";
+            var response = await _http.GetStringAsync(url, token);
+            
+            // [{ "phrase": "..." }, ...]
+            using var doc = JsonDocument.Parse(response);
+            
+            var results = new List<string>();
+            
+            // Add local shortcuts first
+            var lowerQuery = query.ToLowerInvariant();
+            foreach (var shortcut in Settings.NewTabShortcuts)
+            {
+                if (shortcut.Name.ToLowerInvariant().Contains(lowerQuery) || 
+                    shortcut.Url.ToLowerInvariant().Contains(lowerQuery))
+                {
+                    results.Add(shortcut.Url);
+                }
+            }
+
+            // Then web suggestions
+            foreach (var element in doc.RootElement.EnumerateArray())
+            {
+                if (element.TryGetProperty("phrase", out var phrase))
+                {
+                    var p = phrase.GetString();
+                    if (!string.IsNullOrEmpty(p) && !results.Contains(p))
+                        results.Add(p);
+                }
+            }
+
+            if (!token.IsCancellationRequested)
+            {
+                Suggestions.Clear();
+                foreach (var r in results.Take(8))
+                    Suggestions.Add(r);
+
+                SelectedSuggestionIndex = -1;
+                ShowSuggestions = Suggestions.Count > 0;
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch { }
     }
 }

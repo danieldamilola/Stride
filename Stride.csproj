@@ -58,9 +58,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Interop.IDManTypeInfo">
-      <HintPath>Interop.IDManTypeInfo.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

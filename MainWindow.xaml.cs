@@ -553,7 +553,24 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.Escape)
         {
+            _vm.ShowSuggestions = false;
             HideCommandBar();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Down && _vm.ShowSuggestions)
+        {
+            if (_vm.SelectedSuggestionIndex < _vm.Suggestions.Count - 1)
+                _vm.SelectedSuggestionIndex++;
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Up && _vm.ShowSuggestions)
+        {
+            if (_vm.SelectedSuggestionIndex > 0)
+                _vm.SelectedSuggestionIndex--;
             e.Handled = true;
             return;
         }
@@ -561,7 +578,18 @@ public partial class MainWindow : Window
         if (e.Key != Key.Enter) return;
         e.Handled = true;
 
-        var input = _vm.AddressText?.Trim();
+        // If a suggestion is selected, use it; otherwise use typed text
+        string? input;
+        if (_vm.ShowSuggestions && _vm.SelectedSuggestionIndex >= 0
+            && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
+        {
+            input = _vm.Suggestions[_vm.SelectedSuggestionIndex];
+        }
+        else
+        {
+            input = _vm.AddressText?.Trim();
+        }
+
         if (string.IsNullOrEmpty(input)) return;
 
         var url = _vm.ResolveInput(input);
@@ -572,6 +600,7 @@ public partial class MainWindow : Window
             _engine.Navigate(tab, url);
         }
 
+        _vm.ShowSuggestions = false;
         HideCommandBar();
     }
 
@@ -699,6 +728,9 @@ public partial class MainWindow : Window
         if (!_isCommandBarOpen) return;
         _isCommandBarOpen = false;
 
+        _vm.ShowSuggestions = false;
+        _vm.Suggestions.Clear();
+
         // 150ms ease-out dismiss animation: fade out + slide up
         var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(150))
         { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
@@ -740,6 +772,29 @@ public partial class MainWindow : Window
     {
         // Don't auto-close — only close on Escape, Enter, or backdrop click
         // This prevents the race condition where it closes immediately
+    }
+
+    private void AddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (sender is TextBox tb)
+            _ = _vm.UpdateSuggestionsAsync(tb.Text);
+    }
+
+    private void SuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
+        {
+            var input = _vm.Suggestions[_vm.SelectedSuggestionIndex];
+            var url = _vm.ResolveInput(input);
+            if (_engine.ActiveTab is { } tab)
+            {
+                tab.Url = url;
+                _vm.AddressText = url;
+                _engine.Navigate(tab, url);
+            }
+            _vm.ShowSuggestions = false;
+            HideCommandBar();
+        }
     }
 
     private void UpdateUrlLabel(BrowserTab tab)
