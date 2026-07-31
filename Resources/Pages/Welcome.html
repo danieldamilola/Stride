@@ -6,208 +6,275 @@
     <title>Welcome to Stride</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
-        
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         :root {
-            --bg-base: #111113;
-            --bg-surface: #1C1C1F;
-            --text-main: #E8E4DF;
-            --text-muted: #A5A3A0;
-            --accent: #E3B341;
-            --border: #2A2A2E;
+            --base:    #111113;
+            --surface: #1A1A1E;
+            --border:  #2A2A2E;
+            --accent:  #D4A574;
+            --text:    #E8E4DF;
+            --muted:   #8A8680;
+            --dim:     #4A4844;
         }
 
-        body {
-            background-color: var(--bg-base);
-            color: var(--text-main);
-            font-family: 'Outfit', -apple-system, sans-serif;
+        html, body {
+            width: 100%; height: 100%;
+            background: var(--base);
+            color: var(--text);
+            font-family: 'Outfit', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        /* ── Layout ── */
+        .shell {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Drag region at top (matches WPF title bar drag) */
+        .drag-bar {
+            height: 36px;
+            -webkit-app-region: drag;
+            flex-shrink: 0;
+        }
+
+        .content {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-            -webkit-font-smoothing: antialiased;
+            padding: 0 0 20px;
         }
 
-        .container {
-            width: 100%;
-            max-width: 500px;
-            padding: 40px;
-            text-align: center;
-            background: var(--bg-surface);
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-            position: relative;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        h1 {
-            font-size: 28px;
-            font-weight: 500;
-            margin-bottom: 12px;
-            color: #fff;
-        }
-
-        p {
-            font-size: 15px;
-            color: var(--text-muted);
-            margin-bottom: 32px;
-            line-height: 1.5;
-        }
-
+        /* ── Step container ── */
         .step {
             display: none;
-            animation: fadeIn 0.4s ease;
+            width: 380px;
+            animation: rise 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
         }
 
-        .step.active {
+        .step.active { display: block; }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Wordmark ── */
+        .wordmark {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 32px;
+            opacity: 0.9;
+        }
+
+        /* ── Heading ── */
+        h1 {
+            font-size: 26px;
+            font-weight: 500;
+            line-height: 1.2;
+            letter-spacing: -0.3px;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .sub {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 36px;
+        }
+
+        /* ── Theme options ── */
+        .theme-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 36px;
+        }
+
+        .theme-opt {
+            flex: 1;
+            padding: 14px 12px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            text-align: center;
+        }
+
+        .theme-opt:hover {
+            border-color: #3A3A3E;
+            background: #222226;
+        }
+
+        .theme-opt.selected {
+            border-color: var(--accent);
+            background: rgba(212, 165, 116, 0.08);
+        }
+
+        .theme-icon {
+            font-size: 18px;
+            margin-bottom: 6px;
             display: block;
         }
 
-        .btn {
-            display: inline-block;
+        .theme-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted);
+            letter-spacing: 0.02em;
+        }
+
+        .theme-opt.selected .theme-label {
+            color: var(--accent);
+        }
+
+        /* ── Primary button ── */
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
             background: var(--accent);
             color: #111113;
             border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
+            border-radius: 7px;
+            font-size: 14px;
+            font-weight: 600;
             font-family: inherit;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(227, 179, 65, 0.3);
-        }
-
-        .option-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 32px;
-        }
-
-        .option-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px 10px;
             cursor: pointer;
-            transition: all 0.2s;
+            letter-spacing: 0.01em;
+            transition: opacity 0.15s, transform 0.1s;
         }
 
-        .option-card:hover {
-            background: rgba(255,255,255,0.06);
-        }
+        .btn-primary:hover  { opacity: 0.9; }
+        .btn-primary:active { transform: scale(0.99); }
 
-        .option-card.selected {
-            border-color: var(--accent);
-            background: rgba(227, 179, 65, 0.1);
-        }
-
-        .option-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-
-        .option-label {
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+        /* ── Ghost button (step 1 only) ── */
+        .btn-ghost {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
             background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 20px;
+            color: var(--dim);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            font-size: 13px;
+            font-family: inherit;
             cursor: pointer;
-            transition: color 0.2s;
+            transition: color 0.15s, border-color 0.15s;
         }
 
-        .close-btn:hover { color: #fff; }
+        .btn-ghost:hover { color: var(--muted); border-color: #3A3A3E; }
+
+        /* ── Divider ── */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 28px 0;
+        }
+
+        /* ── Step dots ── */
+        .dots {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 28px;
+        }
+
+        .dot {
+            width: 20px; height: 3px;
+            border-radius: 2px;
+            background: var(--border);
+            transition: background 0.2s, width 0.2s;
+        }
+
+        .dot.active {
+            background: var(--accent);
+            width: 28px;
+        }
     </style>
 </head>
 <body>
+<div class="shell">
+    <div class="drag-bar"></div>
 
-    <div class="container">
-        <button class="close-btn" onclick="closeSetup()">&times;</button>
+    <div class="content">
 
+        <!-- Step 1: Welcome -->
         <div id="step-1" class="step active">
-            <h1>Welcome to Stride</h1>
-            <p>A beautifully minimalist browser designed to keep you focused. Let's get things set up exactly how you like them.</p>
-            <button class="btn" onclick="nextStep(2)">Get Started</button>
+            <div class="dots">
+                <div class="dot active" id="dot-1"></div>
+                <div class="dot" id="dot-2"></div>
+            </div>
+            <div class="wordmark">Stride</div>
+            <h1>A browser built<br>for focus.</h1>
+            <p class="sub">No bloat. No distractions.<br>Just the web, the way you want it.</p>
+            <button class="btn-primary" onclick="goStep(2)">Get Started</button>
+            <button class="btn-ghost" onclick="skip()">Skip setup</button>
         </div>
 
+        <!-- Step 2: Theme -->
         <div id="step-2" class="step">
+            <div class="dots">
+                <div class="dot" id="dot-1b"></div>
+                <div class="dot active" id="dot-2b"></div>
+            </div>
+            <div class="wordmark">Stride</div>
             <h1>Choose your look</h1>
-            <p>Select a theme for the browser interface.</p>
-            
-            <div class="option-grid">
-                <div class="option-card" onclick="setTheme(1, this)">
-                    <div class="option-icon">☀️</div>
-                    <div class="option-label">Light</div>
+            <p class="sub">Stride follows your OS by default.<br>You can change this later in Settings.</p>
+
+            <div class="theme-row">
+                <div class="theme-opt" id="opt-light" onclick="setTheme(1, this)">
+                    <span class="theme-icon">☀️</span>
+                    <span class="theme-label">Light</span>
                 </div>
-                <div class="option-card" onclick="setTheme(2, this)">
-                    <div class="option-icon">🌙</div>
-                    <div class="option-label">Dark</div>
+                <div class="theme-opt selected" id="opt-system" onclick="setTheme(0, this)">
+                    <span class="theme-icon">💻</span>
+                    <span class="theme-label">System</span>
                 </div>
-                <div class="option-card selected" onclick="setTheme(0, this)">
-                    <div class="option-icon">💻</div>
-                    <div class="option-label">System</div>
+                <div class="theme-opt" id="opt-dark" onclick="setTheme(2, this)">
+                    <span class="theme-icon">🌙</span>
+                    <span class="theme-label">Dark</span>
                 </div>
             </div>
-            
-            <button class="btn" onclick="finishSetup()">Start Browsing</button>
+
+            <button class="btn-primary" onclick="finish()">Start Browsing</button>
         </div>
+
     </div>
+</div>
 
-    <script>
-        let settings = {
-            isFirstRun: false,
-            appTheme: 0
-        };
+<script>
+    var settings = Object.assign({ isFirstRun: false, appTheme: 0 }, window.initialSettings || {});
+    settings.isFirstRun = false;
 
-        // Initialize from C#
-        if (window.initialSettings) {
-            settings = window.initialSettings;
-            settings.isFirstRun = false; // We flip it so it doesn't show again
-        }
+    function goStep(n) {
+        document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+        document.getElementById('step-' + n).classList.add('active');
+    }
 
-        function nextStep(step) {
-            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-            document.getElementById('step-' + step).classList.add('active');
-        }
+    function setTheme(val, el) {
+        settings.appTheme = val;
+        document.querySelectorAll('.theme-opt').forEach(function(c) { c.classList.remove('selected'); });
+        el.classList.add('selected');
+    }
 
-        function setTheme(val, el) {
-            settings.appTheme = val;
-            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-        }
+    function finish() {
+        if (window.chrome && window.chrome.webview)
+            window.chrome.webview.postMessage('save:' + JSON.stringify(settings));
+    }
 
-        function finishSetup() {
-            if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage("save:" + JSON.stringify(settings));
-            }
-        }
-
-        function closeSetup() {
-            if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage("close");
-            }
-        }
-    </script>
+    function skip() {
+        finish();
+    }
+</script>
 </body>
 </html>
