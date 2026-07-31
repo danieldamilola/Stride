@@ -8,6 +8,12 @@
     // Skip internal/blank pages
     if (!location.hostname || location.protocol === 'data:' || location.protocol === 'about:') return;
 
+    // Skip domains that are known to completely break with Dark Reader (e.g. Google Sign-In)
+    const excludeDomains = [
+        'accounts.google.com'
+    ];
+    if (excludeDomains.includes(location.hostname)) return;
+
     function tryEnable() {
         if (typeof DarkReader === 'undefined' || !DarkReader.enable) {
             setTimeout(tryEnable, 50);
