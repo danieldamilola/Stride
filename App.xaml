@@ -299,6 +299,10 @@
                             </Setter.Value>
                         </Setter>
                         <Style.Triggers>
+                            <!-- Pinned tab: subtle persistent circular background wash -->
+                            <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+                            </DataTrigger>
                             <!-- Tab hover: 100ms ease-out opacity -->
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Trigger.EnterActions>

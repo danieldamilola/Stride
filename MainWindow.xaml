@@ -22,18 +22,13 @@
                   MouseRightButtonUp="TabItem_RightClick" Tag="{Binding}"
                   ToolTip="{Binding Title}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>  <!-- Pin dot -->
                     <ColumnDefinition Width="20"/>    <!-- Favicon + hover close overlay -->
                     <ColumnDefinition Width="Auto"/>  <!-- Title (active only) -->
                     <ColumnDefinition Width="Auto"/>  <!-- Close pill (active only) -->
                 </Grid.ColumnDefinitions>
-                <!-- Pin indicator — 3px amber dot -->
-                <Ellipse Grid.Column="0" Width="3" Height="3"
-                         Fill="{DynamicResource Accent}" Margin="0,0,2,0"
-                         VerticalAlignment="Center"
-                         Visibility="{Binding IsPinned, Converter={StaticResource BoolToVis}}"/>
+                <!-- Pin indicator removed in favor of pill background -->
                 <!-- Favicon — 20×20 area with 16×16 icon -->
-                <Grid Grid.Column="1" Width="20" Height="20" VerticalAlignment="Center">
+                <Grid Grid.Column="0" Width="20" Height="20" VerticalAlignment="Center">
                     <!-- Default Stride icon — greyed out, hidden when site favicon loads -->
                     <Image Source="pack://application:,,,/icons/stride-browser-32x32.png"
                            Width="14" Height="14" Opacity="0.3"
@@ -116,7 +111,7 @@
                     </Button>
                 </Grid>
                 <!-- Title — visible only when tab is selected -->
-                <TextBlock Grid.Column="2" Text="{Binding Title}"
+                <TextBlock Grid.Column="1" Text="{Binding Title}"
                            Foreground="{DynamicResource TextPrimary}"
                            FontSize="12" FontFamily="{DynamicResource UIFont}"
                            FontWeight="Normal"
@@ -135,12 +130,16 @@
                                 <DataTrigger Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
                                     <Setter Property="Visibility" Value="Visible"/>
                                 </DataTrigger>
+                                <!-- Pinned tabs never show title -->
+                                <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
                 <!-- ACTIVE close: end of pill, always visible when selected -->
-                <Button Grid.Column="3" Click="CloseTab_Click" Tag="{Binding}"
+                <Button Grid.Column="2" Click="CloseTab_Click" Tag="{Binding}"
                         ToolTip="Close tab"
                         Width="14" Height="14" Margin="6,0,2,0"
                         VerticalAlignment="Center" Cursor="Hand">
@@ -169,6 +168,10 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                                     <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <!-- Pinned tabs never show close button -->
+                                <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
