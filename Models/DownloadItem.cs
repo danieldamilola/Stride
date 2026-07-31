@@ -18,6 +18,8 @@ public sealed class DownloadItem : INotifyPropertyChanged
     public string Url { get; init; } = "";
     public string FilePath { get; set; } = "";
     public DateTime StartedAt { get; init; } = DateTime.UtcNow;
+    public string? ETag { get; set; }
+    public string? LastModified { get; set; }
 
     public long ReceivedBytes
     {

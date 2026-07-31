@@ -58,7 +58,7 @@ public partial class MainWindow : Window
         _engine = new TabEngine(WebViewHost, deps);
 
         var extManager = services.GetRequiredService<ExtensionManager>();
-        _router = new WebMessageRouter(_engine, _vm, _oneTabStore, _historyStore, _downloadStore, _settingsStore, extManager);
+        _router = new WebMessageRouter(_engine, _vm, _oneTabStore, _historyStore, _downloadStore, _settingsStore, extManager, deps.CustomDownloadManager);
         _router.SettingChanged += OnSettingChanged;
         Services.ThemeManager.ThemeChanged += () =>
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -12,39 +13,62 @@ namespace StrideBrowser.Services;
 public class CustomDownloadManager
 {
     private readonly HttpClient _httpClient;
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _ctsMap = new();
 
     public CustomDownloadManager()
     {
-        // Simple HttpClient instance; cookies are attached per request
-        var handler = new HttpClientHandler { UseCookies = false };
-        _httpClient = new HttpClient(handler);
+        var handler = new HttpClientHandler { UseCookies = false, AutomaticDecompression = System.Net.DecompressionMethods.All };
+        _httpClient = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
     }
 
-    /// <summary>
-    /// Resumes a download using an HTTP Range request, extracting cookies from the WebView2 environment.
-    /// </summary>
+    public void PauseDownload(DownloadItem item)
+    {
+        if (item.State == DownloadState.InProgress)
+        {
+            item.State = DownloadState.Paused;
+            if (_ctsMap.TryRemove(item.Id, out var cts))
+            {
+                cts.Cancel();
+            }
+        }
+    }
+
+    public void CancelDownload(DownloadItem item)
+    {
+        item.State = DownloadState.Cancelled;
+        if (_ctsMap.TryRemove(item.Id, out var cts))
+        {
+            cts.Cancel();
+        }
+    }
+
     public async Task ResumeDownloadAsync(DownloadItem item, CoreWebView2CookieManager cookieManager)
     {
+        if (item.State == DownloadState.InProgress) return;
+        
+        item.State = DownloadState.InProgress;
+        var cts = new CancellationTokenSource();
+        _ctsMap[item.Id] = cts;
+
         try
         {
-            item.State = DownloadState.InProgress;
-            
             long existingBytes = 0;
             if (File.Exists(item.FilePath))
             {
-                var fileInfo = new FileInfo(item.FilePath);
-                existingBytes = fileInfo.Length;
+                existingBytes = new FileInfo(item.FilePath).Length;
             }
 
             var request = new HttpRequestMessage(HttpMethod.Get, item.Url);
             
-            // Set the Range header for resuming
             if (existingBytes > 0)
             {
                 request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(existingBytes, null);
+                if (!string.IsNullOrEmpty(item.ETag))
+                    request.Headers.IfRange = new System.Net.Http.Headers.RangeConditionHeaderValue(item.ETag);
+                else if (!string.IsNullOrEmpty(item.LastModified) && DateTimeOffset.TryParse(item.LastModified, out var lastMod))
+                    request.Headers.IfRange = new System.Net.Http.Headers.RangeConditionHeaderValue(lastMod);
             }
 
-            // Extract cookies from WebView2 for this domain
             var cookies = await cookieManager.GetCookiesAsync(item.Url);
             if (cookies != null && cookies.Count > 0)
             {
@@ -52,53 +76,61 @@ public class CustomDownloadManager
                 request.Headers.Add("Cookie", cookieString);
             }
 
-            // Execute the request
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
             response.EnsureSuccessStatusCode();
 
-            // Update TotalBytes if unknown (some servers omit it on range requests, so we add existingBytes)
+            // If server returned 200 instead of 206, it means range request failed (not supported or ETags mismatched)
+            if (response.StatusCode == System.Net.HttpStatusCode.OK && existingBytes > 0)
+            {
+                existingBytes = 0;
+                File.Delete(item.FilePath);
+            }
+
+            item.ETag = response.Headers.ETag?.Tag;
+            item.LastModified = response.Content.Headers.LastModified?.ToString();
+
             if (item.TotalBytes <= 0 && response.Content.Headers.ContentLength.HasValue)
             {
                 item.TotalBytes = existingBytes + response.Content.Headers.ContentLength.Value;
             }
 
-            using var contentStream = await response.Content.ReadAsStreamAsync();
+            using var contentStream = await response.Content.ReadAsStreamAsync(cts.Token);
             
-            // Offload the heavy stream reading to a background thread to prevent UI thread lockups
             await Task.Run(async () => 
             {
-                using var fileStream = new FileStream(item.FilePath, FileMode.Append, FileAccess.Write, FileShare.None, 81920, true);
-                var buffer = new byte[81920]; // 80KB buffer
+                using var fileStream = new FileStream(item.FilePath, existingBytes > 0 ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, 81920, true);
+                var buffer = new byte[81920];
                 int bytesRead;
-                while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
+                
+                while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length, cts.Token).ConfigureAwait(false)) > 0)
                 {
-                    if (item.State != DownloadState.InProgress)
-                    {
-                        break;
-                    }
+                    if (item.State != DownloadState.InProgress) break;
 
-                    await fileStream.WriteAsync(buffer, 0, bytesRead).ConfigureAwait(false);
+                    await fileStream.WriteAsync(buffer, 0, bytesRead, cts.Token).ConfigureAwait(false);
                     existingBytes += bytesRead;
-                    
-                    // Safe to update because DownloadItem properties now check for changes 
-                    // and WPF safely marshals PropertyChanged for simple bindings
                     item.ReceivedBytes = existingBytes;
                 }
-            });
+            }, cts.Token);
 
             if (item.State == DownloadState.InProgress)
             {
-                // Finished normally
                 item.State = DownloadState.Completed;
             }
         }
+        catch (OperationCanceledException)
+        {
+            // Expected when user pauses or cancels
+        }
         catch (Exception)
         {
-            // If anything fails during the manual stream, mark it failed.
             if (item.State == DownloadState.InProgress)
             {
                 item.State = DownloadState.Failed;
             }
+        }
+        finally
+        {
+            _ctsMap.TryRemove(item.Id, out _);
         }
     }
 }

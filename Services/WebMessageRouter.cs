@@ -23,6 +23,7 @@ public sealed class WebMessageRouter
     private readonly ISettingsStore _settingsStore;
     private readonly IDownloadStore _downloadStore;
     private readonly ExtensionManager _extensionManager;
+    private readonly CustomDownloadManager _customDownloadManager;
 
     /// <summary>Fires when settings change so the view can apply live effects.</summary>
     public event Action<string, string>? SettingChanged;
@@ -34,7 +35,8 @@ public sealed class WebMessageRouter
         IHistoryStore historyStore,
         IDownloadStore downloadStore,
         ISettingsStore settingsStore,
-        ExtensionManager extensionManager)
+        ExtensionManager extensionManager,
+        CustomDownloadManager customDownloadManager)
     {
         _engine = engine;
         _vm = vm;
@@ -43,6 +45,7 @@ public sealed class WebMessageRouter
         _downloadStore = downloadStore;
         _settingsStore = settingsStore;
         _extensionManager = extensionManager;
+        _customDownloadManager = customDownloadManager;
 
         _prefixHandlers = new Dictionary<string, Func<string, Task>>
         {
@@ -349,7 +352,7 @@ public sealed class WebMessageRouter
         var item = _downloadStore.Get(id);
         if (item?.State == DownloadState.InProgress || item?.State == DownloadState.Paused)
         {
-            item.State = DownloadState.Cancelled;
+            _customDownloadManager.CancelDownload(item);
         }
         return Task.CompletedTask;
     }
@@ -359,7 +362,7 @@ public sealed class WebMessageRouter
         var item = _downloadStore.Get(id);
         if (item?.State == DownloadState.InProgress)
         {
-            item.State = DownloadState.Paused;
+            _customDownloadManager.PauseDownload(item);
         }
         return Task.CompletedTask;
     }
