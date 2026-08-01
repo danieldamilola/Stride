@@ -10,485 +10,541 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --base:    #111113;
-            --surface: #1A1A1E;
-            --border:  #2A2A2E;
+            /* High-end Ethereal Glass palette */
+            --base:    #050505;
+            --surface: #0A0A0C;
+            --border:  rgba(255, 255, 255, 0.08);
             --accent:  #D4A574;
-            --text:    #E8E4DF;
+            --text:    #F5F5F5;
             --muted:   #8A8680;
             --dim:     #4A4844;
+            
+            /* Custom spring easing */
+            --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
         }
 
         html, body {
             width: 100%; height: 100%;
             background: var(--base);
             color: var(--text);
-            font-family: 'Outfit', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Outfit', -apple-system, system-ui, sans-serif;
             -webkit-font-smoothing: antialiased;
             user-select: none;
             overflow: hidden;
+        }
+
+        /* Subtle radial ambient glow */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -20%; left: 50%;
+            width: 600px; height: 400px;
+            transform: translateX(-50%);
+            background: radial-gradient(circle, rgba(212, 165, 116, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .shell {
             display: flex;
             flex-direction: column;
             height: 100%;
+            position: relative;
+            z-index: 10;
         }
 
         .drag-bar {
-            height: 32px;
+            height: 40px;
             flex-shrink: 0;
             -webkit-app-region: drag;
         }
 
-        /* Carousel container */
-        .carousel-wrapper {
+        .container {
             flex: 1;
             position: relative;
-            overflow: hidden;
             width: 100%;
-        }
-
-        .carousel-track {
-            display: flex;
-            width: 500%; /* 5 steps */
             height: 100%;
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .step {
-            width: 20%; /* 1/5th of 500% = 100% viewport width */
-            height: 100%;
+            position: absolute;
+            inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 44px 24px;
+            padding: 0 56px 40px;
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            transition: opacity 0.8s var(--ease-spring), visibility 0.8s;
         }
+
+        .step.active {
+            opacity: 1;
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        /* Content stagger animation */
+        .step .stagger-1 { transform: translateY(16px); opacity: 0; transition: all 0.8s var(--ease-spring) 0.1s; }
+        .step .stagger-2 { transform: translateY(16px); opacity: 0; transition: all 0.8s var(--ease-spring) 0.15s; }
+        .step .stagger-3 { transform: translateY(16px); opacity: 0; transition: all 0.8s var(--ease-spring) 0.2s; }
         
+        .step.active .stagger-1, 
+        .step.active .stagger-2, 
+        .step.active .stagger-3 {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
         .step-content {
             width: 100%;
-            max-width: 680px; /* limits width on larger steps */
-            animation: rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+            max-width: 640px;
         }
 
-        @keyframes rise {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Dots */
-        .dots {
-            display: flex;
-            gap: 5px;
+        /* High-end Typography */
+        .eyebrow {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--muted);
             margin-bottom: 24px;
         }
 
-        .dot {
-            height: 2px;
-            width: 16px;
-            border-radius: 2px;
-            background: var(--border);
-            transition: background 0.2s, width 0.2s;
-        }
-
-        .dot.active {
-            background: var(--accent);
-            width: 24px;
-        }
-
-        /* Typography */
-        .wordmark {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--accent);
-            margin-bottom: 20px;
-            opacity: 0.85;
-        }
-
         h1 {
-            font-size: 26px;
-            font-weight: 500;
-            line-height: 1.25;
-            letter-spacing: -0.2px;
+            font-size: 40px;
+            font-weight: 400;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
             color: var(--text);
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
         
         h1 span {
             color: var(--accent);
+            font-style: italic;
+            padding-right: 4px;
         }
 
         .sub {
-            font-size: 14px;
+            font-size: 15px;
             color: var(--muted);
             line-height: 1.6;
-            margin-bottom: 28px;
+            margin-bottom: 40px;
+            max-width: 85%;
         }
 
-        /* Options Grid (Themes & Search) */
+        /* Double-Bezel Architecture Grid */
         .grid-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 28px;
-        }
-        
-        .grid-row.two-col {
-            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
         }
 
-        .opt-card {
-            padding: 16px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--surface);
+        /* Outer Shell */
+        .opt-shell {
+            padding: 2px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
             cursor: pointer;
-            transition: border-color 0.15s, background 0.15s;
+            transition: all 0.4s var(--ease-spring);
+        }
+
+        /* Inner Core */
+        .opt-core {
+            padding: 20px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
             text-align: center;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+            transition: all 0.4s var(--ease-spring);
         }
 
-        .opt-card:hover { border-color: #3A3A3E; }
-        .opt-card.selected {
-            border-color: var(--accent);
-            background: rgba(212, 165, 116, 0.07);
-        }
-
-        .opt-icon { font-size: 24px; margin-bottom: 10px; }
-        .opt-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--muted);
-        }
-        .opt-card.selected .opt-label { color: var(--accent); }
-
-        /* Hotkeys UI */
-        .hotkeys-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-bottom: 32px;
-        }
+        .opt-shell:hover { transform: translateY(-2px); }
+        .opt-shell:hover .opt-core { background: #121215; border-color: rgba(255,255,255,0.15); }
         
-        .hotkey-item {
+        .opt-shell.selected { background: rgba(212, 165, 116, 0.15); }
+        .opt-shell.selected .opt-core {
+            background: rgba(212, 165, 116, 0.05);
+            border-color: rgba(212, 165, 116, 0.3);
+            box-shadow: inset 0 1px 4px rgba(212, 165, 116, 0.1);
+        }
+
+        .opt-icon { font-size: 24px; margin-bottom: 12px; opacity: 0.9; }
+        .opt-label { font-size: 13px; font-weight: 500; color: var(--muted); }
+        .opt-shell.selected .opt-label { color: var(--accent); }
+
+        /* Nested CTA Button Architecture */
+        .actions {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 18px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-        }
-        
-        .hotkey-desc {
-            font-size: 14px;
-            color: var(--text);
-        }
-        
-        .hotkey-desc span {
-            display: block;
-            font-size: 11px;
-            color: var(--muted);
-            margin-top: 4px;
-        }
-        
-        .kbd-group {
-            display: flex;
-            gap: 4px;
-        }
-        
-        kbd {
-            background: var(--base);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 11px;
-            font-family: monospace;
-            color: var(--accent);
-            box-shadow: 0 2px 0 var(--border);
-        }
-
-        /* Buttons */
-        .actions {
-            display: flex;
-            gap: 12px;
-            margin-top: auto;
         }
 
         .btn-primary {
-            flex: 1;
-            padding: 12px;
-            background: var(--accent);
-            color: #111113;
+            group: main-btn;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 8px 8px 24px;
+            background: var(--text);
+            color: var(--base);
             border: none;
-            border-radius: 6px;
+            border-radius: 999px;
             font-size: 14px;
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
-            transition: opacity 0.15s;
+            transition: transform 0.3s var(--ease-spring);
+        }
+        
+        .btn-primary.accent {
+            background: var(--accent);
         }
 
-        .btn-primary:hover { opacity: 0.88; }
+        .btn-primary:active { transform: scale(0.97); }
+
+        .btn-icon-wrapper {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.4s var(--ease-spring);
+        }
+        
+        .btn-primary:hover .btn-icon-wrapper {
+            transform: translateX(2px);
+        }
+
+        .btn-icon-wrapper svg { width: 14px; height: 14px; fill: currentColor; }
 
         .btn-skip {
-            padding: 12px 24px;
+            padding: 12px;
             background: transparent;
             color: var(--dim);
-            border: 1px solid var(--border);
-            border-radius: 6px;
+            border: none;
             font-size: 13px;
             font-family: inherit;
             cursor: pointer;
-            transition: color 0.15s, border-color 0.15s;
+            transition: color 0.3s ease;
         }
 
-        .btn-skip:hover { color: var(--muted); border-color: #3A3A3E; }
-        
-        /* Command bar visual */
-        .cmd-bar-visual {
-            width: 100%;
-            background: rgba(26, 26, 30, 0.8);
-            border: 1px solid rgba(212, 165, 116, 0.3);
-            border-radius: 12px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
+        .btn-skip:hover { color: var(--muted); }
+
+        /* High-End Hotkey Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            margin-bottom: 40px;
         }
-        
-        .cmd-icon { color: var(--accent); opacity: 0.8; font-size: 18px; }
-        .cmd-text { color: var(--text); font-size: 15px; opacity: 0.9; }
-        .cmd-cursor { 
-            width: 2px; height: 18px; background: var(--accent); 
-            animation: blink 1s infinite;
+
+        .dash-card {
+            padding: 2px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
         }
-        
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        
-        /* Toggle */
-        .toggle-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px;
+
+        .dash-core {
+            padding: 20px;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 24px;
+            border-radius: 14px;
+            height: 100%;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .dash-title { font-size: 15px; color: var(--text); font-weight: 500; margin-bottom: 4px; }
+        .dash-sub { font-size: 13px; color: var(--dim); }
+        .kbd-group { margin-top: 16px; display: flex; gap: 6px; }
+        
+        kbd {
+            background: var(--base);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-family: monospace;
+            color: var(--muted);
+            box-shadow: 0 2px 0 rgba(255,255,255,0.05);
+        }
+
+        /* Toggle Bezel */
+        .toggle-shell {
+            padding: 2px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            margin-bottom: 40px;
             cursor: pointer;
         }
-        .toggle-info strong { display: block; font-size: 14px; font-weight: 500; margin-bottom: 4px; }
-        .toggle-info span { font-size: 12px; color: var(--muted); }
+        .toggle-core {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+        }
+        .toggle-info strong { display: block; font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+        .toggle-info span { font-size: 13px; color: var(--dim); }
         .toggle-switch {
-            width: 36px; height: 20px;
-            background: var(--border);
-            border-radius: 10px;
+            width: 44px; height: 24px;
+            background: #1A1A1E;
+            border: 1px solid var(--border);
+            border-radius: 12px;
             position: relative;
-            transition: background 0.2s;
+            transition: background 0.4s var(--ease-spring);
         }
         .toggle-switch::after {
             content: ''; position: absolute;
-            top: 2px; left: 2px;
+            top: 3px; left: 3px;
             width: 16px; height: 16px;
-            background: var(--text);
+            background: var(--muted);
             border-radius: 50%;
-            transition: transform 0.2s;
+            transition: transform 0.4s var(--ease-spring), background 0.4s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
-        .toggle-row.active .toggle-switch { background: var(--accent); }
-        .toggle-row.active .toggle-switch::after { transform: translateX(16px); background: #111; }
+        .toggle-shell.active .toggle-switch { background: var(--accent); border-color: var(--accent); }
+        .toggle-shell.active .toggle-switch::after { transform: translateX(20px); background: #111; }
+
+        /* SVG Arrow */
+        .arrow-svg { width: 12px; height: 12px; }
 
     </style>
 </head>
 <body>
 <div class="shell">
     <div class="drag-bar"></div>
-    <div class="carousel-wrapper">
-        <div class="carousel-track" id="track">
-            
-            <!-- Step 1: Welcome -->
-            <div class="step">
-                <div class="step-content">
-                    <div class="dots">
-                        <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                    </div>
-                    <div class="wordmark">Stride</div>
-                    <h1>A browser built<br>for <span>focus</span>.</h1>
-                    <p class="sub">No bloat. No distractions.<br>Just the web, the way you want it.</p>
-                    <div class="actions">
-                        <button class="btn-primary" onclick="goStep(1, 600, 520)">Get Started</button>
-                        <button class="btn-skip" onclick="skip()">Skip setup</button>
-                    </div>
+    <div class="container">
+        
+        <!-- Step 1: Welcome (Size: 520x460) -->
+        <div id="step-1" class="step active">
+            <div class="step-content">
+                <div class="eyebrow stagger-1">Stride Browser</div>
+                <h1 class="stagger-1">A browser built<br>for <span>focus.</span></h1>
+                <p class="sub stagger-2">No bloat. No visual noise. Just a meticulously crafted digital environment for your best work.</p>
+                <div class="actions stagger-3">
+                    <button class="btn-skip" onclick="skip()">Skip setup</button>
+                    <button class="btn-primary" onclick="goStep(2, 640, 520)">
+                        Configure Workspace
+                        <div class="btn-icon-wrapper">
+                            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                        </div>
+                    </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Step 2: Search Engine -->
-            <div class="step">
-                <div class="step-content">
-                    <div class="dots">
-                        <div class="dot"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                    </div>
-                    <div class="wordmark">Privacy First</div>
-                    <h1>Choose your engine</h1>
-                    <p class="sub">Stride has zero telemetry. Pick the search engine you trust.</p>
+        <!-- Step 2: Search (Size: 640x520) -->
+        <div id="step-2" class="step">
+            <div class="step-content">
+                <div class="eyebrow stagger-1">01 / Privacy</div>
+                <h1 class="stagger-1">Select your engine</h1>
+                <p class="sub stagger-2">Stride collects zero telemetry. Choose the search provider you trust for your daily workflow.</p>
 
-                    <div class="grid-row">
-                        <div class="opt-card selected" onclick="setSearch('DuckDuckGo', this)">
+                <div class="grid-row stagger-3">
+                    <div class="opt-shell selected" onclick="setSearch('DuckDuckGo', this)">
+                        <div class="opt-core">
                             <span class="opt-icon">🦆</span>
                             <span class="opt-label">DuckDuckGo</span>
                         </div>
-                        <div class="opt-card" onclick="setSearch('Google', this)">
+                    </div>
+                    <div class="opt-shell" onclick="setSearch('Google', this)">
+                        <div class="opt-core">
                             <span class="opt-icon">🔍</span>
                             <span class="opt-label">Google</span>
                         </div>
-                        <div class="opt-card" onclick="setSearch('Bing', this)">
+                    </div>
+                    <div class="opt-shell" onclick="setSearch('Bing', this)">
+                        <div class="opt-core">
                             <span class="opt-icon">🌐</span>
                             <span class="opt-label">Bing</span>
                         </div>
                     </div>
+                </div>
 
-                    <div class="actions">
-                        <button class="btn-skip" onclick="goStep(0, 480, 440)">Back</button>
-                        <button class="btn-primary" onclick="goStep(2, 760, 580)">Continue</button>
-                    </div>
+                <div class="actions stagger-3">
+                    <button class="btn-skip" onclick="goStep(1, 520, 460)">Back</button>
+                    <button class="btn-primary" onclick="goStep(3, 760, 600)">
+                        Next Step
+                        <div class="btn-icon-wrapper">
+                            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                        </div>
+                    </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Step 3: Hotkeys & Command Bar -->
-            <div class="step">
-                <div class="step-content">
-                    <div class="dots">
-                        <div class="dot"></div><div class="dot"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div>
-                    </div>
-                    <div class="wordmark">Master Stride</div>
-                    <h1>The Command Bar</h1>
-                    <p class="sub">Forget cluttered toolbars. Press <strong>Ctrl+L</strong> to open the Command Bar to search, navigate, and control Stride instantly.</p>
-                    
-                    <div class="cmd-bar-visual">
-                        <span class="cmd-icon">🔍</span>
-                        <span class="cmd-text">stride://settings</span>
-                        <div class="cmd-cursor"></div>
-                    </div>
-                    
-                    <div class="hotkeys-grid">
-                        <div class="hotkey-item">
-                            <div class="hotkey-desc">Command Bar<span>Search & Navigate</span></div>
+        <!-- Step 3: Hotkeys (Size: 760x600) -->
+        <div id="step-3" class="step">
+            <div class="step-content">
+                <div class="eyebrow stagger-1">02 / Mastery</div>
+                <h1 class="stagger-1">The Command Bar</h1>
+                <p class="sub stagger-2">Forget cluttered toolbars. Press <strong>Ctrl+L</strong> to open the Command Bar—your unified hub to search, navigate, and control Stride instantly.</p>
+                
+                <div class="dashboard-grid stagger-3">
+                    <div class="dash-card">
+                        <div class="dash-core">
+                            <div>
+                                <div class="dash-title">Command Bar</div>
+                                <div class="dash-sub">Global search & navigation</div>
+                            </div>
                             <div class="kbd-group"><kbd>Ctrl</kbd><kbd>L</kbd></div>
                         </div>
-                        <div class="hotkey-item">
-                            <div class="hotkey-desc">New Tab<span>Quickly open a blank slate</span></div>
-                            <div class="kbd-group"><kbd>Ctrl</kbd><kbd>T</kbd></div>
-                        </div>
-                        <div class="hotkey-item">
-                            <div class="hotkey-desc">Toggle Sidebar<span>Hide UI for maximum focus</span></div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-core">
+                            <div>
+                                <div class="dash-title">Toggle Sidebar</div>
+                                <div class="dash-sub">Hide UI for maximum focus</div>
+                            </div>
                             <div class="kbd-group"><kbd>Ctrl</kbd><kbd>B</kbd></div>
                         </div>
-                        <div class="hotkey-item">
-                            <div class="hotkey-desc">Close Tab<span>Keep things tidy</span></div>
-                            <div class="kbd-group"><kbd>Ctrl</kbd><kbd>W</kbd></div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-core">
+                            <div>
+                                <div class="dash-title">New Tab</div>
+                                <div class="dash-sub">Quickly open a blank slate</div>
+                            </div>
+                            <div class="kbd-group"><kbd>Ctrl</kbd><kbd>T</kbd></div>
                         </div>
                     </div>
-
-                    <div class="actions">
-                        <button class="btn-skip" onclick="goStep(1, 600, 520)">Back</button>
-                        <button class="btn-primary" onclick="goStep(3, 600, 550)">Continue</button>
+                    <div class="dash-card">
+                        <div class="dash-core">
+                            <div>
+                                <div class="dash-title">Settings</div>
+                                <div class="dash-sub">Configure your environment</div>
+                            </div>
+                            <div class="kbd-group"><kbd>Ctrl</kbd><kbd>,</kbd></div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="actions stagger-3">
+                    <button class="btn-skip" onclick="goStep(2, 640, 520)">Back</button>
+                    <button class="btn-primary" onclick="goStep(4, 640, 560)">
+                        Next Step
+                        <div class="btn-icon-wrapper">
+                            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                        </div>
+                    </button>
+                </div>
             </div>
+        </div>
 
-            <!-- Step 4: Look & Feel -->
-            <div class="step">
-                <div class="step-content">
-                    <div class="dots">
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot active"></div><div class="dot"></div>
-                    </div>
-                    <div class="wordmark">Aesthetics</div>
-                    <h1>Choose your look</h1>
-                    <p class="sub">Configure how Stride feels. Change these anytime in Settings.</p>
+        <!-- Step 4: Theme (Size: 640x560) -->
+        <div id="step-4" class="step">
+            <div class="step-content">
+                <div class="eyebrow stagger-1">03 / Aesthetics</div>
+                <h1 class="stagger-1">Choose your look</h1>
+                <p class="sub stagger-2">Configure how Stride feels. Your environment adapts to your preferences seamlessly.</p>
 
-                    <div class="grid-row">
-                        <div class="opt-card" onclick="setTheme(1, this)">
+                <div class="grid-row stagger-3">
+                    <div class="opt-shell" onclick="setTheme(1, this)">
+                        <div class="opt-core">
                             <span class="opt-icon">☀️</span>
                             <span class="opt-label">Light</span>
                         </div>
-                        <div class="opt-card selected" onclick="setTheme(0, this)">
+                    </div>
+                    <div class="opt-shell selected" onclick="setTheme(0, this)">
+                        <div class="opt-core">
                             <span class="opt-icon">💻</span>
                             <span class="opt-label">System</span>
                         </div>
-                        <div class="opt-card" onclick="setTheme(2, this)">
+                    </div>
+                    <div class="opt-shell" onclick="setTheme(2, this)">
+                        <div class="opt-core">
                             <span class="opt-icon">🌙</span>
                             <span class="opt-label">Dark</span>
                         </div>
                     </div>
-                    
-                    <div class="toggle-row" id="tabNamesToggle" onclick="toggleTabNames()">
+                </div>
+                
+                <div class="toggle-shell stagger-3" id="tabNamesToggle" onclick="toggleTabNames()">
+                    <div class="toggle-core">
                         <div class="toggle-info">
                             <strong>Show Tab Names</strong>
                             <span>Display full titles in the sidebar instead of just icons</span>
                         </div>
                         <div class="toggle-switch"></div>
                     </div>
+                </div>
 
-                    <div class="actions">
-                        <button class="btn-skip" onclick="goStep(2, 760, 580)">Back</button>
-                        <button class="btn-primary" onclick="goStep(4, 480, 440)">Continue</button>
-                    </div>
+                <div class="actions stagger-3">
+                    <button class="btn-skip" onclick="goStep(3, 760, 600)">Back</button>
+                    <button class="btn-primary" onclick="goStep(5, 520, 460)">
+                        Next Step
+                        <div class="btn-icon-wrapper">
+                            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                        </div>
+                    </button>
                 </div>
             </div>
-            
-            <!-- Step 5: Ready -->
-            <div class="step">
-                <div class="step-content">
-                    <div class="dots">
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot active"></div>
-                    </div>
-                    <div class="wordmark">Complete</div>
-                    <h1>You're all set.</h1>
-                    <p class="sub">Stride is ready. Time to take back your focus.</p>
-
-                    <div class="actions">
-                        <button class="btn-skip" onclick="goStep(3, 600, 550)">Back</button>
-                        <button class="btn-primary" onclick="finish()">Start Browsing</button>
-                    </div>
-                </div>
-            </div>
-
         </div>
+        
+        <!-- Step 5: Ready (Size: 520x460) -->
+        <div id="step-5" class="step">
+            <div class="step-content">
+                <div class="eyebrow stagger-1">Initialization Complete</div>
+                <h1 class="stagger-1">You're all set.</h1>
+                <p class="sub stagger-2">Stride is ready. Time to take back your focus and build incredible things.</p>
+
+                <div class="actions stagger-3">
+                    <button class="btn-skip" onclick="goStep(4, 640, 560)">Back</button>
+                    <button class="btn-primary accent" onclick="finish()">
+                        Start Browsing
+                        <div class="btn-icon-wrapper">
+                            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 <script>
     var settings = Object.assign({ isFirstRun: false, appTheme: 0, searchEngine: 'DuckDuckGo', showTabNames: false }, window.initialSettings || {});
     settings.isFirstRun = false;
 
-    // Carousel logic
+    // Fade-in-place logic (replaces sliding carousel for high-end feel)
     function goStep(index, width, height) {
-        // Send resize message to C# backend
         if (window.chrome && window.chrome.webview && width && height) {
             window.chrome.webview.postMessage('resize:' + width + ',' + height);
         }
         
-        // Slide track
-        const track = document.getElementById('track');
-        track.style.transform = `translateX(-${index * 20}%)`;
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step-' + index).classList.add('active');
     }
 
-    // Settings mutators
     function setTheme(val, el) {
         settings.appTheme = val;
-        el.parentElement.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+        el.parentElement.querySelectorAll('.opt-shell').forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
     }
     
     function setSearch(engine, el) {
         settings.searchEngine = engine;
-        el.parentElement.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+        el.parentElement.querySelectorAll('.opt-shell').forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
     }
     
@@ -506,11 +562,14 @@
 
     function skip() { finish(); }
     
-    // Init toggles based on loaded settings
+    // Init initial window size properly
+    if (window.chrome && window.chrome.webview) {
+        window.chrome.webview.postMessage('resize:520,460');
+    }
+
     if (settings.showTabNames) {
         document.getElementById('tabNamesToggle').classList.add('active');
     }
-    
 </script>
 </body>
 </html>

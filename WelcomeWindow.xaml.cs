@@ -102,15 +102,27 @@ public partial class WelcomeWindow : Window
             {
                 Dispatcher.Invoke(() =>
                 {
-                    // Smoothly animate window size
-                    var duration = new Duration(TimeSpan.FromMilliseconds(300));
-                    var ease = new CubicEase { EasingMode = EasingMode.EaseInOut };
+                    // Calculate current center
+                    double centerX = this.Left + (this.ActualWidth / 2);
+                    double centerY = this.Top + (this.ActualHeight / 2);
+                    
+                    // Calculate target Left and Top to keep centered
+                    double targetLeft = centerX - (width / 2);
+                    double targetTop = centerY - (height / 2);
+
+                    // Smoothly animate window size and position
+                    var duration = new Duration(TimeSpan.FromMilliseconds(400));
+                    var ease = new QuarticEase { EasingMode = EasingMode.EaseInOut };
 
                     var widthAnim = new DoubleAnimation(width, duration) { EasingFunction = ease };
                     var heightAnim = new DoubleAnimation(height, duration) { EasingFunction = ease };
+                    var leftAnim = new DoubleAnimation(targetLeft, duration) { EasingFunction = ease };
+                    var topAnim = new DoubleAnimation(targetTop, duration) { EasingFunction = ease };
 
                     this.BeginAnimation(Window.WidthProperty, widthAnim);
                     this.BeginAnimation(Window.HeightProperty, heightAnim);
+                    this.BeginAnimation(Window.LeftProperty, leftAnim);
+                    this.BeginAnimation(Window.TopProperty, topAnim);
                 });
             }
         }
