@@ -25,22 +25,23 @@
 
         html, body {
             width: 100%; height: 100%;
-            background: var(--base);
+            background: transparent; /* Let the shell handle the background for rounded corners */
             color: var(--text);
             font-family: 'Outfit', -apple-system, system-ui, sans-serif;
             -webkit-font-smoothing: antialiased;
             user-select: none;
             overflow: hidden;
+            margin: 0; padding: 0;
         }
 
-        /* Subtle radial ambient glow */
-        body::before {
+        /* Subtle radial ambient glow attached to the shell */
+        .shell::before {
             content: '';
             position: absolute;
             top: -20%; left: 50%;
             width: 600px; height: 400px;
             transform: translateX(-50%);
-            background: radial-gradient(circle, rgba(212, 165, 116, 0.05) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(212, 165, 116, 0.08) 0%, transparent 60%);
             pointer-events: none;
             z-index: 0;
         }
@@ -48,9 +49,15 @@
         .shell {
             display: flex;
             flex-direction: column;
-            height: 100%;
+            height: calc(100% - 2px); /* Leave room for border */
+            margin: 1px;
             position: relative;
             z-index: 10;
+            background: var(--base);
+            border-radius: 16px;
+            border: 1px solid rgba(212, 165, 116, 0.15);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05);
+            overflow: hidden;
         }
 
         .drag-bar {
@@ -340,7 +347,7 @@
             <div class="step-content">
                 <div class="eyebrow stagger-1">Stride Browser</div>
                 <h1 class="stagger-1">A browser built<br>for <span>focus.</span></h1>
-                <p class="sub stagger-2">No bloat. No visual noise. Just a meticulously crafted digital environment for your best work.</p>
+                <p class="sub stagger-2">We stripped away the toolbars, the bloat, and the visual noise. What remains is a meticulously crafted digital environment for your best work.</p>
                 <div class="actions stagger-3">
                     <button class="btn-skip" onclick="skip()">Skip setup</button>
                     <button class="btn-primary" onclick="goStep(2, 640, 520)">
