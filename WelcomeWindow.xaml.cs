@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
+using System.Windows.Media.Animation;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.ViewModels;
@@ -91,6 +92,25 @@ public partial class WelcomeWindow : Window
                     var mainWindow = new MainWindow(_services, vm);
                     mainWindow.Show();
                     this.Close();
+                });
+            }
+        }
+        else if (msg.StartsWith("resize:"))
+        {
+            var parts = msg.Substring(7).Split(',');
+            if (parts.Length == 2 && double.TryParse(parts[0], out double width) && double.TryParse(parts[1], out double height))
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    // Smoothly animate window size
+                    var duration = new Duration(TimeSpan.FromMilliseconds(300));
+                    var ease = new CubicEase { EasingMode = EasingMode.EaseInOut };
+
+                    var widthAnim = new DoubleAnimation(width, duration) { EasingFunction = ease };
+                    var heightAnim = new DoubleAnimation(height, duration) { EasingFunction = ease };
+
+                    this.BeginAnimation(Window.WidthProperty, widthAnim);
+                    this.BeginAnimation(Window.HeightProperty, heightAnim);
                 });
             }
         }
