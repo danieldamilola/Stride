@@ -42,16 +42,8 @@ public partial class App : Application
         // Create and show MainWindow via DI
         var vm = _serviceProvider.GetRequiredService<BrowserViewModel>();
         
-        if (vm.Settings.IsFirstRun)
-        {
-            var welcomeWindow = new WelcomeWindow(_serviceProvider);
-            welcomeWindow.Show();
-        }
-        else
-        {
-            var window = new MainWindow(_serviceProvider, vm);
-            window.Show();
-        }
+        var window = new MainWindow(_serviceProvider, vm);
+        window.Show();
     }
 
     protected override void OnExit(ExitEventArgs e)

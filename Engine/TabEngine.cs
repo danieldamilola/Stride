@@ -542,6 +542,12 @@ public sealed class TabEngine : IDisposable
             await ApplyDarkModeToWebViewAsync(tab.Id, wv.CoreWebView2, _settings.ForceDarkMode);
 
             wv.CoreWebView2.SetVirtualHostNameToFolderMapping("local.assets", System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages"), Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
+
+            // Strip native Edge bloat UI
+            wv.CoreWebView2.Settings.IsBuiltInErrorPageEnabled = false;
+            wv.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
+            wv.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
+            wv.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
         }
         catch
         {
@@ -889,6 +895,14 @@ public sealed class TabEngine : IDisposable
             }
         };
 
+        // Suppress the default Edge Downloads hub flyout
+        wv.CoreWebView2.IsDefaultDownloadDialogOpenChanged += (_, _) =>
+        {
+            if (wv.CoreWebView2.IsDefaultDownloadDialogOpen)
+            {
+                wv.CoreWebView2.CloseDefaultDownloadDialog();
+            }
+        };
         wv.CoreWebView2.DownloadStarting += async (_, e) =>
         {
             e.Handled = true; // We don't want the default download dialog
@@ -1058,6 +1072,43 @@ public sealed class TabEngine : IDisposable
         wv.CoreWebView2.WindowCloseRequested += (_, _) =>
         {
             _dispatcher.Invoke(() => CloseTab(tab));
+        };
+
+        wv.CoreWebView2.ScriptDialogOpening += (_, e) =>
+        {
+            var deferral = e.GetDeferral();
+            _dispatcher.InvokeAsync(() =>
+            {
+                var dialog = new ScriptDialogWindow(e.Kind, e.Message, e.DefaultText, e.Uri);
+                dialog.Owner = System.Windows.Application.Current.MainWindow;
+                dialog.ShowDialog();
+
+                if (dialog.IsAccepted)
+                {
+                    e.Accept();
+                    if (e.Kind == CoreWebView2ScriptDialogKind.Prompt)
+                        e.ResultText = dialog.InputText;
+                }
+                
+                deferral.Complete();
+            });
+        };
+
+        wv.CoreWebView2.PermissionRequested += (_, e) =>
+        {
+            var deferral = e.GetDeferral();
+            _dispatcher.InvokeAsync(() =>
+            {
+                var dialog = new PermissionDialogWindow(e.Uri, e.PermissionKind);
+                dialog.Owner = System.Windows.Application.Current.MainWindow;
+                dialog.ShowDialog();
+
+                e.State = dialog.IsAllowed 
+                    ? CoreWebView2PermissionState.Allow 
+                    : CoreWebView2PermissionState.Deny;
+                    
+                deferral.Complete();
+            });
         };
     }
 
