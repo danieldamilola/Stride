@@ -542,6 +542,9 @@ public sealed class TabEngine : IDisposable
             await ApplyDarkModeToWebViewAsync(tab.Id, wv.CoreWebView2, _settings.ForceDarkMode);
 
             wv.CoreWebView2.SetVirtualHostNameToFolderMapping("local.assets", System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages"), Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
+            var userAssetsPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
+            if (!System.IO.Directory.Exists(userAssetsPath)) System.IO.Directory.CreateDirectory(userAssetsPath);
+            wv.CoreWebView2.SetVirtualHostNameToFolderMapping("user.assets", userAssetsPath, Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
 
             // Strip native Edge bloat UI
             wv.CoreWebView2.Settings.IsBuiltInErrorPageEnabled = false;
@@ -668,7 +671,7 @@ public sealed class TabEngine : IDisposable
 
             if (e.Uri is string urlStr)
             {
-                var isInternal = urlStr.StartsWith("internal://") || urlStr.StartsWith("https://local.assets/");
+                var isInternal = urlStr.StartsWith("internal://") || urlStr.StartsWith("https://local.assets/") || urlStr.StartsWith("https://user.assets/");
                 wv.DefaultBackgroundColor = isInternal 
                     ? System.Drawing.Color.Transparent 
                     : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
@@ -872,7 +875,8 @@ public sealed class TabEngine : IDisposable
             try 
             { 
                 if (e.Source.StartsWith("http://local.assets/", StringComparison.OrdinalIgnoreCase) || 
-                    e.Source.StartsWith("https://local.assets/", StringComparison.OrdinalIgnoreCase)) 
+                    e.Source.StartsWith("https://local.assets/", StringComparison.OrdinalIgnoreCase) ||
+                    e.Source.StartsWith("https://user.assets/", StringComparison.OrdinalIgnoreCase)) 
                 {
                     isTrustedLocalAsset = true; 
                 }
