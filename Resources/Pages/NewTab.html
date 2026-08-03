@@ -11,6 +11,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
+            zoom: {{ZOOM}}%;
             background-color: #111113;
             background-size: cover;
             background-position: center;
@@ -500,14 +501,16 @@
         const __T = '{{IPC_TOKEN}}:';
         const shortcuts = JSON.parse('{{SHORTCUTS}}' || '[]');
 
-        // Local high-quality backgrounds (instant load!)
-        const BACKGROUNDS = [
-            "https://local.assets/bg1.jpg",
-            "https://local.assets/bg2.jpg",
-            "https://local.assets/bg3.jpg"
-        ];
+        const BACKGROUNDS = JSON.parse('{{BACKGROUNDS_JSON}}' || '[]');
 
         function initBackground() {
+            if (BACKGROUNDS.length === 0) return;
+
+            if (BACKGROUNDS.length === 1) {
+                document.body.style.backgroundImage = `url(${BACKGROUNDS[0]})`;
+                return;
+            }
+
             // Pick a random background index from cache to avoid showing the same one twice in a row if possible
             let lastIdx = -1;
             try {

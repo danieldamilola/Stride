@@ -45,6 +45,11 @@ public partial class MainWindow : Window
 
     public MainWindow(IServiceProvider services, BrowserViewModel vm)
     {
+        // Close the Command Bar overlay if the window loses focus or moves/resizes
+        this.Deactivated += (_, _) => HideCommandBar();
+        this.LocationChanged += (_, _) => HideCommandBar();
+        this.SizeChanged += (_, _) => HideCommandBar();
+
         InitializeComponent();
 
         _vm = vm;
@@ -691,13 +696,13 @@ public partial class MainWindow : Window
         CommandBarGrid.BeginAnimation(OpacityProperty, fadeIn);
         CommandBarPanel.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slideIn);
 
-        // Focus after layout pass to ensure TextBox is in visual tree
-        _ = Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () =>
+        // Focus after layout pass to ensure TextBox is in visual tree and Popup is active
+        Dispatcher.BeginInvoke(new Action(() =>
         {
             AddressBar.Focus();
             Keyboard.Focus(AddressBar);
             AddressBar.SelectAll();
-        });
+        }), System.Windows.Threading.DispatcherPriority.Input);
     }
 
     private void HideCommandBar()
