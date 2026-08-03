@@ -548,6 +548,8 @@ public sealed class TabEngine : IDisposable
             wv.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
             wv.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
             wv.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+            
+            try { wv.CoreWebView2.Settings.IsSwipeNavigationEnabled = true; } catch { }
         }
         catch
         {
