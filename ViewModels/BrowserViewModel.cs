@@ -142,18 +142,10 @@ public sealed partial class BrowserViewModel : ObservableObject
 
         try
         {
-            await Task.Delay(150, token); // Debounce
-            
-            var url = $"https://duckduckgo.com/ac/?q={Uri.EscapeDataString(query)}";
-            var response = await _http.GetStringAsync(url, token);
-            
-            // [{ "phrase": "..." }, ...]
-            using var doc = JsonDocument.Parse(response);
-            
             var results = new List<string>();
-            
-            // Add local shortcuts first
             var lowerQuery = query.ToLowerInvariant();
+            
+            // 1. Instantly show local shortcuts
             foreach (var shortcut in Settings.NewTabShortcuts)
             {
                 if (shortcut.Name.ToLowerInvariant().Contains(lowerQuery) || 
@@ -162,8 +154,25 @@ public sealed partial class BrowserViewModel : ObservableObject
                     results.Add(shortcut.Url);
                 }
             }
+            
+            Suggestions.Clear();
+            foreach (var r in results.Take(8))
+                Suggestions.Add(r);
+            
+            SelectedSuggestionIndex = -1;
+            ShowSuggestions = Suggestions.Count > 0;
 
-            // Then web suggestions
+            // 2. Debounce and fetch web suggestions
+            await Task.Delay(150, token); 
+            
+            var url = $"https://duckduckgo.com/ac/?q={Uri.EscapeDataString(query)}";
+            var response = await _http.GetStringAsync(url, token);
+            
+            if (token.IsCancellationRequested) return;
+
+            // [{ "phrase": "..." }, ...]
+            using var doc = JsonDocument.Parse(response);
+            
             foreach (var element in doc.RootElement.EnumerateArray())
             {
                 if (element.TryGetProperty("phrase", out var phrase))
