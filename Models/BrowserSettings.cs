@@ -69,7 +69,10 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _showDownloadsIcon = true;
 
     [ObservableProperty]
-    private bool _showNavArrows = true;
+    private bool _showBackArrow = true;
+
+    [ObservableProperty]
+    private bool _showForwardArrow = true;
 
     [ObservableProperty]
     private bool _showRefreshButton = true;

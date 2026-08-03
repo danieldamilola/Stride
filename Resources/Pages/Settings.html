@@ -747,11 +747,20 @@
           </div>
           <div class="setting-row">
             <div class="setting-info">
-              <div class="setting-label">Show Navigation Arrows</div>
-              <div class="setting-desc">Back and Forward buttons</div>
+              <div class="setting-label">Show Back Arrow</div>
+              <div class="setting-desc">Left navigation button</div>
             </div>
             <div class="setting-control">
-              <input type="checkbox" class="toggle" {{CHK_NAVARROWS}} onchange="s('showNavArrows', this)" />
+              <input type="checkbox" class="toggle" {{CHK_BACKARROW}} onchange="s('showBackArrow', this)" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Show Forward Arrow</div>
+              <div class="setting-desc">Right navigation button</div>
+            </div>
+            <div class="setting-control">
+              <input type="checkbox" class="toggle" {{CHK_FWDARROW}} onchange="s('showForwardArrow', this)" />
             </div>
           </div>
           <div class="setting-row">

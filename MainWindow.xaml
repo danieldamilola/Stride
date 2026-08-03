@@ -234,7 +234,7 @@
                     <StackPanel Grid.Column="0" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="0,0,4,0">
                         <Button Click="GoBack_Click" Style="{DynamicResource IconBtn}"
-                                Visibility="{Binding Settings.ShowNavArrows, Converter={StaticResource BoolToVis}}"
+                                Visibility="{Binding Settings.ShowBackArrow, Converter={StaticResource BoolToVis}}"
                                 Width="26" Height="26" ToolTip="Back (Alt+Left)">
                             <Path Data="{StaticResource IconBack}"
                                   Stroke="{DynamicResource TextSecondary}"
@@ -243,7 +243,7 @@
                                   StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                         </Button>
                         <Button Click="GoForward_Click" Style="{DynamicResource IconBtn}"
-                                Visibility="{Binding Settings.ShowNavArrows, Converter={StaticResource BoolToVis}}"
+                                Visibility="{Binding Settings.ShowForwardArrow, Converter={StaticResource BoolToVis}}"
                                 Width="26" Height="26" ToolTip="Forward (Alt+Right)">
                             <Path Data="{StaticResource IconForward}"
                                   Stroke="{DynamicResource TextSecondary}"
