@@ -317,6 +317,7 @@ public partial class MainWindow : Window
                     var tab = _engine.CreateTab(entry.Url);
                     tab.Title = entry.Title;
                     tab.IsPinned = entry.IsPinned;
+                    _ = _engine.LoadFaviconAsync(tab);
                 }
                 _engine.SwitchTo(_engine.Tabs[0]);
                 await _engine.ActivateAsync(_engine.Tabs[0]);

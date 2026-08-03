@@ -1298,6 +1298,21 @@ public sealed class TabEngine : IDisposable
     }
 
     // ──── Memory Management ────
+    
+    public async Task LoadFaviconAsync(BrowserTab tab)
+    {
+        if (string.IsNullOrWhiteSpace(tab.Url)) return;
+        
+        var bitmap = await _faviconLoader.LoadAsync(tab.Url);
+        if (bitmap is not null)
+        {
+            _dispatcher.Invoke(() => 
+            { 
+                tab.Favicon = bitmap; 
+                TabStateChanged?.Invoke(tab); 
+            });
+        }
+    }
 
     private bool IsTabSafeToHibernate(BrowserTab tab)
     {
