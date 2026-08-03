@@ -661,7 +661,7 @@ public partial class MainWindow : Window
         ShowCommandBar();
     }
 
-    private async void ShowCommandBar()
+    private void ShowCommandBar()
     {
         if (_isCommandBarOpen) return;
         _isCommandBarOpen = true;
@@ -677,34 +677,10 @@ public partial class MainWindow : Window
             _vm.AddressText = "";
         }
 
-        // Capture WebView content as screenshot before hiding (for dimmed preview)
-        try
-        {
-            var core = _engine.GetCoreWebView2();
-            if (core is not null)
-            {
-                using var ms = new System.IO.MemoryStream();
-                await core.CapturePreviewAsync(
-                    Microsoft.Web.WebView2.Core.CoreWebView2CapturePreviewImageFormat.Jpeg, ms);
-                ms.Position = 0;
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.StreamSource = ms;
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.EndInit();
-                bitmap.Freeze();
-                PageSnapshot.Source = bitmap;
-                PageSnapshot.Visibility = Visibility.Visible;
-            }
-        }
-        catch { /* Fallback: no snapshot, just dark background */ }
-
-        // Hide WebView — it's a native HWND that renders above WPF overlays (airspace issue)
-        WebViewHost.Visibility = Visibility.Hidden;
-        CommandBarOverlay.Visibility = Visibility.Visible;
+        CommandBarOverlay.IsOpen = true;
 
         // 80ms punchy ease-out animation
-        CommandBarOverlay.Opacity = 0;
+        CommandBarGrid.Opacity = 0;
         CommandBarPanel.RenderTransform = new TranslateTransform(0, -10);
 
         var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(80))
@@ -712,7 +688,7 @@ public partial class MainWindow : Window
         var slideIn = new DoubleAnimation(-10, 0, TimeSpan.FromMilliseconds(80))
         { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
 
-        CommandBarOverlay.BeginAnimation(OpacityProperty, fadeIn);
+        CommandBarGrid.BeginAnimation(OpacityProperty, fadeIn);
         CommandBarPanel.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slideIn);
 
         // Focus after layout pass to ensure TextBox is in visual tree
@@ -737,13 +713,8 @@ public partial class MainWindow : Window
         { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
         fadeOut.Completed += (_, _) =>
         {
-            CommandBarOverlay.Visibility = Visibility.Collapsed;
-            CommandBarOverlay.BeginAnimation(OpacityProperty, null);
-
-            // Restore WebView visibility and clear snapshot
-            PageSnapshot.Visibility = Visibility.Collapsed;
-            PageSnapshot.Source = null;
-            WebViewHost.Visibility = Visibility.Visible;
+            CommandBarOverlay.IsOpen = false;
+            CommandBarGrid.BeginAnimation(OpacityProperty, null);
 
             // Return focus to WebView
             if (_engine.ActiveTab is not null)
@@ -753,7 +724,7 @@ public partial class MainWindow : Window
         var slideOut = new DoubleAnimation(0, -10, TimeSpan.FromMilliseconds(80))
         { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
 
-        CommandBarOverlay.BeginAnimation(OpacityProperty, fadeOut);
+        CommandBarGrid.BeginAnimation(OpacityProperty, fadeOut);
         if (CommandBarPanel.RenderTransform is TranslateTransform tt)
             tt.BeginAnimation(TranslateTransform.YProperty, slideOut);
     }
