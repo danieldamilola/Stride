@@ -51,7 +51,24 @@
                            Width="16" Height="16"
                            RenderOptions.BitmapScalingMode="HighQuality"
                            HorizontalAlignment="Center"
-                           VerticalAlignment="Center" x:Name="FaviconImage"/>
+                           VerticalAlignment="Center" x:Name="FaviconImage">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Setter Property="Opacity" Value="1.0"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                        <Setter Property="Opacity" Value="0.65"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsHibernated}" Value="True">
+                                        <Setter Property="Opacity" Value="0.35"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <Setter Property="Opacity" Value="1.0"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
                     <!-- INACTIVE close: overlay on favicon, hover tab to show, hidden when selected -->
                     <Button Click="CloseTab_Click" Tag="{Binding}"
                             ToolTip="Close tab"
