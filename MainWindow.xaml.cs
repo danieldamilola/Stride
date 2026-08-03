@@ -685,7 +685,7 @@ public partial class MainWindow : Window
             {
                 using var ms = new System.IO.MemoryStream();
                 await core.CapturePreviewAsync(
-                    Microsoft.Web.WebView2.Core.CoreWebView2CapturePreviewImageFormat.Png, ms);
+                    Microsoft.Web.WebView2.Core.CoreWebView2CapturePreviewImageFormat.Jpeg, ms);
                 ms.Position = 0;
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
@@ -703,14 +703,14 @@ public partial class MainWindow : Window
         WebViewHost.Visibility = Visibility.Hidden;
         CommandBarOverlay.Visibility = Visibility.Visible;
 
-        // 150ms ease-out appear animation: fade in + slide down
+        // 80ms punchy ease-out animation
         CommandBarOverlay.Opacity = 0;
         CommandBarPanel.RenderTransform = new TranslateTransform(0, -10);
 
-        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(150))
-        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
-        var slideIn = new DoubleAnimation(-10, 0, TimeSpan.FromMilliseconds(150))
-        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(80))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+        var slideIn = new DoubleAnimation(-10, 0, TimeSpan.FromMilliseconds(80))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
 
         CommandBarOverlay.BeginAnimation(OpacityProperty, fadeIn);
         CommandBarPanel.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slideIn);
@@ -732,9 +732,9 @@ public partial class MainWindow : Window
         _vm.ShowSuggestions = false;
         _vm.Suggestions.Clear();
 
-        // 150ms ease-out dismiss animation: fade out + slide up
-        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(150))
-        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+        // 80ms ease-out dismiss animation: fade out + slide up
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(80))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
         fadeOut.Completed += (_, _) =>
         {
             CommandBarOverlay.Visibility = Visibility.Collapsed;
@@ -750,8 +750,8 @@ public partial class MainWindow : Window
                 WebViewHost.Focus();
         };
 
-        var slideOut = new DoubleAnimation(0, -10, TimeSpan.FromMilliseconds(150))
-        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+        var slideOut = new DoubleAnimation(0, -10, TimeSpan.FromMilliseconds(80))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
 
         CommandBarOverlay.BeginAnimation(OpacityProperty, fadeOut);
         if (CommandBarPanel.RenderTransform is TranslateTransform tt)
