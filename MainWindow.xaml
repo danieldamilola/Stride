@@ -57,10 +57,10 @@
                                 <Setter Property="Opacity" Value="1.0"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsActive}" Value="False">
-                                        <Setter Property="Opacity" Value="0.65"/>
+                                        <Setter Property="Opacity" Value="0.4"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding IsHibernated}" Value="True">
-                                        <Setter Property="Opacity" Value="0.35"/>
+                                        <Setter Property="Opacity" Value="0.15"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                                         <Setter Property="Opacity" Value="1.0"/>
