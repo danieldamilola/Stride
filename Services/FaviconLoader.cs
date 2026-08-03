@@ -90,7 +90,7 @@ public sealed class FaviconLoader
     /// saves it to disk and updates the in-memory cache.
     /// This is the Chrome/Firefox approach — engine-provided, not 3rd party.
     /// </summary>
-    public async Task<BitmapImage?> HandleFaviconChangedAsync(WebView2 wv, string url)
+    public async Task<BitmapImage?> HandleFaviconChangedAsync(WebView2CompositionControl wv, string url)
     {
         if (wv.CoreWebView2 is null) return null;
         if (InternalUrls.IsInternal(url) || InternalUrls.IsDataOrBlank(url))

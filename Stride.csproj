@@ -15,7 +15,7 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.*" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2849.39" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4181-prerelease" />
   </ItemGroup>
 
   <!-- Nested projects; exclude from this project's default globs -->

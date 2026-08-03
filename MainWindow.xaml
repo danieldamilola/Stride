@@ -427,20 +427,7 @@
             </Border>
         </DockPanel>
 
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  COMMAND BAR — Floating overlay. Centered. On-demand.  -->
-        <!--  Appears on Ctrl+L / click URL label. Disappears on   -->
-        <!--  Escape or click-away. No permanent address bar.      -->
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <Popup x:Name="CommandBarOverlay" 
-               PlacementTarget="{Binding ElementName=LayoutRoot}" 
-               Placement="Center" 
-               AllowsTransparency="True" 
-               StaysOpen="True" 
-               PopupAnimation="None">
-            <Grid x:Name="CommandBarGrid" 
-                  Width="{Binding ElementName=LayoutRoot, Path=ActualWidth}"
-                  Height="{Binding ElementName=LayoutRoot, Path=ActualHeight}">
+        <Grid x:Name="CommandBarGrid" Visibility="Collapsed" Panel.ZIndex="100">
             <!-- Backdrop dim — 50% black to clearly show floating panel -->
             <Border Background="#80000000"
                     MouseLeftButtonDown="CommandBarBackdrop_Click"/>
@@ -569,7 +556,6 @@
                     </ListBox>
                 </Grid>
             </Border>
-            </Grid>
-        </Popup>
+        </Grid>
     </Grid>
 </Window>

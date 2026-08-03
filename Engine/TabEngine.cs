@@ -31,7 +31,7 @@ public sealed class TabEngine : IDisposable
     private readonly ContentScriptInjector _contentScriptInjector;
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _hibernationTimer;
-    private readonly Dictionary<Guid, WebView2> _webViews = new();
+    private readonly Dictionary<Guid, WebView2CompositionControl> _webViews = new();
     private readonly Dictionary<Guid, (string darkReaderId, string forceDarkId)> _darkScripts = new();
     private readonly LinkedList<(string url, string title)> _closedTabs = new();
 
@@ -524,7 +524,7 @@ public sealed class TabEngine : IDisposable
     {
         var isInternal = tab.Url?.StartsWith("internal://") ?? true;
         
-        var wv = new WebView2
+        var wv = new WebView2CompositionControl
         {
             DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
             Visibility = Visibility.Hidden
@@ -597,7 +597,7 @@ public sealed class TabEngine : IDisposable
         NavigateInitialUrl(wv, tab);
     }
 
-    private void NavigateInitialUrl(WebView2 wv, BrowserTab tab)
+    private void NavigateInitialUrl(WebView2CompositionControl wv, BrowserTab tab)
     {
         // Settings/OneTab/History are navigated by NavigateToSettings/OneTab/History
         // after activation — skip here to avoid a double load.
@@ -658,7 +658,7 @@ public sealed class TabEngine : IDisposable
 
     // ──── WebView Event Wiring ────
 
-    private void WireNavigationEvents(WebView2 wv, BrowserTab tab)
+    private void WireNavigationEvents(WebView2CompositionControl wv, BrowserTab tab)
     {
         wv.CoreWebView2.NavigationStarting += (_, e) =>
         {
@@ -811,7 +811,7 @@ public sealed class TabEngine : IDisposable
         };
     }
 
-    private void WireTitleAndSourceEvents(WebView2 wv, BrowserTab tab)
+    private void WireTitleAndSourceEvents(WebView2CompositionControl wv, BrowserTab tab)
     {
         wv.CoreWebView2.DocumentTitleChanged += (_, _) =>
         {
@@ -854,7 +854,7 @@ public sealed class TabEngine : IDisposable
         };
     }
 
-    private void WireMessageAndWindowEvents(WebView2 wv, BrowserTab tab)
+    private void WireMessageAndWindowEvents(WebView2CompositionControl wv, BrowserTab tab)
     {
         wv.CoreWebView2.WebMessageReceived += (_, e) =>
         {
@@ -1112,7 +1112,7 @@ public sealed class TabEngine : IDisposable
         };
     }
 
-    private void WireContextMenuEvents(WebView2 wv, BrowserTab tab)
+    private void WireContextMenuEvents(WebView2CompositionControl wv, BrowserTab tab)
     {
         wv.CoreWebView2.ContextMenuRequested += (_, e) =>
         {
@@ -1218,7 +1218,7 @@ public sealed class TabEngine : IDisposable
 
 
 
-    private void HandleProcessFailure(WebView2 wv, BrowserTab tab)
+    private void HandleProcessFailure(WebView2CompositionControl wv, BrowserTab tab)
     {
         wv.CoreWebView2.ProcessFailed += (_, e) =>
         {
@@ -1262,7 +1262,7 @@ public sealed class TabEngine : IDisposable
         _darkScripts.Clear();
     }
 
-    private void UpdateTabFromWebView(WebView2 wv, BrowserTab tab)
+    private void UpdateTabFromWebView(WebView2CompositionControl wv, BrowserTab tab)
     {
         var source = wv.Source?.ToString() ?? "";
         if (InternalUrls.IsDataOrBlank(source))

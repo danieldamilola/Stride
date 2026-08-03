@@ -45,10 +45,8 @@ public partial class MainWindow : Window
 
     public MainWindow(IServiceProvider services, BrowserViewModel vm)
     {
-        // Close the Command Bar overlay if the window loses focus or moves/resizes
-        this.Deactivated += (_, _) => HideCommandBar();
-        this.LocationChanged += (_, _) => HideCommandBar();
-        this.SizeChanged += (_, _) => HideCommandBar();
+        // We no longer need Deactivated/LocationChanged/SizeChanged hooks 
+        // since the Command Bar is integrated back into the visual tree.
 
         InitializeComponent();
 
@@ -682,7 +680,7 @@ public partial class MainWindow : Window
             _vm.AddressText = "";
         }
 
-        CommandBarOverlay.IsOpen = true;
+        CommandBarGrid.Visibility = Visibility.Visible;
 
         // 80ms punchy ease-out animation
         CommandBarGrid.Opacity = 0;
@@ -718,7 +716,7 @@ public partial class MainWindow : Window
         { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
         fadeOut.Completed += (_, _) =>
         {
-            CommandBarOverlay.IsOpen = false;
+            CommandBarGrid.Visibility = Visibility.Collapsed;
             CommandBarGrid.BeginAnimation(OpacityProperty, null);
 
             // Return focus to WebView

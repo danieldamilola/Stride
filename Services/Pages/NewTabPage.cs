@@ -8,7 +8,7 @@ namespace StrideBrowser.Services.Pages;
 /// <summary>Generates the new tab page HTML.</summary>
 public sealed class NewTabPage
 {
-    private static string[] _backgroundUrls = null;
+    private static string[]? _backgroundUrls = null;
 
     /// <summary>Returns the new tab page HTML.</summary>
     public string Render(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "")
