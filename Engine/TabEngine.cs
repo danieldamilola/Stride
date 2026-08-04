@@ -513,6 +513,44 @@ public sealed class TabEngine : IDisposable
             await wv.EnsureCoreWebView2Async(_environment);
             wv.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
             
+            CoreWebView2 core = wv.CoreWebView2;
+            core.ContextMenuRequested += (object? sender, CoreWebView2ContextMenuRequestedEventArgs args) =>
+            {
+                var deferral = args.GetDeferral();
+                args.Handled = true;
+
+                _webViewHost.Dispatcher.InvokeAsync(() =>
+                {
+                    var cm = new ContextMenu();
+                    cm.Background = (System.Windows.Media.Brush)Application.Current.Resources["SurfaceBrush"];
+                    cm.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["TextPrimary"];
+                    cm.BorderBrush = (System.Windows.Media.Brush)Application.Current.Resources["BorderMuted"];
+                    cm.BorderThickness = new Thickness(1);
+                    cm.Padding = new Thickness(4);
+
+                    var back = new MenuItem { Header = "Back", IsEnabled = core.CanGoBack };
+                    back.Click += (s, e) => core.GoBack();
+                    cm.Items.Add(back);
+
+                    var forward = new MenuItem { Header = "Forward", IsEnabled = core.CanGoForward };
+                    forward.Click += (s, e) => core.GoForward();
+                    cm.Items.Add(forward);
+
+                    var refresh = new MenuItem { Header = "Refresh" };
+                    refresh.Click += (s, e) => core.Reload();
+                    cm.Items.Add(refresh);
+
+                    cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderMuted"] });
+
+                    var inspect = new MenuItem { Header = "Inspect Element" };
+                    inspect.Click += (s, e) => core.OpenDevToolsWindow();
+                    cm.Items.Add(inspect);
+
+                    cm.IsOpen = true;
+                    deferral.Complete();
+                });
+            };
+            
             wv.CoreWebView2.Profile.PreferredColorScheme = Services.ThemeManager.IsCurrentlyDark() 
                 ? CoreWebView2PreferredColorScheme.Dark 
                 : CoreWebView2PreferredColorScheme.Light;
