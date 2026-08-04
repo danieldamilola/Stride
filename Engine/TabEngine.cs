@@ -511,7 +511,6 @@ public sealed class TabEngine : IDisposable
         try
         {
             await wv.EnsureCoreWebView2Async(_environment);
-            wv.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
             
             CoreWebView2 core = wv.CoreWebView2;
             core.ContextMenuRequested += (object? sender, CoreWebView2ContextMenuRequestedEventArgs args) =>
