@@ -511,6 +511,7 @@ public sealed class TabEngine : IDisposable
         try
         {
             await wv.EnsureCoreWebView2Async(_environment);
+            wv.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
             
             wv.CoreWebView2.Profile.PreferredColorScheme = Services.ThemeManager.IsCurrentlyDark() 
                 ? CoreWebView2PreferredColorScheme.Dark 
