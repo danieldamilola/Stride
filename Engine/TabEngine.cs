@@ -521,27 +521,23 @@ public sealed class TabEngine : IDisposable
                 _webViewHost.Dispatcher.InvokeAsync(() =>
                 {
                     var cm = new ContextMenu();
-                    cm.Background = (System.Windows.Media.Brush)Application.Current.Resources["SurfaceBrush"];
-                    cm.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["TextPrimary"];
-                    cm.BorderBrush = (System.Windows.Media.Brush)Application.Current.Resources["BorderMuted"];
-                    cm.BorderThickness = new Thickness(1);
-                    cm.Padding = new Thickness(4);
+                    cm.PlacementTarget = _webViewHost;
 
-                    var back = new MenuItem { Header = "Back", IsEnabled = core.CanGoBack };
+                    var back = new MenuItem { Header = "Back", IsEnabled = core.CanGoBack, InputGestureText = "Alt+Left Arrow" };
                     back.Click += (s, e) => core.GoBack();
                     cm.Items.Add(back);
 
-                    var forward = new MenuItem { Header = "Forward", IsEnabled = core.CanGoForward };
+                    var forward = new MenuItem { Header = "Forward", IsEnabled = core.CanGoForward, InputGestureText = "Alt+Right Arrow" };
                     forward.Click += (s, e) => core.GoForward();
                     cm.Items.Add(forward);
 
-                    var refresh = new MenuItem { Header = "Refresh" };
+                    var refresh = new MenuItem { Header = "Refresh", InputGestureText = "Ctrl+R" };
                     refresh.Click += (s, e) => core.Reload();
                     cm.Items.Add(refresh);
 
-                    cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderMuted"] });
+                    cm.Items.Add(new Separator());
 
-                    var inspect = new MenuItem { Header = "Inspect Element" };
+                    var inspect = new MenuItem { Header = "Inspect Element", InputGestureText = "Ctrl+Shift+I" };
                     inspect.Click += (s, e) => core.OpenDevToolsWindow();
                     cm.Items.Add(inspect);
 
