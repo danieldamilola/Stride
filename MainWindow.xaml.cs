@@ -820,7 +820,7 @@ public partial class MainWindow : Window
 
     private void StandardAddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (sender is TextBox tb)
+        if (sender is TextBox tb && tb.IsKeyboardFocusWithin)
             _ = _vm.UpdateSuggestionsAsync(tb.Text);
     }
 
@@ -853,7 +853,7 @@ public partial class MainWindow : Window
 
     private void AddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (sender is TextBox tb)
+        if (sender is TextBox tb && tb.IsKeyboardFocusWithin)
             _ = _vm.UpdateSuggestionsAsync(tb.Text);
     }
 

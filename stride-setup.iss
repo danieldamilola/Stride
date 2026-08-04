@@ -6,7 +6,7 @@
 #define MyAppPublisher "Daniel Damilola"
 #define MyAppURL "https://stride.browser"
 #define MyAppExeName "Stride.exe"
-#define MySourceDir "bin\Release\net9.0-windows\win-x64\publish"
+#define MySourceDir "bin\Release\net9.0-windows10.0.17763.0\win-x64\publish"
 
 [Setup]
 AppId={{B8F2A9D1-3E7C-4A5B-9D6F-1C2E8F4A7B3D}
