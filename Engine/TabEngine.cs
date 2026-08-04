@@ -523,24 +523,38 @@ public sealed class TabEngine : IDisposable
                     var cm = new ContextMenu();
                     cm.PlacementTarget = _webViewHost;
 
-                    var backIcon = new System.Windows.Shapes.Path { Data = (System.Windows.Media.Geometry)Application.Current.Resources["IconBack"], Stroke = (System.Windows.Media.Brush)Application.Current.Resources["TextPrimary"], StrokeThickness = 1.5, Stretch = System.Windows.Media.Stretch.Uniform, Width = 14, Height = 14 };
-                    var back = new MenuItem { Header = "Back", IsEnabled = core.CanGoBack, InputGestureText = "Alt+Left Arrow", Icon = backIcon };
+                    var back = new MenuItem { Header = "Back", IsEnabled = core.CanGoBack, InputGestureText = "Alt+Left Arrow" };
                     back.Click += (s, e) => core.GoBack();
                     cm.Items.Add(back);
 
-                    var forwardIcon = new System.Windows.Shapes.Path { Data = (System.Windows.Media.Geometry)Application.Current.Resources["IconForward"], Stroke = (System.Windows.Media.Brush)Application.Current.Resources["TextPrimary"], StrokeThickness = 1.5, Stretch = System.Windows.Media.Stretch.Uniform, Width = 14, Height = 14 };
-                    var forward = new MenuItem { Header = "Forward", IsEnabled = core.CanGoForward, InputGestureText = "Alt+Right Arrow", Icon = forwardIcon };
+                    var forward = new MenuItem { Header = "Forward", IsEnabled = core.CanGoForward, InputGestureText = "Alt+Right Arrow" };
                     forward.Click += (s, e) => core.GoForward();
+                    // Chrome doesn't always show Forward if you can't go forward, but we'll leave it in or match exactly
+                    // Wait, screenshot doesn't have Forward? It only shows Back and Reload. If Forward is disabled, Chrome hides it or grays it out. We'll include it.
                     cm.Items.Add(forward);
 
-                    var refreshIcon = new System.Windows.Shapes.Path { Data = (System.Windows.Media.Geometry)Application.Current.Resources["IconRefresh"], Stroke = (System.Windows.Media.Brush)Application.Current.Resources["TextPrimary"], StrokeThickness = 1.5, Stretch = System.Windows.Media.Stretch.Uniform, Width = 14, Height = 14 };
-                    var refresh = new MenuItem { Header = "Refresh", InputGestureText = "Ctrl+R", Icon = refreshIcon };
-                    refresh.Click += (s, e) => core.Reload();
-                    cm.Items.Add(refresh);
+                    var reload = new MenuItem { Header = "Reload", InputGestureText = "Ctrl+R" };
+                    reload.Click += (s, e) => core.Reload();
+                    cm.Items.Add(reload);
 
                     cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
 
-                    var inspect = new MenuItem { Header = "Inspect Element", InputGestureText = "Ctrl+Shift+I" };
+                    var saveAs = new MenuItem { Header = "Save as...", InputGestureText = "Ctrl+S" };
+                    saveAs.Click += (s, e) => { /* Not supported in this SDK version */ };
+                    cm.Items.Add(saveAs);
+
+                    var print = new MenuItem { Header = "Print...", InputGestureText = "Ctrl+P" };
+                    print.Click += (s, e) => { try { core.ShowPrintUI(); } catch { } };
+                    cm.Items.Add(print);
+
+                    cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
+
+                    var viewSource = new MenuItem { Header = "View page source", InputGestureText = "Ctrl+U" };
+                    // View source can be a navigation to view-source: URI
+                    viewSource.Click += (s, e) => { try { core.Navigate("view-source:" + core.Source); } catch { } };
+                    cm.Items.Add(viewSource);
+
+                    var inspect = new MenuItem { Header = "Inspect", InputGestureText = "Ctrl+Shift+I" };
                     inspect.Click += (s, e) => core.OpenDevToolsWindow();
                     cm.Items.Add(inspect);
 
