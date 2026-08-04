@@ -434,7 +434,7 @@
                             <Border.Effect>
                                 <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="4" Opacity="0.25"/>
                             </Border.Effect>
-                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" Grid.IsSharedSizeScope="True"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -451,7 +451,21 @@
                     <ControlTemplate TargetType="MenuItem">
                         <Border x:Name="Bd" Background="Transparent"
                                 CornerRadius="4" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter ContentSource="Header"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Icon" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Shortcut" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter ContentSource="Icon" Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                <ContentPresenter ContentSource="Header" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                <TextBlock Text="{TemplateBinding InputGestureText}" 
+                                           Grid.Column="2" 
+                                           Margin="32,0,0,0" 
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextSecondary}" />
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">

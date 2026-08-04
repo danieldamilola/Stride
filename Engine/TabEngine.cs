@@ -523,19 +523,22 @@ public sealed class TabEngine : IDisposable
                     var cm = new ContextMenu();
                     cm.PlacementTarget = _webViewHost;
 
-                    var back = new MenuItem { Header = "Back", IsEnabled = core.CanGoBack, InputGestureText = "Alt+Left Arrow" };
+                    var backIcon = new System.Windows.Shapes.Path { Data = (System.Windows.Media.Geometry)Application.Current.Resources["IconBack"], Stroke = (System.Windows.Media.Brush)Application.Current.Resources["TextPrimary"], StrokeThickness = 1.5, Stretch = System.Windows.Media.Stretch.Uniform, Width = 14, Height = 14 };
+                    var back = new MenuItem { Header = "Back", IsEnabled = core.CanGoBack, InputGestureText = "Alt+Left Arrow", Icon = backIcon };
                     back.Click += (s, e) => core.GoBack();
                     cm.Items.Add(back);
 
-                    var forward = new MenuItem { Header = "Forward", IsEnabled = core.CanGoForward, InputGestureText = "Alt+Right Arrow" };
+                    var forwardIcon = new System.Windows.Shapes.Path { Data = (System.Windows.Media.Geometry)Application.Current.Resources["IconForward"], Stroke = (System.Windows.Media.Brush)Application.Current.Resources["TextPrimary"], StrokeThickness = 1.5, Stretch = System.Windows.Media.Stretch.Uniform, Width = 14, Height = 14 };
+                    var forward = new MenuItem { Header = "Forward", IsEnabled = core.CanGoForward, InputGestureText = "Alt+Right Arrow", Icon = forwardIcon };
                     forward.Click += (s, e) => core.GoForward();
                     cm.Items.Add(forward);
 
-                    var refresh = new MenuItem { Header = "Refresh", InputGestureText = "Ctrl+R" };
+                    var refreshIcon = new System.Windows.Shapes.Path { Data = (System.Windows.Media.Geometry)Application.Current.Resources["IconRefresh"], Stroke = (System.Windows.Media.Brush)Application.Current.Resources["TextPrimary"], StrokeThickness = 1.5, Stretch = System.Windows.Media.Stretch.Uniform, Width = 14, Height = 14 };
+                    var refresh = new MenuItem { Header = "Refresh", InputGestureText = "Ctrl+R", Icon = refreshIcon };
                     refresh.Click += (s, e) => core.Reload();
                     cm.Items.Add(refresh);
 
-                    cm.Items.Add(new Separator());
+                    cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
 
                     var inspect = new MenuItem { Header = "Inspect Element", InputGestureText = "Ctrl+Shift+I" };
                     inspect.Click += (s, e) => core.OpenDevToolsWindow();
