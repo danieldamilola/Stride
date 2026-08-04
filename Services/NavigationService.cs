@@ -48,7 +48,7 @@ public sealed class NavigationService
 
     private static bool IsAbsoluteWebUrl(string text) =>
         Uri.TryCreate(text, UriKind.Absolute, out var uri) &&
-        uri.Scheme is "http" or "https";
+        (uri.Scheme is "http" or "https" || uri.Scheme == "internal" || uri.Scheme == "data");
 
     private static bool LooksLikeNavigableHost(string text)
     {

@@ -684,6 +684,20 @@
         <div class="card">
           <div class="setting-row">
             <div class="setting-info">
+              <div class="setting-label">Floating Command Bar</div>
+              <div class="setting-desc">When on, search floats beautifully mid-screen (breaks 2-finger trackpad swipe). When off, uses standard address bar. Requires restart.</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_USE_FLOATING_BAR}}
+                onchange="s('useFloatingBar', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
               <div class="setting-label">App Theme</div>
               <div class="setting-desc">Choose between light, dark, or system default.</div>
             </div>
@@ -1419,14 +1433,12 @@
               <div class="setting-desc">Uses GPU to render graphics. Turn off if experiencing graphical glitches. Requires restart.</div>
             </div>
             <div class="setting-control">
-              <label class="toggle-switch">
-                <input
-                  type="checkbox"
-                  {{CHK_HWACCEL}}
-                  onchange="window.chrome.webview.postMessage(__T + 'hwAccel:' + this.checked)"
-                />
-                <span class="slider"></span>
-              </label>
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_HWACCEL}}
+                onchange="s('hwAccel', this)"
+              />
             </div>
           </div>
           <div class="setting-row">

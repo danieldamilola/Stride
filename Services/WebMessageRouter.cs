@@ -69,6 +69,7 @@ public sealed class WebMessageRouter
             [WebMessagePrefix.DownloadCancel] = HandleDownloadCancel,
             [WebMessagePrefix.DownloadPause] = HandleDownloadPause,
             [WebMessagePrefix.DownloadResume] = HandleDownloadResume,
+            [WebMessagePrefix.DownloadRequest] = HandleDownloadRequest,
             [WebMessagePrefix.TCLensGetText] = HandleTCLensGetText,
         };
 
@@ -78,6 +79,7 @@ public sealed class WebMessageRouter
             [WebMessagePrefix.SetDefaultBrowser] = HandleSetDefaultBrowser,
             [WebMessagePrefix.DownloadClear] = HandleDownloadClear,
             [WebMessagePrefix.DownloadRequestSync] = HandleDownloadSync,
+            [WebMessagePrefix.OpenBackgroundsFolder] = HandleOpenBackgroundsFolder,
         };
     }
 
@@ -104,6 +106,16 @@ public sealed class WebMessageRouter
         {
             Trace.WriteLine($"WebMessageRouter.RouteAsync failed for '{message}': {ex.Message}");
         }
+    }
+
+    private Task HandleOpenBackgroundsFolder()
+    {
+        var userBgFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
+        if (!System.IO.Directory.Exists(userBgFolder))
+            System.IO.Directory.CreateDirectory(userBgFolder);
+
+        Process.Start(new ProcessStartInfo { FileName = userBgFolder, UseShellExecute = true });
+        return Task.CompletedTask;
     }
 
     private async Task HandleOpen(string url)
@@ -349,13 +361,82 @@ public sealed class WebMessageRouter
 
     private Task HandleDownloadCancel(string id)
     {
-        var item = _downloadStore.Get(id);
-        if (item?.State == DownloadState.InProgress || item?.State == DownloadState.Paused)
+        var item = _downloadStore.Items.FirstOrDefault(d => d.Id == id);
+        if (item != null)
         {
             _customDownloadManager.CancelDownload(item);
         }
         return Task.CompletedTask;
     }
+
+    private async Task HandleDownloadRequest(string url)
+    {
+        var uri = new Uri(url);
+        var fileName = System.IO.Path.GetFileName(uri.LocalPath);
+        if (string.IsNullOrEmpty(fileName)) fileName = "download";
+        
+        var downloadsFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        var filePath = System.IO.Path.Combine(downloadsFolder, fileName);
+        
+        // Ensure unique filename
+        int count = 1;
+        while (System.IO.File.Exists(filePath))
+        {
+            var nameOnly = System.IO.Path.GetFileNameWithoutExtension(fileName);
+            var ext = System.IO.Path.GetExtension(fileName);
+            filePath = System.IO.Path.Combine(downloadsFolder, $"{nameOnly} ({count}){ext}");
+            count++;
+        }
+        
+        var item = new DownloadItem
+        {
+            Url = url,
+            FileName = System.IO.Path.GetFileName(filePath),
+            FilePath = filePath,
+            State = DownloadState.InProgress
+        };
+        _downloadStore.Add(item);
+        
+        try
+        {
+            using var client = new System.Net.Http.HttpClient();
+            using var response = await client.GetAsync(url, System.Net.Http.HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+            
+            item.TotalBytes = response.Content.Headers.ContentLength ?? 0;
+            
+            using var contentStream = await response.Content.ReadAsStreamAsync();
+            using var fileStream = new System.IO.FileStream(filePath, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, 8192, true);
+            
+            var buffer = new byte[8192];
+            var isMoreToRead = true;
+            long totalRead = 0;
+            
+            do
+            {
+                var read = await contentStream.ReadAsync(buffer, 0, buffer.Length);
+                if (read == 0)
+                {
+                    isMoreToRead = false;
+                }
+                else
+                {
+                    await fileStream.WriteAsync(buffer, 0, read);
+                    totalRead += read;
+                    item.ReceivedBytes = totalRead;
+                }
+            }
+            while (isMoreToRead);
+            
+            item.State = DownloadState.Completed;
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Native download failed: {ex.Message}");
+            item.State = DownloadState.Failed;
+        }
+    }
+
 
     private Task HandleDownloadPause(string id)
     {
@@ -415,6 +496,7 @@ public sealed class WebMessageRouter
 
         ["restoreSession"] = (s, v) => s.RestoreSessionOnStartup = v == "true",
         ["idm"] = (s, v) => s.UseIDMForDownloads = v == "true",
+        ["useFloatingBar"] = (s, v) => s.UseFloatingCommandBar = v == "true",
         ["hwAccel"] = (s, v) => s.HardwareAccelerationEnabled = v == "true",
         ["darkMode"] = (s, v) => s.ForceDarkMode = v == "true",
         ["forceHttps"] = (s, v) => s.ForceHttps = v == "true",

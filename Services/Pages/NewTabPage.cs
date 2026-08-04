@@ -10,6 +10,9 @@ namespace StrideBrowser.Services.Pages;
 /// <summary>Generates the new tab page HTML.</summary>
 public sealed class NewTabPage
 {
+    private static int _lastBgIndex = -1;
+    private static readonly Random _random = new();
+
     /// <summary>Returns the new tab page HTML.</summary>
     public string Render(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "")
     {
@@ -43,13 +46,19 @@ public sealed class NewTabPage
                                      .ToArray();
             }
         }
-        
-        var backgroundsJson = JsonSerializer.Serialize(backgroundUrls);
+        if (backgroundUrls.Length > 0 && string.IsNullOrEmpty(backgroundPath))
+        {
+            int nextIdx = _random.Next(backgroundUrls.Length);
+            if (nextIdx == _lastBgIndex && backgroundUrls.Length > 1)
+                nextIdx = (nextIdx + 1) % backgroundUrls.Length;
+            _lastBgIndex = nextIdx;
+            backgroundPath = backgroundUrls[nextIdx];
+        }
+
         return Helpers.ResourceLoader.LoadTemplate("Resources.Pages.NewTab.html",
             new Dictionary<string, string>
             {
                 ["BACKGROUND"] = backgroundPath,
-                ["BACKGROUNDS_JSON"] = backgroundsJson,
                 ["SHORTCUTS"] = shortcutsJson,
                 ["ACCENT"] = accentColor,
                 ["ACCENT_RGB"] = accentRgb,

@@ -661,7 +661,23 @@ public partial class MainWindow : Window
 
     private void FocusAddressBar()
     {
-        ShowCommandBar();
+        if (_vm.Settings.UseFloatingCommandBar)
+        {
+            ShowCommandBar();
+        }
+        else
+        {
+            StandardAddressBar.Focus();
+            if (_engine.ActiveTab is { } activeTab && !string.IsNullOrEmpty(activeTab.Url) && !InternalUrls.IsInternal(activeTab.Url))
+            {
+                StandardAddressBar.Text = activeTab.Url;
+            }
+            else
+            {
+                StandardAddressBar.Text = "";
+            }
+            StandardAddressBar.SelectAll();
+        }
     }
 
     private void ShowCommandBar()
@@ -734,8 +750,94 @@ public partial class MainWindow : Window
 
     private void UrlLabel_Click(object sender, MouseButtonEventArgs e)
     {
-        ShowCommandBar();
+        FocusAddressBar();
         e.Handled = true;
+    }
+
+    private void StandardAddressBar_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            _vm.ShowSuggestions = false;
+            UpdateUrlLabel(_engine.ActiveTab);
+            WebViewHost.Focus();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Down && _vm.ShowSuggestions)
+        {
+            if (_vm.SelectedSuggestionIndex < _vm.Suggestions.Count - 1)
+                _vm.SelectedSuggestionIndex++;
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Up && _vm.ShowSuggestions)
+        {
+            if (_vm.SelectedSuggestionIndex > 0)
+                _vm.SelectedSuggestionIndex--;
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key != Key.Enter) return;
+        e.Handled = true;
+
+        string? input;
+        if (_vm.ShowSuggestions && _vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
+        {
+            input = _vm.Suggestions[_vm.SelectedSuggestionIndex];
+        }
+        else
+        {
+            input = StandardAddressBar.Text?.Trim();
+        }
+
+        if (string.IsNullOrEmpty(input)) return;
+
+        var url = _vm.ResolveInput(input);
+        if (_engine.ActiveTab is { } tab)
+        {
+            tab.Url = url;
+            _vm.AddressText = url;
+            _engine.Navigate(tab, url);
+        }
+        
+        _vm.ShowSuggestions = false;
+        WebViewHost.Focus();
+    }
+
+    private void StandardAddressBar_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        StandardAddressBar.Dispatcher.InvokeAsync(() => StandardAddressBar.SelectAll());
+    }
+
+    private void StandardAddressBar_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Do not auto-close to allow MouseUp to fire on the list
+    }
+
+    private void StandardAddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (sender is TextBox tb)
+            _ = _vm.UpdateSuggestionsAsync(tb.Text);
+    }
+
+    private void StandardSuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
+        {
+            var url = _vm.ResolveInput(_vm.Suggestions[_vm.SelectedSuggestionIndex]);
+            if (_engine.ActiveTab is { } tab)
+            {
+                tab.Url = url;
+                _vm.AddressText = url;
+                _engine.Navigate(tab, url);
+            }
+            _vm.ShowSuggestions = false;
+            WebViewHost.Focus();
+        }
     }
 
     private void CommandBarBackdrop_Click(object sender, MouseButtonEventArgs e)
@@ -774,6 +876,11 @@ public partial class MainWindow : Window
 
     private void UpdateUrlLabel(BrowserTab tab)
     {
+        if (!StandardAddressBar.IsKeyboardFocusWithin)
+        {
+            StandardAddressBar.Text = tab.Url;
+        }
+
         if (string.IsNullOrEmpty(tab.Url) || InternalUrls.IsInternal(tab.Url))
         {
             UrlLabel.Text = tab.Title ?? "New Tab";
@@ -783,7 +890,9 @@ public partial class MainWindow : Window
         try
         {
             var uri = new Uri(tab.Url);
-            UrlLabel.Text = uri.Host;
+            var host = uri.Host;
+            if (host.StartsWith("www.")) host = host[4..];
+            UrlLabel.Text = host;
         }
         catch
         {
@@ -1000,7 +1109,27 @@ public partial class MainWindow : Window
     private void OnSettingChanged(string key, string _)
     {
         if (key == "darkMode")
-            _engine.ApplyDarkModeToAll(_vm.Settings.ForceDarkMode);
+        {
+            // Native dark mode (WebContentsForceDark) takes effect at engine init — a restart is required.
+            // Show a banner on the settings page to inform the user.
+            var msg = _vm.Settings.ForceDarkMode ? "Dark mode enabled" : "Dark mode disabled";
+            var js = $@"(function() {{
+                var existing = document.getElementById('stride-restart-banner');
+                if (existing) existing.remove();
+                var banner = document.createElement('div');
+                banner.id = 'stride-restart-banner';
+                banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#e0e0e0;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 22px;font-size:14px;font-family:inherit;display:flex;align-items:center;gap:14px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
+                banner.innerHTML = '<span style=""font-size:18px"">🌙</span><span><strong>{msg}</strong> — Restart Stride to apply</span><button onclick=""this.parentElement.remove()"" style=""background:rgba(255,255,255,0.1);border:none;color:#e0e0e0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;margin-left:8px;"">Dismiss</button>';
+                document.body.appendChild(banner);
+                setTimeout(() => {{ if(banner.parentNode) banner.remove(); }}, 6000);
+            }})();";
+            foreach (var tab in _engine.Tabs)
+            {
+                if (tab.Url?.StartsWith("internal://settings") == true)
+                    _engine.ExecuteScript(tab.Id, js);
+            }
+        }
+
 
         if (key == "appTheme")
         {
@@ -1432,3 +1561,4 @@ public partial class MainWindow : Window
         _loadingStoryboard = null;
     }
 }
+

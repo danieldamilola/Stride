@@ -59,6 +59,7 @@ public sealed class SettingsPage
                 ["CHK_REFRESH"] = Chk(settings.ShowRefreshButton),
                 ["CHK_DOWNLOADS"] = Chk(settings.ShowDownloadsIcon),
                 ["CHK_SETTINGSICON"] = Chk(settings.ShowSettingsIcon),
+                ["CHK_USE_FLOATING_BAR"] = Chk(settings.UseFloatingCommandBar),
                 ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0",
                 ["ACCENT_COLOR"] = settings.AccentColor,
                 ["ACCENT"] = settings.AccentColor,
