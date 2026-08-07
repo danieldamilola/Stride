@@ -513,6 +513,10 @@ public sealed class TabEngine : IDisposable
             await wv.EnsureCoreWebView2Async(_environment);
             
             CoreWebView2 core = wv.CoreWebView2;
+            
+            if (_settings.AdBlockEnabled)
+                AdBlockFilter.Apply(core);
+
             core.ContextMenuRequested += (object? sender, CoreWebView2ContextMenuRequestedEventArgs args) =>
             {
                 var deferral = args.GetDeferral();
@@ -637,7 +641,7 @@ public sealed class TabEngine : IDisposable
         // after activation — skip here to avoid a double load.
         var callerManagedUrls = new HashSet<string>
         {
-            InternalUrls.Settings, InternalUrls.OneTab, InternalUrls.History
+            InternalUrls.Settings, InternalUrls.OneTab, InternalUrls.History, "internal://pending-native"
         };
         if (callerManagedUrls.Contains(tab.Url))
             return;
@@ -1039,15 +1043,35 @@ public sealed class TabEngine : IDisposable
 
             // Otherwise, handle it ourselves by opening a new Stride tab
             e.Handled = true;
+            var deferral = e.GetDeferral();
             
             _ = _dispatcher.InvokeAsync(async () =>
             {
                 try
                 {
-                    var newTab = CreateTab(e.Uri);
+                    // Create tab with a sentinel URL so NavigateInitialUrl does NOT navigate it.
+                    // This keeps the CoreWebView2 clean so we can assign it to e.NewWindow.
+                    var newTab = CreateTab("internal://pending-native");
+                    
+                    // ActivateAsync is triggered via TabStateChanged but we await it directly to ensure readiness
                     await ActivateAsync(newTab);
+
+                    if (_webViews.TryGetValue(newTab.Id, out var wv) && wv.CoreWebView2 != null)
+                    {
+                        // Fix background color (internal:// made it transparent, we want opaque for the popup)
+                        wv.DefaultBackgroundColor = _settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White;
+                        
+                        // Let WebView2 do the navigation natively! 
+                        // This allows extensions (like uBlock Origin) to intercept the new window request!
+                        e.NewWindow = wv.CoreWebView2;
+                        newTab.Url = e.Uri; // Update the UI to reflect the requested URL
+                    }
                 }
                 catch (Exception ex) { Trace.WriteLine($"NewWindowRequested error: {ex.Message}"); }
+                finally
+                {
+                    deferral.Complete();
+                }
             });
         };
 
