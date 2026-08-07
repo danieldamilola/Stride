@@ -597,8 +597,8 @@ public sealed class TabEngine : IDisposable
         // Internal pages are served via NavigateToString, no WebResourceRequested host needed.
 
         // Network-level ad blocking — block known ad URLs before they load
-        if (_settings.AdBlockEnabled)
-            AdBlockFilter.Apply(wv.CoreWebView2);
+        // Note: We now rely entirely on the native uBlock Origin extension (ExtensionManager)
+        // rather than the rudimentary AdBlockFilter, as it provides far superior blocking without breaking sites.
 
         if (!_extensionsLoaded)
         {
@@ -610,10 +610,10 @@ public sealed class TabEngine : IDisposable
                     
                     // MUST dispatch to UI thread!
                     await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
-               // Extensions
-        _ = _extensionManager.InitializeAsync(wv.CoreWebView2);
+                // Extensions
+                _ = _extensionManager.InitializeAsync(wv.CoreWebView2, _settings);
 
-        // Context Menu
+                // Context Menu
                     });
                 }
                 catch (Exception ex)

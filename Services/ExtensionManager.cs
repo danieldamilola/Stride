@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using StrideBrowser.Helpers;
 using Microsoft.Web.WebView2.Core;
+using StrideBrowser.Models;
 
 namespace StrideBrowser.Services;
 
@@ -27,7 +28,7 @@ public sealed class ExtensionManager
 
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(30) };
 
-    public async Task InitializeAsync(CoreWebView2 webview)
+    public async Task InitializeAsync(CoreWebView2 webview, BrowserSettings settings)
     {
         try
         {
@@ -50,6 +51,11 @@ public sealed class ExtensionManager
             if (ublock is not null)
             {
                 Trace.WriteLine($"ExtensionManager: uBlock Origin already loaded (id={ublock.Id}).");
+                // Sync the enable state with the BrowserSettings
+                if (ublock.IsEnabled != settings.AdBlockEnabled)
+                {
+                    await ToggleExtensionAsync(ublock, settings.AdBlockEnabled);
+                }
             }
             else
             {
@@ -58,6 +64,14 @@ public sealed class ExtensionManager
                 {
                     await LoadUnpackedAsync(webview, folderPath);
                     Trace.WriteLine("ExtensionManager: uBlock Origin loaded successfully.");
+                    
+                    // The extension is enabled by default upon loading, check if we need to disable it immediately
+                    if (!settings.AdBlockEnabled)
+                    {
+                        var newlyLoaded = (await webview.Profile.GetBrowserExtensionsAsync())
+                            .FirstOrDefault(e => e.Name.Contains("uBlock", StringComparison.OrdinalIgnoreCase));
+                        if (newlyLoaded != null) await ToggleExtensionAsync(newlyLoaded, false);
+                    }
                 }
             }
         }
