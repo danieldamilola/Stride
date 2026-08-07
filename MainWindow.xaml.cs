@@ -1554,7 +1554,7 @@ public partial class MainWindow : Window
             }
             catch { }
 
-            Application.Current.Shutdown();
+            Application.Current.Dispatcher.InvokeAsync(() => Close(), System.Windows.Threading.DispatcherPriority.Normal);
         }
     }
 

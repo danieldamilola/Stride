@@ -53,7 +53,6 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        _serviceProvider?.Dispose();
         SingleInstanceManager.Shutdown();
         base.OnExit(e);
     }
