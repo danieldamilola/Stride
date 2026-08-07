@@ -146,6 +146,12 @@ public sealed class TabEngine : IDisposable
                 (!_settings.HardwareAccelerationEnabled ? " --disable-gpu" : ""),
         };
         _environment = await CoreWebView2Environment.CreateAsync(null, dataDir, options);
+        
+        if (_settings.AdBlockEnabled)
+        {
+            // Initializes the background adblock list (does not block startup, finishes in background if downloading)
+            _ = AdBlockFilter.InitializeAsync();
+        }
 
         // Handle browser process exit at the environment level
         _environment.BrowserProcessExited += (_, e) =>
