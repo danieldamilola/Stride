@@ -45,6 +45,9 @@ public partial class MainWindow : Window
 
     public MainWindow(IServiceProvider services, BrowserViewModel vm)
     {
+        // We no longer need Deactivated/LocationChanged/SizeChanged hooks 
+        // since the Command Bar is integrated back into the visual tree.
+
         InitializeComponent();
 
         _vm = vm;
@@ -58,7 +61,8 @@ public partial class MainWindow : Window
         _engine = new TabEngine(WebViewHost, deps);
 
         var extManager = services.GetRequiredService<ExtensionManager>();
-        _router = new WebMessageRouter(_engine, _vm, _oneTabStore, _historyStore, _downloadStore, _settingsStore, extManager, deps.CustomDownloadManager);
+        var updateService = services.GetRequiredService<UpdateService>();
+        _router = new WebMessageRouter(_engine, _vm, _oneTabStore, _historyStore, _downloadStore, _settingsStore, extManager, deps.CustomDownloadManager, updateService);
         _router.SettingChanged += OnSettingChanged;
         Services.ThemeManager.ThemeChanged += () =>
         {
@@ -317,6 +321,7 @@ public partial class MainWindow : Window
                     var tab = _engine.CreateTab(entry.Url);
                     tab.Title = entry.Title;
                     tab.IsPinned = entry.IsPinned;
+                    _ = _engine.LoadFaviconAsync(tab);
                 }
                 _engine.SwitchTo(_engine.Tabs[0]);
                 await _engine.ActivateAsync(_engine.Tabs[0]);
@@ -350,6 +355,22 @@ public partial class MainWindow : Window
 
     private void WireEngineEvents()
     {
+        _engine.FullScreenChanged += isFullScreen =>
+        {
+            if (isFullScreen)
+            {
+                Toolbar.Visibility = Visibility.Collapsed;
+                WindowState = WindowState.Normal;
+                ResizeMode = ResizeMode.NoResize;
+                WindowState = WindowState.Maximized;
+            }
+            else
+            {
+                Toolbar.Visibility = Visibility.Visible;
+                ResizeMode = ResizeMode.CanResize;
+            }
+        };
+
         _engine.TabStateChanged += async tab =>
         {
             if (tab.IsActive)
@@ -448,14 +469,17 @@ public partial class MainWindow : Window
         }
         finally { _isUpdatingSelection = false; }
 
-        try
+        Dispatcher.InvokeAsync(async () =>
         {
-            await _engine.ActivateAsync(tab);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"TabList_SelectionChanged activation failed: {ex}");
-        }
+            try
+            {
+                await _engine.ActivateAsync(tab);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"TabList_SelectionChanged activation failed: {ex}");
+            }
+        }, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     private async void NewTab_Click(object sender, RoutedEventArgs e)
@@ -587,7 +611,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            input = _vm.AddressText?.Trim();
+            input = (sender as System.Windows.Controls.TextBox)?.Text?.Trim() ?? _vm.AddressText?.Trim();
         }
 
         if (string.IsNullOrEmpty(input)) return;
@@ -657,10 +681,26 @@ public partial class MainWindow : Window
 
     private void FocusAddressBar()
     {
-        ShowCommandBar();
+        if (_vm.Settings.UseFloatingCommandBar)
+        {
+            ShowCommandBar();
+        }
+        else
+        {
+            StandardAddressBar.Focus();
+            if (_engine.ActiveTab is { } activeTab && !string.IsNullOrEmpty(activeTab.Url) && !InternalUrls.IsInternal(activeTab.Url))
+            {
+                StandardAddressBar.Text = activeTab.Url;
+            }
+            else
+            {
+                StandardAddressBar.Text = "";
+            }
+            StandardAddressBar.SelectAll();
+        }
     }
 
-    private async void ShowCommandBar()
+    private void ShowCommandBar()
     {
         if (_isCommandBarOpen) return;
         _isCommandBarOpen = true;
@@ -676,51 +716,27 @@ public partial class MainWindow : Window
             _vm.AddressText = "";
         }
 
-        // Capture WebView content as screenshot before hiding (for dimmed preview)
-        try
-        {
-            var core = _engine.GetCoreWebView2();
-            if (core is not null)
-            {
-                using var ms = new System.IO.MemoryStream();
-                await core.CapturePreviewAsync(
-                    Microsoft.Web.WebView2.Core.CoreWebView2CapturePreviewImageFormat.Png, ms);
-                ms.Position = 0;
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.StreamSource = ms;
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.EndInit();
-                bitmap.Freeze();
-                PageSnapshot.Source = bitmap;
-                PageSnapshot.Visibility = Visibility.Visible;
-            }
-        }
-        catch { /* Fallback: no snapshot, just dark background */ }
+        CommandBarGrid.Visibility = Visibility.Visible;
 
-        // Hide WebView — it's a native HWND that renders above WPF overlays (airspace issue)
-        WebViewHost.Visibility = Visibility.Hidden;
-        CommandBarOverlay.Visibility = Visibility.Visible;
-
-        // 150ms ease-out appear animation: fade in + slide down
-        CommandBarOverlay.Opacity = 0;
+        // 80ms punchy ease-out animation
+        CommandBarGrid.Opacity = 0;
         CommandBarPanel.RenderTransform = new TranslateTransform(0, -10);
 
-        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(150))
-        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
-        var slideIn = new DoubleAnimation(-10, 0, TimeSpan.FromMilliseconds(150))
-        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(80))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+        var slideIn = new DoubleAnimation(-10, 0, TimeSpan.FromMilliseconds(80))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
 
-        CommandBarOverlay.BeginAnimation(OpacityProperty, fadeIn);
+        CommandBarGrid.BeginAnimation(OpacityProperty, fadeIn);
         CommandBarPanel.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slideIn);
 
-        // Focus after layout pass to ensure TextBox is in visual tree
-        _ = Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () =>
+        // Focus after layout pass to ensure TextBox is in visual tree and Popup is active
+        Dispatcher.BeginInvoke(new Action(() =>
         {
             AddressBar.Focus();
             Keyboard.Focus(AddressBar);
             AddressBar.SelectAll();
-        });
+        }), System.Windows.Threading.DispatcherPriority.Input);
     }
 
     private void HideCommandBar()
@@ -731,36 +747,117 @@ public partial class MainWindow : Window
         _vm.ShowSuggestions = false;
         _vm.Suggestions.Clear();
 
-        // 150ms ease-out dismiss animation: fade out + slide up
-        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(150))
-        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+        // 80ms ease-out dismiss animation: fade out + slide up
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(80))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
         fadeOut.Completed += (_, _) =>
         {
-            CommandBarOverlay.Visibility = Visibility.Collapsed;
-            CommandBarOverlay.BeginAnimation(OpacityProperty, null);
-
-            // Restore WebView visibility and clear snapshot
-            PageSnapshot.Visibility = Visibility.Collapsed;
-            PageSnapshot.Source = null;
-            WebViewHost.Visibility = Visibility.Visible;
+            CommandBarGrid.Visibility = Visibility.Collapsed;
+            CommandBarGrid.BeginAnimation(OpacityProperty, null);
 
             // Return focus to WebView
             if (_engine.ActiveTab is not null)
                 WebViewHost.Focus();
         };
 
-        var slideOut = new DoubleAnimation(0, -10, TimeSpan.FromMilliseconds(150))
-        { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+        var slideOut = new DoubleAnimation(0, -10, TimeSpan.FromMilliseconds(80))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
 
-        CommandBarOverlay.BeginAnimation(OpacityProperty, fadeOut);
+        CommandBarGrid.BeginAnimation(OpacityProperty, fadeOut);
         if (CommandBarPanel.RenderTransform is TranslateTransform tt)
             tt.BeginAnimation(TranslateTransform.YProperty, slideOut);
     }
 
     private void UrlLabel_Click(object sender, MouseButtonEventArgs e)
     {
-        ShowCommandBar();
+        FocusAddressBar();
         e.Handled = true;
+    }
+
+    private void StandardAddressBar_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            _vm.ShowSuggestions = false;
+            UpdateUrlLabel(_engine.ActiveTab);
+            WebViewHost.Focus();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Down && _vm.ShowSuggestions)
+        {
+            if (_vm.SelectedSuggestionIndex < _vm.Suggestions.Count - 1)
+                _vm.SelectedSuggestionIndex++;
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Up && _vm.ShowSuggestions)
+        {
+            if (_vm.SelectedSuggestionIndex > 0)
+                _vm.SelectedSuggestionIndex--;
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key != Key.Enter) return;
+        e.Handled = true;
+
+        string? input;
+        if (_vm.ShowSuggestions && _vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
+        {
+            input = _vm.Suggestions[_vm.SelectedSuggestionIndex];
+        }
+        else
+        {
+            input = StandardAddressBar.Text?.Trim();
+        }
+
+        if (string.IsNullOrEmpty(input)) return;
+
+        var url = _vm.ResolveInput(input);
+        if (_engine.ActiveTab is { } tab)
+        {
+            tab.Url = url;
+            _vm.AddressText = url;
+            _engine.Navigate(tab, url);
+        }
+        
+        _vm.ShowSuggestions = false;
+        WebViewHost.Focus();
+    }
+
+    private void StandardAddressBar_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        StandardAddressBar.Dispatcher.InvokeAsync(() => StandardAddressBar.SelectAll());
+    }
+
+    private void StandardAddressBar_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Do not auto-close to allow MouseUp to fire on the list
+    }
+
+    private void StandardAddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (sender is TextBox tb && tb.IsKeyboardFocusWithin)
+            _ = _vm.UpdateSuggestionsAsync(tb.Text);
+    }
+
+    private void StandardSuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
+        {
+            var url = _vm.ResolveInput(_vm.Suggestions[_vm.SelectedSuggestionIndex]);
+            if (_engine.ActiveTab is { } tab)
+            {
+                tab.Url = url;
+                _vm.AddressText = url;
+                _engine.Navigate(tab, url);
+            }
+            _vm.ShowSuggestions = false;
+            WebViewHost.Focus();
+        }
     }
 
     private void CommandBarBackdrop_Click(object sender, MouseButtonEventArgs e)
@@ -776,7 +873,7 @@ public partial class MainWindow : Window
 
     private void AddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (sender is TextBox tb)
+        if (sender is TextBox tb && tb.IsKeyboardFocusWithin)
             _ = _vm.UpdateSuggestionsAsync(tb.Text);
     }
 
@@ -799,6 +896,11 @@ public partial class MainWindow : Window
 
     private void UpdateUrlLabel(BrowserTab tab)
     {
+        if (!StandardAddressBar.IsKeyboardFocusWithin)
+        {
+            StandardAddressBar.Text = tab.Url;
+        }
+
         if (string.IsNullOrEmpty(tab.Url) || InternalUrls.IsInternal(tab.Url))
         {
             UrlLabel.Text = tab.Title ?? "New Tab";
@@ -808,7 +910,9 @@ public partial class MainWindow : Window
         try
         {
             var uri = new Uri(tab.Url);
-            UrlLabel.Text = uri.Host;
+            var host = uri.Host;
+            if (host.StartsWith("www.")) host = host[4..];
+            UrlLabel.Text = host;
         }
         catch
         {
@@ -817,31 +921,46 @@ public partial class MainWindow : Window
     }
 
     // ───────────────────── Adaptive Site Tinting ─────────────────────
-    // Extracts dominant color from favicon and applies subtle 8% tint
-    // on the toolbar background. 400ms smooth transition.
+    // Uses the page's actual theme color (extracted by ContentScriptInjector JS)
+    // and applies it directly to the entire toolbar chrome for a seamless look.
+    // 400ms smooth QuadraticEase transition.
 
-    private Color _currentTintColor = Colors.Transparent;
+    private string _currentThemeColorHex = "";
 
     private void UpdateToolbarTint(BrowserTab tab)
     {
-        var tintColor = ExtractDominantColor(tab.Favicon as BitmapSource);
-        if (tintColor == _currentTintColor) return;
-        _currentTintColor = tintColor;
+        var hex = tab.ThemeColor ?? "";
+        if (hex == _currentThemeColorHex) return;
+        _currentThemeColorHex = hex;
 
         var baseColor = (Color)FindResource("SidebarColor");
         Color targetColor;
 
-        if (tintColor == Colors.Transparent)
+        if (!string.IsNullOrEmpty(hex))
         {
-            targetColor = baseColor;
+            try
+            {
+                targetColor = (Color)ColorConverter.ConvertFromString(hex);
+                // Reject pure/near white. This prevents the toolbar from turning blindingly white 
+                // when Dark Reader is active but the site's meta theme-color tag still says #FFFFFF.
+                if (targetColor.R > 245 && targetColor.G > 245 && targetColor.B > 245)
+                {
+                    targetColor = Color.FromRgb(0x11, 0x11, 0x11);
+                }
+                // Reject strong green colors (e.g. jiji.ng) because they clash with the dark theme
+                else if (targetColor.G > 120 && targetColor.G > targetColor.R + 40 && targetColor.G > targetColor.B + 40)
+                {
+                    targetColor = Color.FromRgb(0x11, 0x11, 0x11);
+                }
+            }
+            catch
+            {
+                targetColor = baseColor;
+            }
         }
         else
         {
-            // Blend: 92% base + 8% site color
-            targetColor = Color.FromRgb(
-                (byte)(baseColor.R * 0.92 + tintColor.R * 0.08),
-                (byte)(baseColor.G * 0.92 + tintColor.G * 0.08),
-                (byte)(baseColor.B * 0.92 + tintColor.B * 0.08));
+            targetColor = baseColor;
         }
 
         var anim = new ColorAnimation
@@ -858,64 +977,58 @@ public partial class MainWindow : Window
             Toolbar.Background = brush;
         }
         brush.BeginAnimation(SolidColorBrush.ColorProperty, anim);
-    }
 
-    private static Color ExtractDominantColor(BitmapSource? bitmap)
-    {
-        if (bitmap is null) return Colors.Transparent;
-
-        try
+        // Dynamic Contrast: If the toolbar adapts to a light color, switch icons/text to dark
+        var luminance = (0.299 * targetColor.R + 0.587 * targetColor.G + 0.114 * targetColor.B) / 255.0;
+        if (luminance > 0.5)
         {
-            // Scale down to 1x1 pixel for average color
-            var scaled = new TransformedBitmap(bitmap,
-                new ScaleTransform(
-                    1.0 / bitmap.PixelWidth,
-                    1.0 / bitmap.PixelHeight));
-
-            var pixel = new byte[4];
-            scaled.CopyPixels(pixel, 4, 0);
-
-            var b = pixel[0];
-            var g = pixel[1];
-            var r = pixel[2];
-
-            // Skip very dark or very light colors (not useful as tint)
-            var brightness = (r * 0.299 + g * 0.587 + b * 0.114);
-            if (brightness < 20 || brightness > 240)
-                return Colors.Transparent;
-
-            // Skip near-grey colors (low saturation)
-            var max = Math.Max(r, Math.Max(g, b));
-            var min = Math.Min(r, Math.Min(g, b));
-            if (max - min < 20)
-                return Colors.Transparent;
-
-            return Color.FromRgb(r, g, b);
+            Toolbar.Resources["TextPrimary"] = new SolidColorBrush(Color.FromRgb(30, 30, 34));
+            Toolbar.Resources["TextSecondary"] = new SolidColorBrush(Color.FromRgb(70, 70, 74));
+            Toolbar.Resources["TextMuted"] = new SolidColorBrush(Color.FromRgb(100, 100, 104));
         }
-        catch
+        else
         {
-            return Colors.Transparent;
+            // Dark background -> remove local overrides so they fall back to global App.xaml theme
+            Toolbar.Resources.Remove("TextPrimary");
+            Toolbar.Resources.Remove("TextSecondary");
+            Toolbar.Resources.Remove("TextMuted");
         }
     }
+
 
     private void UpdateSecurityIcon(string url)
     {
         if (string.IsNullOrEmpty(url) || InternalUrls.IsInternal(url))
         {
             SecurityIcon.Visibility = Visibility.Collapsed;
+            StandardSecurityIcon.Visibility = Visibility.Collapsed;
             return;
         }
 
-        SecurityIcon.Visibility = Visibility.Visible;
+        if (_vm.Settings.UseFloatingCommandBar)
+        {
+            SecurityIcon.Visibility = Visibility.Visible;
+            StandardSecurityIcon.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            SecurityIcon.Visibility = Visibility.Collapsed;
+            StandardSecurityIcon.Visibility = Visibility.Visible;
+        }
+
         if (url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             SecurityIcon.Data = (StreamGeometry)FindResource("IconLock");
             SecurityIcon.Stroke = new SolidColorBrush(Color.FromRgb(0x6B, 0x8F, 0x71));
+            StandardSecurityIcon.Data = (StreamGeometry)FindResource("IconLock");
+            StandardSecurityIcon.Stroke = new SolidColorBrush(Color.FromRgb(0x6B, 0x8F, 0x71));
         }
         else
         {
             SecurityIcon.Data = (StreamGeometry)FindResource("IconGlobe");
             SecurityIcon.Stroke = (Brush)FindResource("TextSecondary");
+            StandardSecurityIcon.Data = (StreamGeometry)FindResource("IconGlobe");
+            StandardSecurityIcon.Stroke = (Brush)FindResource("TextSecondary");
         }
     }
 
@@ -1025,7 +1138,27 @@ public partial class MainWindow : Window
     private void OnSettingChanged(string key, string _)
     {
         if (key == "darkMode")
-            _engine.ApplyDarkModeToAll(_vm.Settings.ForceDarkMode);
+        {
+            // Native dark mode (WebContentsForceDark) takes effect at engine init — a restart is required.
+            // Show a banner on the settings page to inform the user.
+            var msg = _vm.Settings.ForceDarkMode ? "Dark mode enabled" : "Dark mode disabled";
+            var js = $@"(function() {{
+                var existing = document.getElementById('stride-restart-banner');
+                if (existing) existing.remove();
+                var banner = document.createElement('div');
+                banner.id = 'stride-restart-banner';
+                banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#e0e0e0;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 22px;font-size:14px;font-family:inherit;display:flex;align-items:center;gap:14px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
+                banner.innerHTML = '<span style=""font-size:18px"">🌙</span><span><strong>{msg}</strong> — Restart Stride to apply</span><button onclick=""this.parentElement.remove()"" style=""background:rgba(255,255,255,0.1);border:none;color:#e0e0e0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;margin-left:8px;"">Dismiss</button>';
+                document.body.appendChild(banner);
+                setTimeout(() => {{ if(banner.parentNode) banner.remove(); }}, 6000);
+            }})();";
+            foreach (var tab in _engine.Tabs)
+            {
+                if (tab.Url?.StartsWith("internal://settings") == true)
+                    _engine.ExecuteScript(tab.Id, js);
+            }
+        }
+
 
         if (key == "appTheme")
         {
@@ -1457,3 +1590,4 @@ public partial class MainWindow : Window
         _loadingStoryboard = null;
     }
 }
+

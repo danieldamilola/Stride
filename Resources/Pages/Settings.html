@@ -684,6 +684,20 @@
         <div class="card">
           <div class="setting-row">
             <div class="setting-info">
+              <div class="setting-label">Floating Command Bar</div>
+              <div class="setting-desc">When on, search floats beautifully mid-screen (breaks 2-finger trackpad swipe). When off, uses standard address bar. Requires restart.</div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_USE_FLOATING_BAR}}
+                onchange="s('useFloatingBar', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
               <div class="setting-label">App Theme</div>
               <div class="setting-desc">Choose between light, dark, or system default.</div>
             </div>
@@ -747,11 +761,20 @@
           </div>
           <div class="setting-row">
             <div class="setting-info">
-              <div class="setting-label">Show Navigation Arrows</div>
-              <div class="setting-desc">Back and Forward buttons</div>
+              <div class="setting-label">Show Back Arrow</div>
+              <div class="setting-desc">Left navigation button</div>
             </div>
             <div class="setting-control">
-              <input type="checkbox" class="toggle" {{CHK_NAVARROWS}} onchange="s('showNavArrows', this)" />
+              <input type="checkbox" class="toggle" {{CHK_BACKARROW}} onchange="s('showBackArrow', this)" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Show Forward Arrow</div>
+              <div class="setting-desc">Right navigation button</div>
+            </div>
+            <div class="setting-control">
+              <input type="checkbox" class="toggle" {{CHK_FWDARROW}} onchange="s('showForwardArrow', this)" />
             </div>
           </div>
           <div class="setting-row">
@@ -895,22 +918,7 @@
               />
             </div>
           </div>
-          <div class="setting-row">
-            <div class="setting-info">
-              <div class="setting-label">Internet Download Manager</div>
-              <div class="setting-desc">
-                Forward downloads to IDM natively (if installed)
-              </div>
-            </div>
-            <div class="setting-control">
-              <input
-                type="checkbox"
-                class="toggle"
-                {{CHK_IDM}}
-                onchange="s('idm', this)"
-              />
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -1410,14 +1418,12 @@
               <div class="setting-desc">Uses GPU to render graphics. Turn off if experiencing graphical glitches. Requires restart.</div>
             </div>
             <div class="setting-control">
-              <label class="toggle-switch">
-                <input
-                  type="checkbox"
-                  {{CHK_HWACCEL}}
-                  onchange="window.chrome.webview.postMessage(__T + 'hwAccel:' + this.checked)"
-                />
-                <span class="slider"></span>
-              </label>
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_HWACCEL}}
+                onchange="s('hwAccel', this)"
+              />
             </div>
           </div>
           <div class="setting-row">
@@ -1446,47 +1452,36 @@
                 class="action-btn"
                 id="checkUpdateBtn"
                 onclick="
-                  this.innerText = 'Checking...';
-                  this.disabled = true;
-                  fetch('https://api.github.com/repos/danieldamilola/Stride/releases/latest')
-                    .then(r => r.json())
-                    .then(data => {
-                      const latest = data.tag_name;
-                      const current = 'v1.0.2';
-                      
-                      const compareVersions = (v1, v2) => {
-                          let p1 = v1.replace(/^v/, '').split('.').map(Number);
-                          let p2 = v2.replace(/^v/, '').split('.').map(Number);
-                          for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
-                              let n1 = p1[i] || 0, n2 = p2[i] || 0;
-                              if (n1 > n2) return 1;
-                              if (n2 > n1) return -1;
-                          }
-                          return 0;
-                      };
-
-                      if (latest && compareVersions(latest, current) > 0) {
-                        document.getElementById('updateStatus').innerText = 'New version available: ' + latest;
-                        this.innerText = 'Download';
-                        this.disabled = false;
-                        this.onclick = () => window.open(data.html_url);
-                      } else {
-                        document.getElementById('updateStatus').innerText = 'Stride is up to date (v{{CURRENT_VERSION}}).';
-                        this.innerText = 'Check for Updates';
-                        this.disabled = false;
-                      }
-                    })
-                    .catch(e => {
-                      document.getElementById('updateStatus').innerText = 'Failed to check for updates.';
-                      this.innerText = 'Try Again';
-                      this.disabled = false;
-                    });
+                  if (this.innerText === 'Download & Install') {
+                      this.innerText = 'Installing...';
+                      this.disabled = true;
+                      window.chrome.webview.postMessage(__T + 'install-update');
+                  } else {
+                      this.innerText = 'Checking...';
+                      this.disabled = true;
+                      window.chrome.webview.postMessage(__T + 'check-for-update');
+                  }
                 "
               >
                 Check for Updates
               </button>
             </div>
           </div>
+          <script>
+            window.onUpdateCheckResult = function(isAvailable, version) {
+                const btn = document.getElementById('checkUpdateBtn');
+                const status = document.getElementById('updateStatus');
+                if (isAvailable) {
+                    status.innerText = 'New version available: ' + version;
+                    btn.innerText = 'Download & Install';
+                    btn.disabled = false;
+                } else {
+                    status.innerText = 'Stride is up to date (v{{CURRENT_VERSION}}).';
+                    btn.innerText = 'Check for Updates';
+                    btn.disabled = false;
+                }
+            };
+          </script>
         </div>
       </div>
     </div>

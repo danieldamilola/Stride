@@ -27,6 +27,9 @@ public sealed partial class BrowserTab : ObservableObject
     [ObservableProperty]
     private ImageSource? _favicon;
 
+    [ObservableProperty]
+    private string _themeColor = "";
+
     /// <summary>
     /// Whether this tab's WebView2 is currently initialized and in memory.
     /// False when the tab has been hibernated to save resources.

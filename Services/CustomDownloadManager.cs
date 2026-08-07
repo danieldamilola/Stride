@@ -102,6 +102,9 @@ public class CustomDownloadManager
                 var buffer = new byte[81920];
                 int bytesRead;
                 
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                long lastBytes = existingBytes;
+                
                 while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length, cts.Token).ConfigureAwait(false)) > 0)
                 {
                     if (item.State != DownloadState.InProgress) break;
@@ -109,6 +112,25 @@ public class CustomDownloadManager
                     await fileStream.WriteAsync(buffer, 0, bytesRead, cts.Token).ConfigureAwait(false);
                     existingBytes += bytesRead;
                     item.ReceivedBytes = existingBytes;
+                    
+                    if (stopwatch.ElapsedMilliseconds >= 1000)
+                    {
+                        long bytesSinceLast = existingBytes - lastBytes;
+                        item.SpeedBytesPerSec = (long)(bytesSinceLast / stopwatch.Elapsed.TotalSeconds);
+                        
+                        if (item.TotalBytes > 0 && item.SpeedBytesPerSec > 0)
+                        {
+                            long remainingBytes = item.TotalBytes - existingBytes;
+                            item.EstimatedTimeRemaining = TimeSpan.FromSeconds(remainingBytes / (double)item.SpeedBytesPerSec);
+                        }
+                        else
+                        {
+                            item.EstimatedTimeRemaining = null;
+                        }
+                        
+                        lastBytes = existingBytes;
+                        stopwatch.Restart();
+                    }
                 }
             }, cts.Token);
 

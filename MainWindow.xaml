@@ -11,7 +11,51 @@
         WindowStartupLocation="CenterScreen"
         PreviewKeyDown="Window_PreviewKeyDown">
 
-    <Window.Resources>
+        <Window.Resources>
+        <Style x:Key="SuggestionItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="ItemBorder"
+                                Background="Transparent"
+                                CornerRadius="4"
+                                Padding="10,7,12,7">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="AccentBar" Grid.Column="0" Background="{DynamicResource Accent}" CornerRadius="2" Opacity="0"/>
+                                <Path x:Name="SearchArrow" Grid.Column="1" Data="{StaticResource IconClock}" Stroke="{DynamicResource TextMuted}" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="10" Height="10" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ContentPresenter Grid.Column="2" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#0EFFFFFF"/>
+                                <Setter TargetName="SearchArrow" Property="Stroke" Value="{DynamicResource TextSecondary}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AccentWash}"/>
+                                <Setter TargetName="AccentBar" Property="Opacity" Value="1"/>
+                                <Setter TargetName="SearchArrow" Property="Stroke" Value="{DynamicResource Accent}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="SuggestionItemTemplate">
+            <TextBlock Text="{Binding}" FontFamily="Segoe UI Variable, Segoe UI" FontSize="13" Foreground="#C8C4BF" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+        </DataTemplate>
         <!-- ═══════════════════════════════════════════════════════ -->
         <!--  FAVICON PILL TAB — The Stride signature element       -->
         <!--  Active: amber pill with favicon + title               -->
@@ -51,7 +95,24 @@
                            Width="16" Height="16"
                            RenderOptions.BitmapScalingMode="HighQuality"
                            HorizontalAlignment="Center"
-                           VerticalAlignment="Center" x:Name="FaviconImage"/>
+                           VerticalAlignment="Center" x:Name="FaviconImage">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Setter Property="Opacity" Value="1.0"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                        <Setter Property="Opacity" Value="0.4"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsHibernated}" Value="True">
+                                        <Setter Property="Opacity" Value="0.15"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <Setter Property="Opacity" Value="1.0"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
                     <!-- INACTIVE close: overlay on favicon, hover tab to show, hidden when selected -->
                     <Button Click="CloseTab_Click" Tag="{Binding}"
                             ToolTip="Close tab"
@@ -191,7 +252,7 @@
                       GlassFrameThickness="0" CornerRadius="0"/>
     </WindowChrome.WindowChrome>
 
-    <Grid>
+    <Grid x:Name="LayoutRoot">
         <!-- Main layout: toolbar on top, content fills rest -->
         <DockPanel>
 
@@ -200,12 +261,12 @@
             <!--  This IS the toolbar. No separate address bar.        -->
             <!--  Stride signature: compact, warm, minimal.            -->
             <!-- ═══════════════════════════════════════════════════════ -->
-            <Border x:Name="Toolbar" DockPanel.Dock="Top" Height="36"
+            <Border x:Name="Toolbar" DockPanel.Dock="Top" Height="40"
                     Background="{DynamicResource SidebarBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
-                    BorderThickness="0,0,0,1"
+                    BorderThickness="0"
                     MouseLeftButtonDown="TitleBar_MouseDown">
-                <Grid x:Name="ToolbarRow" Margin="8,0,0,0">
+                <Grid x:Name="ToolbarRow" Margin="10,0,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>    <!-- Nav buttons -->
                         <ColumnDefinition Width="*"/>       <!-- DockPanel for Tabs + Address Bar -->
@@ -217,7 +278,7 @@
                     <StackPanel Grid.Column="0" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="0,0,4,0">
                         <Button Click="GoBack_Click" Style="{DynamicResource IconBtn}"
-                                Visibility="{Binding Settings.ShowNavArrows, Converter={StaticResource BoolToVis}}"
+                                Visibility="{Binding Settings.ShowBackArrow, Converter={StaticResource BoolToVis}}"
                                 Width="26" Height="26" ToolTip="Back (Alt+Left)">
                             <Path Data="{StaticResource IconBack}"
                                   Stroke="{DynamicResource TextSecondary}"
@@ -226,7 +287,7 @@
                                   StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                         </Button>
                         <Button Click="GoForward_Click" Style="{DynamicResource IconBtn}"
-                                Visibility="{Binding Settings.ShowNavArrows, Converter={StaticResource BoolToVis}}"
+                                Visibility="{Binding Settings.ShowForwardArrow, Converter={StaticResource BoolToVis}}"
                                 Width="26" Height="26" ToolTip="Forward (Alt+Right)">
                             <Path Data="{StaticResource IconForward}"
                                   Stroke="{DynamicResource TextSecondary}"
@@ -258,25 +319,104 @@
                                 </Style>
                             </StackPanel.Style>
                             
-                            <!-- URL domain — bare text, no background. Minimal. -->
+                            <!-- URL domain - bare text, no background. Minimal. -->
                             <StackPanel Orientation="Horizontal"
                                         VerticalAlignment="Center" Margin="4,0,8,0"
                                         Cursor="Hand"
-                                        MouseLeftButtonDown="UrlLabel_Click"
                                         ToolTip="Click to edit URL (Ctrl+L)">
                                 <Path x:Name="SecurityIcon"
                                       Data="{StaticResource IconGlobe}"
                                       Stroke="{DynamicResource TextMuted}"
                                       StrokeThickness="1" Width="10" Height="10"
                                       Stretch="Uniform" VerticalAlignment="Center"
-                                      Margin="0,0,5,0"/>
+                                      Margin="0,0,5,0"
+                                      Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource BoolToVis}}"/>
                                 <TextBlock x:Name="UrlLabel"
                                            Text="New Tab"
                                            Foreground="{DynamicResource TextMuted}"
                                            FontSize="11.5" FontFamily="{DynamicResource UIFont}"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"
-                                           MaxWidth="200"/>
+                                           Width="80"
+                                           MouseLeftButtonDown="UrlLabel_Click"
+                                           Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource BoolToVis}}"/>
+                                <Border x:Name="StandardAddressBarBorder"
+                                        Padding="6,4"
+                                        Width="240"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource InverseBoolToVis}, FallbackValue=Collapsed}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#0DFFFFFF"/>
+                                            <Setter Property="BorderBrush" Value="#1AFFFFFF"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Setter Property="CornerRadius" Value="8"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ElementName=StandardSuggestionsPopup, Path=IsOpen}" Value="True">
+                                                    <Setter Property="Background" Value="#111111"/>
+                                                    <Setter Property="BorderBrush" Value="#2A2A2E"/>
+                                                    <Setter Property="CornerRadius" Value="8,8,0,0"/>
+                                                    <Setter Property="BorderThickness" Value="1,1,1,0"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Path x:Name="StandardSecurityIcon"
+                                              Grid.Column="0"
+                                              Data="{StaticResource IconLock}"
+                                              Stroke="{DynamicResource TextMuted}"
+                                              StrokeThickness="1" Width="10" Height="10"
+                                              Stretch="Uniform" VerticalAlignment="Center"
+                                              Margin="4,0,6,0"/>
+                                        <TextBox x:Name="StandardAddressBar"
+                                                 Grid.Column="1"
+                                                 Background="Transparent"
+                                                 Foreground="{DynamicResource TextPrimary}"
+                                                 BorderThickness="0"
+                                                 FontSize="12" FontFamily="{DynamicResource UIFont}"
+                                                 VerticalContentAlignment="Center"
+                                                 CaretBrush="{DynamicResource TextPrimary}"
+                                                 Text="{Binding AddressText, UpdateSourceTrigger=PropertyChanged}"
+                                                 TextChanged="StandardAddressBar_TextChanged"
+                                                 KeyDown="StandardAddressBar_KeyDown"
+                                                 GotKeyboardFocus="StandardAddressBar_GotKeyboardFocus"
+                                                 LostFocus="StandardAddressBar_LostFocus"/>
+                                    </Grid>
+                                </Border>
+                                <Popup x:Name="StandardSuggestionsPopup"
+                                       PlacementTarget="{Binding ElementName=StandardAddressBarBorder}"
+                                       Placement="Bottom"
+                                       IsOpen="{Binding ShowSuggestions}"
+                                       StaysOpen="False"
+                                       AllowsTransparency="True"
+                                       Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource InverseBoolToVis}}"
+                                       VerticalOffset="0">
+                                    <Border Background="#111111"
+                                            BorderBrush="#2A2A2E" 
+                                            BorderThickness="1,0,1,1"
+                                            CornerRadius="0,0,8,8"
+                                            Width="{Binding ElementName=StandardAddressBarBorder, Path=ActualWidth}"
+                                            Padding="4,4,4,4">
+                                        <ListBox x:Name="StandardSuggestionsList"
+                                                 ItemsSource="{Binding Suggestions}"
+                                                 SelectedIndex="{Binding SelectedSuggestionIndex, Mode=TwoWay}"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 MaxHeight="280"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                                                 KeyboardNavigation.DirectionalNavigation="Cycle"
+                                                 FocusVisualStyle="{x:Null}"
+                                                 PreviewMouseLeftButtonUp="StandardSuggestionsList_MouseUp"
+                                                 ItemContainerStyle="{StaticResource SuggestionItemStyle}"
+                                                 ItemTemplate="{StaticResource SuggestionItemTemplate}"/>
+                                    </Border>
+                                </Popup>
                             </StackPanel>
 
                             <!-- Action buttons: + New Tab -->
@@ -356,21 +496,21 @@
                     <StackPanel Grid.Column="3" Orientation="Horizontal"
                                 VerticalAlignment="Stretch">
                         <Button Click="Minimize_Click" Style="{DynamicResource TitleBtn}"
-                                Width="42" Height="36">
+                                Width="42" Height="40">
                             <Path Data="{StaticResource IconMinimize}"
                                   Stroke="{DynamicResource TextSecondary}"
                                   StrokeThickness="1" Width="10" Height="1"
                                   Stretch="Fill"/>
                         </Button>
                         <Button Click="Maximize_Click" Style="{DynamicResource TitleBtn}"
-                                Width="42" Height="36">
+                                Width="42" Height="40">
                             <Path Data="{StaticResource IconMaximize}"
                                   Stroke="{DynamicResource TextSecondary}"
                                   StrokeThickness="1" Width="10" Height="10"
                                   Stretch="Uniform" Fill="Transparent"/>
                         </Button>
                         <Button Click="Close_Click" Style="{DynamicResource CloseTitleBtn}"
-                                Width="42" Height="36">
+                                Width="42" Height="40">
                             <Path Data="{StaticResource IconClose}"
                                   Stroke="{DynamicResource TextSecondary}"
                                   StrokeThickness="1.2" Width="10" Height="10"
@@ -403,21 +543,14 @@
                             </Border.Background>
                         </Border>
                     </Border>
-                    <!-- Page snapshot — shown dimmed when command bar is open -->
-                    <Image x:Name="PageSnapshot" Stretch="Fill"
-                           Visibility="Collapsed" Opacity="0.3"/>
+                    <!-- Page snapshot removed, no longer needed for airspace hack -->
                     <!-- WebView2 host -->
                     <Grid x:Name="WebViewHost" Background="{DynamicResource BaseBrush}"/>
                 </Grid>
             </Border>
         </DockPanel>
 
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  COMMAND BAR — Floating overlay. Centered. On-demand.  -->
-        <!--  Appears on Ctrl+L / click URL label. Disappears on   -->
-        <!--  Escape or click-away. No permanent address bar.      -->
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <Grid x:Name="CommandBarOverlay" Visibility="Collapsed" Panel.ZIndex="100">
+        <Grid x:Name="CommandBarGrid" Visibility="Collapsed" Panel.ZIndex="100">
             <!-- Backdrop dim — 50% black to clearly show floating panel -->
             <Border Background="#80000000"
                     MouseLeftButtonDown="CommandBarBackdrop_Click"/>
@@ -430,7 +563,7 @@
                     Background="#2C2C32"
                     BorderBrush="#444449"
                     BorderThickness="1"
-                    CornerRadius="12"
+                    CornerRadius="8"
                     Padding="4">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="40" ShadowDepth="8"
@@ -485,7 +618,7 @@
                                         <ControlTemplate TargetType="ListBoxItem">
                                             <Border x:Name="ItemBorder"
                                                     Background="Transparent"
-                                                    CornerRadius="5"
+                                                    CornerRadius="4"
                                                     Padding="10,7,12,7">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
@@ -496,14 +629,14 @@
                                                     <!-- Accent indicator bar (only shown when selected) -->
                                                     <Border x:Name="AccentBar"
                                                             Grid.Column="0"
-                                                            Background="#D4A574"
+                                                            Background="{DynamicResource Accent}"
                                                             CornerRadius="2"
                                                             Opacity="0"/>
                                                     <!-- Icon area -->
                                                     <Path x:Name="SearchArrow"
                                                           Grid.Column="1"
-                                                          Data="M5 12h14 M12 5l7 7-7 7"
-                                                          Stroke="#4A4844"
+                                                          Data="{StaticResource IconClock}"
+                                                          Stroke="{DynamicResource TextMuted}"
                                                           StrokeThickness="1.3"
                                                           StrokeStartLineCap="Round"
                                                           StrokeEndLineCap="Round"
@@ -520,12 +653,12 @@
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter TargetName="ItemBorder" Property="Background" Value="#0EFFFFFF"/>
-                                                    <Setter TargetName="SearchArrow" Property="Stroke" Value="#8A8680"/>
+                                                    <Setter TargetName="SearchArrow" Property="Stroke" Value="{DynamicResource TextSecondary}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="ItemBorder" Property="Background" Value="#14D4A574"/>
+                                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AccentWash}"/>
                                                     <Setter TargetName="AccentBar" Property="Opacity" Value="1"/>
-                                                    <Setter TargetName="SearchArrow" Property="Stroke" Value="#D4A574"/>
+                                                    <Setter TargetName="SearchArrow" Property="Stroke" Value="{DynamicResource Accent}"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -549,3 +682,6 @@
         </Grid>
     </Grid>
 </Window>
+
+
+

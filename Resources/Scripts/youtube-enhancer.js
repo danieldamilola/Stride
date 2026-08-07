@@ -151,6 +151,10 @@
     function applyAutoplay() {
         if (!DISABLE_AUTO) return;
         try {
+            // Robust engine-level disable
+            window.localStorage.setItem('yt-player-autonav-state', JSON.stringify({ data: "1", creation: Date.now() }));
+            
+            // Also click the UI button if it's visually enabled
             var btn = document.querySelector('.ytp-autonav-toggle-button');
             if (btn && btn.getAttribute('aria-checked') === 'true') {
                 btn.click();

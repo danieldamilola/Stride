@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Tab - Stride</title>
+    <link rel="preload" as="image" href="{{BACKGROUND}}">
     <style>
         :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
@@ -11,7 +12,9 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
+            zoom: {{ZOOM}}%;
             background-color: #111113;
+            background-image: url('{{BACKGROUND}}');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -376,6 +379,35 @@
         @media (prefers-reduced-motion: reduce) {
             * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
+        .wallpapers-btn {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(25, 25, 30, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 200ms ease;
+        }
+        .wallpapers-btn:hover {
+            background: rgba(40, 40, 48, 0.8);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .wallpapers-btn svg {
+            width: 16px;
+            height: 16px;
+        }
     </style>
 <style>
 :root, :root[data-theme="dark"] {
@@ -496,37 +528,14 @@
         </div>
     </div>
 
+    <button class="wallpapers-btn" onclick="window.chrome.webview.postMessage(__T + 'open-backgrounds-folder')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        Custom Wallpapers
+    </button>
+
     <script>
         const __T = '{{IPC_TOKEN}}:';
         const shortcuts = JSON.parse('{{SHORTCUTS}}' || '[]');
-
-        // Local high-quality backgrounds (instant load!)
-        const BACKGROUNDS = [
-            "https://local.assets/bg1.jpg",
-            "https://local.assets/bg2.jpg",
-            "https://local.assets/bg3.jpg"
-        ];
-
-        function initBackground() {
-            // Pick a random background index from cache to avoid showing the same one twice in a row if possible
-            let lastIdx = -1;
-            try {
-                lastIdx = parseInt(localStorage.getItem('stride_ntp_bg_idx') || '-1');
-            } catch (e) {}
-
-            let nextIdx = Math.floor(Math.random() * BACKGROUNDS.length);
-            if (nextIdx === lastIdx && BACKGROUNDS.length > 1) {
-                nextIdx = (nextIdx + 1) % BACKGROUNDS.length;
-            }
-
-            try {
-                localStorage.setItem('stride_ntp_bg_idx', nextIdx.toString());
-            } catch (e) {}
-
-            document.body.style.backgroundImage = `url(${BACKGROUNDS[nextIdx]})`;
-        }
-
-        initBackground();
 
         function getDomain(url) {
             try { return new URL(url).hostname; } catch { return url; }

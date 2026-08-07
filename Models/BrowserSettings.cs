@@ -8,8 +8,6 @@ public enum AppThemeMode { System, Light, Dark }
 /// <summary>User-configurable browser settings.</summary>
 public sealed partial class BrowserSettings : ObservableObject
 {
-    [ObservableProperty]
-    private bool _isFirstRun = true;
 
     [ObservableProperty]
     private string _searchEngine = "DuckDuckGo";
@@ -39,9 +37,6 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _hardwareAccelerationEnabled = true;
 
     [ObservableProperty]
-    private bool _useIDMForDownloads = true;
-
-    [ObservableProperty]
     private bool _forceDarkMode = true;
 
     [ObservableProperty]
@@ -62,6 +57,9 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _blockDuplicateTabs = true;
 
     [ObservableProperty]
+    private bool _useFloatingCommandBar = true;
+
+    [ObservableProperty]
     private bool _isSidebarPinned;
 
     [ObservableProperty]
@@ -71,7 +69,10 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _showDownloadsIcon = true;
 
     [ObservableProperty]
-    private bool _showNavArrows = true;
+    private bool _showBackArrow = true;
+
+    [ObservableProperty]
+    private bool _showForwardArrow = true;
 
     [ObservableProperty]
     private bool _showRefreshButton = true;
