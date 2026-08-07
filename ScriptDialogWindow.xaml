@@ -5,10 +5,12 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="NoResize"
         Topmost="True">
-    <Border Background="{DynamicResource AppBackgroundBrush}" 
+    <Border Background="{DynamicResource SurfaceBrush}" 
             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
-            CornerRadius="8" Padding="24"
-            Effect="{DynamicResource DropShadowEffect}">
+            CornerRadius="8" Padding="24">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" BlurRadius="24" ShadowDepth="8" Opacity="0.5"/>
+        </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -17,27 +19,27 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,12" />
+            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,12" />
             
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="80">
-                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" FontSize="14" />
+                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" FontSize="14" />
             </ScrollViewer>
             
             <TextBox x:Name="InputBox" Grid.Row="2" Visibility="{Binding InputVisibility}" 
                      Margin="0,16,0,0" Padding="8" FontSize="14"
-                     Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextMainBrush}"
+                     Background="{DynamicResource BaseBrush}" Foreground="{DynamicResource TextPrimary}"
                      BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                      Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}" />
 
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
                 <Button Content="Cancel" x:Name="BtnCancel" Visibility="{Binding CancelVisibility}"
                         Margin="0,0,12,0" Padding="16,8" Cursor="Hand"
-                        Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextMainBrush}" 
+                        Background="{DynamicResource BaseBrush}" Foreground="{DynamicResource TextPrimary}" 
                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
                         Click="BtnCancel_Click" />
                 <Button Content="OK" x:Name="BtnOk" IsDefault="True"
                         Padding="16,8" Cursor="Hand"
-                        Background="{DynamicResource AccentBrush}" Foreground="White" BorderThickness="0"
+                        Background="{DynamicResource Accent}" Foreground="#111113" BorderThickness="0"
                         Click="BtnOk_Click" />
             </StackPanel>
         </Grid>
