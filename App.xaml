@@ -40,10 +40,11 @@
         <Geometry x:Key="IconPin">M 12 2 L 12 22 M 5 6 L 12 2 L 19 6</Geometry>
         <Geometry x:Key="IconSearch">M 11 18 A 7 7 0 1 0 11 4 A 7 7 0 0 0 11 18 Z M 16.2 16.2 L 21 21</Geometry>
         <Geometry x:Key="IconDownload">M 12 16 L 12 3 M 7 11 L 12 16 L 17 11 M 5 20 L 19 20</Geometry>
+        <Geometry x:Key="IconClock">M 12 2 A 10 10 0 1 0 12 22 A 10 10 0 0 0 12 2 Z M 12 6 L 12 12 L 16 14</Geometry>
 
         <!-- ═══════════════════════════════════════════════════════ -->
         <!--  BUTTON STYLES                                         -->
-        <!--  6px radius. cursor:Hand on all clickable.             -->
+        <!--  4px radius. cursor:Hand on all clickable.             -->
         <!--  150ms ease-out on hover transitions.                  -->
         <!-- ═══════════════════════════════════════════════════════ -->
 
@@ -60,7 +61,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center"/>
                         </Border>
@@ -82,7 +83,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Width" Value="46"/>
-            <Setter Property="Height" Value="34"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
@@ -107,7 +108,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Width" Value="46"/>
-            <Setter Property="Height" Value="34"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
@@ -287,7 +288,7 @@
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">
                                     <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                            CornerRadius="14" Padding="4,2">
+                                            CornerRadius="8" Padding="4,2">
                                         <ContentPresenter VerticalAlignment="Center"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
@@ -383,7 +384,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="8" Padding="12,10">
+                                CornerRadius="6" Padding="12,10">
                             <Grid>
                                 <ScrollViewer x:Name="PART_ContentHost"
                                               VerticalAlignment="Center"
@@ -508,7 +509,7 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
                             <ContentPresenter/>
                         </Border>
                     </ControlTemplate>

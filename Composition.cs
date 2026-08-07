@@ -44,6 +44,7 @@ public static class Composition
         services.AddSingleton<FocusBlocklistService>();
         services.AddSingleton<Engine.ContentScriptInjector>();
         services.AddSingleton<CustomDownloadManager>();
+        services.AddSingleton<UpdateService>();
 
         // Engine dependencies record
         services.AddSingleton<EngineDependencies>();

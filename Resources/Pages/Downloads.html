@@ -451,6 +451,12 @@
 
                 const progress = dl.TotalBytes > 0 ? Math.min(100, Math.round(dl.ReceivedBytes * 100 / dl.TotalBytes)) : 0;
 
+                let speedEtaText = '';
+                if (isActive && dl.SpeedText && dl.SpeedText !== '') {
+                    speedEtaText = dl.SpeedText;
+                    if (dl.EtaText && dl.EtaText !== '') speedEtaText += ` · ${dl.EtaText}`;
+                }
+
                 html += `<div class="download-item" data-id="${escapeHtml(dl.Id)}">`;
                 html += `<div class="file-icon">${escapeHtml(ext)}</div>`;
                 html += `<div class="download-info">`;
@@ -459,6 +465,7 @@
                 html += `<span class="status-dot ${sc}"></span>`;
                 html += `<span>${stateLabel(dl.State)}</span>`;
                 if (sizeText) html += `<span>·</span><span>${sizeText}</span>`;
+                if (speedEtaText) html += `<span>·</span><span>${speedEtaText}</span>`;
                 html += `<span>·</span><span>${formatTime(dl.StartedAt)}</span>`;
                 html += `</div>`;
                 

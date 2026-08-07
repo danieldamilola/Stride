@@ -24,6 +24,7 @@ public sealed class WebMessageRouter
     private readonly IDownloadStore _downloadStore;
     private readonly ExtensionManager _extensionManager;
     private readonly CustomDownloadManager _customDownloadManager;
+    private readonly UpdateService _updateService;
 
     /// <summary>Fires when settings change so the view can apply live effects.</summary>
     public event Action<string, string>? SettingChanged;
@@ -36,7 +37,8 @@ public sealed class WebMessageRouter
         IDownloadStore downloadStore,
         ISettingsStore settingsStore,
         ExtensionManager extensionManager,
-        CustomDownloadManager customDownloadManager)
+        CustomDownloadManager customDownloadManager,
+        UpdateService updateService)
     {
         _engine = engine;
         _vm = vm;
@@ -46,6 +48,7 @@ public sealed class WebMessageRouter
         _settingsStore = settingsStore;
         _extensionManager = extensionManager;
         _customDownloadManager = customDownloadManager;
+        _updateService = updateService;
 
         _prefixHandlers = new Dictionary<string, Func<string, Task>>
         {
@@ -80,6 +83,8 @@ public sealed class WebMessageRouter
             [WebMessagePrefix.DownloadClear] = HandleDownloadClear,
             [WebMessagePrefix.DownloadRequestSync] = HandleDownloadSync,
             [WebMessagePrefix.OpenBackgroundsFolder] = HandleOpenBackgroundsFolder,
+            [WebMessagePrefix.CheckForUpdate] = HandleCheckForUpdate,
+            [WebMessagePrefix.InstallUpdate] = HandleInstallUpdate,
         };
     }
 
@@ -478,6 +483,29 @@ public sealed class WebMessageRouter
         await wv.ExecuteScriptAsync($"if (typeof updateDownloads === 'function') updateDownloads('{json}');");
     }
 
+    private async Task HandleCheckForUpdate()
+    {
+        var hasUpdate = await _updateService.CheckForUpdatesAsync();
+        var wv = _engine.GetCoreWebView2();
+        if (wv != null)
+        {
+            if (hasUpdate)
+            {
+                var version = _updateService.LatestVersion ?? "Unknown";
+                await wv.ExecuteScriptAsync($"if (typeof window.onUpdateCheckResult === 'function') window.onUpdateCheckResult(true, '{version}');");
+            }
+            else
+            {
+                await wv.ExecuteScriptAsync("if (typeof window.onUpdateCheckResult === 'function') window.onUpdateCheckResult(false, null);");
+            }
+        }
+    }
+
+    private async Task HandleInstallUpdate()
+    {
+        await _updateService.DownloadAndInstallUpdateAsync();
+    }
+
     private void RefreshOneTabPages()
     {
         var groups = _oneTabStore.Load();
@@ -495,7 +523,7 @@ public sealed class WebMessageRouter
         ["zoom"] = (s, v) => { if (int.TryParse(v, out var z)) s.DefaultZoom = z; },
 
         ["restoreSession"] = (s, v) => s.RestoreSessionOnStartup = v == "true",
-        ["idm"] = (s, v) => s.UseIDMForDownloads = v == "true",
+
         ["useFloatingBar"] = (s, v) => s.UseFloatingCommandBar = v == "true",
         ["hwAccel"] = (s, v) => s.HardwareAccelerationEnabled = v == "true",
         ["darkMode"] = (s, v) => s.ForceDarkMode = v == "true",

@@ -21,6 +21,7 @@
         // ─ Home Feed ─
         'html.stride-unhook-homeFeed ytd-browse[page-subtype="home"] ytd-rich-grid-renderer { display:none!important }',
         'html.stride-unhook-homeFeed ytd-browse[page-subtype="home"] #contents.ytd-rich-grid-renderer { display:none!important }',
+        'html.stride-unhook-homeFeed ytd-rich-section-renderer { display:none!important }',
 
         // ─ Shorts ─
         'html.stride-unhook-shorts ytd-reel-shelf-renderer { display:none!important }',
@@ -174,6 +175,18 @@
         }
     }
 
+    // ── Shorts Redirect ──────────────────────────────────────────────
+    function checkShortsRedirect() {
+        if (cfg.shorts && location.pathname.startsWith('/shorts/')) {
+            var videoId = location.pathname.split('/shorts/')[1];
+            if (videoId) {
+                location.replace('/watch?v=' + videoId);
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ── JS-only actions (can't be done with CSS) ─────────────────────
     function runJsActions() {
         // "More from YouTube" section — text-based match
@@ -195,6 +208,15 @@
             var btn = document.querySelector('.ytp-autonav-toggle-button');
             if (btn && btn.getAttribute('aria-checked') === 'true') {
                 btn.click();
+            }
+        }
+
+        // Force Theater Mode if sidebar is hidden
+        if (cfg.sidebar) {
+            var flexy = document.querySelector('ytd-watch-flexy');
+            if (flexy && !flexy.hasAttribute('theater')) {
+                var sizeBtn = document.querySelector('.ytp-size-button');
+                if (sizeBtn) sizeBtn.click();
             }
         }
     }
@@ -244,6 +266,7 @@
 
     // ── SPA Navigation ───────────────────────────────────────────────
     window.addEventListener('yt-navigate-finish', function() {
+        if (checkShortsRedirect()) return;
         applyClasses();
         runJsActions();
     });
@@ -251,11 +274,13 @@
         runJsActions();
     });
     window.addEventListener('yt-navigate-start', function() {
+        checkShortsRedirect();
         applyClasses();
     });
 
     // ── Boot: defer ALL DOM access until the document exists ─────────
     function boot() {
+        if (checkShortsRedirect()) return;
         injectStyleSheet();
         applyClasses();
         runJsActions();

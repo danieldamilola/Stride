@@ -40,7 +40,7 @@ public sealed class SettingsPage
                 ["ZOOM_175"] = SelInt(settings.DefaultZoom, 175),
                 ["ZOOM_200"] = SelInt(settings.DefaultZoom, 200),
                 ["CHK_RESTORE"] = Chk(settings.RestoreSessionOnStartup),
-                ["CHK_IDM"] = Chk(settings.UseIDMForDownloads),
+
                 ["CHK_DARK"] = Chk(settings.ForceDarkMode),
                 ["CHK_HWACCEL"] = Chk(settings.HardwareAccelerationEnabled),
                 ["CHK_HTTPS"] = Chk(settings.ForceHttps),

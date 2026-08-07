@@ -31,4 +31,6 @@ public static class WebMessagePrefix
     public const string FocusSettings = "focus-settings";
     public const string TCLensGetText = "tclens-get-text:";
     public const string OpenBackgroundsFolder = "open-backgrounds-folder";
+    public const string CheckForUpdate = "check-for-update";
+    public const string InstallUpdate = "install-update";
 }

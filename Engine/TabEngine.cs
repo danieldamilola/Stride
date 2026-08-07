@@ -175,7 +175,6 @@ public sealed class TabEngine : IDisposable
             "--disable-domain-reliability " +
             "--disable-sync " +
             "--metrics-recording-only " +
-            "--renderer-process-limit=2 " + // Drastically cuts down memory by forcing Chromium to reuse renderer processes
             "--process-per-site " + // Groups pages from the same site into the same process
             "--no-first-run";
 
@@ -284,6 +283,7 @@ public sealed class TabEngine : IDisposable
 
         // Cancel any in-flight activation so rapid clicks don't queue up
         _activationCts?.Cancel();
+        _activationCts?.Dispose();
         var cts = _activationCts = new CancellationTokenSource();
 
         // Removed immediate Visibility.Collapsed to prevent a blank screen flash 
@@ -610,7 +610,10 @@ public sealed class TabEngine : IDisposable
                     
                     // MUST dispatch to UI thread!
                     await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
-                        await _extensionManager.InitializeAsync(wv.CoreWebView2);
+               // Extensions
+        _ = _extensionManager.InitializeAsync(wv.CoreWebView2);
+
+        // Context Menu
                     });
                 }
                 catch (Exception ex)
@@ -887,9 +890,19 @@ public sealed class TabEngine : IDisposable
         };
     }
 
+    public event Action<bool>? FullScreenChanged;
+
     private void WireMessageAndWindowEvents(dynamic wv, BrowserTab tab)
     {
         CoreWebView2 core = wv.CoreWebView2;
+        core.ContainsFullScreenElementChanged += (_, _) =>
+        {
+            if (!_webViews.ContainsKey(tab.Id)) return;
+            _dispatcher.InvokeAsync(() =>
+            {
+                FullScreenChanged?.Invoke(core.ContainsFullScreenElement);
+            });
+        };
         core.WebMessageReceived += (_, e) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
@@ -910,6 +923,16 @@ public sealed class TabEngine : IDisposable
                     isTrustedLocalAsset = true; 
                 }
             } catch { }
+
+            if (msg.StartsWith("THEME_COLOR:"))
+            {
+                var colorStr = msg.Substring("THEME_COLOR:".Length);
+                _dispatcher.InvokeAsync(() => {
+                    tab.ThemeColor = colorStr;
+                    TabStateChanged?.Invoke(tab);
+                });
+                return;
+            }
 
             if (!isTrustedLocalAsset)
             {
@@ -942,58 +965,6 @@ public sealed class TabEngine : IDisposable
         {
             e.Handled = true; // We don't want the default download dialog
             var op = e.DownloadOperation;
-
-            if (_settings.UseIDMForDownloads)
-            {
-                var idmPath = @"C:\Program Files (x86)\Internet Download Manager\IDMan.exe";
-                if (System.IO.File.Exists(idmPath))
-                {
-                    e.Cancel = true;
-                    var uri = op.Uri;
-                    
-                    try
-                    {
-                        string referer = (string)core.Source ?? "";
-                        CoreWebView2CookieManager cookieManager = core.CookieManager;
-                        var cookies = await cookieManager.GetCookiesAsync(uri);
-                        var cookieHeader = string.Join("; ", cookies.Select(c => $"{c.Name}={c.Value}"));
-                        var userAgent = (string)core.Settings.UserAgent ?? "";
-
-                        Type idmType = Type.GetTypeFromProgID("IDMan.CIDMLinkTransmitter");
-                        if (idmType != null)
-                        {
-                            dynamic idm = Activator.CreateInstance(idmType);
-                            idm.SendLinkToIDM2(
-                                uri,
-                                referer,
-                                cookieHeader,
-                                "", "", "", "", "", 0, userAgent, ""
-                            );
-                            return;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.WriteLine($"COM IDM failed: {ex.Message}");
-                    }
-                    
-                    // Fallback to CLI
-                    try
-                    {
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = idmPath,
-                            Arguments = $"/d \"{uri}\"",
-                            UseShellExecute = true
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.WriteLine($"Failed to start IDM: {ex.Message}");
-                    }
-                    return;
-                }
-            }
 
             var item = new Models.DownloadItem
             {
@@ -1090,6 +1061,17 @@ public sealed class TabEngine : IDisposable
 
         core.ScriptDialogOpening += (_, e) =>
         {
+            if (_settings.AdBlockEnabled)
+            {
+                var msg = e.Message?.ToLowerInvariant() ?? "";
+                if (msg.Contains("robot") || msg.Contains("virus") || msg.Contains("update") || 
+                    msg.Contains("allow") || msg.Contains("human") || msg.Contains("vpn"))
+                {
+                    // Silently suppress the spam dialog
+                    return;
+                }
+            }
+
             var deferral = e.GetDeferral();
             _dispatcher.InvokeAsync(() =>
             {

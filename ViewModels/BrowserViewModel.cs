@@ -42,6 +42,12 @@ public sealed partial class BrowserViewModel : ObservableObject
     [ObservableProperty]
     private double _activeDownloadsProgress;
 
+    [ObservableProperty]
+    private bool _isUpdateAvailable;
+
+    [ObservableProperty]
+    private string _updateVersion = string.Empty;
+
     public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore)
     {
         Settings = settings;

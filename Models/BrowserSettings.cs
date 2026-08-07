@@ -37,9 +37,6 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _hardwareAccelerationEnabled = true;
 
     [ObservableProperty]
-    private bool _useIDMForDownloads = true;
-
-    [ObservableProperty]
     private bool _forceDarkMode = true;
 
     [ObservableProperty]

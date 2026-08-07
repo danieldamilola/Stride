@@ -34,6 +34,8 @@
         '#ad-container { display:none!important }',
         'ytd-ad-slot-renderer { display:none!important }',
         'ytd-rich-item-renderer:has(.ytd-ad-slot-renderer) { display:none!important }',
+        'ytd-rich-section-renderer:has(.ytd-ad-slot-renderer) { display:none!important }',
+        'ytd-rich-section-renderer:has(ytd-ad-slot-renderer) { display:none!important }',
         'ytd-display-ad-renderer { display:none!important }',
         'ytd-promoted-sparkles-web-renderer { display:none!important }',
         'ytd-promoted-sparkles-text-search-renderer { display:none!important }',
