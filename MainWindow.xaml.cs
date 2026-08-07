@@ -360,9 +360,9 @@ public partial class MainWindow : Window
             if (isFullScreen)
             {
                 Toolbar.Visibility = Visibility.Collapsed;
-                if (WindowState != WindowState.Maximized)
-                    WindowState = WindowState.Maximized;
+                WindowState = WindowState.Normal;
                 ResizeMode = ResizeMode.NoResize;
+                WindowState = WindowState.Maximized;
             }
             else
             {
@@ -469,14 +469,17 @@ public partial class MainWindow : Window
         }
         finally { _isUpdatingSelection = false; }
 
-        try
+        Dispatcher.InvokeAsync(async () =>
         {
-            await _engine.ActivateAsync(tab);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"TabList_SelectionChanged activation failed: {ex}");
-        }
+            try
+            {
+                await _engine.ActivateAsync(tab);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"TabList_SelectionChanged activation failed: {ex}");
+            }
+        }, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     private async void NewTab_Click(object sender, RoutedEventArgs e)
@@ -608,7 +611,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            input = _vm.AddressText?.Trim();
+            input = (sender as System.Windows.Controls.TextBox)?.Text?.Trim() ?? _vm.AddressText?.Trim();
         }
 
         if (string.IsNullOrEmpty(input)) return;
