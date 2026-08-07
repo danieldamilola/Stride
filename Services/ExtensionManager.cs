@@ -36,6 +36,17 @@ public sealed class ExtensionManager
             var ublock = extensions.FirstOrDefault(e =>
                 e.Name.Contains("uBlock", StringComparison.OrdinalIgnoreCase));
 
+            // Clean up legacy IDM extension from older versions
+            var idm = extensions.FirstOrDefault(e =>
+                e.Name.Contains("IDM", StringComparison.OrdinalIgnoreCase) ||
+                e.Name.Contains("Internet Download Manager", StringComparison.OrdinalIgnoreCase));
+
+            if (idm is not null)
+            {
+                Trace.WriteLine($"ExtensionManager: Removing legacy IDM extension (id={idm.Id}).");
+                await idm.RemoveAsync();
+            }
+
             if (ublock is not null)
             {
                 Trace.WriteLine($"ExtensionManager: uBlock Origin already loaded (id={ublock.Id}).");
