@@ -732,14 +732,11 @@ public sealed class TabEngine : IDisposable
                     {
                         // SECURITY: confirm before handing off to an external app — unprompted
                         // protocol-handler invocation is a known RCE vector for some installed apps.
-                        var confirmed = System.Windows.MessageBox.Show(
-                            $"This page wants to open an external application to handle this link:\n\n{uriForCustom}\n\nOnly continue if you trust this site.",
-                            "Open External Application?",
-                            System.Windows.MessageBoxButton.YesNo,
-                            System.Windows.MessageBoxImage.Warning,
-                            System.Windows.MessageBoxResult.No) == System.Windows.MessageBoxResult.Yes;
+                        var dialog = new ProtocolDialogWindow(uriForCustom);
+                        dialog.Owner = System.Windows.Application.Current.MainWindow;
+                        dialog.ShowDialog();
 
-                        if (!confirmed) return;
+                        if (!dialog.IsAllowed) return;
 
                         try
                         {
