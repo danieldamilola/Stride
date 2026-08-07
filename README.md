@@ -28,11 +28,14 @@ We set out to build a browser that rethinks desktop tab management, respects you
 
 - **Favicon Pill Tabs**: A unique "Stride Signature" UI that compresses inactive tabs into clean icons and expands active ones, saving vertical and horizontal screen real estate.
 - **Command Bar Navigation**: Say goodbye to the permanent, bulky URL bar. Press `Ctrl+L` to invoke a floating, intelligent command bar with instant local history and autocomplete.
-- **Native Ad & Tracker Blocking**: Built-in network-level blocking capabilities with native support for parsing and applying **uBlock Origin** rules.
+- **Native Ad & Tracker Blocking**: Built-in network-level blocking capabilities with native support for parsing and applying **uBlock Origin** rules, enhanced with custom cosmetic filters.
 - **Smart Memory Management**: Intelligent tab hibernation and LRU (Least Recently Used) eviction algorithms to keep memory usage strictly bounded, no matter how many tabs you open.
 - **Force Dark Mode**: Integrated Dark Reader functionality to seamlessly force dark mode on websites that lack native dark themes.
+- **Adaptive Tab Bar**: The browser UI intelligently adapts its color palette based on the active website's theme.
 - **Focus Mode**: Distraction-free browsing modes with built-in domain blocklists to keep you on track.
 - **YouTube Enhancer**: Native integration to enforce default video quality, playback speed, looping, and distraction removal ("Unhook").
+- **Native Download Manager**: Built-in download tracker with real-time speed calculation and ETAs.
+- **Custom Start Pages**: Personalize your New Tab page with beautiful, custom background image options.
 - **OneTab Consolidation**: Built-in tools for sweeping your open tabs into a single, clean list for later reading.
 
 ## Installation (Quick Start)
@@ -73,10 +76,9 @@ If you want to build Stride yourself, you'll need the following prerequisites:
    ```
 
 ### Building the Installer
-To generate the `.exe` installer yourself, publish the app and use **Inno Setup 6+**:
-```bash
-dotnet publish Stride.csproj -c Release -r win-x64 --self-contained true
-iscc stride-setup.iss
+Stride uses **Velopack** for packaging and auto-updates. To generate the `.exe` installer yourself, run the build script:
+```powershell
+.\build-release.ps1
 ```
 
 ## Roadmap & Future Plans
