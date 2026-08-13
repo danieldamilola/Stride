@@ -10,14 +10,12 @@
     <AssemblyName>Stride</AssemblyName>
     <ApplicationIcon>icons\stride.ico</ApplicationIcon>
     <Version>1.1.3</Version>
-    <StartupObject>StrideBrowser.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.*" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4181-prerelease" />
-    <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>
 
   <!-- Nested projects; exclude from this project's default globs -->

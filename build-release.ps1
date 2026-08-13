@@ -18,8 +18,8 @@ Write-Host "Building release for Version: $version" -ForegroundColor Green
 Write-Host "Publishing project..." -ForegroundColor Cyan
 dotnet publish -c Release -o .\publish
 
-# 4. Pack with Velopack using the extracted version
-Write-Host "Packaging with Velopack..." -ForegroundColor Cyan
-vpk pack -u Stride -v $version -p .\publish -e Stride.exe -i .\icons\stride.ico
+# 4. Pack with Inno Setup
+Write-Host "Packaging with Inno Setup..." -ForegroundColor Cyan
+& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer.iss"
 
 Write-Host "Done! Release created in .\Releases" -ForegroundColor Green
