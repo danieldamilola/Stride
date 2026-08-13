@@ -515,7 +515,7 @@ public sealed class TabEngine : IDisposable
             wv = new Microsoft.Web.WebView2.Wpf.WebView2
             {
                 DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
-                Visibility = Visibility.Hidden
+                Visibility = Visibility.Collapsed
             };
         }
 
@@ -1239,9 +1239,13 @@ public sealed class TabEngine : IDisposable
         {
             var isActive = id == activeTab.Id;
             
-            // Use Hidden instead of Collapsed to prevent HWND layout teardown (flicker)
-            // Do not use Margin=-10000 because WPF Grids will try to allocate massive D3D surfaces.
-            ((FrameworkElement)wv).Visibility = isActive ? Visibility.Visible : Visibility.Hidden;
+            // Use Hidden for CompositionControl to prevent flicker.
+            // But HwndHost (standard WebView2) ignores Hidden and keeps rendering the HWND, so we MUST use Collapsed.
+            // Check the actual type of the control, because the setting might have been toggled at runtime before a restart.
+            bool isHwndHost = wv is Microsoft.Web.WebView2.Wpf.WebView2;
+            ((FrameworkElement)wv).Visibility = isActive 
+                ? Visibility.Visible 
+                : (isHwndHost ? Visibility.Collapsed : Visibility.Hidden);
             Panel.SetZIndex((FrameworkElement)wv, isActive ? 1 : 0);
             
             if (wv.CoreWebView2 is null) continue;
