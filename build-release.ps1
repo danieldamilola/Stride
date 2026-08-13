@@ -20,6 +20,6 @@ dotnet publish -c Release -o .\publish
 
 # 4. Pack with Inno Setup
 Write-Host "Packaging with Inno Setup..." -ForegroundColor Cyan
-& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer.iss"
+& "$env:USERPROFILE\AppData\Local\Programs\Inno Setup 6\ISCC.exe" "installer.iss"
 
 Write-Host "Done! Release created in .\Releases" -ForegroundColor Green

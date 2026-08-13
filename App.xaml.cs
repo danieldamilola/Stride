@@ -4,7 +4,7 @@ using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using StrideBrowser.Services;
 using StrideBrowser.ViewModels;
-using Velopack;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace StrideBrowser;
 
