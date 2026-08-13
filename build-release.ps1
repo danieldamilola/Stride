@@ -16,7 +16,7 @@ Write-Host "Building release for Version: $version" -ForegroundColor Green
 
 # 3. Publish the app
 Write-Host "Publishing project..." -ForegroundColor Cyan
-dotnet publish -c Release -o .\publish
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o .\publish
 
 # 4. Pack with Inno Setup
 Write-Host "Packaging with Inno Setup..." -ForegroundColor Cyan

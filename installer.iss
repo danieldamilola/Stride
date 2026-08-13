@@ -31,3 +31,18 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Uninstall\Stride"
 
 [Run]
 Filename: "{app}\Stride.exe"; Description: "Launch Stride"; Flags: nowait postinstall skipifsilent
+
+[Code]
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = wpReady then
+  begin
+    { Check if the Inno Setup uninstall key for Stride exists (meaning it's already installed) }
+    if RegKeyExists(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\Stride_is1') or
+       RegKeyExists(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\Stride_is1') or
+       RegKeyExists(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\Stride') then
+    begin
+      WizardForm.NextButton.Caption := '&Upgrade';
+    end;
+  end;
+end;
