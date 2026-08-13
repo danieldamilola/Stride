@@ -388,20 +388,17 @@ public sealed class TabEngine : IDisposable
 
     public void GoBack()
     {
-        if (ActiveTab is not null && _webViews.TryGetValue(ActiveTab.Id, out var wv))
-            wv.CoreWebView2?.GoBack();
+        GetActiveCore()?.GoBack();
     }
 
     public void GoForward()
     {
-        if (ActiveTab is not null && _webViews.TryGetValue(ActiveTab.Id, out var wv))
-            wv.CoreWebView2?.GoForward();
+        GetActiveCore()?.GoForward();
     }
 
     public void Reload()
     {
-        if (ActiveTab is not null && _webViews.TryGetValue(ActiveTab.Id, out var wv))
-            wv.CoreWebView2?.Reload();
+        GetActiveCore()?.Reload();
     }
 
     public async Task FindInPageAsync()
@@ -414,6 +411,18 @@ public sealed class TabEngine : IDisposable
                 await wv.CoreWebView2.ExecuteScriptAsync(script);
             }
             catch (Exception ex) { Trace.WriteLine($"FindInPage failed: {ex.Message}"); }
+        }
+    }
+
+    public void PostMessageToActiveTab(string message)
+    {
+        if (ActiveTab is not null && _webViews.TryGetValue(ActiveTab.Id, out var wv) && wv.CoreWebView2 is not null)
+        {
+            try
+            {
+                wv.CoreWebView2.PostWebMessageAsString(message);
+            }
+            catch (Exception ex) { Trace.WriteLine($"PostMessageToActiveTab failed: {ex.Message}"); }
         }
     }
 
@@ -461,6 +470,11 @@ public sealed class TabEngine : IDisposable
 
     public CoreWebView2? GetCoreWebView2()
     {
+        return GetActiveCore();
+    }
+
+    private CoreWebView2? GetActiveCore()
+    {
         if (ActiveTab is not null && _webViews.TryGetValue(ActiveTab.Id, out var wv))
             return wv.CoreWebView2;
         return null;
@@ -500,101 +514,19 @@ public sealed class TabEngine : IDisposable
     private async Task CreateWebViewForTab(BrowserTab tab)
     {
         var isInternal = tab.Url?.StartsWith("internal://") ?? true;
-        
-        IWebView2 wv;
-        if (_settings.UseFloatingCommandBar)
-        {
-            wv = new WebView2CompositionControl
-            {
-                DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
-                Visibility = Visibility.Hidden
-            };
-        }
-        else
-        {
-            wv = new Microsoft.Web.WebView2.Wpf.WebView2
-            {
-                DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
-                Visibility = Visibility.Collapsed
-            };
-        }
+
+        IWebView2 wv = CreateWebViewControl(isInternal);
 
         _webViewHost!.Children.Add((FrameworkElement)wv);
         try
         {
             await wv.EnsureCoreWebView2Async(_environment);
-            
-            CoreWebView2 core = wv.CoreWebView2;
-            
+
             if (_settings.AdBlockEnabled)
-                AdBlockFilter.Apply(core);
+                AdBlockFilter.Apply(wv.CoreWebView2);
 
-            core.ContextMenuRequested += (object? sender, CoreWebView2ContextMenuRequestedEventArgs args) =>
-            {
-                var deferral = args.GetDeferral();
-                args.Handled = true;
-
-                _webViewHost!.Dispatcher.InvokeAsync(() =>
-                {
-                    var cm = new ContextMenu();
-                    cm.PlacementTarget = _webViewHost;
-
-                    var back = new MenuItem { Header = "Back", IsEnabled = core.CanGoBack, InputGestureText = "Alt+Left Arrow" };
-                    back.Click += (s, e) => core.GoBack();
-                    cm.Items.Add(back);
-
-                    var forward = new MenuItem { Header = "Forward", IsEnabled = core.CanGoForward, InputGestureText = "Alt+Right Arrow" };
-                    forward.Click += (s, e) => core.GoForward();
-                    // Chrome doesn't always show Forward if you can't go forward, but we'll leave it in or match exactly
-                    // Wait, screenshot doesn't have Forward? It only shows Back and Reload. If Forward is disabled, Chrome hides it or grays it out. We'll include it.
-                    cm.Items.Add(forward);
-
-                    var reload = new MenuItem { Header = "Reload", InputGestureText = "Ctrl+R" };
-                    reload.Click += (s, e) => core.Reload();
-                    cm.Items.Add(reload);
-
-                    cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
-
-                    var saveAs = new MenuItem { Header = "Save as...", InputGestureText = "Ctrl+S" };
-                    saveAs.Click += (s, e) => { /* Not supported in this SDK version */ };
-                    cm.Items.Add(saveAs);
-
-                    var print = new MenuItem { Header = "Print...", InputGestureText = "Ctrl+P" };
-                    print.Click += (s, e) => { try { core.ShowPrintUI(); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } };
-                    cm.Items.Add(print);
-
-                    cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
-
-                    var viewSource = new MenuItem { Header = "View page source", InputGestureText = "Ctrl+U" };
-                    // View source can be a navigation to view-source: URI
-                    viewSource.Click += (s, e) => { try { core.Navigate("view-source:" + core.Source); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } };
-                    cm.Items.Add(viewSource);
-
-                    var inspect = new MenuItem { Header = "Inspect", InputGestureText = "Ctrl+Shift+I" };
-                    inspect.Click += (s, e) => core.OpenDevToolsWindow();
-                    cm.Items.Add(inspect);
-
-                    cm.IsOpen = true;
-                    deferral.Complete();
-                });
-            };
-            
-            wv.CoreWebView2.Profile.PreferredColorScheme = Services.ThemeManager.IsCurrentlyDark() 
-                ? CoreWebView2PreferredColorScheme.Dark 
-                : CoreWebView2PreferredColorScheme.Light;
-            
-            wv.CoreWebView2.SetVirtualHostNameToFolderMapping("local.assets", System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages"), Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
-            var userAssetsPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
-            if (!System.IO.Directory.Exists(userAssetsPath)) System.IO.Directory.CreateDirectory(userAssetsPath);
-            wv.CoreWebView2.SetVirtualHostNameToFolderMapping("user.assets", userAssetsPath, Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
-
-            // Strip native Edge bloat UI
-            wv.CoreWebView2.Settings.IsBuiltInErrorPageEnabled = false;
-            wv.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
-            wv.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
-            wv.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
-            
-            try { wv.CoreWebView2.Settings.IsSwipeNavigationEnabled = true; } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+            WireInlinedContextMenu(wv.CoreWebView2);
+            ConfigureCoreWebView(wv.CoreWebView2);
         }
         catch
         {
@@ -609,35 +541,11 @@ public sealed class TabEngine : IDisposable
         WireContextMenuEvents(wv, tab);
         HandleProcessFailure(wv, tab);
 
-        // Serve internal pages (settings, newtab, etc.) from a real stride:// origin
-        // Internal pages are served via NavigateToString, no WebResourceRequested host needed.
-
         // Network-level ad blocking — block known ad URLs before they load
         // Note: We now rely entirely on the native uBlock Origin extension (ExtensionManager)
         // rather than the rudimentary AdBlockFilter, as it provides far superior blocking without breaking sites.
 
-        if (!_extensionsLoaded)
-        {
-            _extensionsLoaded = true;
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    
-                    // MUST dispatch to UI thread!
-                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
-                // Extensions
-                _ = _extensionManager.InitializeAsync(wv.CoreWebView2, _settings);
-
-                // Context Menu
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Trace.WriteLine($"Extension init failed: {ex.Message}");
-                }
-            });
-        }
+        TryInitializeExtensions(wv);
 
         await _contentScriptInjector.InjectAsync(wv.CoreWebView2, _settings, _ipcToken);
 
@@ -645,6 +553,118 @@ public sealed class TabEngine : IDisposable
         tab.IsHibernated = false;
 
         NavigateInitialUrl(wv, tab);
+    }
+
+    private IWebView2 CreateWebViewControl(bool isInternal)
+    {
+        if (_settings.UseFloatingCommandBar)
+        {
+            return new WebView2CompositionControl
+            {
+                DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
+                Visibility = Visibility.Hidden
+            };
+        }
+
+        return new Microsoft.Web.WebView2.Wpf.WebView2
+        {
+            DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
+            Visibility = Visibility.Collapsed
+        };
+    }
+
+    private void WireInlinedContextMenu(CoreWebView2 core)
+    {
+        core.ContextMenuRequested += (object? sender, CoreWebView2ContextMenuRequestedEventArgs args) =>
+        {
+            var deferral = args.GetDeferral();
+            args.Handled = true;
+
+            _webViewHost!.Dispatcher.InvokeAsync(() =>
+            {
+                var cm = new ContextMenu();
+                cm.PlacementTarget = _webViewHost;
+
+                var back = new MenuItem { Header = "Back", IsEnabled = core.CanGoBack, InputGestureText = "Alt+Left Arrow" };
+                back.Click += (s, e) => core.GoBack();
+                cm.Items.Add(back);
+
+                var forward = new MenuItem { Header = "Forward", IsEnabled = core.CanGoForward, InputGestureText = "Alt+Right Arrow" };
+                forward.Click += (s, e) => core.GoForward();
+                cm.Items.Add(forward);
+
+                var reload = new MenuItem { Header = "Reload", InputGestureText = "Ctrl+R" };
+                reload.Click += (s, e) => core.Reload();
+                cm.Items.Add(reload);
+
+                cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
+
+                var saveAs = new MenuItem { Header = "Save as...", InputGestureText = "Ctrl+S" };
+                saveAs.Click += (s, e) => { /* Not supported in this SDK version */ };
+                cm.Items.Add(saveAs);
+
+                var print = new MenuItem { Header = "Print...", InputGestureText = "Ctrl+P" };
+                print.Click += (s, e) => { try { core.ShowPrintUI(); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } };
+                cm.Items.Add(print);
+
+                cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
+
+                var viewSource = new MenuItem { Header = "View page source", InputGestureText = "Ctrl+U" };
+                // View source can be a navigation to view-source: URI
+                viewSource.Click += (s, e) => { try { core.Navigate("view-source:" + core.Source); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } };
+                cm.Items.Add(viewSource);
+
+                var inspect = new MenuItem { Header = "Inspect", InputGestureText = "Ctrl+Shift+I" };
+                inspect.Click += (s, e) => core.OpenDevToolsWindow();
+                cm.Items.Add(inspect);
+
+                cm.IsOpen = true;
+                deferral.Complete();
+            });
+        };
+    }
+
+    private void ConfigureCoreWebView(CoreWebView2 core)
+    {
+        core.Profile.PreferredColorScheme = Services.ThemeManager.IsCurrentlyDark()
+            ? CoreWebView2PreferredColorScheme.Dark
+            : CoreWebView2PreferredColorScheme.Light;
+
+        core.SetVirtualHostNameToFolderMapping("local.assets", System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages"), Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
+        var userAssetsPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
+        if (!System.IO.Directory.Exists(userAssetsPath)) System.IO.Directory.CreateDirectory(userAssetsPath);
+        core.SetVirtualHostNameToFolderMapping("user.assets", userAssetsPath, Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
+
+        // Strip native Edge bloat UI
+        core.Settings.IsBuiltInErrorPageEnabled = false;
+        core.Settings.IsGeneralAutofillEnabled = false;
+        core.Settings.IsPasswordAutosaveEnabled = false;
+        core.Settings.AreDefaultScriptDialogsEnabled = false;
+
+        try { core.Settings.IsSwipeNavigationEnabled = true; } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+    }
+
+    private void TryInitializeExtensions(IWebView2 wv)
+    {
+        if (_extensionsLoaded) return;
+        _extensionsLoaded = true;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // MUST dispatch to UI thread!
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
+                    // Extensions
+                    _ = _extensionManager.InitializeAsync(wv.CoreWebView2, _settings);
+
+                    // Context Menu
+                });
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Extension init failed: {ex.Message}");
+            }
+        });
     }
 
     private void NavigateInitialUrl(IWebView2 wv, BrowserTab tab)
@@ -715,12 +735,7 @@ public sealed class TabEngine : IDisposable
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
 
-            if (e.Uri is string urlStr)
-            {
-                var isInternal = urlStr.StartsWith("internal://") || urlStr.StartsWith("https://local.assets/") || urlStr.StartsWith("https://user.assets/");
-                if (wv is Microsoft.Web.WebView2.Wpf.WebView2 std3) std3.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
-                else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp3) comp3.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
-            }
+            ApplyNavigationBackground(wv, e.Uri);
 
             if (_settings.DefaultZoom != 100)
             {
@@ -735,86 +750,11 @@ public sealed class TabEngine : IDisposable
                 catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
             }
 
-            if (e.Uri is string uriForCustom && Uri.TryCreate(uriForCustom, UriKind.Absolute, out var parsedCustomUri))
-            {
-                var scheme = parsedCustomUri.Scheme.ToLowerInvariant();
-                if (scheme != "http" && scheme != "https" && scheme != "file" && scheme != "data" &&
-                    scheme != "about" && scheme != "edge" && scheme != "chrome" && scheme != "stride" && scheme != "javascript" &&
-                    scheme != "extension" && scheme != "chrome-extension" && scheme != "internal")
-                {
-                    e.Cancel = true;
-                    _dispatcher.InvokeAsync(() =>
-                    {
-                        // SECURITY: confirm before handing off to an external app — unprompted
-                        // protocol-handler invocation is a known RCE vector for some installed apps.
-                        var displayUrl = uriForCustom.Length > 100 ? uriForCustom.Substring(0, 97) + "..." : uriForCustom;
-                        var dialog = new BaseBrowserDialogWindow
-                        {
-                            Owner = System.Windows.Application.Current.MainWindow,
-                            DialogTitle = "Open External App",
-                            DialogMessage = $"This page wants to open an external application to handle this link:\n\n{displayUrl}\n\nOnly continue if you trust this site.",
-                            CancelVisibility = System.Windows.Visibility.Visible,
-                            OkButtonText = "Open App",
-                            CancelButtonText = "Cancel"
-                        };
-                        dialog.ShowDialog();
+            if (TryHandleCustomProtocol(e, wv, tab)) return;
 
-                        if (!dialog.IsAccepted) return;
+            if (_settings.FocusLocked && TryHandleFocusLock(e, tab)) return;
 
-                        try
-                        {
-                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uriForCustom) { UseShellExecute = true });
-                            if (tab.Url == InternalUrls.NewTab || tab.Url == "about:blank")
-                                CloseTab(tab);
-                        }
-                        catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Custom protocol launch failed: {ex.Message}"); }
-                    });
-                    return;
-                }
-            }
-
-            if (_settings.FocusLocked)
-            {
-                if (e.Uri is string uriStrFocus && Uri.TryCreate(uriStrFocus, UriKind.Absolute, out var parsedFocusUri))
-                {
-                    var host = parsedFocusUri.Host;
-                    if (!string.IsNullOrEmpty(host) && _focusBlocklistService.IsBlocked(host))
-                    {
-                        e.Cancel = true;
-                        _dispatcher.InvokeAsync(() =>
-                        {
-                            tab.Url = InternalUrls.Focus;
-                            NavigateToFocus(tab);
-                        });
-                        return;
-                    }
-                }
-            }
-
-            if (_settings.ForceHttps && e.Uri is string uriStr && uriStr.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-            {
-                var isLocalHostOrIp = false;
-                if (Uri.TryCreate(uriStr, UriKind.Absolute, out var parsedUri))
-                {
-                    isLocalHostOrIp = parsedUri.IsLoopback ||
-                                      parsedUri.HostNameType == UriHostNameType.IPv4 ||
-                                      parsedUri.HostNameType == UriHostNameType.IPv6 ||
-                                      parsedUri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase);
-                }
-                else
-                {
-                    isLocalHostOrIp = uriStr.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
-                                      uriStr.StartsWith("http://127.", StringComparison.OrdinalIgnoreCase);
-                }
-
-                if (!isLocalHostOrIp)
-                {
-                    e.Cancel = true;
-                    var httpsUri = "https://" + uriStr["http://".Length..];
-                    _dispatcher.InvokeAsync(() => { try { wv.CoreWebView2.Navigate(httpsUri); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } });
-                    return;
-                }
-            }
+            if (_settings.ForceHttps && TryUpgradeToHttps(e, wv)) return;
 
             _dispatcher.InvokeAsync(() =>
             {
@@ -858,12 +798,105 @@ public sealed class TabEngine : IDisposable
                     tab.IsLoading = false;
                     LoadingStateChanged?.Invoke(tab, false);
                     UpdateTabFromWebView(wv, tab);
-
-
                 }
                 catch (Exception ex) { Trace.WriteLine($"NavigationCompleted error: {ex.Message}"); }
             });
         };
+    }
+
+    private void ApplyNavigationBackground(IWebView2 wv, string? url)
+    {
+        if (url is null) return;
+        var isInternal = url.StartsWith("internal://") || url.StartsWith("https://local.assets/") || url.StartsWith("https://user.assets/");
+        if (wv is Microsoft.Web.WebView2.Wpf.WebView2 std3) std3.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
+        else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp3) comp3.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
+    }
+
+    private bool TryHandleCustomProtocol(CoreWebView2NavigationStartingEventArgs e, IWebView2 wv, BrowserTab tab)
+    {
+        if (e.Uri is not string uriForCustom || !Uri.TryCreate(uriForCustom, UriKind.Absolute, out var parsedCustomUri))
+            return false;
+
+        var scheme = parsedCustomUri.Scheme.ToLowerInvariant();
+        if (scheme == "http" || scheme == "https" || scheme == "file" || scheme == "data" ||
+            scheme == "about" || scheme == "edge" || scheme == "chrome" || scheme == "stride" || scheme == "javascript" ||
+            scheme == "extension" || scheme == "chrome-extension" || scheme == "internal")
+            return false;
+
+        e.Cancel = true;
+        _dispatcher.InvokeAsync(() =>
+        {
+            // SECURITY: confirm before handing off to an external app — unprompted
+            // protocol-handler invocation is a known RCE vector for some installed apps.
+            var displayUrl = uriForCustom.Length > 100 ? uriForCustom.Substring(0, 97) + "..." : uriForCustom;
+            var dialog = new BaseBrowserDialogWindow
+            {
+                Owner = System.Windows.Application.Current.MainWindow,
+                DialogTitle = "Open External App",
+                DialogMessage = $"This page wants to open an external application to handle this link:\n\n{displayUrl}\n\nOnly continue if you trust this site.",
+                CancelVisibility = System.Windows.Visibility.Visible,
+                OkButtonText = "Open App",
+                CancelButtonText = "Cancel"
+            };
+            dialog.ShowDialog();
+
+            if (!dialog.IsAccepted) return;
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uriForCustom) { UseShellExecute = true });
+                if (tab.Url == InternalUrls.NewTab || tab.Url == "about:blank")
+                    CloseTab(tab);
+            }
+            catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Custom protocol launch failed: {ex.Message}"); }
+        });
+        return true;
+    }
+
+    private bool TryHandleFocusLock(CoreWebView2NavigationStartingEventArgs e, BrowserTab tab)
+    {
+        if (e.Uri is not string uriStrFocus || !Uri.TryCreate(uriStrFocus, UriKind.Absolute, out var parsedFocusUri))
+            return false;
+
+        var host = parsedFocusUri.Host;
+        if (string.IsNullOrEmpty(host) || !_focusBlocklistService.IsBlocked(host))
+            return false;
+
+        e.Cancel = true;
+        _dispatcher.InvokeAsync(() =>
+        {
+            tab.Url = InternalUrls.Focus;
+            NavigateToFocus(tab);
+        });
+        return true;
+    }
+
+    private bool TryUpgradeToHttps(CoreWebView2NavigationStartingEventArgs e, IWebView2 wv)
+    {
+        if (e.Uri is not string uriStr || !uriStr.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var isLocalHostOrIp = false;
+        if (Uri.TryCreate(uriStr, UriKind.Absolute, out var parsedUri))
+        {
+            isLocalHostOrIp = parsedUri.IsLoopback ||
+                              parsedUri.HostNameType == UriHostNameType.IPv4 ||
+                              parsedUri.HostNameType == UriHostNameType.IPv6 ||
+                              parsedUri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase);
+        }
+        else
+        {
+            isLocalHostOrIp = uriStr.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
+                              uriStr.StartsWith("http://127.", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (isLocalHostOrIp)
+            return false;
+
+        e.Cancel = true;
+        var httpsUri = "https://" + uriStr["http://".Length..];
+        _dispatcher.InvokeAsync(() => { try { wv.CoreWebView2.Navigate(httpsUri); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } });
+        return true;
     }
 
     private void WireTitleAndSourceEvents(IWebView2 wv, BrowserTab tab)
@@ -923,13 +956,28 @@ public sealed class TabEngine : IDisposable
                 FullScreenChanged?.Invoke(core.ContainsFullScreenElement);
             });
         };
+        WireWebMessageReceived(core, tab);
+
+        Handlers.TabDownloadHandler.Wire(wv.CoreWebView2, _dispatcher, _downloadStore, _activeNativeDownloads);
+
+        WireNewWindowRequested(core, tab);
+
+        core.WindowCloseRequested += (_, _) =>
+        {
+            _dispatcher.Invoke(() => CloseTab(tab));
+        };
+
+        Handlers.TabDialogHandler.Wire(wv.CoreWebView2, _dispatcher, _settings);
+    }
+
+    private void WireWebMessageReceived(CoreWebView2 core, BrowserTab tab)
+    {
         core.WebMessageReceived += (_, e) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
 
             var msg = e.TryGetWebMessageAsString();
             var src = e.Source ?? "null";
-            System.IO.File.AppendAllText("ipc_log.txt", $"[IPC] Received '{msg}' from '{src}'\n");
 
             if (string.IsNullOrEmpty(msg)) return;
 
@@ -959,7 +1007,6 @@ public sealed class TabEngine : IDisposable
                 // SECURITY: Internal pages loaded via NavigateToString (origin = about:blank) embed a per-session secret token
                 if (!msg.StartsWith(_ipcToken + ":", StringComparison.Ordinal))
                 {
-                    System.IO.File.AppendAllText("ipc_log.txt", $"[IPC] Dropped because not trusted and missing token.\n");
                     return;
                 }
                 // Strip the token prefix before forwarding the payload
@@ -968,13 +1015,13 @@ public sealed class TabEngine : IDisposable
 
             if (!string.IsNullOrEmpty(msg))
             {
-                System.IO.File.AppendAllText("ipc_log.txt", $"[IPC] Forwarding '{msg}'\n");
                 _dispatcher.Invoke(() => WebMessageReceived?.Invoke(msg));
             }
         };
+    }
 
-        Handlers.TabDownloadHandler.Wire(wv.CoreWebView2, _dispatcher, _downloadStore, _activeNativeDownloads);
-
+    private void WireNewWindowRequested(CoreWebView2 core, BrowserTab tab)
+    {
         core.NewWindowRequested += (_, e) =>
         {
             // Treat as popup if it requests specific dimensions or isn't explicitly user-initiated (e.g. OAuth flows)
@@ -1020,13 +1067,6 @@ public sealed class TabEngine : IDisposable
                 }
             });
         };
-
-        core.WindowCloseRequested += (_, _) =>
-        {
-            _dispatcher.Invoke(() => CloseTab(tab));
-        };
-
-        Handlers.TabDialogHandler.Wire(wv.CoreWebView2, _dispatcher, _settings);
     }
 
     private void WireContextMenuEvents(IWebView2 wv, BrowserTab tab)

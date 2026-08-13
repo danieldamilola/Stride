@@ -29,9 +29,14 @@ public class SettingsMessageHandler : IWebMessageHandler
     public void Register(Dictionary<string, Func<string, Task>> prefixHandlers, Dictionary<string, Func<Task>> exactHandlers)
     {
         prefixHandlers[WebMessagePrefix.Setting] = HandleSetting;
+        prefixHandlers["install-update:"] = async (payload) => { await _updateService.DownloadAndInstallUpdateAsync(payload); };
         exactHandlers[WebMessagePrefix.OpenBackgroundsFolder] = HandleOpenBackgroundsFolder;
-        exactHandlers["check-for-update"] = () => { _updateService.ShowUpdateUI(); return Task.CompletedTask; };
-        exactHandlers["install-update"] = () => { _updateService.ShowUpdateUI(); return Task.CompletedTask; };
+        exactHandlers["check-for-update"] = async () => 
+        {
+            var (available, version, notes, url) = await _updateService.CheckForUpdateCustomAsync();
+            var status = available ? "true" : "false";
+            _engine.PostMessageToActiveTab($"update-check-result:{status}:{version}:{url}");
+        };
     }
 
     private Task HandleOpenBackgroundsFolder()

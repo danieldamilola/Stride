@@ -37,22 +37,13 @@ public class NavigationServiceTests
         Assert.Equal(expected, CreateService().Resolve(input));
     }
 
-    [Fact]
-    public void Resolve_Localhost_UsesHttpScheme()
+    [Theory]
+    [InlineData("localhost:8080", "http://localhost:8080")]
+    [InlineData("127.0.0.1:3000", "http://127.0.0.1:3000")]
+    [InlineData("8.8.8.8", "https://8.8.8.8")]
+    public void Resolve_HostAndIpAddresses_UseAppropriateScheme(string input, string expected)
     {
-        Assert.Equal("http://localhost:8080", CreateService().Resolve("localhost:8080"));
-    }
-
-    [Fact]
-    public void Resolve_LoopbackIp_UsesHttpScheme()
-    {
-        Assert.Equal("http://127.0.0.1:3000", CreateService().Resolve("127.0.0.1:3000"));
-    }
-
-    [Fact]
-    public void Resolve_PublicIp_UsesHttpsScheme()
-    {
-        Assert.Equal("https://8.8.8.8", CreateService().Resolve("8.8.8.8"));
+        Assert.Equal(expected, CreateService().Resolve(input));
     }
 
     [Fact]

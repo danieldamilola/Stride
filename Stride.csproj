@@ -23,10 +23,13 @@
   <ItemGroup>
     <Compile Remove="SpurBrowser.Tests\**" />
     <Compile Remove="src\**" />
+    <Compile Remove="tools\**" />
     <EmbeddedResource Remove="SpurBrowser.Tests\**" />
     <EmbeddedResource Remove="src\**" />
+    <EmbeddedResource Remove="tools\**" />
     <None Remove="SpurBrowser.Tests\**" />
     <None Remove="src\**" />
+    <None Remove="tools\**" />
   </ItemGroup>
 
   <!-- Embedded HTML templates and JS scripts -->

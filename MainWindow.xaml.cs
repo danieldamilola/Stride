@@ -770,22 +770,14 @@ public partial class MainWindow : Window
 
     private void StandardAddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (sender is TextBox tb && tb.IsKeyboardFocusWithin)
-            _ = _vm.UpdateSuggestionsAsync(tb.Text);
+        HandleAddressTextChanged(sender as TextBox);
     }
 
     private void StandardSuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
     {
         if (_vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
         {
-            var url = _vm.ResolveInput(_vm.Suggestions[_vm.SelectedSuggestionIndex]);
-            if (_engine.ActiveTab is { } tab)
-            {
-                tab.Url = url;
-                _vm.AddressText = url;
-                _engine.Navigate(tab, url);
-            }
-            _vm.ShowSuggestions = false;
+            NavigateToSuggestion(_vm.Suggestions[_vm.SelectedSuggestionIndex]);
             WebViewHost.Focus();
         }
     }
@@ -803,7 +795,12 @@ public partial class MainWindow : Window
 
     private void AddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (sender is TextBox tb && tb.IsKeyboardFocusWithin)
+        HandleAddressTextChanged(sender as TextBox);
+    }
+
+    private void HandleAddressTextChanged(TextBox? tb)
+    {
+        if (tb is not null && tb.IsKeyboardFocusWithin)
             _ = _vm.UpdateSuggestionsAsync(tb.Text);
     }
 
@@ -811,17 +808,21 @@ public partial class MainWindow : Window
     {
         if (_vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
         {
-            var input = _vm.Suggestions[_vm.SelectedSuggestionIndex];
-            var url = _vm.ResolveInput(input);
-            if (_engine.ActiveTab is { } tab)
-            {
-                tab.Url = url;
-                _vm.AddressText = url;
-                _engine.Navigate(tab, url);
-            }
-            _vm.ShowSuggestions = false;
+            NavigateToSuggestion(_vm.Suggestions[_vm.SelectedSuggestionIndex]);
             HideCommandBar();
         }
+    }
+
+    private void NavigateToSuggestion(string input)
+    {
+        var url = _vm.ResolveInput(input);
+        if (_engine.ActiveTab is { } tab)
+        {
+            tab.Url = url;
+            _vm.AddressText = url;
+            _engine.Navigate(tab, url);
+        }
+        _vm.ShowSuggestions = false;
     }
 
     private void UpdateUrlLabel(BrowserTab tab)

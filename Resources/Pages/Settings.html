@@ -1448,14 +1448,12 @@
               <div class="setting-desc">Quietly check for updates in the background</div>
             </div>
             <div class="setting-control">
-              <label class="switch">
-                <input
-                  type="checkbox"
-                  {{CHK_AUTO_CHECK_FOR_UPDATES}}
-                  onchange="s('autoCheckForUpdates', this)"
-                />
-                <span class="slider"></span>
-              </label>
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_AUTO_CHECK_FOR_UPDATES}}
+                onchange="s('autoCheckForUpdates', this)"
+              />
             </div>
           </div>
           <div class="setting-row">
@@ -1469,9 +1467,9 @@
                 id="checkUpdateBtn"
                 onclick="
                   if (this.innerText === 'Download & Install') {
-                      this.innerText = 'Installing...';
+                      this.innerText = 'Downloading update... Stride will restart shortly.';
                       this.disabled = true;
-                      window.chrome.webview.postMessage(__T + 'install-update');
+                      window.chrome.webview.postMessage(__T + 'install-update:' + currentDownloadUrl);
                   } else {
                       this.innerText = 'Checking...';
                       this.disabled = true;
@@ -1484,19 +1482,31 @@
             </div>
           </div>
           <script>
-            window.onUpdateCheckResult = function(isAvailable, version) {
-                const btn = document.getElementById('checkUpdateBtn');
-                const status = document.getElementById('updateStatus');
-                if (isAvailable) {
-                    status.innerText = 'New version available: ' + version;
-                    btn.innerText = 'Download & Install';
-                    btn.disabled = false;
-                } else {
-                    status.innerText = 'Stride is up to date (v{{CURRENT_VERSION}}).';
-                    btn.innerText = 'Check for Updates';
-                    btn.disabled = false;
-                }
-            };
+            let currentDownloadUrl = '';
+            
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.addEventListener('message', function(event) {
+                    if (typeof event.data === 'string' && event.data.startsWith('update-check-result:')) {
+                        const parts = event.data.split(':');
+                        const isAvailable = parts[1] === 'true';
+                        const version = parts[2];
+                        currentDownloadUrl = parts.slice(3).join(':'); 
+                        
+                        const btn = document.getElementById('checkUpdateBtn');
+                        const status = document.getElementById('updateStatus');
+                        
+                        if (isAvailable) {
+                            status.innerText = 'New version available: ' + version;
+                            btn.innerText = 'Download & Install';
+                            btn.disabled = false;
+                        } else {
+                            status.innerText = 'Stride is up to date (v{{CURRENT_VERSION}}).';
+                            btn.innerText = 'Check for Updates';
+                            btn.disabled = false;
+                        }
+                    }
+                });
+            }
           </script>
         </div>
       </div>
