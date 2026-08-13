@@ -40,6 +40,10 @@ public partial class App : Application
         // Build DI container
         _serviceProvider = Composition.BuildServiceProvider();
 
+        // Start NetSparkle auto-update loop in the background
+        var updateService = _serviceProvider.GetRequiredService<UpdateService>();
+        updateService.StartUpdateLoop();
+
         CheckForPreviousCrash();
 
         // Create and show MainWindow via DI
