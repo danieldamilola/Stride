@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using NetSparkleUpdater;
+using NetSparkleUpdater.Events;
 using NetSparkleUpdater.SignatureVerifiers;
 using NetSparkleUpdater.UI.WPF;
 
@@ -12,34 +13,46 @@ public class UpdateService
     private SparkleUpdater _sparkle;
     private const string AppcastUrl = "https://raw.githubusercontent.com/danieldamilola/Stride/main/appcast.xml";
 
+    public event EventHandler? UpdateAvailable;
+
     public UpdateService()
     {
-        // For development, we skip signature verification (assuming HTTPS is secure enough for this project).
-        // For production, you can configure DSAChecker or Ed25519Checker.
-        _sparkle = new SparkleUpdater(AppcastUrl, new Ed25519Checker(Enums.SecurityMode.Unsafe))
+        _sparkle = new SparkleUpdater(AppcastUrl, new Ed25519Checker(NetSparkleUpdater.Enums.SecurityMode.Unsafe))
         {
             UIFactory = new UIFactory(),
-            ShowsUIOnMainThread = true,
-            UseNotificationToast = true
+            UseNotificationToast = false // We manage our own red dot notification instead
+        };
+
+        _sparkle.UpdateDetected += (sender, e) =>
+        {
+            UpdateAvailable?.Invoke(this, EventArgs.Empty);
         };
     }
 
-    public void StartUpdateLoop()
-    {
-        _sparkle.StartLoop(true, true);
-    }
-
-    public async Task<bool> CheckForUpdatesAsync()
+    /// <summary>
+    /// Silently checks for updates in the background. If one is found, fires the UpdateAvailable event.
+    /// </summary>
+    public async Task CheckForUpdatesQuietlyAsync()
     {
         try
         {
             var updateInfo = await _sparkle.CheckForUpdatesQuietly();
-            return updateInfo.Status == NetSparkleUpdater.Enums.UpdateStatus.UpdateAvailable;
+            if (updateInfo.Status == NetSparkleUpdater.Enums.UpdateStatus.UpdateAvailable)
+            {
+                UpdateAvailable?.Invoke(this, EventArgs.Empty);
+            }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Failed to check for updates via NetSparkle: {ex.Message}");
-            return false;
+            Debug.WriteLine($"Failed to check for updates: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Triggers the actual NetSparkle UI window so the user can see release notes and install.
+    /// </summary>
+    public void ShowUpdateUI()
+    {
+        _sparkle.CheckForUpdatesAtUserRequest();
     }
 }

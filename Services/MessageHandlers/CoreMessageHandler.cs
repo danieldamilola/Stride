@@ -25,8 +25,6 @@ public class CoreMessageHandler : IWebMessageHandler
         prefixHandlers[WebMessagePrefix.Open] = HandleOpen;
         prefixHandlers[WebMessagePrefix.Search] = HandleSearch;
         exactHandlers[WebMessagePrefix.SetDefaultBrowser] = HandleSetDefaultBrowser;
-        exactHandlers[WebMessagePrefix.CheckForUpdate] = HandleCheckForUpdate;
-        exactHandlers[WebMessagePrefix.InstallUpdate] = HandleInstallUpdate;
     }
 
     private async Task HandleOpen(string url)
@@ -52,28 +50,5 @@ public class CoreMessageHandler : IWebMessageHandler
         DefaultBrowserRegistrar.Register();
         DefaultBrowserRegistrar.OpenDefaultAppsSettings();
         return Task.CompletedTask;
-    }
-
-    private async Task HandleCheckForUpdate()
-    {
-        var hasUpdate = await _updateService.CheckForUpdatesAsync();
-        var wv = _engine.GetCoreWebView2();
-        if (wv != null)
-        {
-            if (hasUpdate)
-            {
-                var version = _updateService.LatestVersion ?? "Unknown";
-                await wv.ExecuteScriptAsync($"if (typeof window.onUpdateCheckResult === 'function') window.onUpdateCheckResult(true, '{version}');");
-            }
-            else
-            {
-                await wv.ExecuteScriptAsync("if (typeof window.onUpdateCheckResult === 'function') window.onUpdateCheckResult(false, null);");
-            }
-        }
-    }
-
-    private async Task HandleInstallUpdate()
-    {
-        await _updateService.DownloadAndInstallUpdateAsync();
     }
 }

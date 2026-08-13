@@ -57,6 +57,9 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _blockDuplicateTabs = true;
 
     [ObservableProperty]
+    private bool _autoCheckForUpdates = true;
+
+    [ObservableProperty]
     private bool _useFloatingCommandBar = true;
 
     [ObservableProperty]

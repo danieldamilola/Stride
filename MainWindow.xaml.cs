@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Web.WebView2.Core;
 using StrideBrowser.Engine;
 using StrideBrowser.Interop;
 using StrideBrowser.Models;
@@ -62,6 +63,12 @@ public partial class MainWindow : Window
 
         _router = services.GetRequiredService<WebMessageRouter>();
         _router.SettingChanged += OnSettingChanged;
+        
+        var updateService = services.GetRequiredService<UpdateService>();
+        updateService.UpdateAvailable += (s, e) => 
+        {
+            Dispatcher.Invoke(() => UpdateBadge.Visibility = Visibility.Visible);
+        };
         Services.ThemeManager.ThemeChanged += () =>
         {
             var themeStr = Services.ThemeManager.GetThemeString();

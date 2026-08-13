@@ -40,9 +40,15 @@ public partial class App : Application
         // Build DI container
         _serviceProvider = Composition.BuildServiceProvider();
 
-        // Start NetSparkle auto-update loop in the background
-        var updateService = _serviceProvider.GetRequiredService<UpdateService>();
-        updateService.StartUpdateLoop();
+        // Check for updates silently if enabled
+        var settingsStore = _serviceProvider.GetRequiredService<ISettingsStore>();
+        var settings = settingsStore.Load();
+        if (settings.AutoCheckForUpdates)
+        {
+            var updateService = _serviceProvider.GetRequiredService<UpdateService>();
+            // Fire and forget the async silent check
+            _ = updateService.CheckForUpdatesQuietlyAsync();
+        }
 
         CheckForPreviousCrash();
 

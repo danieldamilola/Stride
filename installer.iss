@@ -1,6 +1,8 @@
 [Setup]
 AppName=Stride
 AppVersion=1.1.3
+UninstallDisplayName=Stride
+AppId=Stride
 DefaultDirName={localappdata}\Stride
 DefaultGroupName=Stride
 UninstallDisplayIcon={app}\Stride.exe

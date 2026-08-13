@@ -14,20 +14,24 @@ public class SettingsMessageHandler : IWebMessageHandler
     private readonly TabEngine _engine;
     private readonly BrowserViewModel _vm;
     private readonly ISettingsStore _settingsStore;
+    private readonly UpdateService _updateService;
 
     public event Action<string, string>? SettingChanged;
 
-    public SettingsMessageHandler(TabEngine engine, BrowserViewModel vm, ISettingsStore settingsStore)
+    public SettingsMessageHandler(TabEngine engine, BrowserViewModel vm, ISettingsStore settingsStore, UpdateService updateService)
     {
         _engine = engine;
         _vm = vm;
         _settingsStore = settingsStore;
+        _updateService = updateService;
     }
 
     public void Register(Dictionary<string, Func<string, Task>> prefixHandlers, Dictionary<string, Func<Task>> exactHandlers)
     {
         prefixHandlers[WebMessagePrefix.Setting] = HandleSetting;
         exactHandlers[WebMessagePrefix.OpenBackgroundsFolder] = HandleOpenBackgroundsFolder;
+        exactHandlers["check-for-update"] = () => { _updateService.ShowUpdateUI(); return Task.CompletedTask; };
+        exactHandlers["install-update"] = () => { _updateService.ShowUpdateUI(); return Task.CompletedTask; };
     }
 
     private Task HandleOpenBackgroundsFolder()
