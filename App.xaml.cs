@@ -15,8 +15,6 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        VelopackApp.Build().Run();
-
         if (!SingleInstanceManager.Initialize(e.Args))
         {
             Shutdown();
