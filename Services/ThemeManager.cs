@@ -89,7 +89,7 @@ public static class ThemeManager
                 return lightTheme == 0;
             }
         }
-        catch { }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Theme error: {ex}"); }
         return true; // Default to dark if we can't read the registry
     }
 }

@@ -90,7 +90,10 @@ public partial class App : Application
                 File.Delete(logPath);
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Trace.WriteLine($"Failed to check for previous crash: {ex}");
+        }
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

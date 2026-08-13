@@ -34,7 +34,10 @@ public sealed class WindowChromeHelper
         {
             _hwndSource?.RemoveHook(WndProc);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Trace.WriteLine($"Failed to unhook WndProc: {ex}");
+        }
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)

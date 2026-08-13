@@ -50,7 +50,7 @@ public static class SingleInstanceManager
         _cts?.Cancel();
         if (_ownsMutex)
         {
-            try { _mutex?.ReleaseMutex(); } catch { }
+            try { _mutex?.ReleaseMutex(); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"ReleaseMutex error: {ex}"); }
         }
         _mutex?.Dispose();
     }
@@ -77,7 +77,7 @@ public static class SingleInstanceManager
                             InstanceMessageReceived?.Invoke(args);
                         }
                     }
-                    catch (JsonException) { }
+                    catch (JsonException ex) { System.Diagnostics.Trace.WriteLine($"JsonException: {ex}"); }
                 }
             }
             catch (OperationCanceledException)

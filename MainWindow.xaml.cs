@@ -57,12 +57,10 @@ public partial class MainWindow : Window
         _historyStore = services.GetRequiredService<IHistoryStore>();
         _downloadStore = services.GetRequiredService<IDownloadStore>();
 
-        var deps = services.GetRequiredService<EngineDependencies>();
-        _engine = new TabEngine(WebViewHost, deps);
+        _engine = services.GetRequiredService<TabEngine>();
+        _engine.AttachHost(WebViewHost);
 
-        var extManager = services.GetRequiredService<ExtensionManager>();
-        var updateService = services.GetRequiredService<UpdateService>();
-        _router = new WebMessageRouter(_engine, _vm, _oneTabStore, _historyStore, _downloadStore, _settingsStore, extManager, deps.CustomDownloadManager, updateService);
+        _router = services.GetRequiredService<WebMessageRouter>();
         _router.SettingChanged += OnSettingChanged;
         Services.ThemeManager.ThemeChanged += () =>
         {
@@ -89,85 +87,29 @@ public partial class MainWindow : Window
 
         Loaded += OnWindowLoaded;
     }
+    private WindowChromeManager? _chromeManager;
+
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
-        ApplyRoundedCorners();
-
-        var source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
-        source?.AddHook(WndProc);
+        
+        _chromeManager = new WindowChromeManager(this)
+        {
+            OnMouseHWheel = delta =>
+            {
+                var scrollViewer = GetScrollViewer(TabList);
+                if (scrollViewer != null)
+                {
+                    scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + (delta * 0.5));
+                }
+            }
+        };
+        _chromeManager.Initialize();
     }
 
     private const int WM_MOUSEHWHEEL = 0x020E;
 
-    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-    {
-        if (msg == WM_MOUSEHWHEEL)
-        {
-            int delta = (short)((wParam.ToInt64() >> 16) & 0xFFFF);
-            var scrollViewer = GetScrollViewer(TabList);
-            if (scrollViewer != null)
-            {
-                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + (delta * 0.5));
-                handled = true;
-            }
-        }
-        else if (msg == NativeMethods.WM_GETMINMAXINFO)
-        {
-            var mmi = Marshal.PtrToStructure<NativeMethods.MINMAXINFO>(lParam);
-            var monitor = NativeMethods.MonitorFromWindow(hwnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
-            if (monitor != IntPtr.Zero)
-            {
-                var mi = new NativeMethods.MONITORINFO { cbSize = Marshal.SizeOf<NativeMethods.MONITORINFO>() };
-                NativeMethods.GetMonitorInfo(monitor, ref mi);
 
-                var work = mi.rcWork;
-                var mon = mi.rcMonitor;
-
-                mmi.ptMaxPosition = new NativeMethods.POINT { X = work.Left - mon.Left, Y = work.Top - mon.Top };
-                mmi.ptMaxSize = new NativeMethods.POINT { X = work.Right - work.Left, Y = work.Bottom - work.Top };
-
-                // When the taskbar is auto-hidden, rcWork == rcMonitor (full screen).
-                // The maximized window then covers the taskbar trigger zone (the 1px edge).
-                // Detect this and leave a 1px gap on the taskbar edge so the cursor can trigger it.
-                if (NativeMethods.IsTaskbarAutoHide())
-                {
-                    var edge = NativeMethods.GetTaskbarEdge();
-                    switch (edge)
-                    {
-                        case 0: // Left
-                            mmi.ptMaxPosition.X += 1;
-                            mmi.ptMaxSize.X -= 1;
-                            break;
-                        case 1: // Top
-                            mmi.ptMaxPosition.Y += 1;
-                            mmi.ptMaxSize.Y -= 1;
-                            break;
-                        case 2: // Right
-                            mmi.ptMaxSize.X -= 1;
-                            break;
-                        case 3: // Bottom (most common)
-                            mmi.ptMaxSize.Y -= 1;
-                            break;
-                    }
-                }
-            }
-            Marshal.StructureToPtr(mmi, lParam, true);
-            handled = true;
-        }
-        return IntPtr.Zero;
-    }
-
-    private void ApplyRoundedCorners()
-    {
-        try
-        {
-            var hwnd = new WindowInteropHelper(this).Handle;
-            var preference = NativeMethods.DWMWCP_ROUND;
-            NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
-        }
-        catch { /* Pre-Windows 11 — graceful fallback to square corners */ }
-    }
 
     // ───────────────────── Initialization ─────────────────────
 
@@ -217,24 +159,7 @@ public partial class MainWindow : Window
                 }
             }
 
-            // Win32 foreground activation — WPF's Activate() alone is unreliable
-            // on Windows 10/11 when the app is in the background. Windows enforces
-            // strict foreground rules, so a background process calling Activate()
-            // often just flashes the taskbar icon. Using the native APIs first
-            // ensures the window actually comes to the front.
-            var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-            if (hwnd != IntPtr.Zero)
-            {
-                if (NativeMethods.IsIconic(hwnd))
-                    NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
-
-                NativeMethods.SetForegroundWindow(hwnd);
-            }
-
-            if (WindowState == WindowState.Minimized)
-                WindowState = WindowState.Normal;
-
-            Activate();
+            _chromeManager?.BringToFront();
         });
     }
 
@@ -569,9 +494,7 @@ public partial class MainWindow : Window
 
     // ───────────────────── Navigation ─────────────────────
 
-    private void GoBack_Click(object sender, RoutedEventArgs e) => _engine.GoBack();
-    private void GoForward_Click(object sender, RoutedEventArgs e) => _engine.GoForward();
-    private void Refresh_Click(object sender, RoutedEventArgs e) => _engine.Reload();
+
 
     private void AddressBar_KeyDown(object sender, KeyEventArgs e)
     {
@@ -1545,14 +1468,6 @@ public partial class MainWindow : Window
         {
             try { _engine.Shutdown(); }
             catch (Exception ex) { Trace.WriteLine($"Engine shutdown failed: {ex}"); }
-
-            try
-            {
-                var hwnd = new WindowInteropHelper(this).Handle;
-                var source = HwndSource.FromHwnd(hwnd);
-                source?.RemoveHook(WndProc);
-            }
-            catch { }
 
             Application.Current.Dispatcher.InvokeAsync(() => Close(), System.Windows.Threading.DispatcherPriority.Normal);
         }

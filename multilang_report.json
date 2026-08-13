@@ -1,0 +1,606 @@
+{
+  "scanner": "multilang_scanner.py",
+  "files_scanned": 66,
+  "languages": {
+    "csharp": 66
+  },
+  "severity_counts": {
+    "critical": 32,
+    "high": 4,
+    "medium": 38
+  },
+  "findings": [
+    {
+      "file": "App.xaml.cs",
+      "line": 93,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 358,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 364,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 370,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 376,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 382,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 557,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 564,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 591,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 596,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 658,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 663,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 730,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 801,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 841,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 932,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 1034,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 1189,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 1284,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 1355,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 1464,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 1476,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Helpers\\WindowChromeHelper.cs",
+      "line": 37,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "MainWindow.xaml.cs",
+      "line": 1555,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "PermissionDialogWindow.xaml.cs",
+      "line": 33,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "ScriptDialogWindow.xaml.cs",
+      "line": 54,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Services\\ExtensionManager.cs",
+      "line": 110,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Services\\SingleInstanceManager.cs",
+      "line": 53,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Services\\SingleInstanceManager.cs",
+      "line": 80,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Services\\ThemeManager.cs",
+      "line": 92,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "ViewModels\\BrowserViewModel.cs",
+      "line": 202,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "ViewModels\\BrowserViewModel.cs",
+      "line": 203,
+      "category": "empty_except",
+      "severity": "critical",
+      "detail": "catch block has no statements",
+      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
+    },
+    {
+      "file": "Converters\\InverseBooleanToVisibilityConverter.cs",
+      "line": 21,
+      "category": "stub_marker",
+      "severity": "high",
+      "detail": "throw new NotImplementedException();",
+      "remediation": "Either implement the real logic now, or make the stub loudly fail at call time with a typed error naming what's missing - don't leave a silent placeholder."
+    },
+    {
+      "file": "Converters\\InverseBooleanToVisibilityConverter.cs",
+      "line": 21,
+      "category": "stub_marker",
+      "severity": "high",
+      "detail": "new NotImplementedException()",
+      "remediation": "Either implement the real logic now, or make the stub loudly fail at call time with a typed error naming what's missing - don't leave a silent placeholder."
+    },
+    {
+      "file": "Converters\\ProgressToDashArrayConverter.cs",
+      "line": 36,
+      "category": "stub_marker",
+      "severity": "high",
+      "detail": "throw new NotImplementedException();",
+      "remediation": "Either implement the real logic now, or make the stub loudly fail at call time with a typed error naming what's missing - don't leave a silent placeholder."
+    },
+    {
+      "file": "Converters\\ProgressToDashArrayConverter.cs",
+      "line": 36,
+      "category": "stub_marker",
+      "severity": "high",
+      "detail": "new NotImplementedException()",
+      "remediation": "Either implement the real logic now, or make the stub loudly fail at call time with a typed error naming what's missing - don't leave a silent placeholder."
+    },
+    {
+      "file": "Converters\\InverseBooleanToVisibilityConverter.cs",
+      "line": 19,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. Converters\\ProgressToDashArrayConverter.cs:34",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "Converters\\ProgressToDashArrayConverter.cs",
+      "line": 34,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. Converters\\InverseBooleanToVisibilityConverter.cs:19",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "Engine\\ContentScriptInjector.cs",
+      "line": 25,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "191 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "Engine\\StressTestRunner.cs",
+      "line": 15,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. Helpers\\WindowChromeHelper.cs:17",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "Engine\\StressTestRunner.cs",
+      "line": 20,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "134 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 385,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. Engine\\TabEngine.cs:391",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 391,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. Engine\\TabEngine.cs:385",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 397,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. Engine\\TabEngine.cs:385",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 494,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "149 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 705,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "150 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 902,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "235 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "Engine\\TabEngine.cs",
+      "line": 1138,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "104 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "Helpers\\WindowChromeHelper.cs",
+      "line": 17,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. Engine\\StressTestRunner.cs:15",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "MainWindow.xaml.cs",
+      "line": 836,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. MainWindow.xaml.cs:868",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "MainWindow.xaml.cs",
+      "line": 841,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. MainWindow.xaml.cs:874",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "MainWindow.xaml.cs",
+      "line": 868,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. MainWindow.xaml.cs:836",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "MainWindow.xaml.cs",
+      "line": 874,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. MainWindow.xaml.cs:841",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "PermissionDialogWindow.xaml.cs",
+      "line": 52,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. ProtocolDialogWindow.xaml.cs:30",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "PermissionDialogWindow.xaml.cs",
+      "line": 58,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. ProtocolDialogWindow.xaml.cs:36",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "ProtocolDialogWindow.xaml.cs",
+      "line": 30,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. PermissionDialogWindow.xaml.cs:52",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "ProtocolDialogWindow.xaml.cs",
+      "line": 36,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. PermissionDialogWindow.xaml.cs:58",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "ScriptDialogWindow.xaml.cs",
+      "line": 89,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. PermissionDialogWindow.xaml.cs:52",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "ScriptDialogWindow.xaml.cs",
+      "line": 95,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. PermissionDialogWindow.xaml.cs:58",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "Services\\CustomDownloadManager.cs",
+      "line": 45,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "113 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "Services\\DefaultBrowserRegistrar.cs",
+      "line": 24,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "81 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "Services\\Input\\KeyboardShortcutMap.cs",
+      "line": 19,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "81 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "Services\\NavigationService.cs",
+      "line": 21,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. Engine\\StressTestRunner.cs:15",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "Services\\Pages\\DownloadPage.cs",
+      "line": 10,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. Services\\Pages\\HistoryPage.cs:10",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "Services\\Pages\\HistoryPage.cs",
+      "line": 10,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. Services\\Pages\\DownloadPage.cs:10",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "Services\\Pages\\SettingsPage.cs",
+      "line": 11,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "101 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "SpurBrowser.Tests\\FocusDomainMatcherTests.cs",
+      "line": 17,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. SpurBrowser.Tests\\FocusDomainMatcherTests.cs:23",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "SpurBrowser.Tests\\FocusDomainMatcherTests.cs",
+      "line": 23,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. SpurBrowser.Tests\\FocusDomainMatcherTests.cs:17",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
+      "line": 40,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:46",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
+      "line": 46,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:40",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
+      "line": 52,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:40",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
+      "line": 58,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:66",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
+      "line": 66,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:58",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
+      "line": 72,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:58",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    }
+  ]
+}

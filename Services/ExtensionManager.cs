@@ -16,7 +16,7 @@ public sealed class ExtensionManager
 {
     private static readonly string ExtensionsDir = AppPaths.ExtensionsDir;
 
-    private const string UBlockVersion = "1.71.0";
+    private const string UBlockVersion = "1.73.0";
 
     private const string UBlockDownloadUrl =
         $"https://github.com/gorhill/uBlock/releases/download/{UBlockVersion}/uBlock0_{UBlockVersion}.chromium.zip";
@@ -24,7 +24,7 @@ public sealed class ExtensionManager
     private const string TCLensUrl = "https://github.com/danieldamilola/T-C/archive/refs/heads/main.zip";
 
     /// <summary>Path to the stored SHA-256 hash for TOFU (Trust On First Use) verification.</summary>
-    private static readonly string HashFilePath = AppPaths.UBlockHashFile;
+    private static readonly string HashFilePath = AppPaths.UBlockHashFile + "." + UBlockVersion;
 
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(30) };
 
@@ -107,7 +107,7 @@ public sealed class ExtensionManager
             {
                 var tempDir = Path.Combine(ExtensionsDir, $"uBlock0_{UBlockVersion}_{Guid.NewGuid():N}");
                 Directory.Move(targetDir, tempDir);
-                _ = Task.Run(() => { try { Directory.Delete(tempDir, recursive: true); } catch { } });
+                _ = Task.Run(() => { try { Directory.Delete(tempDir, recursive: true); } catch (Exception ex) { Trace.WriteLine($"Failed to delete temp dir: {ex}"); } });
             }
 
             ZipFile.ExtractToDirectory(localZipPath, targetDir);

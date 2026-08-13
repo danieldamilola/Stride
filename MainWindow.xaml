@@ -277,7 +277,7 @@
                     <!-- Navigation: ← → ↻ -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="0,0,4,0">
-                        <Button Click="GoBack_Click" Style="{DynamicResource IconBtn}"
+                        <Button Command="{Binding GoBackCommand}" Style="{DynamicResource IconBtn}"
                                 Visibility="{Binding Settings.ShowBackArrow, Converter={StaticResource BoolToVis}}"
                                 Width="26" Height="26" ToolTip="Back (Alt+Left)">
                             <Path Data="{StaticResource IconBack}"
@@ -286,7 +286,7 @@
                                   Stretch="Uniform" StrokeStartLineCap="Round"
                                   StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                         </Button>
-                        <Button Click="GoForward_Click" Style="{DynamicResource IconBtn}"
+                        <Button Command="{Binding GoForwardCommand}" Style="{DynamicResource IconBtn}"
                                 Visibility="{Binding Settings.ShowForwardArrow, Converter={StaticResource BoolToVis}}"
                                 Width="26" Height="26" ToolTip="Forward (Alt+Right)">
                             <Path Data="{StaticResource IconForward}"
@@ -295,7 +295,7 @@
                                   Stretch="Uniform" StrokeStartLineCap="Round"
                                   StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                         </Button>
-                        <Button Click="Refresh_Click" Style="{DynamicResource IconBtn}"
+                        <Button Command="{Binding RefreshCommand}" Style="{DynamicResource IconBtn}"
                                 Visibility="{Binding Settings.ShowRefreshButton, Converter={StaticResource BoolToVis}}"
                                 Width="26" Height="26" ToolTip="Refresh (F5)">
                             <Path Data="{StaticResource IconRefresh}"

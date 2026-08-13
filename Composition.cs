@@ -48,6 +48,18 @@ public static class Composition
 
         // Engine dependencies record
         services.AddSingleton<EngineDependencies>();
+        services.AddSingleton<TabEngine>();
+        
+        // Message Handlers
+        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.CoreMessageHandler>();
+        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.SettingsMessageHandler>();
+        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.OneTabMessageHandler>();
+        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.HistoryMessageHandler>();
+        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.ShortcutMessageHandler>();
+        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.DownloadMessageHandler>();
+        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.TCLensMessageHandler>();
+
+        services.AddSingleton<WebMessageRouter>();
 
         // ViewModel
         services.AddSingleton<BrowserViewModel>();

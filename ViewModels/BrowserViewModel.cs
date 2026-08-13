@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 
@@ -48,10 +49,13 @@ public sealed partial class BrowserViewModel : ObservableObject
     [ObservableProperty]
     private string _updateVersion = string.Empty;
 
-    public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore)
+    private readonly Engine.TabEngine _engine;
+
+    public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore, Engine.TabEngine engine)
     {
         Settings = settings;
         _navigation = navigation;
+        _engine = engine;
         
         downloadStore.Items.CollectionChanged += (s, e) => 
         {
@@ -199,7 +203,16 @@ public sealed partial class BrowserViewModel : ObservableObject
                 ShowSuggestions = Suggestions.Count > 0;
             }
         }
-        catch (OperationCanceledException) { }
-        catch { }
+        catch (OperationCanceledException) { /* Ignoring cancellation */ }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"UpdateSuggestionsAsync error: {ex}"); }
     }
+
+    [RelayCommand]
+    private void GoBack() => _engine.GoBack();
+
+    [RelayCommand]
+    private void GoForward() => _engine.GoForward();
+
+    [RelayCommand]
+    private void Refresh() => _engine.Reload();
 }
