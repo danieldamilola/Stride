@@ -31,7 +31,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         return new Dictionary<string, Func<string, Task>>
         {
             [WebMessagePrefix.Setting] = HandleSetting,
-            ["install-update:"] = async (payload) => { await _updateService.DownloadAndInstallUpdateAsync(payload); }
+            ["install-update:"] = async (_) => { await _updateService.DownloadAndInstallUpdateAsync(); }
         };
     }
 
@@ -42,8 +42,10 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
             [WebMessagePrefix.OpenBackgroundsFolder] = HandleOpenBackgroundsFolder,
             ["check-for-update"] = async () => 
             {
-                var (available, version, notes, url) = await _updateService.CheckForUpdateCustomAsync();
-                var status = available ? "true" : "false";
+                var item = await _updateService.CheckForUpdateCustomAsync();
+                var status = item is null ? "false" : "true";
+                var version = item?.Version ?? "";
+                var url = item?.DownloadLink ?? "";
                 _engine.PostMessageToActiveTab($"update-check-result:{status}:{version}:{url}");
             }
         };

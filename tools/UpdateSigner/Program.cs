@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Text;
 using System.Xml;
 using Chaos.NaCl;
 
@@ -58,15 +57,24 @@ internal static class Program
         return 0;
     }
 
+    /// <summary>
+    /// Signs the bytes of the installer file itself and stamps that signature on every
+    /// <c>enclosure</c> in the appcast. NetSparkle verifies the signature against the
+    /// downloaded file bytes, so this is the only scheme that can actually validate a
+    /// download. (Signing the enclosure URL cannot — the two never match.)
+    /// </summary>
     private static int Sign(string[] args)
     {
-        if (args.Length < 3)
+        if (args.Length < 4)
         {
-            Console.Error.WriteLine("usage: UpdateSigner sign <appcast.xml> <private-key.key>");
+            Console.Error.WriteLine("usage: UpdateSigner sign <appcast.xml> <installer-file> <private-key.key>");
             return 1;
         }
 
-        var seed = File.ReadAllBytes(args[2]);
+        var seed = File.ReadAllBytes(args[3]);
+        var installerBytes = File.ReadAllBytes(args[2]);
+        var signature = Ed25519.Sign(installerBytes, Ed25519.ExpandedPrivateKeyFromSeed(seed));
+
         var doc = new XmlDocument { PreserveWhitespace = true };
         doc.Load(args[1]);
 
@@ -79,7 +87,6 @@ internal static class Program
                 continue;
             }
 
-            var signature = Ed25519.Sign(Encoding.UTF8.GetBytes(url), Ed25519.ExpandedPrivateKeyFromSeed(seed));
             enclosure.SetAttribute("edSignature", EdSignatureAttribute, Convert.ToBase64String(signature));
             signed++;
         }
@@ -91,19 +98,24 @@ internal static class Program
         }
 
         doc.Save(args[1]);
-        Console.WriteLine($"Signed {signed} enclosure(s) in {args[1]}");
+        Console.WriteLine($"Signed {signed} enclosure(s) in {args[1]} (Ed25519 over installer bytes: {args[2]})");
         return 0;
     }
 
+    /// <summary>
+    /// Verifies each enclosure's signature against the bytes of the local installer file.
+    /// Pass the exact file that the appcast points at.
+    /// </summary>
     private static int Verify(string[] args)
     {
-        if (args.Length < 3)
+        if (args.Length < 4)
         {
-            Console.Error.WriteLine("usage: UpdateSigner verify <appcast.xml> <public-key-base64>");
+            Console.Error.WriteLine("usage: UpdateSigner verify <appcast.xml> <public-key-base64> <installer-file>");
             return 1;
         }
 
         var publicKey = Convert.FromBase64String(args[2]);
+        var installerBytes = File.ReadAllBytes(args[3]);
         var doc = new XmlDocument();
         doc.Load(args[1]);
 
@@ -113,7 +125,7 @@ internal static class Program
         {
             var url = enclosure.GetAttribute("url");
             var signature = Convert.FromBase64String(enclosure.GetAttribute("edSignature", EdSignatureAttribute));
-            var valid = Ed25519.Verify(signature, Encoding.UTF8.GetBytes(url), publicKey);
+            var valid = Ed25519.Verify(signature, installerBytes, publicKey);
             Console.WriteLine($"  {(valid ? "OK" : "FAIL")}  {url}");
             if (valid) ok++; else failed++;
         }
@@ -131,8 +143,8 @@ internal static class Program
     private static void PrintUsage()
     {
         Console.WriteLine("Stride appcast signing tool");
-        Console.WriteLine("  generate <private-key.key>            create a new Ed25519 keypair");
-        Console.WriteLine("  sign <appcast.xml> <private-key.key>  sign enclosure URLs in the appcast");
-        Console.WriteLine("  verify <appcast.xml> <pubkey-base64>  verify enclosure signatures");
+        Console.WriteLine("  generate <private-key.key>                              create a new Ed25519 keypair");
+        Console.WriteLine("  sign <appcast.xml> <installer-file> <private-key.key>  sign the installer's bytes into the appcast");
+        Console.WriteLine("  verify <appcast.xml> <pubkey-base64> <installer-file>  verify signatures against the installer's bytes");
     }
 }

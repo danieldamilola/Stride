@@ -86,6 +86,10 @@ public partial class MainWindow : Window
             Dispatcher.Invoke(() => UpdateBadge.Visibility = Visibility.Visible);
         };
 
+        // NetSparkle fires this right before it runs the installer (which overwrites app files),
+        // so the app must exit first. OnClosing persists the session, then closes for good.
+        updateService.AppExitRequested += () => Dispatcher.Invoke(() => Application.Current.Shutdown());
+
         _commandBar = new CommandBarController(
             _vm, _engine, CommandBarGrid, CommandBarPanel, AddressBar, StandardAddressBar, UrlLabel, WebViewHost, Dispatcher);
             
@@ -167,8 +171,6 @@ public partial class MainWindow : Window
             await HandleCommandLineUrls();
 
             SingleInstanceManager.InstanceMessageReceived += OnInstanceMessageReceived;
-
-            _ = CheckForUpdatesInBackgroundAsync();
 
             if (!DefaultBrowserRegistrar.IsRegistered())
                 DefaultBrowserRegistrar.Register();
@@ -1028,36 +1030,6 @@ public partial class MainWindow : Window
         {
             Trace.WriteLine($"Settings_Click failed: {ex}");
         }
-    }
-
-    private async Task CheckForUpdatesInBackgroundAsync()
-    {
-        try
-        {
-            using var client = new System.Net.Http.HttpClient();
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("StrideBrowser");
-            var response = await client.GetAsync("https://api.github.com/repos/danieldamilola/Stride/releases/latest");
-            if (!response.IsSuccessStatusCode) return;
-
-            var json = await response.Content.ReadAsStringAsync();
-            var doc = System.Text.Json.JsonDocument.Parse(json);
-            if (doc.RootElement.TryGetProperty("tag_name", out var tagProp))
-            {
-                var latest = tagProp.GetString()?.TrimStart('v');
-                var current = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";
-                
-                if (!string.IsNullOrEmpty(latest) && 
-                    Version.TryParse(latest, out var latestVersion) && 
-                    Version.TryParse(current, out var currentVersion))
-                {
-                    if (latestVersion > currentVersion)
-                    {
-                        Dispatcher.Invoke(() => UpdateBadge.Visibility = Visibility.Visible);
-                    }
-                }
-            }
-        }
-        catch { /* Silently fail on network/parsing issues */ }
     }
 
     // ───────────────────── Title Bar ─────────────────────
