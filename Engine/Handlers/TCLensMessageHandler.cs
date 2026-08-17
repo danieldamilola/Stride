@@ -19,15 +19,10 @@ public class TCLensMessageHandler : IWebMessageHandler
         _transfer = transfer;
     }
 
-    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
+    public IEnumerable<MessageRoute> GetRoutes()
     {
-        return new Dictionary<string, Func<string, Task>>
-        {
-            [WebMessagePrefix.TCLensGetText] = HandleTCLensGetText
-        };
+        yield return MessageRoute.Prefix(WebMessagePrefix.TCLensGetText, HandleTCLensGetText);
     }
-
-    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers() => new Dictionary<string, Func<Task>>();
 
     private async Task HandleTCLensGetText(string _)
     {

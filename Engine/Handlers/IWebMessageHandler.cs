@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace StrideBrowser.Engine.Handlers;
 
+/// <summary>
+/// Contract for web-message handlers. Routes are declared as a flat list of
+/// <see cref="MessageRoute"/> records — no handler-side dictionaries leak out.
+/// </summary>
 public interface IWebMessageHandler
 {
-    IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers();
-    IReadOnlyDictionary<string, Func<Task>> GetExactHandlers();
+    IEnumerable<MessageRoute> GetRoutes();
 }

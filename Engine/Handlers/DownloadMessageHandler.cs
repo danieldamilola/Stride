@@ -23,26 +23,16 @@ public class DownloadMessageHandler : IWebMessageHandler
         _customDownloadManager = customDownloadManager;
     }
 
-    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
+    public IEnumerable<MessageRoute> GetRoutes()
     {
-        return new Dictionary<string, Func<string, Task>>
-        {
-            [WebMessagePrefix.DownloadOpen] = HandleDownloadOpen,
-            [WebMessagePrefix.DownloadFolder] = HandleDownloadFolder,
-            [WebMessagePrefix.DownloadCancel] = HandleDownloadCancel,
-            [WebMessagePrefix.DownloadPause] = HandleDownloadPause,
-            [WebMessagePrefix.DownloadResume] = HandleDownloadResume,
-            [WebMessagePrefix.DownloadRequest] = HandleDownloadRequest
-        };
-    }
-
-    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers()
-    {
-        return new Dictionary<string, Func<Task>>
-        {
-            [WebMessagePrefix.DownloadClear] = HandleDownloadClear,
-            [WebMessagePrefix.DownloadRequestSync] = HandleDownloadSync
-        };
+        yield return MessageRoute.Prefix(WebMessagePrefix.DownloadOpen, HandleDownloadOpen);
+        yield return MessageRoute.Prefix(WebMessagePrefix.DownloadFolder, HandleDownloadFolder);
+        yield return MessageRoute.Prefix(WebMessagePrefix.DownloadCancel, HandleDownloadCancel);
+        yield return MessageRoute.Prefix(WebMessagePrefix.DownloadPause, HandleDownloadPause);
+        yield return MessageRoute.Prefix(WebMessagePrefix.DownloadResume, HandleDownloadResume);
+        yield return MessageRoute.Prefix(WebMessagePrefix.DownloadRequest, HandleDownloadRequest);
+        yield return MessageRoute.Exact(WebMessagePrefix.DownloadClear, HandleDownloadClear);
+        yield return MessageRoute.Exact(WebMessagePrefix.DownloadRequestSync, HandleDownloadSync);
     }
 
     private Task HandleDownloadOpen(string id)

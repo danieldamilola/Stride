@@ -4,38 +4,27 @@ using System.Threading.Tasks;
 using StrideBrowser.Engine;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
-using StrideBrowser.ViewModels;
 
 namespace StrideBrowser.Engine.Handlers;
 
-public class CoreMessageHandler : IWebMessageHandler
+public class CoreMessageHandler : IWebMessageHandler, IAddressEmitter
 {
     private readonly TabEngine _engine;
-    private readonly BrowserViewModel _vm;
-    private readonly UpdateService _updateService;
+    private readonly NavigationService _navigation;
 
-    public CoreMessageHandler(TabEngine engine, BrowserViewModel vm, UpdateService updateService)
+    public event Action<string>? AddressChanged;
+
+    public CoreMessageHandler(TabEngine engine, NavigationService navigation)
     {
         _engine = engine;
-        _vm = vm;
-        _updateService = updateService;
+        _navigation = navigation;
     }
 
-    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
+    public IEnumerable<MessageRoute> GetRoutes()
     {
-        return new Dictionary<string, Func<string, Task>>
-        {
-            [WebMessagePrefix.Open] = HandleOpen,
-            [WebMessagePrefix.Search] = HandleSearch
-        };
-    }
-
-    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers()
-    {
-        return new Dictionary<string, Func<Task>>
-        {
-            [WebMessagePrefix.SetDefaultBrowser] = HandleSetDefaultBrowser
-        };
+        yield return MessageRoute.Prefix(WebMessagePrefix.Open, HandleOpen);
+        yield return MessageRoute.Prefix(WebMessagePrefix.Search, HandleSearch);
+        yield return MessageRoute.Exact(WebMessagePrefix.SetDefaultBrowser, HandleSetDefaultBrowser);
     }
 
     private async Task HandleOpen(string url)
@@ -46,12 +35,12 @@ public class CoreMessageHandler : IWebMessageHandler
 
     private Task HandleSearch(string query)
     {
-        var url = _vm.ResolveInput(query);
+        var url = _navigation.Resolve(query);
         if (_engine.ActiveTab is not null)
         {
             _engine.ActiveTab.Url = url;
-            _vm.AddressText = url;
             _engine.Navigate(_engine.ActiveTab, url);
+            AddressChanged?.Invoke(url);
         }
         return Task.CompletedTask;
     }

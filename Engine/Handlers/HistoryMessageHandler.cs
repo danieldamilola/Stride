@@ -18,20 +18,10 @@ public class HistoryMessageHandler : IWebMessageHandler
         _historyStore = historyStore;
     }
 
-    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
+    public IEnumerable<MessageRoute> GetRoutes()
     {
-        return new Dictionary<string, Func<string, Task>>
-        {
-            [WebMessagePrefix.HistoryOpen] = HandleOpen
-        };
-    }
-
-    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers()
-    {
-        return new Dictionary<string, Func<Task>>
-        {
-            [WebMessagePrefix.HistoryClear] = HandleHistoryClear
-        };
+        yield return MessageRoute.Prefix(WebMessagePrefix.HistoryOpen, HandleOpen);
+        yield return MessageRoute.Exact(WebMessagePrefix.HistoryClear, HandleHistoryClear);
     }
 
     private async Task HandleOpen(string url)

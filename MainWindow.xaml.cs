@@ -80,6 +80,7 @@ public partial class MainWindow : Window
         _tcLensTransfer = tcLensTransfer;
         _themeManager = themeManager;
         _router.SettingChanged += OnSettingChanged;
+        _router.AddressChanged += OnRouterAddressChanged;
         
         updateService.UpdateAvailable += (s, e) => 
         {
@@ -878,6 +879,8 @@ public partial class MainWindow : Window
             Trace.WriteLine($"HandleWebMessage failed: {ex}");
         }
     }
+
+    private void OnRouterAddressChanged(string url) => _vm.AddressText = url;
 
     private void OnSettingChanged(string key, string _)
     {

@@ -8,28 +8,36 @@ namespace StrideBrowser.Services;
 
 /// <summary>
 /// Dispatches web messages from internal pages to typed handlers.
-/// Replaces the monolithic if/else chain formerly in MainWindow.
+/// Exact routes win over prefix routes (exact-first semantics).
 /// </summary>
 public sealed class WebMessageRouter
 {
     private readonly Dictionary<string, Func<string, Task>> _prefixHandlers = new();
-    private readonly Dictionary<string, Func<Task>> _exactHandlers = new();
+    private readonly Dictionary<string, Func<string, Task>> _exactHandlers = new();
 
     /// <summary>Fires when settings change so the view can apply live effects.</summary>
     public event Action<string, string>? SettingChanged;
+
+    /// <summary>Fires when a handler navigates the active tab so the view can sync the address bar.</summary>
+    public event Action<string>? AddressChanged;
 
     public WebMessageRouter(IEnumerable<IWebMessageHandler> handlers)
     {
         foreach (var handler in handlers)
         {
-            foreach (var (prefix, func) in handler.GetPrefixHandlers())
-                _prefixHandlers[prefix] = func;
-            
-            foreach (var (key, func) in handler.GetExactHandlers())
-                _exactHandlers[key] = func;
+            foreach (var route in handler.GetRoutes())
+            {
+                if (route.IsExact)
+                    _exactHandlers[route.Key] = route.Handler;
+                else
+                    _prefixHandlers[route.Key] = route.Handler;
+            }
 
             if (handler is ISettingEmitter emitter)
                 emitter.SettingChanged += (k, v) => SettingChanged?.Invoke(k, v);
+
+            if (handler is IAddressEmitter addressEmitter)
+                addressEmitter.AddressChanged += url => AddressChanged?.Invoke(url);
         }
     }
 
@@ -39,7 +47,7 @@ public sealed class WebMessageRouter
         {
             if (_exactHandlers.TryGetValue(message, out var exactHandler))
             {
-                await exactHandler();
+                await exactHandler(message);
                 return;
             }
 

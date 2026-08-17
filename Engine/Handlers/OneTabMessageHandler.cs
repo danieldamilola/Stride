@@ -19,22 +19,17 @@ public class OneTabMessageHandler : IWebMessageHandler
         _oneTabStore = oneTabStore;
     }
 
-    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
+    public IEnumerable<MessageRoute> GetRoutes()
     {
-        return new Dictionary<string, Func<string, Task>>
-        {
-            [WebMessagePrefix.OneTabRestore] = HandleOneTabRestore,
-            [WebMessagePrefix.OneTabDelete] = HandleOneTabDelete,
-            [WebMessagePrefix.OneTabRename] = HandleOneTabRename,
-            [WebMessagePrefix.OneTabOpen] = HandleOneTabOpen,
-            [WebMessagePrefix.OneTabDeleteTab] = HandleOneTabDeleteTab,
-            [WebMessagePrefix.OneTabStar] = HandleOneTabStar,
-            [WebMessagePrefix.OneTabReorderTab] = HandleOneTabReorderTab,
-            [WebMessagePrefix.OneTabReorderGroup] = HandleOneTabReorderGroup
-        };
+        yield return MessageRoute.Prefix(WebMessagePrefix.OneTabRestore, HandleOneTabRestore);
+        yield return MessageRoute.Prefix(WebMessagePrefix.OneTabDelete, HandleOneTabDelete);
+        yield return MessageRoute.Prefix(WebMessagePrefix.OneTabRename, HandleOneTabRename);
+        yield return MessageRoute.Prefix(WebMessagePrefix.OneTabOpen, HandleOneTabOpen);
+        yield return MessageRoute.Prefix(WebMessagePrefix.OneTabDeleteTab, HandleOneTabDeleteTab);
+        yield return MessageRoute.Prefix(WebMessagePrefix.OneTabStar, HandleOneTabStar);
+        yield return MessageRoute.Prefix(WebMessagePrefix.OneTabReorderTab, HandleOneTabReorderTab);
+        yield return MessageRoute.Prefix(WebMessagePrefix.OneTabReorderGroup, HandleOneTabReorderGroup);
     }
-
-    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers() => new Dictionary<string, Func<Task>>();
 
     private async Task HandleOneTabRestore(string groupId)
     {

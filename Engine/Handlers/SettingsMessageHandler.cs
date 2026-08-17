@@ -6,50 +6,39 @@ using System.Threading.Tasks;
 using StrideBrowser.Engine;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
-using StrideBrowser.ViewModels;
 
 namespace StrideBrowser.Engine.Handlers;
 
 public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
 {
     private readonly TabEngine _engine;
-    private readonly BrowserViewModel _vm;
+    private readonly BrowserSettings _settings;
     private readonly ISettingsStore _settingsStore;
     private readonly UpdateService _updateService;
 
     public event Action<string, string>? SettingChanged;
 
-    public SettingsMessageHandler(TabEngine engine, BrowserViewModel vm, ISettingsStore settingsStore, UpdateService updateService)
+    public SettingsMessageHandler(TabEngine engine, BrowserSettings settings, ISettingsStore settingsStore, UpdateService updateService)
     {
         _engine = engine;
-        _vm = vm;
+        _settings = settings;
         _settingsStore = settingsStore;
         _updateService = updateService;
     }
 
-    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
+    public IEnumerable<MessageRoute> GetRoutes()
     {
-        return new Dictionary<string, Func<string, Task>>
+        yield return MessageRoute.Prefix(WebMessagePrefix.Setting, HandleSetting);
+        yield return MessageRoute.Prefix("install-update:", async (_) => { await _updateService.DownloadAndInstallUpdateAsync(); });
+        yield return MessageRoute.Exact(WebMessagePrefix.OpenBackgroundsFolder, HandleOpenBackgroundsFolder);
+        yield return MessageRoute.Exact("check-for-update", async () =>
         {
-            [WebMessagePrefix.Setting] = HandleSetting,
-            ["install-update:"] = async (_) => { await _updateService.DownloadAndInstallUpdateAsync(); }
-        };
-    }
-
-    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers()
-    {
-        return new Dictionary<string, Func<Task>>
-        {
-            [WebMessagePrefix.OpenBackgroundsFolder] = HandleOpenBackgroundsFolder,
-            ["check-for-update"] = async () => 
-            {
-                var item = await _updateService.CheckForUpdateCustomAsync();
-                var status = item is null ? "false" : "true";
-                var version = item?.Version ?? "";
-                var url = item?.DownloadLink ?? "";
-                _engine.PostMessageToActiveTab($"update-check-result:{status}:{version}:{url}");
-            }
-        };
+            var item = await _updateService.CheckForUpdateCustomAsync();
+            var status = item is null ? "false" : "true";
+            var version = item?.Version ?? "";
+            var url = item?.DownloadLink ?? "";
+            _engine.PostMessageToActiveTab($"update-check-result:{status}:{version}:{url}");
+        });
     }
 
     private Task HandleOpenBackgroundsFolder()
@@ -76,8 +65,8 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
             var subParts = value.Split(':', 2);
             if (subParts.Length == 2)
             {
-                _vm.Settings.CustomShortcuts[subParts[0]] = subParts[1];
-                _settingsStore.Save(_vm.Settings);
+                _settings.CustomShortcuts[subParts[0]] = subParts[1];
+                _settingsStore.Save(_settings);
                 SettingChanged?.Invoke("shortcut", subParts[0]);
             }
             return;
@@ -86,18 +75,18 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         // Special handling for shortcut reset: "shortcutReset:ActionName"
         if (key == "shortcutReset")
         {
-            _vm.Settings.CustomShortcuts.Remove(value);
-            _settingsStore.Save(_vm.Settings);
+            _settings.CustomShortcuts.Remove(value);
+            _settingsStore.Save(_settings);
             SettingChanged?.Invoke("shortcutReset", value);
             return;
         }
 
         if (SettingSetters.TryGetValue(key, out var setter))
-            setter(_vm.Settings, value);
+            setter(_settings, value);
         else
             Trace.WriteLine($"WebMessageRouter: unknown setting key '{key}'");
 
-        _settingsStore.Save(_vm.Settings);
+        _settingsStore.Save(_settings);
         SettingChanged?.Invoke(key, value);
 
         // Live-reload: re-inject unhook script into YouTube tabs when settings change

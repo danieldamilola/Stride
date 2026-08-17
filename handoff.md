@@ -25,6 +25,14 @@
   3. a correctly **signed installer reaches the install step** (`AppExitRequested`, dummy harmless WinExe runs via NetSparkle's batch).
   - 32/32 tests passing; 0 build errors.
 
+### 2026-08-17 — R3b handlers decoupled from ViewModel + sealed router contract (F5/F6)
+
+- **Dropped `BrowserViewModel` from the 3 handlers that took it** (Core/Settings/Shortcut): `CoreMessageHandler` now uses `NavigationService.Resolve` (the real logic behind `ResolveInput`) and no longer carries the unused `UpdateService`; Settings/Shortcut handlers inject `BrowserSettings` directly (already registered as singleton) instead of the whole VM.
+- **New `IAddressEmitter`** (`Engine\Handlers`) — the one `_vm.AddressText = url` UI-sync each navigator did is now a narrow `AddressChanged` event on the router; `MainWindow.OnRouterAddressChanged` sets the VM text.
+- **Sealed router contract**: `IWebMessageHandler` now exposes `IEnumerable<MessageRoute>`; `MessageRoute(Key, IsExact, Handler)` record with `Exact(...)`/`Prefix(...)` factories replaces the two leaked `Func` dictionaries. Router keeps exact-first semantics; also forwards `ISettingEmitter` + `IAddressEmitter`.
+- **Router unit tests added** (`StrideBrowser.Tests/WebMessageRouterTests.cs`, 7 tests — first router coverage): exact-over-prefix, prefix payload slicing, multi-handler merge, unknown message, exception swallowing, setting/address forwarding.
+- 39/39 tests passing; 0 build errors.
+
 ### 2026-08-17 — R3a message handlers → Engine layer
 
 - Moved all 9 message-handler files from `Services\MessageHandlers\` to `Engine\Handlers\` (namespace `StrideBrowser.Engine.Handlers`): `IWebMessageHandler`, `ISettingEmitter`, `CoreMessageHandler`, `SettingsMessageHandler`, `OneTabMessageHandler`, `HistoryMessageHandler`, `ShortcutMessageHandler`, `DownloadMessageHandler`, `TCLensMessageHandler`.
@@ -80,7 +88,7 @@
 - **Update installer integrity:** FIXED (2026-08-17) — see changelog. Installer binaries are Ed25519-verified before install; failures are traced to the log file and surfaced via `UpdateFailed`.
 - **Live update flow:** the local E2E dry run (appcast → download → signature → install step) passes, but the *real* release asset has not been exercised: `appcast.xml` currently carries a signature made by the OLD signer (over the enclosure URL), which NetSparkle rejects. **REQUIRED BEFORE NEXT RELEASE:** re-sign `appcast.xml` with the corrected signer against the real installer — `dotnet run --project tools/UpdateSigner -- sign appcast.xml Releases/Stride-win-Setup.exe tools/signing/ed25519_private.key` — verify it, commit, and confirm `ReleaseNotes.md` resolves at the `releaseNotesLink`.
 - **Build caveat:** if Stride.exe is running, `dotnet build` compiles fine but the copy step fails (MSB3026/3027, file lock).
-- **Architecture roadmap** (from `ARCHITECTURE_AUDIT.md`): R0 baseline ✅ · R1 update pipeline ✅ · R2 docs & test-project naming ✅ · R3a move message handlers to `Engine\Handlers` ✅ · R3b narrow handler dependencies (drop `BrowserViewModel`/router) · R4 `TabEngine` decomposition (WebViewFactory, WebViewIpcBridge) · R5 `MainWindow` decomposition (TabStripController, WindowLifecycleController, TCLensLauncher) · R6 navigation predicates + test coverage + dead-code removal · R7 release actions (re-sign appcast, ReleaseNotes.md, release a build).
+- **Architecture roadmap** (from `ARCHITECTURE_AUDIT.md`): R0 baseline ✅ · R1 update pipeline ✅ · R2 docs & test-project naming ✅ · R3a move message handlers to `Engine\Handlers` ✅ · R3b narrow handler dependencies (drop `BrowserViewModel`/router) ✅ · R4 `TabEngine` decomposition (WebViewFactory, WebViewIpcBridge) · R5 `MainWindow` decomposition (TabStripController, WindowLifecycleController, TCLensLauncher) · R6 navigation predicates + test coverage + dead-code removal · R7 release actions (re-sign appcast, ReleaseNotes.md, release a build).
 
 ---
 

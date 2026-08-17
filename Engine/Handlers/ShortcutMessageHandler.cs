@@ -6,36 +6,31 @@ using System.Threading.Tasks;
 using StrideBrowser.Engine;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
-using StrideBrowser.ViewModels;
 
 namespace StrideBrowser.Engine.Handlers;
 
-public class ShortcutMessageHandler : IWebMessageHandler, ISettingEmitter
+public class ShortcutMessageHandler : IWebMessageHandler, ISettingEmitter, IAddressEmitter
 {
     private readonly TabEngine _engine;
-    private readonly BrowserViewModel _vm;
+    private readonly BrowserSettings _settings;
     private readonly ISettingsStore _settingsStore;
 
     public event Action<string, string>? SettingChanged;
+    public event Action<string>? AddressChanged;
 
-    public ShortcutMessageHandler(TabEngine engine, BrowserViewModel vm, ISettingsStore settingsStore)
+    public ShortcutMessageHandler(TabEngine engine, BrowserSettings settings, ISettingsStore settingsStore)
     {
         _engine = engine;
-        _vm = vm;
+        _settings = settings;
         _settingsStore = settingsStore;
     }
 
-    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
+    public IEnumerable<MessageRoute> GetRoutes()
     {
-        return new Dictionary<string, Func<string, Task>>
-        {
-            [WebMessagePrefix.ShortcutAdd] = HandleShortcutAdd,
-            [WebMessagePrefix.ShortcutRemove] = HandleShortcutRemove,
-            [WebMessagePrefix.ShortcutClick] = HandleShortcutClick
-        };
+        yield return MessageRoute.Prefix(WebMessagePrefix.ShortcutAdd, HandleShortcutAdd);
+        yield return MessageRoute.Prefix(WebMessagePrefix.ShortcutRemove, HandleShortcutRemove);
+        yield return MessageRoute.Prefix(WebMessagePrefix.ShortcutClick, HandleShortcutClick);
     }
-
-    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers() => new Dictionary<string, Func<Task>>();
 
     private Task HandleShortcutAdd(string payload)
     {
@@ -44,8 +39,8 @@ public class ShortcutMessageHandler : IWebMessageHandler, ISettingEmitter
             var item = JsonSerializer.Deserialize<ShortcutItem>(payload, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (item is null || string.IsNullOrWhiteSpace(item.Url)) return Task.CompletedTask;
 
-            _vm.Settings.NewTabShortcuts.Add(item);
-            _settingsStore.Save(_vm.Settings);
+            _settings.NewTabShortcuts.Add(item);
+            _settingsStore.Save(_settings);
             SettingChanged?.Invoke("shortcuts", "");
         }
         catch (Exception ex)
@@ -58,10 +53,10 @@ public class ShortcutMessageHandler : IWebMessageHandler, ISettingEmitter
     private Task HandleShortcutRemove(string payload)
     {
         if (!int.TryParse(payload, out var index)) return Task.CompletedTask;
-        if (index < 0 || index >= _vm.Settings.NewTabShortcuts.Count) return Task.CompletedTask;
+        if (index < 0 || index >= _settings.NewTabShortcuts.Count) return Task.CompletedTask;
 
-        _vm.Settings.NewTabShortcuts.RemoveAt(index);
-        _settingsStore.Save(_vm.Settings);
+        _settings.NewTabShortcuts.RemoveAt(index);
+        _settingsStore.Save(_settings);
         SettingChanged?.Invoke("shortcuts", "");
         return Task.CompletedTask;
     }
@@ -71,8 +66,8 @@ public class ShortcutMessageHandler : IWebMessageHandler, ISettingEmitter
         if (_engine.ActiveTab is not null)
         {
             _engine.ActiveTab.Url = url;
-            _vm.AddressText = url;
             _engine.Navigate(_engine.ActiveTab, url);
+            AddressChanged?.Invoke(url);
         }
         return Task.CompletedTask;
     }
