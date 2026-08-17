@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -6,8 +6,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using StrideBrowser.Engine;
 using StrideBrowser.Models;
+using StrideBrowser.Services;
 
-namespace StrideBrowser.Services.MessageHandlers;
+namespace StrideBrowser.Engine.Handlers;
 
 public class DownloadMessageHandler : IWebMessageHandler
 {

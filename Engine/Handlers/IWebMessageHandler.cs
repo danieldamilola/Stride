@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace StrideBrowser.Services.MessageHandlers;
+namespace StrideBrowser.Engine.Handlers;
 
 public interface IWebMessageHandler
 {

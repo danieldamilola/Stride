@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using StrideBrowser.Services.MessageHandlers;
+using StrideBrowser.Engine.Handlers;
 
 namespace StrideBrowser.Services;
 

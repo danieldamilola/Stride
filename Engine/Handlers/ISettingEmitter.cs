@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 
-namespace StrideBrowser.Services.MessageHandlers;
+namespace StrideBrowser.Engine.Handlers;
 
 /// <summary>
 /// Implemented by any message handler that can emit setting changes.
-/// The router subscribes generically — no downcasting needed.
+/// The router subscribes generically â€” no downcasting needed.
 /// </summary>
 public interface ISettingEmitter
 {

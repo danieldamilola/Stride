@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using StrideBrowser.Engine;
+using StrideBrowser.Engine.Handlers;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.ViewModels;
@@ -70,13 +71,13 @@ public static class Composition
         services.AddSingleton<TabEngine>();
         
         // Message Handlers
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.CoreMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.SettingsMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.OneTabMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.HistoryMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.ShortcutMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.DownloadMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.TCLensMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, CoreMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, SettingsMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, OneTabMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, HistoryMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, ShortcutMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, DownloadMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, TCLensMessageHandler>();
 
         services.AddSingleton<WebMessageRouter>();
         services.AddSingleton<TCLensTransferService>();

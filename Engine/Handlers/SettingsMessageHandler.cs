@@ -1,13 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using StrideBrowser.Engine;
 using StrideBrowser.Models;
+using StrideBrowser.Services;
 using StrideBrowser.ViewModels;
 
-namespace StrideBrowser.Services.MessageHandlers;
+namespace StrideBrowser.Engine.Handlers;
 
 public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
 {

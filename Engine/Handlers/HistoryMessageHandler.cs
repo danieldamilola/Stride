@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StrideBrowser.Engine;
 using StrideBrowser.Models;
+using StrideBrowser.Services;
 
-namespace StrideBrowser.Services.MessageHandlers;
+namespace StrideBrowser.Engine.Handlers;
 
 public class HistoryMessageHandler : IWebMessageHandler
 {
