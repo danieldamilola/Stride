@@ -214,7 +214,6 @@ public partial class MainWindow : Window
                 CycleTab = async reverse => await CycleTabAsync(reverse),
                 ToggleFullscreen = () => { ToggleFullscreen(); return Task.CompletedTask; },
                 IsFullscreen = () => _isFullscreen,
-                UpdateZoomIndicator = () => { UpdateZoomIndicator(); return Task.CompletedTask; },
                 OpenHistory = OpenHistoryTab,
                 OpenDownloads = OpenDownloadsTab,
                 SwitchToTabIndex = SwitchToTabByIndex,
@@ -1069,14 +1068,6 @@ public partial class MainWindow : Window
     }
 
 
-
-    // ───────────────────── Zoom Indicator ─────────────────────
-
-    private void UpdateZoomIndicator()
-    {
-        // Stride minimal UI — no visible zoom indicator
-        // Zoom still works via Ctrl+/- shortcuts
-    }
 
     private void ZoomIndicator_Click(object sender, MouseButtonEventArgs e)
     {

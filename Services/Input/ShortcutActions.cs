@@ -15,7 +15,6 @@ public sealed record ShortcutActions
     public required Func<bool, Task> CycleTab { get; init; }
     public required Func<Task> ToggleFullscreen { get; init; }
     public required Func<bool> IsFullscreen { get; init; }
-    public required Func<Task> UpdateZoomIndicator { get; init; }
     public required Func<Task> OpenHistory { get; init; }
     public required Func<Task> OpenDownloads { get; init; }
     public required Func<int, Task> SwitchToTabIndex { get; init; }

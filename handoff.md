@@ -19,11 +19,18 @@
   - Env-var overrides `STRIDE_APPCAST_URL` + `STRIDE_UPDATE_PUBLIC_KEY` exist for end-to-end testing only; the signature gate still applies to every download.
 - `tools/UpdateSigner` now signs **installer file bytes** (it previously signed the enclosure URL bytes, which can never match what NetSparkle verifies — downloads would have been rejected as corrupt). New CLI: `sign <appcast.xml> <installer-file> <private-key.key>` and `verify <appcast.xml> <public-key-base64> <installer-file>`.
 - Removed `MainWindow.CheckForUpdatesInBackgroundAsync` (GitHub-API release check duplicating the NetSparkle badge check).
-- **E2E dry run** (`SpurBrowser.Tests/UpdateServiceE2ETests.cs`, 3 tests, real HTTP + real Ed25519 + throwaway key):
+- **E2E dry run** (`StrideBrowser.Tests/UpdateServiceE2ETests.cs`, 3 tests, real HTTP + real Ed25519 + throwaway key):
   1. appcast check works with **no sidecar**;
   2. a **tampered installer is rejected** before any install (no exit requested);
   3. a correctly **signed installer reaches the install step** (`AppExitRequested`, dummy harmless WinExe runs via NetSparkle's batch).
   - 32/32 tests passing; 0 build errors.
+
+### 2026-08-17 — R2 cosmetic cleanup (F11)
+
+- Test project renamed `SpurBrowser.Tests` → `StrideBrowser.Tests` (folder + csproj, matches `StrideBrowser.Tests` namespaces). All references updated (`Stride.csproj` excludes, `README.md`, `CONTRIBUTING.md`, `THIRD-PARTY-NOTICES.md`).
+- Deleted `UpdateZoomIndicator()` stub (no visible zoom indicator) + the `ShortcutActions.UpdateZoomIndicator` delegate and its call sites in `KeyboardShortcutMap`.
+- `App.xaml.cs` duplicate `using Microsoft.Extensions.DependencyInjection;` — already gone (audit stale).
+- `ARCHITECTURE_AUDIT.md` F11 marked done.
 
 ### 2026-08-13 — Code health, update security, architecture audit
 
@@ -46,7 +53,7 @@
 - `NavigationServiceTests` — 3 identical test methods consolidated into one `[Theory]` (3 cases).
 
 **Fixes**
-- Test project was silently broken: referenced a deleted `SpurBrowser.csproj` and targeted `net9.0-windows` while the app targets `net9.0-windows10.0.17763`. Fixed both — the test project now builds and runs.
+- Test project was silently broken: referenced a deleted `SpurBrowser.csproj` (later renamed to `StrideBrowser.Tests.csproj`) and targeted `net9.0-windows` while the app targets `net9.0-windows10.0.17763`. Fixed both — the test project now builds and runs.
 - Build: 0 errors, 0 warnings. Tests: 29/29 passing.
 
 **Architecture**
@@ -66,7 +73,7 @@
 - **Update installer integrity:** FIXED (2026-08-17) — see changelog. Installer binaries are Ed25519-verified before install; failures are traced to the log file and surfaced via `UpdateFailed`.
 - **Live update flow:** the local E2E dry run (appcast → download → signature → install step) passes, but the *real* release asset has not been exercised: `appcast.xml` currently carries a signature made by the OLD signer (over the enclosure URL), which NetSparkle rejects. **REQUIRED BEFORE NEXT RELEASE:** re-sign `appcast.xml` with the corrected signer against the real installer — `dotnet run --project tools/UpdateSigner -- sign appcast.xml Releases/Stride-win-Setup.exe tools/signing/ed25519_private.key` — verify it, commit, and confirm `ReleaseNotes.md` resolves at the `releaseNotesLink`.
 - **Build caveat:** if Stride.exe is running, `dotnet build` compiles fine but the copy step fails (MSB3026/3027, file lock).
-- **Architecture roadmap** (from `ARCHITECTURE_AUDIT.md`): R0 baseline ✅ · R1 update pipeline ✅ · R2 docs & test-project naming · R3a move message handlers to `Engine\Handlers` · R3b narrow handler dependencies (drop `BrowserViewModel`/router) · R4 `TabEngine` decomposition (WebViewFactory, WebViewIpcBridge) · R5 `MainWindow` decomposition (TabStripController, WindowLifecycleController, TCLensLauncher) · R6 navigation predicates + test coverage + dead-code removal · R7 release actions (re-sign appcast, ReleaseNotes.md, release a build).
+- **Architecture roadmap** (from `ARCHITECTURE_AUDIT.md`): R0 baseline ✅ · R1 update pipeline ✅ · R2 docs & test-project naming ✅ · R3a move message handlers to `Engine\Handlers` · R3b narrow handler dependencies (drop `BrowserViewModel`/router) · R4 `TabEngine` decomposition (WebViewFactory, WebViewIpcBridge) · R5 `MainWindow` decomposition (TabStripController, WindowLifecycleController, TCLensLauncher) · R6 navigation predicates + test coverage + dead-code removal · R7 release actions (re-sign appcast, ReleaseNotes.md, release a build).
 
 ---
 

@@ -31,4 +31,4 @@ downloads the following third-party components at runtime.
 ## Microsoft.Web.WebView2 / CommunityToolkit.Mvvm / Microsoft.Extensions.DependencyInjection
 
 - **License:** MIT
-- **Source:** NuGet packages, referenced in `SpurBrowser.csproj`.
+- **Source:** NuGet packages, referenced in `Stride.csproj`.

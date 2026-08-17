@@ -58,9 +58,9 @@ public sealed class KeyboardShortcutMap
         _actions["CycleTabBackward"] = () => actions.CycleTab(true);
         _actions["FindInPage"] = async () => await engine.FindInPageAsync();
         _actions["Print"] = () => { engine.Print(); return Task.CompletedTask; };
-        _actions["ZoomIn"] = async () => { engine.Zoom(0.1); await actions.UpdateZoomIndicator(); };
-        _actions["ZoomOut"] = async () => { engine.Zoom(-0.1); await actions.UpdateZoomIndicator(); };
-        _actions["ResetZoom"] = async () => { engine.ResetZoom(); await actions.UpdateZoomIndicator(); };
+        _actions["ZoomIn"] = () => { engine.Zoom(0.1); return Task.CompletedTask; };
+        _actions["ZoomOut"] = () => { engine.Zoom(-0.1); return Task.CompletedTask; };
+        _actions["ResetZoom"] = () => { engine.ResetZoom(); return Task.CompletedTask; };
         _actions["CopyUrl"] = () =>
         {
             var url = engine.ActiveTab?.Url;

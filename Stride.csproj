@@ -21,13 +21,13 @@
 
   <!-- Nested projects; exclude from this project's default globs -->
   <ItemGroup>
-    <Compile Remove="SpurBrowser.Tests\**" />
+    <Compile Remove="StrideBrowser.Tests\**" />
     <Compile Remove="src\**" />
     <Compile Remove="tools\**" />
-    <EmbeddedResource Remove="SpurBrowser.Tests\**" />
+    <EmbeddedResource Remove="StrideBrowser.Tests\**" />
     <EmbeddedResource Remove="src\**" />
     <EmbeddedResource Remove="tools\**" />
-    <None Remove="SpurBrowser.Tests\**" />
+    <None Remove="StrideBrowser.Tests\**" />
     <None Remove="src\**" />
     <None Remove="tools\**" />
   </ItemGroup>

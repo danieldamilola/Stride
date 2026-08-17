@@ -102,9 +102,9 @@ Hidden coupling wearing a parameter list. Every new shortcut touches the ctor si
 - **Effort:** M (opportunistic — do while splitting).
 
 ### F11 — Cosmetic leftovers
-- Test project still named `SpurBrowser.Tests` (old product name; namespaces are `StrideBrowser.Tests`). Rename csproj + folder.
-- `UpdateZoomIndicator()` is an empty stub ("no visible zoom indicator") — delete method + the 2-3 call sites or keep with a comment (currently comment-only, ~5 lines).
-- `App.xaml.cs` has a duplicated `using Microsoft.Extensions.DependencyInjection;` (line 5 and 7).
+- Test project renamed `SpurBrowser.Tests` → `StrideBrowser.Tests` (folder + csproj; namespaces were already `StrideBrowser.Tests`). ✅ done 2026-08-17.
+- `UpdateZoomIndicator()` was an empty stub — deleted method + delegate + call sites. ✅ done 2026-08-17.
+- `App.xaml.cs` had a duplicated `using Microsoft.Extensions.DependencyInjection;` — already gone (stale finding).
 - The two empty `LostFocus` handlers are required by XAML bindings — leave them.
 
 - **Effort:** S total.
