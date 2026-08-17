@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -34,15 +33,14 @@ public sealed class TabEngine : IDisposable
     private readonly NavigationPolicyEngine _navigationPolicyEngine;
     private readonly ThemeManager _themeManager;
     private readonly Dictionary<Guid, dynamic> _webViews = new();
+    private readonly WebViewFactory _webViewFactory;
+    private readonly WebViewIpcBridge _ipcBridge;
 
     private readonly LinkedList<(string url, string title)> _closedTabs = new();
 
-    private CoreWebView2Environment? _environment;
-    private bool _extensionsLoaded;
     private readonly SemaphoreSlim _activationGate = new(1, 1); // Serialize WebView2 creation
     private CancellationTokenSource? _activationCts;
     private const int MaxClosedTabs = 50;
-    private static readonly System.Drawing.Color DarkBackground = System.Drawing.Color.FromArgb(255, 24, 24, 30);
     private bool _disposed;
 
     // Per-session random token embedded in every internal page. IPC messages that
@@ -90,6 +88,22 @@ public sealed class TabEngine : IDisposable
         _navigationPolicyEngine = deps.NavigationPolicyEngine;
         _themeManager = deps.ThemeManager;
         _dispatcher = Application.Current.Dispatcher;
+
+        _webViewFactory = new WebViewFactory(_settings, _themeManager, _pages, _extensionManager, _ipcToken);
+        _ipcBridge = new WebViewIpcBridge(
+            _dispatcher,
+            _settings,
+            _downloadStore,
+            _ipcToken,
+            _activeNativeDownloads,
+            isTabAlive: id => _webViews.ContainsKey(id),
+            getWebView: id => _webViews.TryGetValue(id, out var wv) ? wv : null,
+            createTab: CreateTab,
+            activateAsync: ActivateAsync,
+            closeTab: CloseTab);
+        _ipcBridge.WebMessageReceived += msg => WebMessageReceived?.Invoke(msg);
+        _ipcBridge.FullScreenChanged += fs => FullScreenChanged?.Invoke(fs);
+        _ipcBridge.TabStateChanged += tab => TabStateChanged?.Invoke(tab);
 
         _hibernationManager.Attach(
             getTabs: () => Tabs,
@@ -142,63 +156,8 @@ public sealed class TabEngine : IDisposable
     /// <summary>Must be called once at startup to create the WebView2 environment.</summary>
     public async Task InitializeAsync()
     {
-        var dataDir = Helpers.AppPaths.WebView2Dir;
-
-        var options = new CoreWebView2EnvironmentOptions
-        {
-            AreBrowserExtensionsEnabled = true,
-            // Fluent overlay scrollbar: overlays content without pushing layout, works in Shadow DOM
-            ScrollBarStyle = CoreWebView2ScrollbarStyle.FluentOverlay,
-            AdditionalBrowserArguments = BuildBrowserArguments(_settings.SmartScreenEnabled, _settings.ForceDarkMode) + 
-                (!_settings.HardwareAccelerationEnabled ? " --disable-gpu" : ""),
-        };
-        _environment = await CoreWebView2Environment.CreateAsync(null, dataDir, options);
-        
-        if (_settings.AdBlockEnabled)
-        {
-            // Initializes the background adblock list (does not block startup, finishes in background if downloading)
-            _ = AdBlockFilter.InitializeAsync();
-        }
-
-        // Handle browser process exit at the environment level
-        _environment.BrowserProcessExited += (_, e) =>
-        {
-            Trace.WriteLine($"WebView2 browser process exited: Kind={e.BrowserProcessExitKind}");
-            _dispatcher.Invoke(HandleBrowserProcessDeath);
-        };
-    }
-
-    /// <summary>
-    /// Builds the Chromium command-line flags. Notably:
-    /// - The renderer process-limit flag is gone, restoring Chromium's default Site Isolation
-    ///   (each site in its own process) rather than capping at a shared pool.
-    /// - SmartScreen is ON by default. Disabling it via setting appends the disable flag.
-    ///   Note: this flag is read at environment creation, so toggling requires a restart.
-    /// - ForceDarkMode uses Chromium's native WebContentsForceDark engine.
-    ///   Also read at environment creation — toggling requires a restart.
-    /// </summary>
-    private static string BuildBrowserArguments(bool smartScreenEnabled, bool forceDarkMode = false)
-    {
-        var args =
-            "--app-user-model-id=Stride " +
-            "--disable-background-networking " +
-            "--disable-breakpad " +
-            "--disable-component-update " +
-            "--disable-default-apps " +
-            "--disable-domain-reliability " +
-            "--disable-sync " +
-            "--metrics-recording-only " +
-            "--process-per-site " + // Groups pages from the same site into the same process
-            "--no-first-run";
-
-        if (forceDarkMode)
-            args += " --enable-features=WebContentsForceDark";
-
-
-        if (!smartScreenEnabled)
-            args += " --disable-features=msSmartScreenProtection";
-
-        return args;
+        _webViewFactory.BrowserProcessExited += () => _dispatcher.Invoke(HandleBrowserProcessDeath);
+        await _webViewFactory.InitializeAsync();
     }
 
     // ──── Tab Lifecycle ────
@@ -292,7 +251,7 @@ public sealed class TabEngine : IDisposable
     /// <summary>Activates a tab's WebView2 — creates one if needed, shows it, hides others.</summary>
     public async Task ActivateAsync(BrowserTab tab)
     {
-        if (_environment is null) return;
+        if (_webViewFactory.Environment is null) return;
 
         // Cancel any in-flight activation so rapid clicks don't queue up
         _activationCts?.Cancel();
@@ -419,14 +378,7 @@ public sealed class TabEngine : IDisposable
 
     public void PostMessageToActiveTab(string message)
     {
-        if (ActiveTab is not null && _webViews.TryGetValue(ActiveTab.Id, out var wv) && wv.CoreWebView2 is not null)
-        {
-            try
-            {
-                wv.CoreWebView2.PostWebMessageAsString(message);
-            }
-            catch (Exception ex) { Trace.WriteLine($"PostMessageToActiveTab failed: {ex.Message}"); }
-        }
+        _ipcBridge.PostMessageToActiveTab(ActiveTab?.Id, message);
     }
 
     public void Print()
@@ -464,7 +416,7 @@ public sealed class TabEngine : IDisposable
             var isInternal = Tabs.FirstOrDefault(t => t.Id == id)?.Url?.StartsWith("internal://") ?? true;
             
             // For internal pages, use Transparent to let WPF ThemeManager handle the background color
-            var bgColor = isInternal ? System.Drawing.Color.Transparent : (enabled ? DarkBackground : System.Drawing.Color.White);
+            var bgColor = isInternal ? System.Drawing.Color.Transparent : (enabled ? WebViewFactory.DarkBackground : System.Drawing.Color.White);
             
             if (wv is Microsoft.Web.WebView2.Wpf.WebView2 std1) std1.DefaultBackgroundColor = bgColor;
             else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp1) comp1.DefaultBackgroundColor = bgColor;
@@ -507,8 +459,8 @@ public sealed class TabEngine : IDisposable
         {
             var url = Tabs.FirstOrDefault(t => t.Id == id)?.Url ?? "";
             bool isInternal = url.StartsWith("internal://") || string.IsNullOrEmpty(url);
-            if (wv is Microsoft.Web.WebView2.Wpf.WebView2 std2) std2.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
-            else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp2) comp2.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
+            if (wv is Microsoft.Web.WebView2.Wpf.WebView2 std2) std2.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? WebViewFactory.DarkBackground : System.Drawing.Color.White);
+            else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp2) comp2.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? WebViewFactory.DarkBackground : System.Drawing.Color.White);
         }
     }
 
@@ -518,18 +470,18 @@ public sealed class TabEngine : IDisposable
     {
         var isInternal = tab.Url?.StartsWith("internal://") ?? true;
 
-        dynamic wv = CreateWebViewControl(isInternal);
+        dynamic wv = _webViewFactory.CreateWebViewControl(isInternal);
 
         _webViewHost!.Children.Add((FrameworkElement)wv);
         try
         {
-            await wv.EnsureCoreWebView2Async(_environment);
+            await wv.EnsureCoreWebView2Async(_webViewFactory.Environment);
 
             if (_settings.AdBlockEnabled)
                 AdBlockFilter.Apply(wv.CoreWebView2);
 
             WireInlinedContextMenu(wv.CoreWebView2);
-            ConfigureCoreWebView(wv.CoreWebView2);
+            _webViewFactory.ConfigureCoreWebView(wv.CoreWebView2);
         }
         catch
         {
@@ -540,7 +492,7 @@ public sealed class TabEngine : IDisposable
 
         WireNavigationEvents(wv, tab);
         WireTitleAndSourceEvents(wv, tab);
-        WireMessageAndWindowEvents(wv, tab);
+        _ipcBridge.Wire(wv, tab);
         WireContextMenuEvents(wv, tab);
         HandleProcessFailure(wv, tab);
 
@@ -548,32 +500,14 @@ public sealed class TabEngine : IDisposable
         // Note: We now rely entirely on the native uBlock Origin extension (ExtensionManager)
         // rather than the rudimentary AdBlockFilter, as it provides far superior blocking without breaking sites.
 
-        TryInitializeExtensions(wv);
+        _webViewFactory.TryInitializeExtensions(wv);
 
         await _contentScriptInjector.InjectAsync(wv.CoreWebView2, _settings, _ipcToken);
 
         _webViews[tab.Id] = wv;
         tab.IsHibernated = false;
 
-        NavigateInitialUrl(wv, tab);
-    }
-
-    private dynamic CreateWebViewControl(bool isInternal)
-    {
-        if (_settings.UseFloatingCommandBar)
-        {
-            return new WebView2CompositionControl
-            {
-                DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
-                Visibility = Visibility.Hidden
-            };
-        }
-
-        return new Microsoft.Web.WebView2.Wpf.WebView2
-        {
-            DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
-            Visibility = Visibility.Collapsed
-        };
+        _webViewFactory.NavigateInitialUrl(wv, tab);
     }
 
     private void WireInlinedContextMenu(CoreWebView2 core)
@@ -626,74 +560,6 @@ public sealed class TabEngine : IDisposable
             });
         };
     }
-
-    private void ConfigureCoreWebView(CoreWebView2 core)
-    {
-        core.Profile.PreferredColorScheme = _themeManager.IsCurrentlyDark()
-            ? CoreWebView2PreferredColorScheme.Dark
-            : CoreWebView2PreferredColorScheme.Light;
-
-        core.SetVirtualHostNameToFolderMapping("local.assets", System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages"), Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
-        var userAssetsPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
-        if (!System.IO.Directory.Exists(userAssetsPath)) System.IO.Directory.CreateDirectory(userAssetsPath);
-        core.SetVirtualHostNameToFolderMapping("user.assets", userAssetsPath, Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
-
-        // Strip native Edge bloat UI
-        core.Settings.IsBuiltInErrorPageEnabled = false;
-        core.Settings.IsGeneralAutofillEnabled = false;
-        core.Settings.IsPasswordAutosaveEnabled = false;
-        core.Settings.AreDefaultScriptDialogsEnabled = false;
-
-        try { core.Settings.IsSwipeNavigationEnabled = true; } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
-    }
-
-    private void TryInitializeExtensions(dynamic wv)
-    {
-        if (_extensionsLoaded) return;
-        _extensionsLoaded = true;
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                // MUST dispatch to UI thread!
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
-                    // Extensions
-                    _ = _extensionManager.InitializeAsync(wv.CoreWebView2, _settings);
-
-                    // Context Menu
-                });
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"Extension init failed: {ex.Message}");
-            }
-        });
-    }
-
-    private void NavigateInitialUrl(dynamic wv, BrowserTab tab)
-    {
-        // Settings/OneTab/History are navigated by NavigateToSettings/OneTab/History
-        // after activation — skip here to avoid a double load.
-        var callerManagedUrls = new HashSet<string>
-        {
-            InternalUrls.Settings, InternalUrls.OneTab, InternalUrls.History, "internal://pending-native"
-        };
-        if (callerManagedUrls.Contains(tab.Url))
-            return;
-
-        // NewTab is served as HTML string so there's no real URL to navigate to.
-        if (tab.Url == InternalUrls.NewTab || string.IsNullOrEmpty(tab.Url))
-        {
-            try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom)); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
-            return;
-        }
-
-        try { wv.CoreWebView2.Navigate(tab.Url); }
-        catch (ArgumentException) { try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom)); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } }
-    }
-
-
-
 
     /// <summary>
     /// Re-injects the YouTube Unhook script into all active YouTube tabs.
@@ -815,8 +681,8 @@ public sealed class TabEngine : IDisposable
     {
         if (url is null) return;
         var isInternal = url.StartsWith("internal://") || url.StartsWith("https://local.assets/") || url.StartsWith("https://user.assets/");
-        if (wv is Microsoft.Web.WebView2.Wpf.WebView2 std3) std3.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
-        else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp3) comp3.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
+        if (wv is Microsoft.Web.WebView2.Wpf.WebView2 std3) std3.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? WebViewFactory.DarkBackground : System.Drawing.Color.White);
+        else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp3) comp3.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? WebViewFactory.DarkBackground : System.Drawing.Color.White);
     }
 
     private void WireTitleAndSourceEvents(dynamic wv, BrowserTab tab)
@@ -864,130 +730,6 @@ public sealed class TabEngine : IDisposable
     }
 
     public event Action<bool>? FullScreenChanged;
-
-    private void WireMessageAndWindowEvents(dynamic wv, BrowserTab tab)
-    {
-        CoreWebView2 core = wv.CoreWebView2;
-        core.ContainsFullScreenElementChanged += (_, _) =>
-        {
-            if (!_webViews.ContainsKey(tab.Id)) return;
-            _dispatcher.InvokeAsync(() =>
-            {
-                FullScreenChanged?.Invoke(core.ContainsFullScreenElement);
-            });
-        };
-        WireWebMessageReceived(core, tab);
-
-        Handlers.TabDownloadHandler.Wire(wv.CoreWebView2, _dispatcher, _downloadStore, _activeNativeDownloads);
-
-        WireNewWindowRequested(core, tab);
-
-        core.WindowCloseRequested += (_, _) =>
-        {
-            _dispatcher.Invoke(() => CloseTab(tab));
-        };
-
-        Handlers.TabDialogHandler.Wire(wv.CoreWebView2, _dispatcher, _settings);
-    }
-
-    private void WireWebMessageReceived(CoreWebView2 core, BrowserTab tab)
-    {
-        core.WebMessageReceived += (_, e) =>
-        {
-            if (!_webViews.ContainsKey(tab.Id)) return;
-
-            var msg = e.TryGetWebMessageAsString();
-            var src = e.Source ?? "null";
-
-            if (string.IsNullOrEmpty(msg)) return;
-
-            bool isTrustedLocalAsset = false;
-            try 
-            { 
-                if (e.Source.StartsWith("http://local.assets/", StringComparison.OrdinalIgnoreCase) || 
-                    e.Source.StartsWith("https://local.assets/", StringComparison.OrdinalIgnoreCase) ||
-                    e.Source.StartsWith("https://user.assets/", StringComparison.OrdinalIgnoreCase)) 
-                {
-                    isTrustedLocalAsset = true; 
-                }
-            } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
-
-            if (msg.StartsWith("THEME_COLOR:"))
-            {
-                var colorStr = msg.Substring("THEME_COLOR:".Length);
-                _dispatcher.InvokeAsync(() => {
-                    tab.ThemeColor = colorStr;
-                    TabStateChanged?.Invoke(tab);
-                });
-                return;
-            }
-
-            if (!isTrustedLocalAsset)
-            {
-                // SECURITY: Internal pages loaded via NavigateToString (origin = about:blank) embed a per-session secret token
-                if (!msg.StartsWith(_ipcToken + ":", StringComparison.Ordinal))
-                {
-                    return;
-                }
-                // Strip the token prefix before forwarding the payload
-                msg = msg[(_ipcToken.Length + 1)..];
-            }
-
-            if (!string.IsNullOrEmpty(msg))
-            {
-                _dispatcher.Invoke(() => WebMessageReceived?.Invoke(msg));
-            }
-        };
-    }
-
-    private void WireNewWindowRequested(CoreWebView2 core, BrowserTab tab)
-    {
-        core.NewWindowRequested += (_, e) =>
-        {
-            // Treat as popup if it requests specific dimensions or isn't explicitly user-initiated (e.g. OAuth flows)
-            if (e.WindowFeatures.HasPosition || e.WindowFeatures.HasSize || !e.IsUserInitiated)
-            {
-                // Let WebView2 handle the popup natively! This is the most reliable way to handle OAuth popups
-                // without breaking window.opener or causing the site to think popups are blocked.
-                e.Handled = false;
-                return;
-            }
-
-            // Otherwise, handle it ourselves by opening a new Stride tab
-            e.Handled = true;
-            var deferral = e.GetDeferral();
-            
-            _ = _dispatcher.InvokeAsync(async () =>
-            {
-                try
-                {
-                    // Create tab with a sentinel URL so NavigateInitialUrl does NOT navigate it.
-                    // This keeps the CoreWebView2 clean so we can assign it to e.NewWindow.
-                    var newTab = CreateTab("internal://pending-native");
-                    
-                    // ActivateAsync is triggered via TabStateChanged but we await it directly to ensure readiness
-                    await ActivateAsync(newTab);
-
-                    if (_webViews.TryGetValue(newTab.Id, out var wv) && wv.CoreWebView2 != null)
-                    {
-                        // Fix background color (internal:// made it transparent, we want opaque for the popup)
-                        if (wv is Microsoft.Web.WebView2.Wpf.WebView2 std4) std4.DefaultBackgroundColor = _settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White;
-                        else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp4) comp4.DefaultBackgroundColor = _settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White;
-                        
-                        // Let WebView2 do the navigation natively! 
-                        // This allows extensions (like uBlock Origin) to intercept the new window request!
-                        e.NewWindow = wv.CoreWebView2;
-                        newTab.Url = e.Uri; // Update the UI to reflect the requested URL
-                    }
-                }
-                catch (Exception ex) { Trace.WriteLine($"NewWindowRequested error: {ex.Message}"); }
-                finally
-                {
-                    deferral.Complete();
-                }
-            });
-        };
-    }
 
     private void WireContextMenuEvents(dynamic wv, BrowserTab tab)
     {
