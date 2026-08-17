@@ -16,27 +16,10 @@ public sealed class KeyboardShortcutMap
     private readonly Dictionary<string, Func<Task>> _actions = new();
     private List<ShortcutEntry> _entries = [];
 
-    public KeyboardShortcutMap(
-        TabEngine engine,
-        Func<Task> focusAddressBar,
-        Func<Task> saveAllTabs,
-        Func<bool, Task> cycleTab,
-        Func<Task> toggleFullscreen,
-        Func<bool> isFullscreen,
-        Func<Task> updateZoomIndicator,
-        Func<Task> openHistory,
-        Func<Task> openDownloads,
-        Func<int, Task> switchToTabIndex,
-        Action<string> copyUrl,
-        Func<List<(string url, string title)>> sendAllToOneTab,
-        Action<List<(string url, string title)>> saveOneTabGroup,
-        Action syncTabsBinding,
-        Func<Task> openOneTab,
-        Func<Task> openSettings,
-        Func<Task> launchTCLens)
+    public KeyboardShortcutMap(TabEngine engine, ShortcutActions actions)
     {
         // Register all actions by name (these never change, only the key bindings do)
-        _actions["TCLens"] = launchTCLens;
+        _actions["TCLens"] = actions.LaunchTCLens;
         _actions["RestoreClosedTab"] = async () =>
         {
             var tab = engine.RestoreClosedTab();
@@ -46,7 +29,7 @@ public sealed class KeyboardShortcutMap
         {
             var tab = engine.CreateTab();
             engine.SwitchTo(tab); await engine.ActivateAsync(tab);
-            await focusAddressBar();
+            await actions.FocusAddressBar();
         };
         _actions["CloseTab"] = () =>
         {
@@ -54,34 +37,34 @@ public sealed class KeyboardShortcutMap
                 engine.CloseTab(engine.ActiveTab);
             return Task.CompletedTask;
         };
-        _actions["FocusAddressBar"] = focusAddressBar;
+        _actions["FocusAddressBar"] = actions.FocusAddressBar;
         _actions["SendAllToOneTab"] = () =>
         {
-            var entries = sendAllToOneTab();
-            if (entries.Count > 0) saveOneTabGroup(entries);
-            syncTabsBinding();
+            var entries = actions.SendAllToOneTab();
+            if (entries.Count > 0) actions.SaveOneTabGroup(entries);
+            actions.SyncTabsBinding();
             return Task.CompletedTask;
         };
-        _actions["SaveAllTabs"] = saveAllTabs;
+        _actions["SaveAllTabs"] = actions.SaveAllTabs;
         _actions["Reload"] = () => { engine.Reload(); return Task.CompletedTask; };
         _actions["GoBack"] = () => { engine.GoBack(); return Task.CompletedTask; };
         _actions["GoForward"] = () => { engine.GoForward(); return Task.CompletedTask; };
-        _actions["ToggleFullscreen"] = toggleFullscreen;
+        _actions["ToggleFullscreen"] = actions.ToggleFullscreen;
         _actions["ExitFullscreen"] = async () =>
         {
-            if (isFullscreen()) await toggleFullscreen();
+            if (actions.IsFullscreen()) await actions.ToggleFullscreen();
         };
-        _actions["CycleTabForward"] = () => cycleTab(false);
-        _actions["CycleTabBackward"] = () => cycleTab(true);
+        _actions["CycleTabForward"] = () => actions.CycleTab(false);
+        _actions["CycleTabBackward"] = () => actions.CycleTab(true);
         _actions["FindInPage"] = async () => await engine.FindInPageAsync();
         _actions["Print"] = () => { engine.Print(); return Task.CompletedTask; };
-        _actions["ZoomIn"] = async () => { engine.Zoom(0.1); await updateZoomIndicator(); };
-        _actions["ZoomOut"] = async () => { engine.Zoom(-0.1); await updateZoomIndicator(); };
-        _actions["ResetZoom"] = async () => { engine.ResetZoom(); await updateZoomIndicator(); };
+        _actions["ZoomIn"] = async () => { engine.Zoom(0.1); await actions.UpdateZoomIndicator(); };
+        _actions["ZoomOut"] = async () => { engine.Zoom(-0.1); await actions.UpdateZoomIndicator(); };
+        _actions["ResetZoom"] = async () => { engine.ResetZoom(); await actions.UpdateZoomIndicator(); };
         _actions["CopyUrl"] = () =>
         {
             var url = engine.ActiveTab?.Url;
-            if (!string.IsNullOrEmpty(url)) copyUrl(url);
+            if (!string.IsNullOrEmpty(url)) actions.CopyUrl(url);
             return Task.CompletedTask;
         };
         _actions["DevTools"] = () =>
@@ -89,10 +72,10 @@ public sealed class KeyboardShortcutMap
             engine.GetCoreWebView2()?.OpenDevToolsWindow();
             return Task.CompletedTask;
         };
-        _actions["History"] = openHistory;
-        _actions["Downloads"] = openDownloads;
-        _actions["OpenOneTab"] = openOneTab;
-        _actions["OpenSettings"] = openSettings;
+        _actions["History"] = actions.OpenHistory;
+        _actions["Downloads"] = actions.OpenDownloads;
+        _actions["OpenOneTab"] = actions.OpenOneTab;
+        _actions["OpenSettings"] = actions.OpenSettings;
 
         // Build default bindings
         RebuildBindings(null);

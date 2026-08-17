@@ -20,11 +20,21 @@ public class CoreMessageHandler : IWebMessageHandler
         _updateService = updateService;
     }
 
-    public void Register(Dictionary<string, Func<string, Task>> prefixHandlers, Dictionary<string, Func<Task>> exactHandlers)
+    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
     {
-        prefixHandlers[WebMessagePrefix.Open] = HandleOpen;
-        prefixHandlers[WebMessagePrefix.Search] = HandleSearch;
-        exactHandlers[WebMessagePrefix.SetDefaultBrowser] = HandleSetDefaultBrowser;
+        return new Dictionary<string, Func<string, Task>>
+        {
+            [WebMessagePrefix.Open] = HandleOpen,
+            [WebMessagePrefix.Search] = HandleSearch
+        };
+    }
+
+    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers()
+    {
+        return new Dictionary<string, Func<Task>>
+        {
+            [WebMessagePrefix.SetDefaultBrowser] = HandleSetDefaultBrowser
+        };
     }
 
     private async Task HandleOpen(string url)

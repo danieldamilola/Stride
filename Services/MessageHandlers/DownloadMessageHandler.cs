@@ -22,16 +22,26 @@ public class DownloadMessageHandler : IWebMessageHandler
         _customDownloadManager = customDownloadManager;
     }
 
-    public void Register(Dictionary<string, Func<string, Task>> prefixHandlers, Dictionary<string, Func<Task>> exactHandlers)
+    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
     {
-        prefixHandlers[WebMessagePrefix.DownloadOpen] = HandleDownloadOpen;
-        prefixHandlers[WebMessagePrefix.DownloadFolder] = HandleDownloadFolder;
-        prefixHandlers[WebMessagePrefix.DownloadCancel] = HandleDownloadCancel;
-        prefixHandlers[WebMessagePrefix.DownloadPause] = HandleDownloadPause;
-        prefixHandlers[WebMessagePrefix.DownloadResume] = HandleDownloadResume;
-        prefixHandlers[WebMessagePrefix.DownloadRequest] = HandleDownloadRequest;
-        exactHandlers[WebMessagePrefix.DownloadClear] = HandleDownloadClear;
-        exactHandlers[WebMessagePrefix.DownloadRequestSync] = HandleDownloadSync;
+        return new Dictionary<string, Func<string, Task>>
+        {
+            [WebMessagePrefix.DownloadOpen] = HandleDownloadOpen,
+            [WebMessagePrefix.DownloadFolder] = HandleDownloadFolder,
+            [WebMessagePrefix.DownloadCancel] = HandleDownloadCancel,
+            [WebMessagePrefix.DownloadPause] = HandleDownloadPause,
+            [WebMessagePrefix.DownloadResume] = HandleDownloadResume,
+            [WebMessagePrefix.DownloadRequest] = HandleDownloadRequest
+        };
+    }
+
+    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers()
+    {
+        return new Dictionary<string, Func<Task>>
+        {
+            [WebMessagePrefix.DownloadClear] = HandleDownloadClear,
+            [WebMessagePrefix.DownloadRequestSync] = HandleDownloadSync
+        };
     }
 
     private Task HandleDownloadOpen(string id)

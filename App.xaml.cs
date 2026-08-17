@@ -4,7 +4,6 @@ using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using StrideBrowser.Services;
 using StrideBrowser.ViewModels;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace StrideBrowser;
 
@@ -53,9 +52,7 @@ public partial class App : Application
         CheckForPreviousCrash();
 
         // Create and show MainWindow via DI
-        var vm = _serviceProvider.GetRequiredService<BrowserViewModel>();
-        
-        var window = new MainWindow(_serviceProvider, vm);
+        var window = _serviceProvider.GetRequiredService<MainWindow>();
         window.Show();
     }
 

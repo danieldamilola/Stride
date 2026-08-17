@@ -15,8 +15,14 @@ public sealed class InternalPages
     private readonly HistoryPage _history = new();
     private readonly DownloadPage _downloads = new();
     private readonly ErrorPage _error = new();
+    private readonly ThemeManager _themeManager;
 
-    private static string ApplyTheme(string html) => html.Replace("{{THEME}}", ThemeManager.GetThemeString());
+    public InternalPages(ThemeManager themeManager)
+    {
+        _themeManager = themeManager;
+    }
+
+    private string ApplyTheme(string html) => html.Replace("{{THEME}}", _themeManager.GetThemeString());
 
     /// <summary>Returns the new tab page HTML.</summary>
     public string NewTabPage(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "") =>

@@ -30,8 +30,10 @@ public sealed class TabEngine : IDisposable
     private readonly FocusBlocklistService _focusBlocklistService;
     private readonly ContentScriptInjector _contentScriptInjector;
     private readonly Dispatcher _dispatcher;
-    private readonly DispatcherTimer _hibernationTimer;
-    private readonly Dictionary<Guid, IWebView2> _webViews = new();
+    private readonly TabHibernationManager _hibernationManager;
+    private readonly NavigationPolicyEngine _navigationPolicyEngine;
+    private readonly ThemeManager _themeManager;
+    private readonly Dictionary<Guid, dynamic> _webViews = new();
 
     private readonly LinkedList<(string url, string title)> _closedTabs = new();
 
@@ -48,11 +50,7 @@ public sealed class TabEngine : IDisposable
     // which broke when internal pages ran on about:blank.
     private readonly string _ipcToken = Guid.NewGuid().ToString("N");
 
-    /// <summary>Max number of live (non-hibernated) WebView2 instances. Beyond this, LRU tabs get hibernated.</summary>
-    private const int MaxLiveWebViews = 10;
 
-    /// <summary>Base hibernation interval in minutes — scales down with tab count.</summary>
-    private const int BaseHibernateMinutes = 5;
 
     public ObservableCollection<BrowserTab> Tabs { get; } = [];
     public BrowserTab? ActiveTab { get; private set; }
@@ -88,12 +86,17 @@ public sealed class TabEngine : IDisposable
         _focusBlocklistService = deps.FocusBlocklistService;
         _contentScriptInjector = deps.ContentScriptInjector;
         _customDownloadManager = deps.CustomDownloadManager;
+        _hibernationManager = deps.HibernationManager;
+        _navigationPolicyEngine = deps.NavigationPolicyEngine;
+        _themeManager = deps.ThemeManager;
         _dispatcher = Application.Current.Dispatcher;
 
-        // Check every 60s whether any tabs have exceeded the hibernation timeout
-        _hibernationTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
-        _hibernationTimer.Tick += (_, _) => HibernateInactiveTabs();
-        _hibernationTimer.Start();
+        _hibernationManager.Attach(
+            getTabs: () => Tabs,
+            getWebViews: () => _webViews.ToDictionary(kvp => kvp.Key, kvp => (dynamic)kvp.Value),
+            teardownWebView: id => TeardownWebView(id),
+            maxLiveWebViews: 10
+        );
 
         foreach (var item in _downloadStore.Items)
         {
@@ -308,7 +311,7 @@ public sealed class TabEngine : IDisposable
 
             ShowOnlyActiveWebView(tab);
             tab.LastActiveTime = DateTime.UtcNow;
-            SuspendBackgroundTabs(tab);
+            _hibernationManager.SuspendBackgroundTabs(tab);
             return;
         }
 
@@ -343,8 +346,8 @@ public sealed class TabEngine : IDisposable
         ShowOnlyActiveWebView(tab);
         tab.LastActiveTime = DateTime.UtcNow;
 
-        SuspendBackgroundTabs(tab);
-        EvictExcessWebViews(tab);
+        _hibernationManager.SuspendBackgroundTabs(tab);
+        _hibernationManager.EvictExcessWebViews(tab);
     }
 
     /// <summary>Navigates the active tab to a URL. Internal stride:// pages are served by the WebResourceRequested handler.</summary>
@@ -494,9 +497,9 @@ public sealed class TabEngine : IDisposable
         var firstActive = _webViews.Values.FirstOrDefault(wv => wv.CoreWebView2 is not null);
         if (firstActive?.CoreWebView2 is not null)
         {
-            firstActive.CoreWebView2.Profile.PreferredColorScheme = Services.ThemeManager.IsCurrentlyDark() 
+            _dispatcher.Invoke(() => firstActive.CoreWebView2.Profile.PreferredColorScheme = _themeManager.IsCurrentlyDark() 
                 ? CoreWebView2PreferredColorScheme.Dark 
-                : CoreWebView2PreferredColorScheme.Light;
+                : CoreWebView2PreferredColorScheme.Light);
         }
 
         // Also update background colors for external tabs if they are transparent/white
@@ -515,7 +518,7 @@ public sealed class TabEngine : IDisposable
     {
         var isInternal = tab.Url?.StartsWith("internal://") ?? true;
 
-        IWebView2 wv = CreateWebViewControl(isInternal);
+        dynamic wv = CreateWebViewControl(isInternal);
 
         _webViewHost!.Children.Add((FrameworkElement)wv);
         try
@@ -555,7 +558,7 @@ public sealed class TabEngine : IDisposable
         NavigateInitialUrl(wv, tab);
     }
 
-    private IWebView2 CreateWebViewControl(bool isInternal)
+    private dynamic CreateWebViewControl(bool isInternal)
     {
         if (_settings.UseFloatingCommandBar)
         {
@@ -626,7 +629,7 @@ public sealed class TabEngine : IDisposable
 
     private void ConfigureCoreWebView(CoreWebView2 core)
     {
-        core.Profile.PreferredColorScheme = Services.ThemeManager.IsCurrentlyDark()
+        core.Profile.PreferredColorScheme = _themeManager.IsCurrentlyDark()
             ? CoreWebView2PreferredColorScheme.Dark
             : CoreWebView2PreferredColorScheme.Light;
 
@@ -644,7 +647,7 @@ public sealed class TabEngine : IDisposable
         try { core.Settings.IsSwipeNavigationEnabled = true; } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
-    private void TryInitializeExtensions(IWebView2 wv)
+    private void TryInitializeExtensions(dynamic wv)
     {
         if (_extensionsLoaded) return;
         _extensionsLoaded = true;
@@ -667,7 +670,7 @@ public sealed class TabEngine : IDisposable
         });
     }
 
-    private void NavigateInitialUrl(IWebView2 wv, BrowserTab tab)
+    private void NavigateInitialUrl(dynamic wv, BrowserTab tab)
     {
         // Settings/OneTab/History are navigated by NavigateToSettings/OneTab/History
         // after activation — skip here to avoid a double load.
@@ -728,7 +731,7 @@ public sealed class TabEngine : IDisposable
 
     // ──── WebView Event Wiring ────
 
-    private void WireNavigationEvents(IWebView2 wv, BrowserTab tab)
+    private void WireNavigationEvents(dynamic wv, BrowserTab tab)
     {
         CoreWebView2 core = wv.CoreWebView2;
         core.NavigationStarting += (_, e) =>
@@ -750,11 +753,15 @@ public sealed class TabEngine : IDisposable
                 catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
             }
 
-            if (TryHandleCustomProtocol(e, wv, tab)) return;
-
-            if (_settings.FocusLocked && TryHandleFocusLock(e, tab)) return;
-
-            if (_settings.ForceHttps && TryUpgradeToHttps(e, wv)) return;
+            if (_navigationPolicyEngine.EvaluateAndHandle(
+                e, wv, tab, _dispatcher,
+                closeTab: (Action<BrowserTab>)CloseTab,
+                navigateToFocus: (Action<BrowserTab>)NavigateToFocus,
+                isFocusLocked: _settings.FocusLocked,
+                forceHttps: _settings.ForceHttps))
+            {
+                return;
+            }
 
             _dispatcher.InvokeAsync(() =>
             {
@@ -804,7 +811,7 @@ public sealed class TabEngine : IDisposable
         };
     }
 
-    private void ApplyNavigationBackground(IWebView2 wv, string? url)
+    private void ApplyNavigationBackground(dynamic wv, string? url)
     {
         if (url is null) return;
         var isInternal = url.StartsWith("internal://") || url.StartsWith("https://local.assets/") || url.StartsWith("https://user.assets/");
@@ -812,94 +819,7 @@ public sealed class TabEngine : IDisposable
         else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp3) comp3.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White);
     }
 
-    private bool TryHandleCustomProtocol(CoreWebView2NavigationStartingEventArgs e, IWebView2 wv, BrowserTab tab)
-    {
-        if (e.Uri is not string uriForCustom || !Uri.TryCreate(uriForCustom, UriKind.Absolute, out var parsedCustomUri))
-            return false;
-
-        var scheme = parsedCustomUri.Scheme.ToLowerInvariant();
-        if (scheme == "http" || scheme == "https" || scheme == "file" || scheme == "data" ||
-            scheme == "about" || scheme == "edge" || scheme == "chrome" || scheme == "stride" || scheme == "javascript" ||
-            scheme == "extension" || scheme == "chrome-extension" || scheme == "internal")
-            return false;
-
-        e.Cancel = true;
-        _dispatcher.InvokeAsync(() =>
-        {
-            // SECURITY: confirm before handing off to an external app — unprompted
-            // protocol-handler invocation is a known RCE vector for some installed apps.
-            var displayUrl = uriForCustom.Length > 100 ? uriForCustom.Substring(0, 97) + "..." : uriForCustom;
-            var dialog = new BaseBrowserDialogWindow
-            {
-                Owner = System.Windows.Application.Current.MainWindow,
-                DialogTitle = "Open External App",
-                DialogMessage = $"This page wants to open an external application to handle this link:\n\n{displayUrl}\n\nOnly continue if you trust this site.",
-                CancelVisibility = System.Windows.Visibility.Visible,
-                OkButtonText = "Open App",
-                CancelButtonText = "Cancel"
-            };
-            dialog.ShowDialog();
-
-            if (!dialog.IsAccepted) return;
-
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uriForCustom) { UseShellExecute = true });
-                if (tab.Url == InternalUrls.NewTab || tab.Url == "about:blank")
-                    CloseTab(tab);
-            }
-            catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Custom protocol launch failed: {ex.Message}"); }
-        });
-        return true;
-    }
-
-    private bool TryHandleFocusLock(CoreWebView2NavigationStartingEventArgs e, BrowserTab tab)
-    {
-        if (e.Uri is not string uriStrFocus || !Uri.TryCreate(uriStrFocus, UriKind.Absolute, out var parsedFocusUri))
-            return false;
-
-        var host = parsedFocusUri.Host;
-        if (string.IsNullOrEmpty(host) || !_focusBlocklistService.IsBlocked(host))
-            return false;
-
-        e.Cancel = true;
-        _dispatcher.InvokeAsync(() =>
-        {
-            tab.Url = InternalUrls.Focus;
-            NavigateToFocus(tab);
-        });
-        return true;
-    }
-
-    private bool TryUpgradeToHttps(CoreWebView2NavigationStartingEventArgs e, IWebView2 wv)
-    {
-        if (e.Uri is not string uriStr || !uriStr.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        var isLocalHostOrIp = false;
-        if (Uri.TryCreate(uriStr, UriKind.Absolute, out var parsedUri))
-        {
-            isLocalHostOrIp = parsedUri.IsLoopback ||
-                              parsedUri.HostNameType == UriHostNameType.IPv4 ||
-                              parsedUri.HostNameType == UriHostNameType.IPv6 ||
-                              parsedUri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase);
-        }
-        else
-        {
-            isLocalHostOrIp = uriStr.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
-                              uriStr.StartsWith("http://127.", StringComparison.OrdinalIgnoreCase);
-        }
-
-        if (isLocalHostOrIp)
-            return false;
-
-        e.Cancel = true;
-        var httpsUri = "https://" + uriStr["http://".Length..];
-        _dispatcher.InvokeAsync(() => { try { wv.CoreWebView2.Navigate(httpsUri); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } });
-        return true;
-    }
-
-    private void WireTitleAndSourceEvents(IWebView2 wv, BrowserTab tab)
+    private void WireTitleAndSourceEvents(dynamic wv, BrowserTab tab)
     {
         CoreWebView2 core = wv.CoreWebView2;
         core.DocumentTitleChanged += (_, _) =>
@@ -945,7 +865,7 @@ public sealed class TabEngine : IDisposable
 
     public event Action<bool>? FullScreenChanged;
 
-    private void WireMessageAndWindowEvents(IWebView2 wv, BrowserTab tab)
+    private void WireMessageAndWindowEvents(dynamic wv, BrowserTab tab)
     {
         CoreWebView2 core = wv.CoreWebView2;
         core.ContainsFullScreenElementChanged += (_, _) =>
@@ -1069,10 +989,11 @@ public sealed class TabEngine : IDisposable
         };
     }
 
-    private void WireContextMenuEvents(IWebView2 wv, BrowserTab tab)
+    private void WireContextMenuEvents(dynamic wv, BrowserTab tab)
     {
+        var typedWv = (Microsoft.Web.WebView2.Wpf.WebView2)wv;
         Handlers.TabContextMenuHandler.Wire(
-            wv.CoreWebView2, 
+            typedWv.CoreWebView2, 
             _dispatcher, 
             _settings, 
             url => { _ = _dispatcher.InvokeAsync(async () => { try { var newTab = CreateTab(url); await ActivateAsync(newTab); } catch (Exception ex) { Trace.WriteLine(ex); } }); },
@@ -1082,7 +1003,7 @@ public sealed class TabEngine : IDisposable
 
 
 
-    private void HandleProcessFailure(IWebView2 wv, BrowserTab tab)
+    private void HandleProcessFailure(dynamic wv, BrowserTab tab)
     {
         CoreWebView2 core = wv.CoreWebView2;
         core.ProcessFailed += (_, e) =>
@@ -1126,7 +1047,7 @@ public sealed class TabEngine : IDisposable
         _webViews.Clear();
     }
 
-    private void UpdateTabFromWebView(IWebView2 wv, BrowserTab tab)
+    private void UpdateTabFromWebView(dynamic wv, BrowserTab tab)
     {
         string source = (string)wv.Source?.ToString() ?? "";
         if (InternalUrls.IsDataOrBlank(source))
@@ -1178,100 +1099,7 @@ public sealed class TabEngine : IDisposable
         }
     }
 
-    private bool IsTabSafeToHibernate(BrowserTab tab)
-    {
-        if (tab.IsActive || tab.IsHibernated) return false;
-        if (tab.IsPinned) return false;
-        if (InternalUrls.IsInternal(tab.Url)) return false;
 
-        // Check if tab is playing audio
-        if (_webViews.TryGetValue(tab.Id, out var wv))
-        {
-            try
-            {
-                if (wv.CoreWebView2 != null && wv.CoreWebView2.IsDocumentPlayingAudio)
-                    return false;
-            }
-            catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
-        }
-
-        // If there are ANY active downloads, disable all hibernation to be safe,
-        // because destroying a WebView might abort downloads originating from it.
-        if (_downloadStore.Items.Any(d => d.State == Models.DownloadState.InProgress))
-            return false;
-
-        return true;
-    }
-
-    private void SuspendBackgroundTabs(BrowserTab activeTab)
-    {
-        foreach (var (id, wv) in _webViews)
-        {
-            if (id == activeTab.Id) continue;
-            if (wv.CoreWebView2 is null) continue;
-
-            try
-            {
-                wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
-                _ = wv.CoreWebView2.TrySuspendAsync();
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"SuspendBackgroundTabs failed for tab {id}: {ex.Message}");
-            }
-        }
-    }
-
-    private void EvictExcessWebViews(BrowserTab activeTab)
-    {
-        if (_webViews.Count <= MaxLiveWebViews) return;
-
-        var candidates = Tabs
-            .Where(t => t.Id != activeTab.Id && !t.IsHibernated && _webViews.ContainsKey(t.Id))
-            .Where(t => IsTabSafeToHibernate(t))
-            .OrderBy(t => t.LastActiveTime)
-            .ToList();
-
-        var toEvict = _webViews.Count - MaxLiveWebViews;
-        foreach (var tab in candidates.Take(toEvict))
-        {
-            Trace.WriteLine($"Evicting WebView for '{tab.Title}' (last active: {tab.LastActiveTime:HH:mm:ss})");
-            HibernateTab(tab);
-        }
-    }
-
-    // ──── Hibernation ────
-
-    private void HibernateInactiveTabs()
-    {
-        var hibernateMinutes = Tabs.Count switch
-        {
-            <= 5 => BaseHibernateMinutes,
-            <= 10 => 3,
-            <= 15 => 2,
-            _ => 1
-        };
-
-        var cutoff = DateTime.UtcNow.AddMinutes(-hibernateMinutes);
-
-        foreach (var tab in Tabs.ToList())
-        {
-            if (!IsTabSafeToHibernate(tab)) continue;
-            if (tab.LastActiveTime > cutoff) continue;
-
-            HibernateTab(tab);
-        }
-    }
-
-    private void HibernateTab(BrowserTab tab)
-    {
-        if (_webViews.TryGetValue(tab.Id, out var wv))
-            tab.Url = wv.Source?.ToString() ?? tab.Url;
-        TeardownWebView(tab.Id);
-        tab.IsHibernated = true;
-    }
-
-    // ──── Visibility ────
 
     private void ShowOnlyActiveWebView(BrowserTab activeTab)
     {
@@ -1311,7 +1139,7 @@ public sealed class TabEngine : IDisposable
 
     public void Shutdown()
     {
-        _hibernationTimer.Stop();
+        _hibernationManager.Detach();
         _activationCts?.Cancel();
         _activationCts?.Dispose();
         _webViewHost!.Children.Clear();

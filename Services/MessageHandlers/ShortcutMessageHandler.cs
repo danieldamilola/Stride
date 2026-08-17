@@ -9,7 +9,7 @@ using StrideBrowser.ViewModels;
 
 namespace StrideBrowser.Services.MessageHandlers;
 
-public class ShortcutMessageHandler : IWebMessageHandler
+public class ShortcutMessageHandler : IWebMessageHandler, ISettingEmitter
 {
     private readonly TabEngine _engine;
     private readonly BrowserViewModel _vm;
@@ -24,12 +24,17 @@ public class ShortcutMessageHandler : IWebMessageHandler
         _settingsStore = settingsStore;
     }
 
-    public void Register(Dictionary<string, Func<string, Task>> prefixHandlers, Dictionary<string, Func<Task>> exactHandlers)
+    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
     {
-        prefixHandlers[WebMessagePrefix.ShortcutAdd] = HandleShortcutAdd;
-        prefixHandlers[WebMessagePrefix.ShortcutRemove] = HandleShortcutRemove;
-        prefixHandlers[WebMessagePrefix.ShortcutClick] = HandleShortcutClick;
+        return new Dictionary<string, Func<string, Task>>
+        {
+            [WebMessagePrefix.ShortcutAdd] = HandleShortcutAdd,
+            [WebMessagePrefix.ShortcutRemove] = HandleShortcutRemove,
+            [WebMessagePrefix.ShortcutClick] = HandleShortcutClick
+        };
     }
+
+    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers() => new Dictionary<string, Func<Task>>();
 
     private Task HandleShortcutAdd(string payload)
     {

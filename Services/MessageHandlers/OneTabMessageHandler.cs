@@ -18,17 +18,22 @@ public class OneTabMessageHandler : IWebMessageHandler
         _oneTabStore = oneTabStore;
     }
 
-    public void Register(Dictionary<string, Func<string, Task>> prefixHandlers, Dictionary<string, Func<Task>> exactHandlers)
+    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
     {
-        prefixHandlers[WebMessagePrefix.OneTabRestore] = HandleOneTabRestore;
-        prefixHandlers[WebMessagePrefix.OneTabDelete] = HandleOneTabDelete;
-        prefixHandlers[WebMessagePrefix.OneTabRename] = HandleOneTabRename;
-        prefixHandlers[WebMessagePrefix.OneTabOpen] = HandleOneTabOpen;
-        prefixHandlers[WebMessagePrefix.OneTabDeleteTab] = HandleOneTabDeleteTab;
-        prefixHandlers[WebMessagePrefix.OneTabStar] = HandleOneTabStar;
-        prefixHandlers[WebMessagePrefix.OneTabReorderTab] = HandleOneTabReorderTab;
-        prefixHandlers[WebMessagePrefix.OneTabReorderGroup] = HandleOneTabReorderGroup;
+        return new Dictionary<string, Func<string, Task>>
+        {
+            [WebMessagePrefix.OneTabRestore] = HandleOneTabRestore,
+            [WebMessagePrefix.OneTabDelete] = HandleOneTabDelete,
+            [WebMessagePrefix.OneTabRename] = HandleOneTabRename,
+            [WebMessagePrefix.OneTabOpen] = HandleOneTabOpen,
+            [WebMessagePrefix.OneTabDeleteTab] = HandleOneTabDeleteTab,
+            [WebMessagePrefix.OneTabStar] = HandleOneTabStar,
+            [WebMessagePrefix.OneTabReorderTab] = HandleOneTabReorderTab,
+            [WebMessagePrefix.OneTabReorderGroup] = HandleOneTabReorderGroup
+        };
     }
+
+    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers() => new Dictionary<string, Func<Task>>();
 
     private async Task HandleOneTabRestore(string groupId)
     {

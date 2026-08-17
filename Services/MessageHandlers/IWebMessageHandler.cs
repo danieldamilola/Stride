@@ -6,5 +6,6 @@ namespace StrideBrowser.Services.MessageHandlers;
 
 public interface IWebMessageHandler
 {
-    void Register(Dictionary<string, Func<string, Task>> prefixHandlers, Dictionary<string, Func<Task>> exactHandlers);
+    IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers();
+    IReadOnlyDictionary<string, Func<Task>> GetExactHandlers();
 }

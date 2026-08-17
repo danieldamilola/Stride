@@ -9,7 +9,7 @@ using StrideBrowser.ViewModels;
 
 namespace StrideBrowser.Services.MessageHandlers;
 
-public class SettingsMessageHandler : IWebMessageHandler
+public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
 {
     private readonly TabEngine _engine;
     private readonly BrowserViewModel _vm;
@@ -26,16 +26,26 @@ public class SettingsMessageHandler : IWebMessageHandler
         _updateService = updateService;
     }
 
-    public void Register(Dictionary<string, Func<string, Task>> prefixHandlers, Dictionary<string, Func<Task>> exactHandlers)
+    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
     {
-        prefixHandlers[WebMessagePrefix.Setting] = HandleSetting;
-        prefixHandlers["install-update:"] = async (payload) => { await _updateService.DownloadAndInstallUpdateAsync(payload); };
-        exactHandlers[WebMessagePrefix.OpenBackgroundsFolder] = HandleOpenBackgroundsFolder;
-        exactHandlers["check-for-update"] = async () => 
+        return new Dictionary<string, Func<string, Task>>
         {
-            var (available, version, notes, url) = await _updateService.CheckForUpdateCustomAsync();
-            var status = available ? "true" : "false";
-            _engine.PostMessageToActiveTab($"update-check-result:{status}:{version}:{url}");
+            [WebMessagePrefix.Setting] = HandleSetting,
+            ["install-update:"] = async (payload) => { await _updateService.DownloadAndInstallUpdateAsync(payload); }
+        };
+    }
+
+    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers()
+    {
+        return new Dictionary<string, Func<Task>>
+        {
+            [WebMessagePrefix.OpenBackgroundsFolder] = HandleOpenBackgroundsFolder,
+            ["check-for-update"] = async () => 
+            {
+                var (available, version, notes, url) = await _updateService.CheckForUpdateCustomAsync();
+                var status = available ? "true" : "false";
+                _engine.PostMessageToActiveTab($"update-check-result:{status}:{version}:{url}");
+            }
         };
     }
 

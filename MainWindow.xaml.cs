@@ -14,6 +14,7 @@ using StrideBrowser.Interop;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.Services.Input;
+using StrideBrowser.Services.UI;
 using StrideBrowser.ViewModels;
 
 namespace StrideBrowser;
@@ -31,20 +32,34 @@ public partial class MainWindow : Window
     private readonly ISessionStore _sessionStore;
     private readonly IHistoryStore _historyStore;
     private readonly IDownloadStore _downloadStore;
+    private readonly TCLensTransferService _tcLensTransfer;
     private readonly WebMessageRouter _router;
     private KeyboardShortcutMap? _shortcuts;
+    private readonly ThemeManager _themeManager;
+    private readonly CommandBarController _commandBar;
+    private readonly ToolbarTintAdapter _toolbarTint;
+    private readonly SecurityBadgeHelper _securityBadge;
+    private readonly LoadingAnimationController _loadingAnim;
 
     /// <summary>Prevents re-entrant tab selection changes when we programmatically update the ListBox selection.</summary>
     private bool _isUpdatingSelection;
     private bool _isFullscreen;
     private WindowState _preFullscreenState;
 
-    private const double LoadingIndicatorWidth = 100;
-    private const double LoadingOvershootPx = 20;
-    private const double FallbackContainerWidth = 900;
-    private const double SweepDurationSeconds = 1.2;
 
-    public MainWindow(IServiceProvider services, BrowserViewModel vm)
+
+    public MainWindow(
+        BrowserViewModel vm,
+        ISettingsStore settingsStore,
+        IOneTabStore oneTabStore,
+        ISessionStore sessionStore,
+        IHistoryStore historyStore,
+        IDownloadStore downloadStore,
+        TabEngine engine,
+        WebMessageRouter router,
+        TCLensTransferService tcLensTransfer,
+        ThemeManager themeManager,
+        UpdateService updateService)
     {
         // We no longer need Deactivated/LocationChanged/SizeChanged hooks 
         // since the Command Bar is integrated back into the visual tree.
@@ -52,26 +67,42 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         _vm = vm;
-        _settingsStore = services.GetRequiredService<ISettingsStore>();
-        _oneTabStore = services.GetRequiredService<IOneTabStore>();
-        _sessionStore = services.GetRequiredService<ISessionStore>();
-        _historyStore = services.GetRequiredService<IHistoryStore>();
-        _downloadStore = services.GetRequiredService<IDownloadStore>();
+        _settingsStore = settingsStore;
+        _oneTabStore = oneTabStore;
+        _sessionStore = sessionStore;
+        _historyStore = historyStore;
+        _downloadStore = downloadStore;
 
-        _engine = services.GetRequiredService<TabEngine>();
+        _engine = engine;
         _engine.AttachHost(WebViewHost);
 
-        _router = services.GetRequiredService<WebMessageRouter>();
+        _router = router;
+        _tcLensTransfer = tcLensTransfer;
+        _themeManager = themeManager;
         _router.SettingChanged += OnSettingChanged;
         
-        var updateService = services.GetRequiredService<UpdateService>();
         updateService.UpdateAvailable += (s, e) => 
         {
             Dispatcher.Invoke(() => UpdateBadge.Visibility = Visibility.Visible);
         };
-        Services.ThemeManager.ThemeChanged += () =>
+
+        _commandBar = new CommandBarController(
+            _vm, _engine, CommandBarGrid, CommandBarPanel, AddressBar, StandardAddressBar, UrlLabel, WebViewHost, Dispatcher);
+            
+        new TabStripDragDropBehavior(TabList, (oldIdx, newIdx) => 
         {
-            var themeStr = Services.ThemeManager.GetThemeString();
+            _isUpdatingSelection = true;
+            try { _engine.Tabs.Move(oldIdx, newIdx); }
+            finally { _isUpdatingSelection = false; }
+        });
+        
+        _toolbarTint = new ToolbarTintAdapter(Toolbar);
+        _securityBadge = new SecurityBadgeHelper(SecurityIcon, StandardSecurityIcon, _vm.Settings);
+        _loadingAnim = new LoadingAnimationController(LoadingIndicator, LoadingBar);
+        
+        _themeManager.ThemeChanged += () =>
+        {
+            var themeStr = _themeManager.GetThemeString();
             var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
             foreach (var tab in _engine.Tabs)
             {
@@ -174,31 +205,34 @@ public partial class MainWindow : Window
     {
         return new KeyboardShortcutMap(
             _engine,
-            focusAddressBar: () => { FocusAddressBar(); return Task.CompletedTask; },
-            saveAllTabs: () => { SaveAllTabs_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-            cycleTab: async reverse => await CycleTabAsync(reverse),
-            toggleFullscreen: () => { ToggleFullscreen(); return Task.CompletedTask; },
-            isFullscreen: () => _isFullscreen,
-            updateZoomIndicator: () => { UpdateZoomIndicator(); return Task.CompletedTask; },
-            openHistory: OpenHistoryTab,
-            openDownloads: OpenDownloadsTab,
-            switchToTabIndex: SwitchToTabByIndex,
-            copyUrl: CopyUrlToClipboard,
-            sendAllToOneTab: () => _engine.SendAllToOneTab(),
-            saveOneTabGroup: entries =>
+            new ShortcutActions
             {
-                var group = new OneTabGroup
+                FocusAddressBar = () => { _commandBar.FocusAddressBar(); return Task.CompletedTask; },
+                SaveAllTabs = () => { SaveAllTabs_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
+                CycleTab = async reverse => await CycleTabAsync(reverse),
+                ToggleFullscreen = () => { ToggleFullscreen(); return Task.CompletedTask; },
+                IsFullscreen = () => _isFullscreen,
+                UpdateZoomIndicator = () => { UpdateZoomIndicator(); return Task.CompletedTask; },
+                OpenHistory = OpenHistoryTab,
+                OpenDownloads = OpenDownloadsTab,
+                SwitchToTabIndex = SwitchToTabByIndex,
+                CopyUrl = CopyUrlToClipboard,
+                SendAllToOneTab = () => _engine.SendAllToOneTab(),
+                SaveOneTabGroup = entries =>
                 {
-                    Name = $"Saved {DateTime.Now:MMM d, h:mm tt}",
-                    Tabs = entries.Select(t =>
-                        new OneTabEntry(t.url, t.title, null, DateTime.UtcNow)).ToList()
-                };
-                _oneTabStore.AddGroup(group);
-            },
-            syncTabsBinding: SyncTabsBinding,
-            openOneTab: OpenOneTabPage,
-            openSettings: () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-            launchTCLens: LaunchTCLensAsync);
+                    var group = new OneTabGroup
+                    {
+                        Name = $"Saved {DateTime.Now:MMM d, h:mm tt}",
+                        Tabs = entries.Select(t =>
+                            new OneTabEntry(t.url, t.title, null, DateTime.UtcNow)).ToList()
+                    };
+                    _oneTabStore.AddGroup(group);
+                },
+                SyncTabsBinding = SyncTabsBinding,
+                OpenOneTab = OpenOneTabPage,
+                OpenSettings = () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
+                LaunchTCLens = LaunchTCLensAsync
+            });
     }
 
     private async Task LaunchTCLensAsync()
@@ -308,9 +342,9 @@ public partial class MainWindow : Window
             if (tab.IsActive)
             {
                 _vm.SyncAddressBar(tab);
-                UpdateSecurityIcon(tab.Url);
-                UpdateUrlLabel(tab);
-                UpdateToolbarTint(tab);
+                _securityBadge.UpdateSecurityIcon(tab.Url);
+                _commandBar.UpdateUrlLabel(tab);
+                _toolbarTint.UpdateTint(tab);
                 _isUpdatingSelection = true;
                 try
                 {
@@ -338,15 +372,15 @@ public partial class MainWindow : Window
                 if (isLoading)
                 {
                     LoadingBar.Visibility = Visibility.Visible;
-                    StartLoadingAnimation();
-                    StartSecuritySpinner();
+                    _loadingAnim.Start();
+                    _securityBadge.StartSecuritySpinner();
                 }
                 else
                 {
-                    StopLoadingAnimation();
-                    StopSecuritySpinner();
+                    _loadingAnim.Stop();
+                    _securityBadge.StopSecuritySpinner();
                     LoadingBar.Visibility = Visibility.Collapsed;
-                    UpdateSecurityIcon(tab.Url);
+                    _securityBadge.UpdateSecurityIcon(tab.Url);
                 }
             }
         };
@@ -421,7 +455,7 @@ public partial class MainWindow : Window
             var tab = _engine.CreateTab();
             _engine.SwitchTo(tab);
             await _engine.ActivateAsync(tab);
-            FocusAddressBar();
+            _commandBar.FocusAddressBar();
         }
         catch (Exception ex)
         {
@@ -508,7 +542,7 @@ public partial class MainWindow : Window
         if (e.Key == Key.Escape)
         {
             _vm.ShowSuggestions = false;
-            HideCommandBar();
+            _commandBar.HideCommandBar();
             e.Handled = true;
             return;
         }
@@ -555,7 +589,7 @@ public partial class MainWindow : Window
         }
 
         _vm.ShowSuggestions = false;
-        HideCommandBar();
+        _commandBar.HideCommandBar();
     }
 
     private void AddressBar_GotFocus(object sender, RoutedEventArgs e)
@@ -574,10 +608,6 @@ public partial class MainWindow : Window
         }
     }
 
-    public static string PendingTCLensText = "";
-    public static string PendingTCLensUrl = "";
-    public static string PendingTCLensTitle = "";
-
     private async Task HandleNativeTCLensShortcutAsync()
     {
         try
@@ -590,10 +620,10 @@ public partial class MainWindow : Window
             var rawJson = await wv.ExecuteScriptAsync("document.body.innerText");
             if (!string.IsNullOrEmpty(rawJson) && rawJson != "null")
             {
-                PendingTCLensText = System.Text.Json.JsonSerializer.Deserialize<string>(rawJson) ?? "";
+                _tcLensTransfer.PendingText = System.Text.Json.JsonSerializer.Deserialize<string>(rawJson) ?? "";
             }
-            PendingTCLensUrl = activeTab.Url ?? "";
-            PendingTCLensTitle = activeTab.Title ?? "";
+            _tcLensTransfer.PendingUrl = activeTab.Url ?? "";
+            _tcLensTransfer.PendingTitle = activeTab.Title ?? "";
 
             var newTab = _engine.CreateTab("http://local.assets/TCLens/options/options.html");
             _engine.SwitchTo(newTab);
@@ -607,100 +637,12 @@ public partial class MainWindow : Window
 
     // ───────────────────── Interop Helpers ─────────────────────
 
-    private bool _isCommandBarOpen;
 
-    private void FocusAddressBar()
-    {
-        if (_vm.Settings.UseFloatingCommandBar)
-        {
-            ShowCommandBar();
-        }
-        else
-        {
-            StandardAddressBar.Focus();
-            if (_engine.ActiveTab is { } activeTab && !string.IsNullOrEmpty(activeTab.Url) && !InternalUrls.IsInternal(activeTab.Url))
-            {
-                StandardAddressBar.Text = activeTab.Url;
-            }
-            else
-            {
-                StandardAddressBar.Text = "";
-            }
-            StandardAddressBar.SelectAll();
-        }
-    }
 
-    private void ShowCommandBar()
-    {
-        if (_isCommandBarOpen) return;
-        _isCommandBarOpen = true;
-
-        // Pre-fill with current URL
-        if (_engine.ActiveTab is { } activeTab && !string.IsNullOrEmpty(activeTab.Url)
-            && !InternalUrls.IsInternal(activeTab.Url))
-        {
-            _vm.AddressText = activeTab.Url;
-        }
-        else
-        {
-            _vm.AddressText = "";
-        }
-
-        CommandBarGrid.Visibility = Visibility.Visible;
-
-        // 80ms punchy ease-out animation
-        CommandBarGrid.Opacity = 0;
-        CommandBarPanel.RenderTransform = new TranslateTransform(0, -10);
-
-        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(80))
-        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-        var slideIn = new DoubleAnimation(-10, 0, TimeSpan.FromMilliseconds(80))
-        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-
-        CommandBarGrid.BeginAnimation(OpacityProperty, fadeIn);
-        CommandBarPanel.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slideIn);
-
-        // Focus after layout pass to ensure TextBox is in visual tree and Popup is active
-        Dispatcher.BeginInvoke(new Action(() =>
-        {
-            AddressBar.Focus();
-            Keyboard.Focus(AddressBar);
-            AddressBar.SelectAll();
-        }), System.Windows.Threading.DispatcherPriority.Input);
-    }
-
-    private void HideCommandBar()
-    {
-        if (!_isCommandBarOpen) return;
-        _isCommandBarOpen = false;
-
-        _vm.ShowSuggestions = false;
-        _vm.Suggestions.Clear();
-
-        // 80ms ease-out dismiss animation: fade out + slide up
-        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(80))
-        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-        fadeOut.Completed += (_, _) =>
-        {
-            CommandBarGrid.Visibility = Visibility.Collapsed;
-            CommandBarGrid.BeginAnimation(OpacityProperty, null);
-
-            // Return focus to WebView
-            if (_engine.ActiveTab is not null)
-                WebViewHost.Focus();
-        };
-
-        var slideOut = new DoubleAnimation(0, -10, TimeSpan.FromMilliseconds(80))
-        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-
-        CommandBarGrid.BeginAnimation(OpacityProperty, fadeOut);
-        if (CommandBarPanel.RenderTransform is TranslateTransform tt)
-            tt.BeginAnimation(TranslateTransform.YProperty, slideOut);
-    }
 
     private void UrlLabel_Click(object sender, MouseButtonEventArgs e)
     {
-        FocusAddressBar();
+        _commandBar.FocusAddressBar();
         e.Handled = true;
     }
 
@@ -709,7 +651,8 @@ public partial class MainWindow : Window
         if (e.Key == Key.Escape)
         {
             _vm.ShowSuggestions = false;
-            UpdateUrlLabel(_engine.ActiveTab);
+            if (_engine.ActiveTab != null)
+            _commandBar.UpdateUrlLabel(_engine.ActiveTab);
             WebViewHost.Focus();
             e.Handled = true;
             return;
@@ -770,21 +713,21 @@ public partial class MainWindow : Window
 
     private void StandardAddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        HandleAddressTextChanged(sender as TextBox);
+        _commandBar.HandleAddressTextChanged(sender as TextBox);
     }
 
     private void StandardSuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
     {
         if (_vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
         {
-            NavigateToSuggestion(_vm.Suggestions[_vm.SelectedSuggestionIndex]);
+            _commandBar.NavigateToSuggestion(_vm.Suggestions[_vm.SelectedSuggestionIndex]);
             WebViewHost.Focus();
         }
     }
 
     private void CommandBarBackdrop_Click(object sender, MouseButtonEventArgs e)
     {
-        HideCommandBar();
+        _commandBar.HideCommandBar();
     }
 
     private void AddressBar_LostFocus(object sender, RoutedEventArgs e)
@@ -795,21 +738,17 @@ public partial class MainWindow : Window
 
     private void AddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        HandleAddressTextChanged(sender as TextBox);
+        _commandBar.HandleAddressTextChanged(sender as TextBox);
     }
 
-    private void HandleAddressTextChanged(TextBox? tb)
-    {
-        if (tb is not null && tb.IsKeyboardFocusWithin)
-            _ = _vm.UpdateSuggestionsAsync(tb.Text);
-    }
+
 
     private void SuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
     {
         if (_vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
         {
-            NavigateToSuggestion(_vm.Suggestions[_vm.SelectedSuggestionIndex]);
-            HideCommandBar();
+            _commandBar.NavigateToSuggestion(_vm.Suggestions[_vm.SelectedSuggestionIndex]);
+            _commandBar.HideCommandBar();
         }
     }
 
@@ -856,136 +795,9 @@ public partial class MainWindow : Window
     // and applies it directly to the entire toolbar chrome for a seamless look.
     // 400ms smooth QuadraticEase transition.
 
-    private string _currentThemeColorHex = "";
-
-    private void UpdateToolbarTint(BrowserTab tab)
-    {
-        var hex = tab.ThemeColor ?? "";
-        if (hex == _currentThemeColorHex) return;
-        _currentThemeColorHex = hex;
-
-        var baseColor = (Color)FindResource("SidebarColor");
-        Color targetColor;
-
-        if (!string.IsNullOrEmpty(hex))
-        {
-            try
-            {
-                targetColor = (Color)ColorConverter.ConvertFromString(hex);
-                // Reject pure/near white. This prevents the toolbar from turning blindingly white 
-                // when Dark Reader is active but the site's meta theme-color tag still says #FFFFFF.
-                if (targetColor.R > 245 && targetColor.G > 245 && targetColor.B > 245)
-                {
-                    targetColor = Color.FromRgb(0x11, 0x11, 0x11);
-                }
-                // Reject strong green colors (e.g. jiji.ng) because they clash with the dark theme
-                else if (targetColor.G > 120 && targetColor.G > targetColor.R + 40 && targetColor.G > targetColor.B + 40)
-                {
-                    targetColor = Color.FromRgb(0x11, 0x11, 0x11);
-                }
-            }
-            catch
-            {
-                targetColor = baseColor;
-            }
-        }
-        else
-        {
-            targetColor = baseColor;
-        }
-
-        var anim = new ColorAnimation
-        {
-            To = targetColor,
-            Duration = TimeSpan.FromMilliseconds(400),
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
-        };
-
-        var brush = Toolbar.Background as SolidColorBrush;
-        if (brush is null || brush.IsFrozen)
-        {
-            brush = new SolidColorBrush(baseColor);
-            Toolbar.Background = brush;
-        }
-        brush.BeginAnimation(SolidColorBrush.ColorProperty, anim);
-
-        // Dynamic Contrast: If the toolbar adapts to a light color, switch icons/text to dark
-        var luminance = (0.299 * targetColor.R + 0.587 * targetColor.G + 0.114 * targetColor.B) / 255.0;
-        if (luminance > 0.5)
-        {
-            Toolbar.Resources["TextPrimary"] = new SolidColorBrush(Color.FromRgb(30, 30, 34));
-            Toolbar.Resources["TextSecondary"] = new SolidColorBrush(Color.FromRgb(70, 70, 74));
-            Toolbar.Resources["TextMuted"] = new SolidColorBrush(Color.FromRgb(100, 100, 104));
-        }
-        else
-        {
-            // Dark background -> remove local overrides so they fall back to global App.xaml theme
-            Toolbar.Resources.Remove("TextPrimary");
-            Toolbar.Resources.Remove("TextSecondary");
-            Toolbar.Resources.Remove("TextMuted");
-        }
-    }
 
 
-    private void UpdateSecurityIcon(string url)
-    {
-        if (string.IsNullOrEmpty(url) || InternalUrls.IsInternal(url))
-        {
-            SecurityIcon.Visibility = Visibility.Collapsed;
-            StandardSecurityIcon.Visibility = Visibility.Collapsed;
-            return;
-        }
 
-        if (_vm.Settings.UseFloatingCommandBar)
-        {
-            SecurityIcon.Visibility = Visibility.Visible;
-            StandardSecurityIcon.Visibility = Visibility.Collapsed;
-        }
-        else
-        {
-            SecurityIcon.Visibility = Visibility.Collapsed;
-            StandardSecurityIcon.Visibility = Visibility.Visible;
-        }
-
-        if (url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            SecurityIcon.Data = (StreamGeometry)FindResource("IconLock");
-            SecurityIcon.Stroke = new SolidColorBrush(Color.FromRgb(0x6B, 0x8F, 0x71));
-            StandardSecurityIcon.Data = (StreamGeometry)FindResource("IconLock");
-            StandardSecurityIcon.Stroke = new SolidColorBrush(Color.FromRgb(0x6B, 0x8F, 0x71));
-        }
-        else
-        {
-            SecurityIcon.Data = (StreamGeometry)FindResource("IconGlobe");
-            SecurityIcon.Stroke = (Brush)FindResource("TextSecondary");
-            StandardSecurityIcon.Data = (StreamGeometry)FindResource("IconGlobe");
-            StandardSecurityIcon.Stroke = (Brush)FindResource("TextSecondary");
-        }
-    }
-
-    private void StartSecuritySpinner()
-    {
-        if (SecurityIcon.Visibility != Visibility.Visible) return;
-
-        StopSecuritySpinner();
-        SecurityIcon.Data = (StreamGeometry)FindResource("IconRefresh");
-        SecurityIcon.Stroke = (Brush)FindResource("Accent");
-        var rot = new RotateTransform();
-        SecurityIcon.RenderTransformOrigin = new Point(0.5, 0.5);
-        SecurityIcon.RenderTransform = rot;
-        var spin = new DoubleAnimation(0, 360, TimeSpan.FromSeconds(0.9))
-        {
-            RepeatBehavior = RepeatBehavior.Forever
-        };
-        rot.BeginAnimation(RotateTransform.AngleProperty, spin);
-    }
-
-    private void StopSecuritySpinner()
-    {
-        if (SecurityIcon.RenderTransform is RotateTransform rot)
-            rot.BeginAnimation(RotateTransform.AngleProperty, null);
-        SecurityIcon.RenderTransform = null;
-    }
 
     // ───────────────────── OneTab ─────────────────────
 
@@ -1044,7 +856,7 @@ public partial class MainWindow : Window
             }
             finally { _isUpdatingSelection = false; }
 
-            FocusAddressBar();
+            _commandBar.FocusAddressBar();
         }
         catch (Exception ex)
         {
@@ -1093,7 +905,7 @@ public partial class MainWindow : Window
 
         if (key == "appTheme")
         {
-            var themeStr = Services.ThemeManager.GetThemeString();
+            var themeStr = _themeManager.GetThemeString();
             var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
             foreach (var tab in _engine.Tabs)
             {
@@ -1284,61 +1096,7 @@ public partial class MainWindow : Window
         }
     }
 
-    // ───────────────────── Tab Drag & Drop ─────────────────────
 
-    private Point _dragStartPoint;
-    private bool _isDragging;
-
-    private void TabList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        _dragStartPoint = e.GetPosition(null);
-        _isDragging = false;
-    }
-
-    private void TabList_PreviewMouseMove(object sender, MouseEventArgs e)
-    {
-        if (e.LeftButton != MouseButtonState.Pressed || _isDragging) return;
-        
-        var pos = e.GetPosition(null);
-        var diff = _dragStartPoint - pos;
-        if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
-            Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
-        {
-            var listBox = sender as ListBox;
-            if (listBox?.SelectedItem is BrowserTab tab)
-            {
-                _isDragging = true;
-                DragDrop.DoDragDrop(listBox, tab, DragDropEffects.Move);
-                _isDragging = false;
-            }
-        }
-    }
-
-    private void TabList_Drop(object sender, DragEventArgs e)
-    {
-        if (e.Data.GetData(typeof(BrowserTab)) is not BrowserTab droppedTab) return;
-        
-        var listBox = sender as ListBox;
-        if (listBox is null) return;
-        
-        var targetElement = e.OriginalSource as FrameworkElement;
-        while (targetElement != null && targetElement != listBox)
-        {
-            if (targetElement.DataContext is BrowserTab targetTab && targetTab != droppedTab)
-            {
-                var oldIndex = _engine.Tabs.IndexOf(droppedTab);
-                var newIndex = _engine.Tabs.IndexOf(targetTab);
-                if (oldIndex >= 0 && newIndex >= 0)
-                {
-                    _isUpdatingSelection = true;
-                    try { _engine.Tabs.Move(oldIndex, newIndex); }
-                    finally { _isUpdatingSelection = false; }
-                }
-                break;
-            }
-            targetElement = VisualTreeHelper.GetParent(targetElement) as FrameworkElement;
-        }
-    }
 
     // ───────────────────── Zoom Indicator ─────────────────────
 
@@ -1481,36 +1239,5 @@ public partial class MainWindow : Window
         }
     }
 
-    private Storyboard? _loadingStoryboard;
-
-    private void StartLoadingAnimation()
-    {
-        StopLoadingAnimation();
-
-        var transform = new TranslateTransform();
-        LoadingIndicator.RenderTransform = transform;
-
-        var containerWidth = LoadingBar.ActualWidth > 0 ? LoadingBar.ActualWidth : FallbackContainerWidth;
-        var anim = new DoubleAnimation
-        {
-            From = -LoadingIndicatorWidth,
-            To = containerWidth + LoadingOvershootPx,
-            Duration = TimeSpan.FromSeconds(SweepDurationSeconds),
-            RepeatBehavior = RepeatBehavior.Forever,
-            EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
-        };
-
-        _loadingStoryboard = new Storyboard();
-        Storyboard.SetTarget(anim, LoadingIndicator);
-        Storyboard.SetTargetProperty(anim, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.X)"));
-        _loadingStoryboard.Children.Add(anim);
-        _loadingStoryboard.Begin();
-    }
-
-    private void StopLoadingAnimation()
-    {
-        _loadingStoryboard?.Stop();
-        _loadingStoryboard = null;
-    }
 }
 

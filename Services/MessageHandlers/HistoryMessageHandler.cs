@@ -17,10 +17,20 @@ public class HistoryMessageHandler : IWebMessageHandler
         _historyStore = historyStore;
     }
 
-    public void Register(Dictionary<string, Func<string, Task>> prefixHandlers, Dictionary<string, Func<Task>> exactHandlers)
+    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
     {
-        prefixHandlers[WebMessagePrefix.HistoryOpen] = HandleOpen;
-        exactHandlers[WebMessagePrefix.HistoryClear] = HandleHistoryClear;
+        return new Dictionary<string, Func<string, Task>>
+        {
+            [WebMessagePrefix.HistoryOpen] = HandleOpen
+        };
+    }
+
+    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers()
+    {
+        return new Dictionary<string, Func<Task>>
+        {
+            [WebMessagePrefix.HistoryClear] = HandleHistoryClear
+        };
     }
 
     private async Task HandleOpen(string url)

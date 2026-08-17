@@ -10,16 +10,23 @@ namespace StrideBrowser.Services.MessageHandlers;
 public class TCLensMessageHandler : IWebMessageHandler
 {
     private readonly TabEngine _engine;
+    private readonly TCLensTransferService _transfer;
 
-    public TCLensMessageHandler(TabEngine engine)
+    public TCLensMessageHandler(TabEngine engine, TCLensTransferService transfer)
     {
         _engine = engine;
+        _transfer = transfer;
     }
 
-    public void Register(Dictionary<string, Func<string, Task>> prefixHandlers, Dictionary<string, Func<Task>> exactHandlers)
+    public IReadOnlyDictionary<string, Func<string, Task>> GetPrefixHandlers()
     {
-        prefixHandlers[WebMessagePrefix.TCLensGetText] = HandleTCLensGetText;
+        return new Dictionary<string, Func<string, Task>>
+        {
+            [WebMessagePrefix.TCLensGetText] = HandleTCLensGetText
+        };
     }
+
+    public IReadOnlyDictionary<string, Func<Task>> GetExactHandlers() => new Dictionary<string, Func<Task>>();
 
     private async Task HandleTCLensGetText(string _)
     {
@@ -30,10 +37,9 @@ public class TCLensMessageHandler : IWebMessageHandler
 
         var payload = new Dictionary<string, string>
         {
-            ["type"] = "tclens-text",
-            ["text"] = MainWindow.PendingTCLensText ?? "",
-            ["url"] = MainWindow.PendingTCLensUrl ?? "",
-            ["title"] = MainWindow.PendingTCLensTitle ?? ""
+            ["text"] = _transfer.PendingText ?? "",
+            ["url"] = _transfer.PendingUrl ?? "",
+            ["title"] = _transfer.PendingTitle ?? ""
         };
         
         var jsonPayload = JsonSerializer.Serialize(payload);

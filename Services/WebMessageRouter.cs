@@ -22,12 +22,14 @@ public sealed class WebMessageRouter
     {
         foreach (var handler in handlers)
         {
-            handler.Register(_prefixHandlers, _exactHandlers);
+            foreach (var (prefix, func) in handler.GetPrefixHandlers())
+                _prefixHandlers[prefix] = func;
             
-            if (handler is SettingsMessageHandler settingsHandler)
-                settingsHandler.SettingChanged += (k, v) => SettingChanged?.Invoke(k, v);
-            else if (handler is ShortcutMessageHandler shortcutHandler)
-                shortcutHandler.SettingChanged += (k, v) => SettingChanged?.Invoke(k, v);
+            foreach (var (key, func) in handler.GetExactHandlers())
+                _exactHandlers[key] = func;
+
+            if (handler is ISettingEmitter emitter)
+                emitter.SettingChanged += (k, v) => SettingChanged?.Invoke(k, v);
         }
     }
 
