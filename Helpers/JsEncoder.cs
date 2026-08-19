@@ -13,6 +13,7 @@ public static class JsEncoder
     public static string Encode(string value)
     {
         return value
+            .Replace("&", "&amp;")
             .Replace("\\", "\\\\")
             .Replace("'", "\\'")
             .Replace("\"", "&quot;")

@@ -23,6 +23,7 @@ public sealed class WebViewFactory
     private readonly ExtensionManager _extensionManager;
     private readonly string _ipcToken;
     private bool _extensionsLoaded;
+    private int _extensionsInitStarted;
 
     public CoreWebView2Environment? Environment { get; private set; }
 
@@ -140,7 +141,10 @@ public sealed class WebViewFactory
     public void TryInitializeExtensions(dynamic wv)
     {
         if (_extensionsLoaded) return;
-        _extensionsLoaded = true;
+        // Only one in-flight init attempt. The flag resets on failure so a later
+        // tab can retry if the first WebView was torn down before loading finished.
+        if (Interlocked.Exchange(ref _extensionsInitStarted, 1) == 1) return;
+
         _ = Task.Run(async () =>
         {
             try
@@ -148,13 +152,18 @@ public sealed class WebViewFactory
                 // MUST dispatch to UI thread!
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
                 {
-                    // Extensions
-                    _ = _extensionManager.InitializeAsync(wv.CoreWebView2, _settings);
+                    CoreWebView2 core = wv.CoreWebView2;
+                    await _extensionManager.InitializeAsync(core, _settings);
+                    _extensionsLoaded = true;
                 });
             }
             catch (Exception ex)
             {
                 Trace.WriteLine($"Extension init failed: {ex.Message}");
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _extensionsInitStarted, 0);
             }
         });
     }

@@ -98,7 +98,7 @@ public sealed class TabEngine : IDisposable
             _activeNativeDownloads,
             isTabAlive: id => _webViews.ContainsKey(id),
             getWebView: id => _webViews.TryGetValue(id, out var wv) ? wv : null,
-            createTab: CreateTab,
+            createTab: url => CreateTab(url),
             activateAsync: ActivateAsync,
             closeTab: CloseTab);
         _ipcBridge.WebMessageReceived += msg => WebMessageReceived?.Invoke(msg);
@@ -162,12 +162,14 @@ public sealed class TabEngine : IDisposable
 
     // ──── Tab Lifecycle ────
 
-    public BrowserTab CreateTab(string? url = null)
+    public BrowserTab CreateTab(string? url = null, bool blockDuplicates = true)
     {
         var resolvedUrl = url ?? InternalUrls.NewTab;
 
-        // Block duplicate tabs — switch to existing tab if URL matches
-        if (_settings.BlockDuplicateTabs && !InternalUrls.IsInternal(resolvedUrl))
+        // Block duplicate tabs — switch to existing tab if URL matches.
+        // Restore and duplicate paths pass blockDuplicates: false so they always
+        // create a fresh tab even when the URL is already open.
+        if (blockDuplicates && _settings.BlockDuplicateTabs && !InternalUrls.IsInternal(resolvedUrl))
         {
             var existing = Tabs.FirstOrDefault(t =>
                 string.Equals(t.Url, resolvedUrl, StringComparison.OrdinalIgnoreCase));
@@ -208,7 +210,7 @@ public sealed class TabEngine : IDisposable
         if (_closedTabs.Count == 0) return null;
         var last = _closedTabs.Last!.Value;
         _closedTabs.RemoveLast();
-        var tab = CreateTab(last.url);
+        var tab = CreateTab(last.url, blockDuplicates: false);
         tab.Title = last.title;
         return tab;
     }
@@ -733,11 +735,13 @@ public sealed class TabEngine : IDisposable
 
     private void WireContextMenuEvents(dynamic wv, BrowserTab tab)
     {
-        var typedWv = (Microsoft.Web.WebView2.Wpf.WebView2)wv;
+        // wv is either WebView2 or WebView2CompositionControl depending on
+        // UseFloatingCommandBar. Both expose CoreWebView2, so no cast is needed.
+        CoreWebView2 core = wv.CoreWebView2;
         Handlers.TabContextMenuHandler.Wire(
-            typedWv.CoreWebView2, 
-            _dispatcher, 
-            _settings, 
+            core,
+            _dispatcher,
+            _settings,
             url => { _ = _dispatcher.InvokeAsync(async () => { try { var newTab = CreateTab(url); await ActivateAsync(newTab); } catch (Exception ex) { Trace.WriteLine(ex); } }); },
             () => { _settings.ForceDarkMode = !_settings.ForceDarkMode; }
         );
@@ -765,7 +769,8 @@ public sealed class TabEngine : IDisposable
                     TeardownWebView(tab.Id);
                     tab.IsHibernated = true;
                     tab.IsLoading = false;
-                    tab.Title = $"[Crashed] {tab.Title}";
+                    if (!tab.Title.StartsWith("[Crashed] ", StringComparison.Ordinal))
+                        tab.Title = $"[Crashed] {tab.Title}";
                 }
                 catch (Exception ex) { Trace.WriteLine($"ProcessFailed handler error: {ex.Message}"); }
             });

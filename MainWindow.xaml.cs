@@ -1,14 +1,12 @@
+using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Web.WebView2.Core;
 using StrideBrowser.Engine;
 using StrideBrowser.Interop;
 using StrideBrowser.Models;
@@ -20,8 +18,7 @@ using StrideBrowser.ViewModels;
 namespace StrideBrowser;
 
 /// <summary>
-/// Thin view layer — delegates all logic to BrowserViewModel and TabEngine.
-/// Horizontal toolbar + horizontal tab strip layout.
+/// Thin view layer coordinating UI controllers, shortcuts, and tab strip bindings.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -32,21 +29,21 @@ public partial class MainWindow : Window
     private readonly ISessionStore _sessionStore;
     private readonly IHistoryStore _historyStore;
     private readonly IDownloadStore _downloadStore;
-    private readonly TCLensTransferService _tcLensTransfer;
     private readonly WebMessageRouter _router;
-    private KeyboardShortcutMap? _shortcuts;
     private readonly ThemeManager _themeManager;
+
     private readonly CommandBarController _commandBar;
+    private readonly TabStripController _tabStrip;
+    private readonly WindowLifecycleController _lifecycle;
+    private readonly TCLensLauncher _tcLensLauncher;
     private readonly ToolbarTintAdapter _toolbarTint;
     private readonly SecurityBadgeHelper _securityBadge;
     private readonly LoadingAnimationController _loadingAnim;
 
-    /// <summary>Prevents re-entrant tab selection changes when we programmatically update the ListBox selection.</summary>
-    private bool _isUpdatingSelection;
-    private bool _isFullscreen;
-    private WindowState _preFullscreenState;
-
-
+    private KeyboardShortcutMap? _shortcuts;
+    private WindowChromeManager? _chromeManager;
+    private System.Windows.Threading.DispatcherTimer? _copyTimer;
+    private WindowState _preFullscreenWindowState = WindowState.Normal;
 
     public MainWindow(
         BrowserViewModel vm,
@@ -61,9 +58,6 @@ public partial class MainWindow : Window
         ThemeManager themeManager,
         UpdateService updateService)
     {
-        // We no longer need Deactivated/LocationChanged/SizeChanged hooks 
-        // since the Command Bar is integrated back into the visual tree.
-
         InitializeComponent();
 
         _vm = vm;
@@ -72,75 +66,72 @@ public partial class MainWindow : Window
         _sessionStore = sessionStore;
         _historyStore = historyStore;
         _downloadStore = downloadStore;
-
         _engine = engine;
+        _router = router;
+        _themeManager = themeManager;
+
         _engine.AttachHost(WebViewHost);
 
-        _router = router;
-        _tcLensTransfer = tcLensTransfer;
-        _themeManager = themeManager;
         _router.SettingChanged += OnSettingChanged;
         _router.AddressChanged += OnRouterAddressChanged;
-        
-        updateService.UpdateAvailable += (s, e) => 
+
+        updateService.UpdateAvailable += (s, e) =>
         {
             Dispatcher.Invoke(() => UpdateBadge.Visibility = Visibility.Visible);
         };
 
-        // NetSparkle fires this right before it runs the installer (which overwrites app files),
-        // so the app must exit first. OnClosing persists the session, then closes for good.
         updateService.AppExitRequested += () => Dispatcher.Invoke(() => Application.Current.Shutdown());
 
         _commandBar = new CommandBarController(
             _vm, _engine, CommandBarGrid, CommandBarPanel, AddressBar, StandardAddressBar, UrlLabel, WebViewHost, Dispatcher);
-            
-        new TabStripDragDropBehavior(TabList, (oldIdx, newIdx) => 
+
+        _tabStrip = new TabStripController(
+            TabList, _engine, Dispatcher, () => _commandBar.FocusAddressBar());
+
+        _tcLensLauncher = new TCLensLauncher(_engine, tcLensTransfer);
+
+        _lifecycle = new WindowLifecycleController(
+            this,
+            Toolbar,
+            _engine,
+            _vm,
+            _settingsStore,
+            _sessionStore,
+            OnPostInit,
+            () => _chromeManager?.BringToFront());
+
+        new TabStripDragDropBehavior(TabList, (oldIdx, newIdx) =>
         {
-            _isUpdatingSelection = true;
+            _tabStrip.IsUpdatingSelection = true;
             try { _engine.Tabs.Move(oldIdx, newIdx); }
-            finally { _isUpdatingSelection = false; }
+            finally { _tabStrip.IsUpdatingSelection = false; }
         });
-        
+
         _toolbarTint = new ToolbarTintAdapter(Toolbar);
         _securityBadge = new SecurityBadgeHelper(SecurityIcon, StandardSecurityIcon, _vm.Settings);
         _loadingAnim = new LoadingAnimationController(LoadingIndicator, LoadingBar);
-        
-        _themeManager.ThemeChanged += () =>
-        {
-            var themeStr = _themeManager.GetThemeString();
-            var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
-            foreach (var tab in _engine.Tabs)
-            {
-                if (tab.Url?.StartsWith("internal://") == true || string.IsNullOrEmpty(tab.Url))
-                {
-                    _engine.ExecuteScript(tab.Id, js);
-                }
-            }
-            _engine.ApplyAppThemeToWebViews();
-        };
+
+        _themeManager.ThemeChanged += OnThemeManagerChanged;
 
         DataContext = _vm;
 
-        // Attach event handlers
         WireEngineEvents();
 
-        // Apply saved accent color
         if (_vm.Settings.AccentColor != "#D4A574")
             ApplyAccentColor(_vm.Settings.AccentColor);
 
-        Loaded += OnWindowLoaded;
+        Loaded += _lifecycle.OnWindowLoaded;
     }
-    private WindowChromeManager? _chromeManager;
 
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
-        
+
         _chromeManager = new WindowChromeManager(this)
         {
             OnMouseHWheel = delta =>
             {
-                var scrollViewer = GetScrollViewer(TabList);
+                var scrollViewer = TabStripController.GetScrollViewer(TabList);
                 if (scrollViewer != null)
                 {
                     scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + (delta * 0.5));
@@ -150,58 +141,25 @@ public partial class MainWindow : Window
         _chromeManager.Initialize();
     }
 
-    private const int WM_MOUSEHWHEEL = 0x020E;
-
-
-
-    // ───────────────────── Initialization ─────────────────────
-
-    private async void OnWindowLoaded(object sender, RoutedEventArgs e)
+    private void OnPostInit()
     {
-        try
-        {
-            await _engine.InitializeAsync();
-
-            _shortcuts = BuildShortcutMap();
-            _shortcuts.RebuildBindings(_vm.Settings.CustomShortcuts);
-
-            await RestoreSessionOrCreateTab();
-            SyncTabsBinding();
-            // Don't auto-open command bar on startup
-
-            await HandleCommandLineUrls();
-
-            SingleInstanceManager.InstanceMessageReceived += OnInstanceMessageReceived;
-
-            if (!DefaultBrowserRegistrar.IsRegistered())
-                DefaultBrowserRegistrar.Register();
-
-
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"OnWindowLoaded failed: {ex}");
-        }
+        _shortcuts = BuildShortcutMap();
+        _shortcuts.RebuildBindings(_vm.Settings.CustomShortcuts);
+        _tabStrip.SyncTabsBinding();
     }
 
-    private void OnInstanceMessageReceived(string[] args)
+    private void OnThemeManagerChanged()
     {
-        Dispatcher.InvokeAsync(async () =>
+        var themeStr = _themeManager.GetThemeString();
+        var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
+        foreach (var tab in _engine.Tabs)
         {
-            foreach (var arg in args)
+            if (tab.Url?.StartsWith("internal://") == true || string.IsNullOrEmpty(tab.Url))
             {
-                if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                    arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                {
-                    var tab = _engine.CreateTab(arg);
-                    _engine.SwitchTo(tab);
-                    await _engine.ActivateAsync(tab);
-                    break;
-                }
+                _engine.ExecuteScript(tab.Id, js);
             }
-
-            _chromeManager?.BringToFront();
-        });
+        }
+        _engine.ApplyAppThemeToWebViews();
     }
 
     private KeyboardShortcutMap BuildShortcutMap()
@@ -212,12 +170,12 @@ public partial class MainWindow : Window
             {
                 FocusAddressBar = () => { _commandBar.FocusAddressBar(); return Task.CompletedTask; },
                 SaveAllTabs = () => { SaveAllTabs_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-                CycleTab = async reverse => await CycleTabAsync(reverse),
-                ToggleFullscreen = () => { ToggleFullscreen(); return Task.CompletedTask; },
-                IsFullscreen = () => _isFullscreen,
+                CycleTab = async reverse => await _tabStrip.CycleTabAsync(reverse),
+                ToggleFullscreen = () => { _lifecycle.ToggleFullscreen(); return Task.CompletedTask; },
+                IsFullscreen = () => _lifecycle.IsFullscreen,
                 OpenHistory = OpenHistoryTab,
                 OpenDownloads = OpenDownloadsTab,
-                SwitchToTabIndex = SwitchToTabByIndex,
+                SwitchToTabIndex = _tabStrip.SwitchToTabByIndex,
                 CopyUrl = CopyUrlToClipboard,
                 SendAllToOneTab = () => _engine.SendAllToOneTab(),
                 SaveOneTabGroup = entries =>
@@ -230,95 +188,11 @@ public partial class MainWindow : Window
                     };
                     _oneTabStore.AddGroup(group);
                 },
-                SyncTabsBinding = SyncTabsBinding,
+                SyncTabsBinding = _tabStrip.SyncTabsBinding,
                 OpenOneTab = OpenOneTabPage,
                 OpenSettings = () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-                LaunchTCLens = LaunchTCLensAsync
+                LaunchTCLens = _tcLensLauncher.LaunchTCLensAsync
             });
-    }
-
-    private async Task LaunchTCLensAsync()
-    {
-        var wv = _engine.GetCoreWebView2();
-        if (wv != null)
-        {
-            try
-            {
-                var exts = await wv.Profile.GetBrowserExtensionsAsync();
-                foreach (var ex in exts) {
-                }
-                var tcLens = exts.FirstOrDefault(e => e.Name.Contains("T&C Lens", StringComparison.OrdinalIgnoreCase) || e.Name.Contains("T-C", StringComparison.OrdinalIgnoreCase));
-                if (tcLens != null)
-                {
-                    var url = $"extension://{tcLens.Id}/options/options.html";
-                    
-                    // Look for existing tab
-                    var existing = _engine.Tabs.FirstOrDefault(t => t.Url != null && t.Url.StartsWith($"extension://{tcLens.Id}/options"));
-                    if (existing != null)
-                    {
-                        _engine.SwitchTo(existing);
-                    }
-                    else
-                    {
-                        var tab = _engine.CreateTab(url);
-                        _engine.SwitchTo(tab);
-                        await _engine.ActivateAsync(tab);
-                    }
-                }
-                else
-                {
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Trace.WriteLine($"Failed to launch T&C Lens: {ex.Message}");
-            }
-        }
-    }
-
-    private async Task RestoreSessionOrCreateTab()
-    {
-        var restored = false;
-        if (_vm.Settings.RestoreSessionOnStartup)
-        {
-            var session = _sessionStore.Load();
-            if (session.Count > 0)
-            {
-                foreach (var entry in session)
-                {
-                    var tab = _engine.CreateTab(entry.Url);
-                    tab.Title = entry.Title;
-                    tab.IsPinned = entry.IsPinned;
-                    _ = _engine.LoadFaviconAsync(tab);
-                }
-                _engine.SwitchTo(_engine.Tabs[0]);
-                await _engine.ActivateAsync(_engine.Tabs[0]);
-                restored = true;
-            }
-        }
-
-        if (!restored)
-        {
-            var tab = _engine.CreateTab();
-            _engine.SwitchTo(tab);
-            await _engine.ActivateAsync(tab);
-        }
-    }
-
-    private async Task HandleCommandLineUrls()
-    {
-        var args = Environment.GetCommandLineArgs();
-        foreach (var arg in args.Skip(1))
-        {
-            if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            {
-                var tab = _engine.CreateTab(arg);
-                _engine.SwitchTo(tab);
-                await _engine.ActivateAsync(tab);
-                break;
-            }
-        }
     }
 
     private void WireEngineEvents()
@@ -327,6 +201,7 @@ public partial class MainWindow : Window
         {
             if (isFullScreen)
             {
+                _preFullscreenWindowState = WindowState;
                 Toolbar.Visibility = Visibility.Collapsed;
                 WindowState = WindowState.Normal;
                 ResizeMode = ResizeMode.NoResize;
@@ -336,6 +211,7 @@ public partial class MainWindow : Window
             {
                 Toolbar.Visibility = Visibility.Visible;
                 ResizeMode = ResizeMode.CanResize;
+                WindowState = _preFullscreenWindowState;
             }
         };
 
@@ -347,13 +223,7 @@ public partial class MainWindow : Window
                 _securityBadge.UpdateSecurityIcon(tab.Url);
                 _commandBar.UpdateUrlLabel(tab);
                 _toolbarTint.UpdateTint(tab);
-                _isUpdatingSelection = true;
-                try
-                {
-                    if (TabList.SelectedItem != tab)
-                        TabList.SelectedItem = tab;
-                }
-                finally { _isUpdatingSelection = false; }
+                _tabStrip.HandleTabSelection(tab);
 
                 try
                 {
@@ -361,7 +231,7 @@ public partial class MainWindow : Window
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Trace.WriteLine($"TabStateChanged activation failed: {ex}");
+                    Trace.WriteLine($"TabStateChanged activation failed: {ex}");
                 }
             }
         };
@@ -388,156 +258,29 @@ public partial class MainWindow : Window
         };
 
         _engine.WebMessageReceived += HandleWebMessage;
-        _engine.TabCreated += tab =>
-        {
-        };
     }
 
-    private void SyncTabsBinding()
-    {
-        TabList.ItemsSource = _engine.Tabs;
-    }
+    // ───────────────────── Tab Strip Event Handlers ─────────────────────
 
-    // ───────────────────── Tab Events ─────────────────────
+    private void TabList_PreviewMouseWheel(object sender, MouseWheelEventArgs e) =>
+        _tabStrip.OnPreviewMouseWheel(sender, e);
 
-    private void TabList_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
-    {
-        var scrollViewer = GetScrollViewer(TabList);
-        if (scrollViewer != null)
-        {
-            // Use e.Delta to support smooth precision trackpad scrolling
-            // e.Delta is typically 120 for a mouse wheel notch, and smaller values for trackpads.
-            scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - (e.Delta * 0.5));
-            e.Handled = true;
-        }
-    }
+    private void TabList_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
+        _tabStrip.OnSelectionChanged(sender, e);
 
-    private ScrollViewer? GetScrollViewer(DependencyObject depObj)
-    {
-        if (depObj is ScrollViewer sv) return sv;
-        for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(depObj); i++)
-        {
-            var child = System.Windows.Media.VisualTreeHelper.GetChild(depObj, i);
-            var result = GetScrollViewer(child);
-            if (result != null) return result;
-        }
-        return null;
-    }
-    private async void TabList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_isUpdatingSelection) return;
-
-        var listBox = (ListBox)sender;
-        if (listBox.SelectedItem is not BrowserTab tab || tab == _engine.ActiveTab) return;
-
-        _isUpdatingSelection = true;
-        try
-        {
-            _engine.SwitchTo(tab);
-        }
-        finally { _isUpdatingSelection = false; }
-
-        Dispatcher.InvokeAsync(async () =>
-        {
-            try
-            {
-                await _engine.ActivateAsync(tab);
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"TabList_SelectionChanged activation failed: {ex}");
-            }
-        }, System.Windows.Threading.DispatcherPriority.Loaded);
-    }
-
-    private async void NewTab_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var tab = _engine.CreateTab();
-            _engine.SwitchTo(tab);
-            await _engine.ActivateAsync(tab);
-            _commandBar.FocusAddressBar();
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"NewTab_Click failed: {ex}");
-        }
-    }
+    private async void NewTab_Click(object sender, RoutedEventArgs e) =>
+        await _tabStrip.CreateNewTabAsync();
 
     private void CloseTab_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button b && b.Tag is BrowserTab tab)
-        {
-            if (tab.IsPinned) return;
-            _engine.CloseTab(tab);
-        }
+            _tabStrip.CloseTab(tab);
     }
 
-    private async void Downloads_Click(object sender, RoutedEventArgs e)
-    {
-        await OpenDownloadsTab();
-    }
+    private void TabItem_RightClick(object sender, MouseButtonEventArgs e) =>
+        _tabStrip.OnTabItemRightClick(sender, e);
 
-    private void TabItem_RightClick(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is not Grid grid || grid.Tag is not BrowserTab tab) return;
-
-        var menu = new ContextMenu();
-
-        var pinItem = new MenuItem
-        {
-            Header = tab.IsPinned ? "Unpin Tab" : "Pin Tab",
-        };
-        pinItem.Click += (_, _) => 
-        {
-            tab.IsPinned = !tab.IsPinned;
-            if (tab.IsPinned)
-            {
-                var index = _engine.Tabs.IndexOf(tab);
-                if (index > 0)
-                {
-                    _engine.Tabs.Move(index, 0);
-                }
-            }
-        };
-        menu.Items.Add(pinItem);
-
-        var dupeItem = new MenuItem
-        {
-            Header = "Duplicate Tab",
-        };
-        dupeItem.Click += async (_, _) =>
-        {
-            try
-            {
-                var newTab = _engine.CreateTab(tab.Url);
-                _engine.SwitchTo(newTab);
-                await _engine.ActivateAsync(newTab);
-            }
-            catch (Exception ex) { Trace.WriteLine($"Duplicate tab error: {ex.Message}"); }
-        };
-        menu.Items.Add(dupeItem);
-
-        if (!tab.IsPinned)
-        {
-            menu.Items.Add(new Separator());
-            var closeItem = new MenuItem
-            {
-                Header = "Close Tab",
-            };
-            closeItem.Click += (_, _) => _engine.CloseTab(tab);
-            menu.Items.Add(closeItem);
-        }
-
-        grid.ContextMenu = menu;
-        menu.IsOpen = true;
-        e.Handled = true;
-    }
-
-    // ───────────────────── Navigation ─────────────────────
-
-
+    // ───────────────────── Navigation & Address Bar ─────────────────────
 
     private void AddressBar_KeyDown(object sender, KeyEventArgs e)
     {
@@ -568,7 +311,6 @@ public partial class MainWindow : Window
         if (e.Key != Key.Enter) return;
         e.Handled = true;
 
-        // If a suggestion is selected, use it; otherwise use typed text
         string? input;
         if (_vm.ShowSuggestions && _vm.SelectedSuggestionIndex >= 0
             && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
@@ -577,7 +319,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            input = (sender as System.Windows.Controls.TextBox)?.Text?.Trim() ?? _vm.AddressText?.Trim();
+            input = (sender as TextBox)?.Text?.Trim() ?? _vm.AddressText?.Trim();
         }
 
         if (string.IsNullOrEmpty(input)) return;
@@ -610,37 +352,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task HandleNativeTCLensShortcutAsync()
-    {
-        try
-        {
-            var activeTab = _engine.ActiveTab;
-            if (activeTab == null) return;
-            var wv = _engine.GetCoreWebView2();
-            if (wv == null) return;
+    private void AddressBar_LostFocus(object sender, RoutedEventArgs e) { }
 
-            var rawJson = await wv.ExecuteScriptAsync("document.body.innerText");
-            if (!string.IsNullOrEmpty(rawJson) && rawJson != "null")
-            {
-                _tcLensTransfer.PendingText = System.Text.Json.JsonSerializer.Deserialize<string>(rawJson) ?? "";
-            }
-            _tcLensTransfer.PendingUrl = activeTab.Url ?? "";
-            _tcLensTransfer.PendingTitle = activeTab.Title ?? "";
-
-            var newTab = _engine.CreateTab("http://local.assets/TCLens/options/options.html");
-            _engine.SwitchTo(newTab);
-            await _engine.ActivateAsync(newTab);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"HandleNativeTCLensShortcutAsync failed: {ex}");
-        }
-    }
-
-    // ───────────────────── Interop Helpers ─────────────────────
-
-
-
+    private void AddressBar_TextChanged(object sender, TextChangedEventArgs e) =>
+        _commandBar.HandleAddressTextChanged(sender as TextBox);
 
     private void UrlLabel_Click(object sender, MouseButtonEventArgs e)
     {
@@ -654,7 +369,7 @@ public partial class MainWindow : Window
         {
             _vm.ShowSuggestions = false;
             if (_engine.ActiveTab != null)
-            _commandBar.UpdateUrlLabel(_engine.ActiveTab);
+                _commandBar.UpdateUrlLabel(_engine.ActiveTab);
             WebViewHost.Focus();
             e.Handled = true;
             return;
@@ -698,25 +413,18 @@ public partial class MainWindow : Window
             _vm.AddressText = url;
             _engine.Navigate(tab, url);
         }
-        
+
         _vm.ShowSuggestions = false;
         WebViewHost.Focus();
     }
 
-    private void StandardAddressBar_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
-    {
+    private void StandardAddressBar_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) =>
         StandardAddressBar.Dispatcher.InvokeAsync(() => StandardAddressBar.SelectAll());
-    }
 
-    private void StandardAddressBar_LostFocus(object sender, RoutedEventArgs e)
-    {
-        // Do not auto-close to allow MouseUp to fire on the list
-    }
+    private void StandardAddressBar_LostFocus(object sender, RoutedEventArgs e) { }
 
-    private void StandardAddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
-    {
+    private void StandardAddressBar_TextChanged(object sender, TextChangedEventArgs e) =>
         _commandBar.HandleAddressTextChanged(sender as TextBox);
-    }
 
     private void StandardSuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
     {
@@ -727,24 +435,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CommandBarBackdrop_Click(object sender, MouseButtonEventArgs e)
-    {
-        _commandBar.HideCommandBar();
-    }
-
-    private void AddressBar_LostFocus(object sender, RoutedEventArgs e)
-    {
-        // Don't auto-close — only close on Escape, Enter, or backdrop click
-        // This prevents the race condition where it closes immediately
-    }
-
-    private void AddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
-    {
-        _commandBar.HandleAddressTextChanged(sender as TextBox);
-    }
-
-
-
     private void SuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
     {
         if (_vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
@@ -754,54 +444,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private void NavigateToSuggestion(string input)
-    {
-        var url = _vm.ResolveInput(input);
-        if (_engine.ActiveTab is { } tab)
-        {
-            tab.Url = url;
-            _vm.AddressText = url;
-            _engine.Navigate(tab, url);
-        }
-        _vm.ShowSuggestions = false;
-    }
+    private void CommandBarBackdrop_Click(object sender, MouseButtonEventArgs e) =>
+        _commandBar.HideCommandBar();
 
-    private void UpdateUrlLabel(BrowserTab tab)
-    {
-        if (!StandardAddressBar.IsKeyboardFocusWithin)
-        {
-            StandardAddressBar.Text = tab.Url;
-        }
-
-        if (string.IsNullOrEmpty(tab.Url) || InternalUrls.IsInternal(tab.Url))
-        {
-            UrlLabel.Text = tab.Title ?? "New Tab";
-            return;
-        }
-
-        try
-        {
-            var uri = new Uri(tab.Url);
-            var host = uri.Host;
-            if (host.StartsWith("www.")) host = host[4..];
-            UrlLabel.Text = host;
-        }
-        catch
-        {
-            UrlLabel.Text = tab.Title ?? tab.Url;
-        }
-    }
-
-    // ───────────────────── Adaptive Site Tinting ─────────────────────
-    // Uses the page's actual theme color (extracted by ContentScriptInjector JS)
-    // and applies it directly to the entire toolbar chrome for a seamless look.
-    // 400ms smooth QuadraticEase transition.
-
-
-
-
-
-    // ───────────────────── OneTab ─────────────────────
+    // ───────────────────── Internal Pages ─────────────────────
 
     private async void OneTab_Click(object sender, RoutedEventArgs e) => await OpenOneTabPage();
 
@@ -850,13 +496,13 @@ public partial class MainWindow : Window
             await _engine.ActivateAsync(freshTab);
 
             var oldTabs = _engine.Tabs.Where(t => t.Id != freshTab.Id).ToList();
-            _isUpdatingSelection = true;
+            _tabStrip.IsUpdatingSelection = true;
             try
             {
                 foreach (var old in oldTabs)
                     _engine.CloseTab(old);
             }
-            finally { _isUpdatingSelection = false; }
+            finally { _tabStrip.IsUpdatingSelection = false; }
 
             _commandBar.FocusAddressBar();
         }
@@ -866,7 +512,52 @@ public partial class MainWindow : Window
         }
     }
 
-    // ───────────────────── Web Messages (delegated to router) ─────
+    private async void Downloads_Click(object sender, RoutedEventArgs e) => await OpenDownloadsTab();
+
+    private async Task OpenDownloadsTab()
+    {
+        try
+        {
+            var tab = _engine.CreateTab(InternalUrls.Downloads);
+            tab.Title = "Downloads";
+            _engine.SwitchTo(tab);
+            await _engine.ActivateAsync(tab);
+            _engine.NavigateToDownloads(tab);
+        }
+        catch (Exception ex) { Trace.WriteLine($"Downloads open failed: {ex}"); }
+    }
+
+    private async Task OpenHistoryTab()
+    {
+        try
+        {
+            var tab = _engine.CreateTab(InternalUrls.History);
+            tab.Title = "History";
+            _engine.SwitchTo(tab);
+            await _engine.ActivateAsync(tab);
+            var entries = _historyStore.Load();
+            _engine.NavigateToHistory(tab, entries);
+        }
+        catch (Exception ex) { Trace.WriteLine($"History open failed: {ex}"); }
+    }
+
+    private async void Settings_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var tab = _engine.CreateTab(InternalUrls.Settings);
+            tab.Title = "Settings";
+            _engine.SwitchTo(tab);
+            await _engine.ActivateAsync(tab);
+            _engine.NavigateToSettings(tab, _vm.Settings);
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Settings_Click failed: {ex}");
+        }
+    }
+
+    // ───────────────────── Web Message Dispatch ─────────────────────
 
     private async void HandleWebMessage(string message)
     {
@@ -886,8 +577,6 @@ public partial class MainWindow : Window
     {
         if (key == "darkMode")
         {
-            // Native dark mode (WebContentsForceDark) takes effect at engine init — a restart is required.
-            // Show a banner on the settings page to inform the user.
             var msg = _vm.Settings.ForceDarkMode ? "Dark mode enabled" : "Dark mode disabled";
             var js = $@"(function() {{
                 var existing = document.getElementById('stride-restart-banner');
@@ -906,32 +595,17 @@ public partial class MainWindow : Window
             }
         }
 
-
         if (key == "appTheme")
         {
-            var themeStr = _themeManager.GetThemeString();
-            var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
-            foreach (var tab in _engine.Tabs)
-            {
-                if (tab.Url?.StartsWith("internal://") == true || string.IsNullOrEmpty(tab.Url))
-                {
-                    _engine.ExecuteScript(tab.Id, js);
-                }
-            }
-            _engine.ApplyAppThemeToWebViews();
+            OnThemeManagerChanged();
         }
 
         if (key == "accentColor")
             ApplyAccentColor(_vm.Settings.AccentColor);
 
-        // Live-rebuild shortcut bindings when user rebinds a key
         if (key is "shortcut" or "shortcutReset")
             _shortcuts?.RebuildBindings(_vm.Settings.CustomShortcuts);
 
-        // Removed: Reloading the settings page here causes it to jump back to the General tab
-        // whenever the user changes any setting. The frontend UI updates itself.
-
-        // Live-refresh new tab pages when shortcuts are added/removed
         if (key == "shortcuts")
         {
             foreach (var tab in _engine.Tabs)
@@ -950,23 +624,20 @@ public partial class MainWindow : Window
             var brush = new SolidColorBrush(color);
             brush.Freeze();
 
-            // Update accent color & brush
             Application.Current.Resources["AccentColor"] = color;
             Application.Current.Resources["Accent"] = brush;
 
-            // Update accent wash (10% opacity version)
             var wash = new SolidColorBrush(Color.FromArgb(0x1A, color.R, color.G, color.B));
             wash.Freeze();
             Application.Current.Resources["AccentWash"] = wash;
 
-            // Update loading bar gradient to match accent
             Application.Current.Resources["LoadingBarGlowColor"] = color;
             Application.Current.Resources["LoadingBarFadeColor"] = Color.FromArgb(0x00, color.R, color.G, color.B);
         }
         catch { /* ignore invalid color strings */ }
     }
 
-    // ──── Keyboard shortcuts ────
+    // ───────────────────── Keyboard Shortcuts & Input ─────────────────────
 
     private async void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
@@ -976,10 +647,10 @@ public partial class MainWindow : Window
             {
                 var modifiers = Keyboard.Modifiers;
                 var actualKey = e.Key == Key.System ? e.SystemKey : e.Key;
-                
+
                 if (modifiers == ModifierKeys.Alt && actualKey == Key.T)
                 {
-                    await HandleNativeTCLensShortcutAsync();
+                    await _tcLensLauncher.HandleNativeTCLensShortcutAsync();
                     e.Handled = true;
                     return;
                 }
@@ -990,23 +661,23 @@ public partial class MainWindow : Window
                     e.Handled = true;
                     return;
                 }
+
                 if (modifiers == ModifierKeys.Control && actualKey >= Key.D1 && actualKey <= Key.D9)
                 {
                     var tabIndex = actualKey - Key.D1;
                     if (actualKey == Key.D9)
                         tabIndex = _engine.Tabs.Count - 1;
-                    await SwitchToTabByIndex(tabIndex);
+                    await _tabStrip.SwitchToTabByIndex(tabIndex);
                     e.Handled = true;
                     return;
                 }
 
-                // Alt+1–9: also switch tabs (user preference)
                 if (modifiers == ModifierKeys.Alt && actualKey >= Key.D1 && actualKey <= Key.D9)
                 {
                     var tabIndex = actualKey - Key.D1;
                     if (actualKey == Key.D9)
                         tabIndex = _engine.Tabs.Count - 1;
-                    await SwitchToTabByIndex(tabIndex);
+                    await _tabStrip.SwitchToTabByIndex(tabIndex);
                     e.Handled = true;
                     return;
                 }
@@ -1017,105 +688,6 @@ public partial class MainWindow : Window
             Trace.WriteLine($"PreviewKeyDown failed: {ex}");
         }
     }
-
-    private async void Settings_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var tab = _engine.CreateTab(InternalUrls.Settings);
-            tab.Title = "Settings";
-            _engine.SwitchTo(tab);
-            await _engine.ActivateAsync(tab);
-            _engine.NavigateToSettings(tab, _vm.Settings);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"Settings_Click failed: {ex}");
-        }
-    }
-
-    // ───────────────────── Title Bar ─────────────────────
-
-    private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount == 2)
-            ToggleMaximize();
-        else if (e.LeftButton == MouseButtonState.Pressed)
-        {
-            try { DragMove(); }
-            catch (InvalidOperationException) { /* Mouse released during drag */ }
-        }
-    }
-
-    private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
-    private void Maximize_Click(object sender, RoutedEventArgs e) => ToggleMaximize();
-    private void Close_Click(object sender, RoutedEventArgs e) => Close();
-
-    private void ToggleMaximize() =>
-        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-
-    private void ToggleFullscreen()
-    {
-        _isFullscreen = !_isFullscreen;
-        if (_isFullscreen)
-        {
-            _preFullscreenState = WindowState;
-            Toolbar.Visibility = Visibility.Collapsed;
-            WindowState = WindowState.Maximized;
-        }
-        else
-        {
-            Toolbar.Visibility = Visibility.Visible;
-            WindowState = _preFullscreenState;
-        }
-    }
-
-
-
-    private void ZoomIndicator_Click(object sender, MouseButtonEventArgs e)
-    {
-        _engine.ResetZoom();
-    }
-
-    // OnKeyDown logic moved to Window_PreviewKeyDown to handle WebView2 focus
-
-    private async Task SwitchToTabByIndex(int tabIndex)
-    {
-        if (tabIndex >= 0 && tabIndex < _engine.Tabs.Count)
-        {
-            _engine.SwitchTo(_engine.Tabs[tabIndex]);
-            await _engine.ActivateAsync(_engine.Tabs[tabIndex]);
-        }
-    }
-
-    private async Task OpenHistoryTab()
-    {
-        try
-        {
-            var tab = _engine.CreateTab(InternalUrls.History);
-            tab.Title = "History";
-            _engine.SwitchTo(tab);
-            await _engine.ActivateAsync(tab);
-            var entries = _historyStore.Load();
-            _engine.NavigateToHistory(tab, entries);
-        }
-        catch (Exception ex) { Trace.WriteLine($"History open failed: {ex}"); }
-    }
-
-    private async Task OpenDownloadsTab()
-    {
-        try
-        {
-            var tab = _engine.CreateTab(InternalUrls.Downloads);
-            tab.Title = "Downloads";
-            _engine.SwitchTo(tab);
-            await _engine.ActivateAsync(tab);
-            _engine.NavigateToDownloads(tab);
-        }
-        catch (Exception ex) { Trace.WriteLine($"Downloads open failed: {ex}"); }
-    }
-
-    private System.Windows.Threading.DispatcherTimer? _copyTimer;
 
     private void CopyUrlToClipboard(string url)
     {
@@ -1138,72 +710,29 @@ public partial class MainWindow : Window
         Title = "Stride";
     }
 
-    private async Task CycleTabAsync(bool reverse)
+    // ───────────────────── Title Bar & Window Chrome ─────────────────────
+
+    private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (_engine.Tabs.Count <= 1 || _engine.ActiveTab is null) return;
-
-        var index = _engine.Tabs.IndexOf(_engine.ActiveTab);
-        var next = reverse
-            ? (index - 1 + _engine.Tabs.Count) % _engine.Tabs.Count
-            : (index + 1) % _engine.Tabs.Count;
-
-        _engine.SwitchTo(_engine.Tabs[next]);
-        await _engine.ActivateAsync(_engine.ActiveTab!);
-    }
-
-    // ───────────────────── Cleanup ─────────────────────
-
-    private bool _isShuttingDown;
-
-    protected override async void OnClosing(System.ComponentModel.CancelEventArgs e)
-    {
-        if (_isShuttingDown)
+        if (e.ClickCount == 2)
+            ToggleMaximize();
+        else if (e.LeftButton == MouseButtonState.Pressed)
         {
-            base.OnClosing(e);
-            return;
-        }
-
-        e.Cancel = true;
-        _isShuttingDown = true;
-
-        try
-        {
-            if (_vm.Settings.RestoreSessionOnStartup)
-            {
-                var tabs = _engine.Tabs
-                    .Where(t => !InternalUrls.IsInternal(t.Url))
-                    .Select(t => (t.Url, t.Title, t.IsPinned));
-                _sessionStore.Save(tabs);
-            }
-
-            if (_vm.Settings.ClearDataOnExit)
-            {
-                try
-                {
-                    var profile = _engine.GetCoreWebView2()?.Profile;
-                    if (profile is not null)
-                    {
-                        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                        await profile.ClearBrowsingDataAsync().WaitAsync(cts.Token);
-                    }
-                }
-                catch { /* Timeout or disposal — best-effort cleanup */ }
-            }
-
-            _settingsStore.Save(_vm.Settings);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"OnClosing save failed: {ex}");
-        }
-        finally
-        {
-            try { _engine.Shutdown(); }
-            catch (Exception ex) { Trace.WriteLine($"Engine shutdown failed: {ex}"); }
-
-            Application.Current.Dispatcher.InvokeAsync(() => Close(), System.Windows.Threading.DispatcherPriority.Normal);
+            try { DragMove(); }
+            catch (InvalidOperationException) { /* Mouse released during drag */ }
         }
     }
 
+    private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    private void Maximize_Click(object sender, RoutedEventArgs e) => ToggleMaximize();
+    private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void ToggleMaximize() =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void ZoomIndicator_Click(object sender, MouseButtonEventArgs e) =>
+        _engine.ResetZoom();
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e) =>
+        _lifecycle.OnClosing(e);
 }
-

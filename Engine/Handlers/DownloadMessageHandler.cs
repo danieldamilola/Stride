@@ -100,45 +100,9 @@ public class DownloadMessageHandler : IWebMessageHandler
             State = DownloadState.InProgress
         };
         _downloadStore.Add(item);
-        
-        try
-        {
-            using var client = new System.Net.Http.HttpClient();
-            using var response = await client.GetAsync(url, System.Net.Http.HttpCompletionOption.ResponseHeadersRead);
-            response.EnsureSuccessStatusCode();
-            
-            item.TotalBytes = response.Content.Headers.ContentLength ?? 0;
-            
-            using var contentStream = await response.Content.ReadAsStreamAsync();
-            using var fileStream = new System.IO.FileStream(filePath, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, 8192, true);
-            
-            var buffer = new byte[8192];
-            var isMoreToRead = true;
-            long totalRead = 0;
-            
-            do
-            {
-                var read = await contentStream.ReadAsync(buffer, 0, buffer.Length);
-                if (read == 0)
-                {
-                    isMoreToRead = false;
-                }
-                else
-                {
-                    await fileStream.WriteAsync(buffer, 0, read);
-                    totalRead += read;
-                    item.ReceivedBytes = totalRead;
-                }
-            }
-            while (isMoreToRead);
-            
-            item.State = DownloadState.Completed;
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"Native download failed: {ex.Message}");
-            item.State = DownloadState.Failed;
-        }
+
+        // Transfer runs in CustomDownloadManager so Pause/Cancel can abort it.
+        await _customDownloadManager.StartDownloadAsync(item);
     }
 
     private Task HandleDownloadPause(string id)

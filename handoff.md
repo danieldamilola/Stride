@@ -8,6 +8,21 @@
 
 ## Changelog (release-notes ready)
 
+### 2026-08-17 — R6 Tests + cosmetics (F10/F11)
+
+- **Pure navigation predicates** (`Engine\NavigationPolicyEngine.cs`): Extracted `IsCustomProtocol(uri, out scheme)`, `IsBlockedFocusHost(uri, out host)`, and `ShouldUpgradeToHttps(uri, out httpsUrl)` with WebView2-free signatures. `EvaluateAndHandle` is now a thin adapter.
+- **Unit tests added** (`StrideBrowser.Tests\NavigationPolicyEngineTests.cs`, 37 new test cases): HTTPS upgrade rules (standard web URLs vs localhost/IPs/non-HTTP), custom protocol detection (desktop apps vs web/internal schemes), and Focus mode blocklist matching.
+- **Cosmetic cleanup**: Removed dead empty `TabCreated` delegate registration in `MainWindow.xaml.cs` and unused `using StrideBrowser.ViewModels;` import in `App.xaml.cs`.
+- 76/76 tests passing; 0 build errors.
+
+### 2026-08-17 — R5 MainWindow decomposition (F2)
+
+- **`Services\UI\TabStripController`** (new, ~180 lines) — handles tab strip interactions: selection change with `IsUpdatingSelection` recursion guard, mouse-wheel horizontal scrolling, context menu (pin/duplicate/close), tab cycling (`CycleTabAsync`), index switching (`SwitchToTabByIndex`), and binding synchronization.
+- **`Services\UI\WindowLifecycleController`** (new, ~200 lines) — coordinates startup initialization (`OnWindowLoaded`, session restore / initial tab creation, command-line URLs, single-instance listener, default browser check), fullscreen state/toggle, and shutdown sequence (`OnClosing` session persistence, clear browsing data, settings save, engine shutdown).
+- **`Services\UI\TCLensLauncher`** (new, ~80 lines) — encapsulates extension options page navigation and native text capture bridge (`HandleNativeTCLensShortcutAsync`), removing dead loops and empty branches.
+- **`MainWindow.xaml.cs`**: Reduced from ~1,210 to 549 lines as a clean UI coordinator.
+- 39/39 tests passing; 0 build errors.
+
 ### 2026-08-17 — Update pipeline rewrite (binary integrity + visible failures)
 
 **Auto-update pipeline fixed end-to-end**
@@ -95,7 +110,7 @@
 - **Update installer integrity:** FIXED (2026-08-17) — see changelog. Installer binaries are Ed25519-verified before install; failures are traced to the log file and surfaced via `UpdateFailed`.
 - **Live update flow:** the local E2E dry run (appcast → download → signature → install step) passes, but the *real* release asset has not been exercised: `appcast.xml` currently carries a signature made by the OLD signer (over the enclosure URL), which NetSparkle rejects. **REQUIRED BEFORE NEXT RELEASE:** re-sign `appcast.xml` with the corrected signer against the real installer — `dotnet run --project tools/UpdateSigner -- sign appcast.xml Releases/Stride-win-Setup.exe tools/signing/ed25519_private.key` — verify it, commit, and confirm `ReleaseNotes.md` resolves at the `releaseNotesLink`.
 - **Build caveat:** if Stride.exe is running, `dotnet build` compiles fine but the copy step fails (MSB3026/3027, file lock).
-- **Architecture roadmap** (from `ARCHITECTURE_AUDIT.md`): R0 baseline ✅ · R1 update pipeline ✅ · R2 docs & test-project naming ✅ · R3a move message handlers to `Engine\Handlers` ✅ · R3b narrow handler dependencies (drop `BrowserViewModel`/router) ✅ · R4 `TabEngine` decomposition (WebViewFactory, WebViewIpcBridge) ✅ · R5 `MainWindow` decomposition (TabStripController, WindowLifecycleController, TCLensLauncher) · R6 navigation predicates + test coverage + dead-code removal · R7 release actions (re-sign appcast, ReleaseNotes.md, release a build).
+- **Architecture roadmap** (from `ARCHITECTURE_AUDIT.md`): R0 baseline ✅ · R1 update pipeline ✅ · R2 docs & test-project naming ✅ · R3a move message handlers to `Engine\Handlers` ✅ · R3b narrow handler dependencies (drop `BrowserViewModel`/router) ✅ · R4 `TabEngine` decomposition (WebViewFactory, WebViewIpcBridge) ✅ · R5 `MainWindow` decomposition (TabStripController, WindowLifecycleController, TCLensLauncher) ✅ · R6 navigation predicates + test coverage + dead-code removal ✅ · R7 release actions (re-sign appcast, ReleaseNotes.md, release a build).
 
 ---
 

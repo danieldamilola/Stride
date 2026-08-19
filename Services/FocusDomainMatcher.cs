@@ -22,6 +22,18 @@ public static class FocusDomainMatcher
     public static bool MatchesBlockedDomain(string host, IReadOnlySet<string> blockedDomains, out string? matchedSuffix)
     {
         var parts = host.Split('.');
+        if (parts.Length == 1)
+        {
+            if (blockedDomains.Contains(host))
+            {
+                matchedSuffix = host;
+                return true;
+            }
+
+            matchedSuffix = null;
+            return false;
+        }
+
         for (var i = 0; i < parts.Length - 1; i++)
         {
             var subHost = string.Join(".", parts.Skip(i));

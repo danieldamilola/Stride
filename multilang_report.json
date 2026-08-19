@@ -1,505 +1,368 @@
 {
   "scanner": "multilang_scanner.py",
-  "files_scanned": 66,
+  "files_scanned": 98,
   "languages": {
-    "csharp": 66
+    "csharp": 98
   },
   "severity_counts": {
-    "critical": 32,
-    "high": 4,
+    "high": 32,
     "medium": 38
   },
   "findings": [
     {
-      "file": "App.xaml.cs",
-      "line": 93,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 358,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 364,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 370,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 376,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 382,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 557,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 564,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 591,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 596,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 658,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 663,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 730,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 801,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 841,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 932,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 1034,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 1189,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 1284,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 1355,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 1464,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 1476,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Helpers\\WindowChromeHelper.cs",
-      "line": 37,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "MainWindow.xaml.cs",
-      "line": 1555,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "PermissionDialogWindow.xaml.cs",
-      "line": 33,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "ScriptDialogWindow.xaml.cs",
-      "line": 54,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Services\\ExtensionManager.cs",
-      "line": 110,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Services\\SingleInstanceManager.cs",
-      "line": 53,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Services\\SingleInstanceManager.cs",
-      "line": 80,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Services\\ThemeManager.cs",
-      "line": 92,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "ViewModels\\BrowserViewModel.cs",
-      "line": 202,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "ViewModels\\BrowserViewModel.cs",
-      "line": 203,
-      "category": "empty_except",
-      "severity": "critical",
-      "detail": "catch block has no statements",
-      "remediation": "Do not swallow the exception. Re-throw, wrap in a typed error, or log with full context before handling."
-    },
-    {
-      "file": "Converters\\InverseBooleanToVisibilityConverter.cs",
-      "line": 21,
-      "category": "stub_marker",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 38,
+      "category": "debug_bleed",
       "severity": "high",
-      "detail": "throw new NotImplementedException();",
-      "remediation": "Either implement the real logic now, or make the stub loudly fail at call time with a typed error naming what's missing - don't leave a silent placeholder."
+      "detail": "Console.Error.WriteLine($\"Error: {ex.Message}\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
     },
     {
-      "file": "Converters\\InverseBooleanToVisibilityConverter.cs",
-      "line": 21,
-      "category": "stub_marker",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 38,
+      "category": "debug_bleed",
       "severity": "high",
-      "detail": "new NotImplementedException()",
-      "remediation": "Either implement the real logic now, or make the stub loudly fail at call time with a typed error naming what's missing - don't leave a silent placeholder."
+      "detail": "Console.Error.WriteLine($\"Error: {ex.Message}\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
     },
     {
-      "file": "Converters\\ProgressToDashArrayConverter.cs",
-      "line": 36,
-      "category": "stub_marker",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 47,
+      "category": "debug_bleed",
       "severity": "high",
-      "detail": "throw new NotImplementedException();",
-      "remediation": "Either implement the real logic now, or make the stub loudly fail at call time with a typed error naming what's missing - don't leave a silent placeholder."
+      "detail": "Console.Error.WriteLine(\"usage: UpdateSigner generate <private-key-output.key>\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
     },
     {
-      "file": "Converters\\ProgressToDashArrayConverter.cs",
-      "line": 36,
-      "category": "stub_marker",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 47,
+      "category": "debug_bleed",
       "severity": "high",
-      "detail": "new NotImplementedException()",
-      "remediation": "Either implement the real logic now, or make the stub loudly fail at call time with a typed error naming what's missing - don't leave a silent placeholder."
+      "detail": "Console.Error.WriteLine(\"usage: UpdateSigner generate <private-key-output.key>\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
     },
     {
-      "file": "Converters\\InverseBooleanToVisibilityConverter.cs",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 55,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine($\"Private key (32-byte seed) written to {args[1]}\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 55,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine($\"Private key (32-byte seed) written to {args[1]}\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 56,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(\"Public key (base64):\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 56,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(\"Public key (base64):\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 57,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(Convert.ToBase64String(publicKey));",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 57,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(Convert.ToBase64String(publicKey))",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 65,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.Error.WriteLine(\"usage: UpdateSigner sign <appcast.xml> <private-key.key>\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 65,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.Error.WriteLine(\"usage: UpdateSigner sign <appcast.xml> <private-key.key>\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 89,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.Error.WriteLine(\"No <enclosure> elements found to sign.\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 89,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.Error.WriteLine(\"No <enclosure> elements found to sign.\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 94,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine($\"Signed {signed} enclosure(s) in {args[1]}\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 94,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine($\"Signed {signed} enclosure(s) in {args[1]}\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 102,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.Error.WriteLine(\"usage: UpdateSigner verify <appcast.xml> <public-key-base64>\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 102,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.Error.WriteLine(\"usage: UpdateSigner verify <appcast.xml> <public-key-base64>\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 117,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine($\"  {(valid ? \"OK\" : \"FAIL\")}  {url}\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 117,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine($\"  {(valid ? \"OK\" : \"FAIL\")}  {url}\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 123,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.Error.WriteLine($\"Verification failed for {failed} enclosure(s).\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 123,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.Error.WriteLine($\"Verification failed for {failed} enclosure(s).\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 127,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine($\"All {ok} signature(s) valid.\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 127,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine($\"All {ok} signature(s) valid.\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 133,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(\"Stride appcast signing tool\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 133,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(\"Stride appcast signing tool\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 134,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(\"  generate <private-key.key>            create a new Ed25519 keypair\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 134,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(\"  generate <private-key.key>            create a new Ed25519 keypair\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 135,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(\"  sign <appcast.xml> <private-key.key>  sign enclosure URLs in the appcast\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 135,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(\"  sign <appcast.xml> <private-key.key>  sign enclosure URLs in the appcast\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 136,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(\"  verify <appcast.xml> <pubkey-base64>  verify enclosure signatures\");",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\tools\\UpdateSigner\\Program.cs",
+      "line": 136,
+      "category": "debug_bleed",
+      "severity": "high",
+      "detail": "Console.WriteLine(\"  verify <appcast.xml> <pubkey-base64>  verify enclosure signatures\")",
+      "remediation": "Remove leftover debug output before merging, or replace with a real structured-logging call gated by log level."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Converters\\InverseBooleanToVisibilityConverter.cs",
       "line": 19,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 1 other function(s), e.g. Converters\\ProgressToDashArrayConverter.cs:34",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Converters\\ProgressToDashArrayConverter.cs:34",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "Converters\\ProgressToDashArrayConverter.cs",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Converters\\ProgressToDashArrayConverter.cs",
       "line": 34,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 1 other function(s), e.g. Converters\\InverseBooleanToVisibilityConverter.cs:19",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Converters\\InverseBooleanToVisibilityConverter.cs:19",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "Engine\\ContentScriptInjector.cs",
-      "line": 25,
-      "category": "god_function",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\ContentScriptInjector.cs",
+      "line": 19,
+      "category": "clone_cluster",
       "severity": "medium",
-      "detail": "191 lines",
-      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\HistoryMessageHandler.cs:14",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "Engine\\StressTestRunner.cs",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\StressTestRunner.cs",
       "line": 15,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. Helpers\\WindowChromeHelper.cs:17",
+      "detail": "structurally duplicates 3 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Helpers\\WindowChromeHelper.cs:17",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "Engine\\StressTestRunner.cs",
-      "line": 20,
-      "category": "god_function",
-      "severity": "medium",
-      "detail": "134 lines",
-      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 385,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\TabEngine.cs",
+      "line": 389,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. Engine\\TabEngine.cs:391",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\TabEngine.cs:394",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "Engine\\TabEngine.cs",
-      "line": 391,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\TabEngine.cs",
+      "line": 394,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. Engine\\TabEngine.cs:385",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\TabEngine.cs:389",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "Engine\\TabEngine.cs",
-      "line": 397,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\TabEngine.cs",
+      "line": 399,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. Engine\\TabEngine.cs:385",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\TabEngine.cs:389",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "Engine\\TabEngine.cs",
-      "line": 494,
-      "category": "god_function",
-      "severity": "medium",
-      "detail": "149 lines",
-      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 705,
-      "category": "god_function",
-      "severity": "medium",
-      "detail": "150 lines",
-      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 902,
-      "category": "god_function",
-      "severity": "medium",
-      "detail": "235 lines",
-      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
-    },
-    {
-      "file": "Engine\\TabEngine.cs",
-      "line": 1138,
-      "category": "god_function",
-      "severity": "medium",
-      "detail": "104 lines",
-      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
-    },
-    {
-      "file": "Helpers\\WindowChromeHelper.cs",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Helpers\\WindowChromeHelper.cs",
       "line": 17,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. Engine\\StressTestRunner.cs:15",
+      "detail": "structurally duplicates 3 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\StressTestRunner.cs:15",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "MainWindow.xaml.cs",
-      "line": 836,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\MainWindow.xaml.cs",
+      "line": 766,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 1 other function(s), e.g. MainWindow.xaml.cs:868",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\MainWindow.xaml.cs:790",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "MainWindow.xaml.cs",
-      "line": 841,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\MainWindow.xaml.cs",
+      "line": 771,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 1 other function(s), e.g. MainWindow.xaml.cs:874",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\MainWindow.xaml.cs:796",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "MainWindow.xaml.cs",
-      "line": 868,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\MainWindow.xaml.cs",
+      "line": 790,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 1 other function(s), e.g. MainWindow.xaml.cs:836",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\MainWindow.xaml.cs:766",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "MainWindow.xaml.cs",
-      "line": 874,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\MainWindow.xaml.cs",
+      "line": 796,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 1 other function(s), e.g. MainWindow.xaml.cs:841",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\MainWindow.xaml.cs:771",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "PermissionDialogWindow.xaml.cs",
-      "line": 52,
-      "category": "clone_cluster",
-      "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. ProtocolDialogWindow.xaml.cs:30",
-      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
-    },
-    {
-      "file": "PermissionDialogWindow.xaml.cs",
-      "line": 58,
-      "category": "clone_cluster",
-      "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. ProtocolDialogWindow.xaml.cs:36",
-      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
-    },
-    {
-      "file": "ProtocolDialogWindow.xaml.cs",
-      "line": 30,
-      "category": "clone_cluster",
-      "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. PermissionDialogWindow.xaml.cs:52",
-      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
-    },
-    {
-      "file": "ProtocolDialogWindow.xaml.cs",
-      "line": 36,
-      "category": "clone_cluster",
-      "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. PermissionDialogWindow.xaml.cs:58",
-      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
-    },
-    {
-      "file": "ScriptDialogWindow.xaml.cs",
-      "line": 89,
-      "category": "clone_cluster",
-      "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. PermissionDialogWindow.xaml.cs:52",
-      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
-    },
-    {
-      "file": "ScriptDialogWindow.xaml.cs",
-      "line": 95,
-      "category": "clone_cluster",
-      "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. PermissionDialogWindow.xaml.cs:58",
-      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
-    },
-    {
-      "file": "Services\\CustomDownloadManager.cs",
-      "line": 45,
-      "category": "god_function",
-      "severity": "medium",
-      "detail": "113 lines",
-      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
-    },
-    {
-      "file": "Services\\DefaultBrowserRegistrar.cs",
-      "line": 24,
-      "category": "god_function",
-      "severity": "medium",
-      "detail": "81 lines",
-      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
-    },
-    {
-      "file": "Services\\Input\\KeyboardShortcutMap.cs",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\Input\\KeyboardShortcutMap.cs",
       "line": 19,
       "category": "god_function",
       "severity": "medium",
@@ -507,100 +370,204 @@
       "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
     },
     {
-      "file": "Services\\NavigationService.cs",
-      "line": 21,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\CoreMessageHandler.cs",
+      "line": 16,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. Engine\\StressTestRunner.cs:15",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\DownloadMessageHandler.cs:18",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "Services\\Pages\\DownloadPage.cs",
-      "line": 10,
-      "category": "clone_cluster",
-      "severity": "medium",
-      "detail": "structurally duplicates 1 other function(s), e.g. Services\\Pages\\HistoryPage.cs:10",
-      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
-    },
-    {
-      "file": "Services\\Pages\\HistoryPage.cs",
-      "line": 10,
-      "category": "clone_cluster",
-      "severity": "medium",
-      "detail": "structurally duplicates 1 other function(s), e.g. Services\\Pages\\DownloadPage.cs:10",
-      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
-    },
-    {
-      "file": "Services\\Pages\\SettingsPage.cs",
-      "line": 11,
-      "category": "god_function",
-      "severity": "medium",
-      "detail": "101 lines",
-      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
-    },
-    {
-      "file": "SpurBrowser.Tests\\FocusDomainMatcherTests.cs",
-      "line": 17,
-      "category": "clone_cluster",
-      "severity": "medium",
-      "detail": "structurally duplicates 1 other function(s), e.g. SpurBrowser.Tests\\FocusDomainMatcherTests.cs:23",
-      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
-    },
-    {
-      "file": "SpurBrowser.Tests\\FocusDomainMatcherTests.cs",
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\CoreMessageHandler.cs",
       "line": 23,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 1 other function(s), e.g. SpurBrowser.Tests\\FocusDomainMatcherTests.cs:17",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\ShortcutMessageHandler.cs:27",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
-      "line": 40,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\CoreMessageHandler.cs",
+      "line": 30,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:46",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\HistoryMessageHandler.cs:26",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
-      "line": 46,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\DownloadMessageHandler.cs",
+      "line": 18,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:40",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\CoreMessageHandler.cs:16",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
-      "line": 52,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\DownloadMessageHandler.cs",
+      "line": 25,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:40",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\OneTabMessageHandler.cs:21",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
-      "line": 58,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\HistoryMessageHandler.cs",
+      "line": 14,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:66",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\ContentScriptInjector.cs:19",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
-      "line": 66,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\HistoryMessageHandler.cs",
+      "line": 26,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:58",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\CoreMessageHandler.cs:30",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
     },
     {
-      "file": "SpurBrowser.Tests\\NavigationServiceTests.cs",
-      "line": 72,
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\OneTabMessageHandler.cs",
+      "line": 15,
       "category": "clone_cluster",
       "severity": "medium",
-      "detail": "structurally duplicates 2 other function(s), e.g. SpurBrowser.Tests\\NavigationServiceTests.cs:58",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\ContentScriptInjector.cs:19",
       "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\OneTabMessageHandler.cs",
+      "line": 21,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\DownloadMessageHandler.cs:25",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\ShortcutMessageHandler.cs",
+      "line": 20,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\CoreMessageHandler.cs:16",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\ShortcutMessageHandler.cs",
+      "line": 27,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\CoreMessageHandler.cs:23",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\MessageHandlers\\TCLensMessageHandler.cs",
+      "line": 14,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 3 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\StressTestRunner.cs:15",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\NavigationService.cs",
+      "line": 21,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 3 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Engine\\StressTestRunner.cs:15",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\Pages\\DownloadPage.cs",
+      "line": 8,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\Pages\\HistoryPage.cs:8",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\Pages\\HistoryPage.cs",
+      "line": 8,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\Pages\\DownloadPage.cs:8",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Services\\Pages\\SettingsPage.cs",
+      "line": 11,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "102 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\FocusDomainMatcherTests.cs",
+      "line": 17,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\FocusDomainMatcherTests.cs:23",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\FocusDomainMatcherTests.cs",
+      "line": 23,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 1 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\FocusDomainMatcherTests.cs:17",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\NavigationServiceTests.cs",
+      "line": 49,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\NavigationServiceTests.cs:57",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\NavigationServiceTests.cs",
+      "line": 57,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\NavigationServiceTests.cs:49",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\NavigationServiceTests.cs",
+      "line": 63,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\NavigationServiceTests.cs:49",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\obj\\Debug\\net9.0-windows10.0.17763.0\\App.g.cs",
+      "line": 48,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\obj\\Debug\\net9.0-windows10.0.17763.0\\BaseBrowserDialogWindow.g.cs:71",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\obj\\Debug\\net9.0-windows10.0.17763.0\\BaseBrowserDialogWindow.g.cs",
+      "line": 71,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\obj\\Debug\\net9.0-windows10.0.17763.0\\App.g.cs:48",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\obj\\Debug\\net9.0-windows10.0.17763.0\\MainWindow.g.cs",
+      "line": 208,
+      "category": "clone_cluster",
+      "severity": "medium",
+      "detail": "structurally duplicates 2 other function(s), e.g. c:\\Users\\ifeol\\Music\\Daniel\\Stride\\obj\\Debug\\net9.0-windows10.0.17763.0\\App.g.cs:48",
+      "remediation": "Extract the shared logic into a single function/module and have all call sites use it, instead of maintaining N copies that will drift."
+    },
+    {
+      "file": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\obj\\Debug\\net9.0-windows10.0.17763.0\\MainWindow.g.cs",
+      "line": 224,
+      "category": "god_function",
+      "severity": "medium",
+      "detail": "244 lines",
+      "remediation": "Break this function into smaller, independently testable units along its natural sub-steps."
     }
   ]
 }

@@ -2,17 +2,16 @@ using System;
 using System.Diagnostics;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
-using Microsoft.Web.WebView2.Wpf;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
 using StrideBrowser.Helpers;
 using StrideBrowser.Interop;
+using StrideBrowser.Models;
+using StrideBrowser.Services;
 
 namespace StrideBrowser.Engine;
 
 /// <summary>
 /// Encapsulates navigation policies: custom protocol handling, focus mode blocks, and HTTPS upgrades.
-/// Separated from TabEngine to clarify lifecycle vs policy logic.
+/// Exposes pure string-level predicates for unit testing alongside WebView2 event adapters.
 /// </summary>
 public sealed class NavigationPolicyEngine
 {
@@ -42,22 +41,81 @@ public sealed class NavigationPolicyEngine
         return false;
     }
 
+    /// <summary>
+    /// Determines whether the URI uses an external custom protocol requiring OS delegation.
+    /// </summary>
+    public static bool IsCustomProtocol(string? uriString, out string? scheme)
+    {
+        scheme = null;
+        if (string.IsNullOrWhiteSpace(uriString) || !Uri.TryCreate(uriString, UriKind.Absolute, out var parsedUri))
+            return false;
+
+        scheme = parsedUri.Scheme.ToLowerInvariant();
+        if (scheme is "http" or "https" or "file" or "data" or
+            "about" or "edge" or "chrome" or "stride" or "javascript" or
+            "extension" or "chrome-extension" or "internal")
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Determines whether the given URI targets a host blocked under active Focus mode.
+    /// </summary>
+    public bool IsBlockedFocusHost(string? uriString, out string? host)
+    {
+        host = null;
+        if (string.IsNullOrWhiteSpace(uriString) || !Uri.TryCreate(uriString, UriKind.Absolute, out var parsedUri))
+            return false;
+
+        host = parsedUri.Host;
+        return !string.IsNullOrEmpty(host) && _focusBlocklistService.IsBlocked(host);
+    }
+
+    /// <summary>
+    /// Determines whether an HTTP URI should be automatically upgraded to HTTPS.
+    /// Returns false for localhost, loopback, IPv4, IPv6, and non-HTTP schemes.
+    /// </summary>
+    public static bool ShouldUpgradeToHttps(string? uriString, out string? httpsUrl)
+    {
+        httpsUrl = null;
+        if (string.IsNullOrWhiteSpace(uriString) || !uriString.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var isLocalHostOrIp = false;
+        if (Uri.TryCreate(uriString, UriKind.Absolute, out var parsedUri))
+        {
+            isLocalHostOrIp = parsedUri.IsLoopback ||
+                              parsedUri.HostNameType == UriHostNameType.IPv4 ||
+                              parsedUri.HostNameType == UriHostNameType.IPv6 ||
+                              parsedUri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase);
+        }
+        else
+        {
+            isLocalHostOrIp = uriString.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
+                              uriString.StartsWith("http://127.", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (isLocalHostOrIp)
+            return false;
+
+        httpsUrl = "https://" + uriString["http://".Length..];
+        return true;
+    }
+
     private bool TryHandleCustomProtocol(
-        CoreWebView2NavigationStartingEventArgs e, 
-        BrowserTab tab, 
+        CoreWebView2NavigationStartingEventArgs e,
+        BrowserTab tab,
         Dispatcher dispatcher,
         Action<BrowserTab> closeTab)
     {
-        if (e.Uri is not string uriForCustom || !Uri.TryCreate(uriForCustom, UriKind.Absolute, out var parsedCustomUri))
-            return false;
-
-        var scheme = parsedCustomUri.Scheme.ToLowerInvariant();
-        if (scheme == "http" || scheme == "https" || scheme == "file" || scheme == "data" ||
-            scheme == "about" || scheme == "edge" || scheme == "chrome" || scheme == "stride" || scheme == "javascript" ||
-            scheme == "extension" || scheme == "chrome-extension" || scheme == "internal")
+        if (!IsCustomProtocol(e.Uri, out var scheme))
             return false;
 
         e.Cancel = true;
+        var uriForCustom = e.Uri!;
         dispatcher.InvokeAsync(() =>
         {
             // SECURITY: confirm before handing off to an external app — unprompted
@@ -78,26 +136,25 @@ public sealed class NavigationPolicyEngine
 
             try
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uriForCustom) { UseShellExecute = true });
+                Process.Start(new ProcessStartInfo(uriForCustom) { UseShellExecute = true });
                 if (tab.Url == InternalUrls.NewTab || tab.Url == "about:blank")
                     closeTab(tab);
             }
-            catch (Exception ex) { Trace.WriteLine($"Custom protocol launch failed: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Custom protocol launch failed: {ex.Message}");
+            }
         });
         return true;
     }
 
     private bool TryHandleFocusLock(
-        CoreWebView2NavigationStartingEventArgs e, 
-        BrowserTab tab, 
+        CoreWebView2NavigationStartingEventArgs e,
+        BrowserTab tab,
         Dispatcher dispatcher,
         Action<BrowserTab> navigateToFocus)
     {
-        if (e.Uri is not string uriStrFocus || !Uri.TryCreate(uriStrFocus, UriKind.Absolute, out var parsedFocusUri))
-            return false;
-
-        var host = parsedFocusUri.Host;
-        if (string.IsNullOrEmpty(host) || !_focusBlocklistService.IsBlocked(host))
+        if (!IsBlockedFocusHost(e.Uri, out _))
             return false;
 
         e.Cancel = true;
@@ -110,33 +167,19 @@ public sealed class NavigationPolicyEngine
     }
 
     private bool TryUpgradeToHttps(
-        CoreWebView2NavigationStartingEventArgs e, 
-        dynamic wv, 
+        CoreWebView2NavigationStartingEventArgs e,
+        dynamic wv,
         Dispatcher dispatcher)
     {
-        if (e.Uri is not string uriStr || !uriStr.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        var isLocalHostOrIp = false;
-        if (Uri.TryCreate(uriStr, UriKind.Absolute, out var parsedUri))
-        {
-            isLocalHostOrIp = parsedUri.IsLoopback ||
-                              parsedUri.HostNameType == UriHostNameType.IPv4 ||
-                              parsedUri.HostNameType == UriHostNameType.IPv6 ||
-                              parsedUri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase);
-        }
-        else
-        {
-            isLocalHostOrIp = uriStr.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
-                              uriStr.StartsWith("http://127.", StringComparison.OrdinalIgnoreCase);
-        }
-
-        if (isLocalHostOrIp)
+        if (!ShouldUpgradeToHttps(e.Uri, out var httpsUri))
             return false;
 
         e.Cancel = true;
-        var httpsUri = "https://" + uriStr["http://".Length..];
-        dispatcher.InvokeAsync(() => { try { wv.CoreWebView2.Navigate(httpsUri); } catch (Exception ex) { Trace.WriteLine(ex); } });
+        dispatcher.InvokeAsync(() =>
+        {
+            try { wv.CoreWebView2.Navigate(httpsUri); }
+            catch (Exception ex) { Trace.WriteLine(ex); }
+        });
         return true;
     }
 }

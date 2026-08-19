@@ -39,7 +39,7 @@ public class OneTabMessageHandler : IWebMessageHandler
 
         BrowserTab? lastTab = null;
         foreach (var entry in group.Tabs)
-            lastTab = _engine.CreateTab(entry.Url);
+            lastTab = _engine.CreateTab(entry.Url, blockDuplicates: false);
 
         _oneTabStore.RemoveGroup(groupId);
 
@@ -77,7 +77,7 @@ public class OneTabMessageHandler : IWebMessageHandler
         _oneTabStore.RemoveTab(groupId, url);
         RefreshOneTabPages();
 
-        var tab = _engine.CreateTab(url);
+        var tab = _engine.CreateTab(url, blockDuplicates: false);
         await _engine.ActivateAsync(tab);
     }
 

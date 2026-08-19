@@ -80,7 +80,16 @@ public sealed class DownloadItem : INotifyPropertyChanged
     public DownloadState State
     {
         get => _state;
-        set { if (_state != value) { _state = value; OnPropertyChanged(); } }
+        set
+        {
+            if (_state != value)
+            {
+                _state = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(SpeedText));
+                OnPropertyChanged(nameof(EtaText));
+            }
+        }
     }
 
     /// <summary>Progress as 0–100, or -1 if total size is unknown.</summary>

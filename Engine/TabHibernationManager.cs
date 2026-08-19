@@ -107,7 +107,10 @@ public sealed class TabHibernationManager
         if (_teardownWebView is null) return;
 
         if (webViews.TryGetValue(tab.Id, out var wv))
-            tab.Url = ((Microsoft.Web.WebView2.Wpf.WebView2)wv).Source?.ToString() ?? tab.Url;
+        {
+            var src = wv.Source?.ToString();
+            if (!string.IsNullOrEmpty(src)) tab.Url = src;
+        }
         
         _teardownWebView(tab.Id);
         tab.IsHibernated = true;
@@ -150,8 +153,7 @@ public sealed class TabHibernationManager
         {
             try
             {
-                var typed = (Microsoft.Web.WebView2.Wpf.WebView2)wv;
-                if (typed.CoreWebView2 != null && typed.CoreWebView2.IsDocumentPlayingAudio)
+                if (wv.CoreWebView2 != null && wv.CoreWebView2.IsDocumentPlayingAudio)
                     return false;
             }
             catch (Exception ex) { Trace.WriteLine(ex); }

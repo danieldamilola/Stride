@@ -47,7 +47,8 @@ public class CustomDownloadManager
 
     public async Task ResumeDownloadAsync(DownloadItem item, CoreWebView2CookieManager cookieManager)
     {
-        if (item.State == DownloadState.InProgress) return;
+        if (_ctsMap.TryGetValue(item.Id, out _)) return;
+        if (cookieManager is null) return;
 
         item.State = DownloadState.InProgress;
         var cts = new CancellationTokenSource();
@@ -82,6 +83,54 @@ public class CustomDownloadManager
             {
                 item.State = DownloadState.Failed;
             }
+        }
+        finally
+        {
+            _ctsMap.TryRemove(item.Id, out _);
+        }
+    }
+
+    public async Task StartDownloadAsync(DownloadItem item)
+    {
+        if (_ctsMap.TryGetValue(item.Id, out _)) return;
+        var cts = new CancellationTokenSource();
+        _ctsMap[item.Id] = cts;
+
+        item.State = DownloadState.InProgress;
+
+        try
+        {
+            using var client = new HttpClient();
+            using var response = await client.GetAsync(item.Url, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+            response.EnsureSuccessStatusCode();
+
+            item.TotalBytes = response.Content.Headers.ContentLength ?? 0;
+
+            using var contentStream = await response.Content.ReadAsStreamAsync(cts.Token);
+            using var fileStream = new FileStream(item.FilePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+
+            var buffer = new byte[8192];
+            long totalRead = 0;
+            int read;
+            while ((read = await contentStream.ReadAsync(buffer, 0, buffer.Length, cts.Token)) > 0)
+            {
+                if (item.State != DownloadState.InProgress) break;
+                await fileStream.WriteAsync(buffer, 0, read, cts.Token);
+                totalRead += read;
+                item.ReceivedBytes = totalRead;
+            }
+
+            if (item.State == DownloadState.InProgress)
+                item.State = DownloadState.Completed;
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when user pauses or cancels
+        }
+        catch
+        {
+            if (item.State == DownloadState.InProgress)
+                item.State = DownloadState.Failed;
         }
         finally
         {
