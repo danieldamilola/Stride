@@ -20,6 +20,7 @@ public sealed class TabHibernationManager
     private const int BaseHibernateMinutes = 5;
 
     private readonly IDownloadStore _downloadStore;
+    private readonly BrowserSettings _settings;
     private readonly DispatcherTimer _timer;
 
     private Func<IReadOnlyCollection<BrowserTab>>? _getTabs;
@@ -27,9 +28,10 @@ public sealed class TabHibernationManager
     private Action<Guid>? _teardownWebView;
     private int _maxLiveWebViews = 10;
 
-    public TabHibernationManager(IDownloadStore downloadStore)
+    public TabHibernationManager(IDownloadStore downloadStore, BrowserSettings settings)
     {
         _downloadStore = downloadStore;
+        _settings = settings;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
         _timer.Tick += (_, _) => HibernateInactiveTabs();
     }
@@ -57,6 +59,7 @@ public sealed class TabHibernationManager
 
     public void SuspendBackgroundTabs(BrowserTab activeTab)
     {
+        if (!_settings.TabSleepEnabled) return;
         if (_getWebViews is null) return;
         foreach (var (id, wv) in _getWebViews())
         {
@@ -77,6 +80,7 @@ public sealed class TabHibernationManager
 
     public void EvictExcessWebViews(BrowserTab activeTab)
     {
+        if (!_settings.TabHibernationEnabled) return;
         if (_getTabs is null || _getWebViews is null) return;
         
         var webViews = _getWebViews();
@@ -118,6 +122,7 @@ public sealed class TabHibernationManager
 
     private void HibernateInactiveTabs()
     {
+        if (!_settings.TabHibernationEnabled) return;
         if (_getTabs is null || _getWebViews is null) return;
 
         var tabs = _getTabs();

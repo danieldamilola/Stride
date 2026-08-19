@@ -48,6 +48,8 @@ public sealed class SettingsPage
                 ["CHK_ADBLOCK"] = Chk(settings.AdBlockEnabled),
                 ["CHK_CLEAR"] = Chk(settings.ClearDataOnExit),
                 ["CHK_DUPES"] = Chk(settings.BlockDuplicateTabs),
+                ["CHK_TAB_HIBERNATION"] = Chk(settings.TabHibernationEnabled),
+                ["CHK_TAB_SLEEP"] = Chk(settings.TabSleepEnabled),
                 ["SIDEBAR_LEFT"] = settings.IsSidebarOnRight ? "" : " selected",
                 ["SIDEBAR_RIGHT"] = settings.IsSidebarOnRight ? " selected" : "",
                 ["ADDR_LEFT"] = settings.AddressBarOnLeft ? " selected" : "",

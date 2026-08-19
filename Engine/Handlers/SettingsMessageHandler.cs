@@ -110,6 +110,8 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         ["adBlock"] = (s, v) => s.AdBlockEnabled = v == "true",
         ["clearOnExit"] = (s, v) => s.ClearDataOnExit = v == "true",
         ["blockDupes"] = (s, v) => s.BlockDuplicateTabs = v == "true",
+        ["tabHibernation"] = (s, v) => s.TabHibernationEnabled = v == "true",
+        ["tabSleep"] = (s, v) => s.TabSleepEnabled = v == "true",
         ["sidebarPosition"] = (s, v) => s.IsSidebarOnRight = v == "right",
         ["addressBarOnLeft"] = (s, v) => s.AddressBarOnLeft = v == "true",
         ["showTabNames"] = (s, v) => s.ShowTabNames = v == "true",

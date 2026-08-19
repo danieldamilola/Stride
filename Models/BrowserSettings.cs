@@ -57,6 +57,12 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _blockDuplicateTabs = true;
 
     [ObservableProperty]
+    private bool _tabHibernationEnabled = true;
+
+    [ObservableProperty]
+    private bool _tabSleepEnabled = true;
+
+    [ObservableProperty]
     private bool _autoCheckForUpdates = true;
 
     [ObservableProperty]

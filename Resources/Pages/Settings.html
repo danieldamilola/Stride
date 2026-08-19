@@ -918,6 +918,38 @@
               />
             </div>
           </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Tab hibernation</div>
+              <div class="setting-desc">
+                Unload inactive tabs after a few minutes to free memory
+              </div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_TAB_HIBERNATION}}
+                onchange="s('tabHibernation', this)"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Tab sleep</div>
+              <div class="setting-desc">
+                Suspend background tabs to save CPU and battery
+              </div>
+            </div>
+            <div class="setting-control">
+              <input
+                type="checkbox"
+                class="toggle"
+                {{CHK_TAB_SLEEP}}
+                onchange="s('tabSleep', this)"
+              />
+            </div>
+          </div>
 
         </div>
       </div>
