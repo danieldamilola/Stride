@@ -43,10 +43,45 @@ public sealed class StressTestRunner
         var errors = new List<string>();
         var createdTabs = new List<Models.BrowserTab>();
 
-        // Phase 1: Rapid tab creation
-        Trace.WriteLine("Phase 1: Opening 15 tabs...");
-        if (_engine.ActiveTab is not null) _engine.ActiveTab.Title = "[Stress] Opening tabs...";
+        SetStatus("[Stress] Opening tabs...");
+        await PhaseOpenTabsAsync(sites, sw, createdTabs, errors);
+        Trace.WriteLine($"Phase 1 complete: {createdTabs.Count}/{sites.Length} tabs ({sw.ElapsedMilliseconds}ms)");
 
+        SetStatus("[Stress] Cycling tabs...");
+        await PhaseCycleTabsAsync(createdTabs, sw, errors);
+        Trace.WriteLine($"Phase 2 complete ({sw.ElapsedMilliseconds}ms)");
+
+        SetStatus("[Stress] Closing tabs...");
+        var toClose = PhaseCloseTabs(createdTabs, errors);
+        Trace.WriteLine($"Phase 3 complete: closed {toClose.Count} tabs ({sw.ElapsedMilliseconds}ms)");
+
+        SetStatus("[Stress] Reopening...");
+        await PhaseReopenTabsAsync(toClose.Count, createdTabs, errors);
+        Trace.WriteLine($"Phase 4 complete ({sw.ElapsedMilliseconds}ms)");
+
+        SetStatus("[Stress] Cleaning up...");
+        PhaseCleanup(createdTabs, errors);
+
+        sw.Stop();
+
+        var result = errors.Count == 0 ? "PASSED" : $"FAILED ({errors.Count} errors)";
+        Trace.WriteLine($"=== STRESS TEST: {result} in {sw.ElapsedMilliseconds}ms ===");
+        foreach (var err in errors)
+            Trace.WriteLine($"  Error: {err}");
+
+        SetStatus($"Stress Test {result} - {sw.ElapsedMilliseconds}ms");
+
+        using var proc = Process.GetCurrentProcess();
+        Trace.WriteLine($"Memory: {proc.WorkingSet64 / 1024 / 1024}MB");
+    }
+
+    private void SetStatus(string title)
+    {
+        if (_engine.ActiveTab is not null) _engine.ActiveTab.Title = title;
+    }
+
+    private async Task PhaseOpenTabsAsync(string[] sites, Stopwatch sw, List<Models.BrowserTab> createdTabs, List<string> errors)
+    {
         foreach (var site in sites)
         {
             try
@@ -62,13 +97,10 @@ public sealed class StressTestRunner
                 Trace.WriteLine($"  ERROR: {site} - {ex.Message}");
             }
         }
+    }
 
-        Trace.WriteLine($"Phase 1 complete: {createdTabs.Count}/{sites.Length} tabs ({sw.ElapsedMilliseconds}ms)");
-
-        // Phase 2: Cycle through all tabs
-        Trace.WriteLine("Phase 2: Cycling through tabs...");
-        if (_engine.ActiveTab is not null) _engine.ActiveTab.Title = "[Stress] Cycling tabs...";
-
+    private async Task PhaseCycleTabsAsync(List<Models.BrowserTab> createdTabs, Stopwatch sw, List<string> errors)
+    {
         foreach (var tab in createdTabs.ToList())
         {
             try
@@ -82,13 +114,10 @@ public sealed class StressTestRunner
                 errors.Add($"Failed to switch to {tab.Title}: {ex.Message}");
             }
         }
+    }
 
-        Trace.WriteLine($"Phase 2 complete ({sw.ElapsedMilliseconds}ms)");
-
-        // Phase 3: Close half the tabs
-        Trace.WriteLine("Phase 3: Closing tabs under load...");
-        if (_engine.ActiveTab is not null) _engine.ActiveTab.Title = "[Stress] Closing tabs...";
-
+    private List<Models.BrowserTab> PhaseCloseTabs(List<Models.BrowserTab> createdTabs, List<string> errors)
+    {
         var toClose = createdTabs.Take(createdTabs.Count / 2).ToList();
         foreach (var tab in toClose)
         {
@@ -102,14 +131,12 @@ public sealed class StressTestRunner
                 errors.Add($"Failed to close {tab.Title}: {ex.Message}");
             }
         }
+        return toClose;
+    }
 
-        Trace.WriteLine($"Phase 3 complete: closed {toClose.Count} tabs ({sw.ElapsedMilliseconds}ms)");
-
-        // Phase 4: Reopen tabs
-        Trace.WriteLine("Phase 4: Reopening closed tabs...");
-        if (_engine.ActiveTab is not null) _engine.ActiveTab.Title = "[Stress] Reopening...";
-
-        for (int i = 0; i < toClose.Count; i++)
+    private async Task PhaseReopenTabsAsync(int count, List<Models.BrowserTab> createdTabs, List<string> errors)
+    {
+        for (int i = 0; i < count; i++)
         {
             try
             {
@@ -125,31 +152,15 @@ public sealed class StressTestRunner
                 errors.Add($"Failed to restore tab: {ex.Message}");
             }
         }
+    }
 
-        Trace.WriteLine($"Phase 4 complete ({sw.ElapsedMilliseconds}ms)");
-
-        // Phase 5: Cleanup
-        Trace.WriteLine("Phase 5: Cleanup...");
-        if (_engine.ActiveTab is not null) _engine.ActiveTab.Title = "[Stress] Cleaning up...";
-
+    private void PhaseCleanup(List<Models.BrowserTab> createdTabs, List<string> errors)
+    {
         foreach (var tab in createdTabs.ToList())
         {
             try { _engine.CloseTab(tab); }
             catch (Exception ex) { errors.Add($"Cleanup close failed: {ex.Message}"); }
         }
-
-        sw.Stop();
-
-        var result = errors.Count == 0 ? "PASSED" : $"FAILED ({errors.Count} errors)";
-        Trace.WriteLine($"=== STRESS TEST: {result} in {sw.ElapsedMilliseconds}ms ===");
-        foreach (var err in errors)
-            Trace.WriteLine($"  Error: {err}");
-
-        if (_engine.ActiveTab is not null)
-            _engine.ActiveTab.Title = $"Stress Test {result} - {sw.ElapsedMilliseconds}ms";
-
-        using var proc = Process.GetCurrentProcess();
-        Trace.WriteLine($"Memory: {proc.WorkingSet64 / 1024 / 1024}MB");
     }
 }
 #endif

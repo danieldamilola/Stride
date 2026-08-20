@@ -74,8 +74,8 @@ public sealed class HistoryStore : IHistoryStore
             {
                 EnsureLoaded();
                 return _entries
-                    .Where(e => e.Url.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                                e.Title.Contains(query, StringComparison.OrdinalIgnoreCase))
+                    .Where(e => (e.Url?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                                (e.Title?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false))
                     .ToList();
             }
             catch (Exception ex) { Trace.WriteLine($"HistoryStore.Search failed: {ex.Message}"); return []; }

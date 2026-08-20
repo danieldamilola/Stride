@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using StrideBrowser.Engine;
+using StrideBrowser.Engine.Handlers;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.ViewModels;
@@ -21,7 +22,8 @@ public static class Composition
         var settingsStore = new SettingsStore();
         var settings = settingsStore.Load();
 
-        ThemeManager.Initialize(settings);
+        // ThemeManager is now a singleton
+        services.AddSingleton<ThemeManager>();
 
         services.AddSingleton<ISettingsStore>(settingsStore);
         services.AddSingleton(settings);
@@ -38,32 +40,58 @@ public static class Composition
         services.AddSingleton<SessionStore>();
         services.AddSingleton<ISessionStore>(sp => sp.GetRequiredService<SessionStore>());
         services.AddSingleton<ExtensionManager>();
-        services.AddSingleton<InternalPages>();
+        services.AddSingleton(sp => new InternalPages(sp.GetRequiredService<ThemeManager>()));
         services.AddSingleton<YouTubeEnhancer>();
         services.AddSingleton<YouTubeUnhook>();
         services.AddSingleton<FocusBlocklistService>();
         services.AddSingleton<Engine.ContentScriptInjector>();
         services.AddSingleton<CustomDownloadManager>();
         services.AddSingleton<UpdateService>();
+        services.AddSingleton<TabHibernationManager>();
+        services.AddSingleton<NavigationPolicyEngine>();
 
         // Engine dependencies record
-        services.AddSingleton<EngineDependencies>();
+        services.AddSingleton(sp => new EngineDependencies
+        {
+            ExtensionManager = sp.GetRequiredService<ExtensionManager>(),
+            YouTubeUnhook = sp.GetRequiredService<YouTubeUnhook>(),
+            Settings = sp.GetRequiredService<BrowserSettings>(),
+            FaviconLoader = sp.GetRequiredService<FaviconLoader>(),
+            Pages = sp.GetRequiredService<InternalPages>(),
+            HistoryStore = sp.GetRequiredService<IHistoryStore>(),
+            OneTabStore = sp.GetRequiredService<IOneTabStore>(),
+            DownloadStore = sp.GetRequiredService<IDownloadStore>(),
+            FocusBlocklistService = sp.GetRequiredService<FocusBlocklistService>(),
+            ContentScriptInjector = sp.GetRequiredService<ContentScriptInjector>(),
+            CustomDownloadManager = sp.GetRequiredService<CustomDownloadManager>(),
+            HibernationManager = sp.GetRequiredService<TabHibernationManager>(),
+            NavigationPolicyEngine = sp.GetRequiredService<NavigationPolicyEngine>(),
+            ThemeManager = sp.GetRequiredService<ThemeManager>()
+        });
         services.AddSingleton<TabEngine>();
         
         // Message Handlers
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.CoreMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.SettingsMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.OneTabMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.HistoryMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.ShortcutMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.DownloadMessageHandler>();
-        services.AddSingleton<StrideBrowser.Services.MessageHandlers.IWebMessageHandler, StrideBrowser.Services.MessageHandlers.TCLensMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, CoreMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, SettingsMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, OneTabMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, HistoryMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, ShortcutMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, DownloadMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, OnboardingMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, TCLensMessageHandler>();
 
         services.AddSingleton<WebMessageRouter>();
+        services.AddSingleton<TCLensTransferService>();
 
-        // ViewModel
+        // ViewModel and Views
         services.AddSingleton<BrowserViewModel>();
+        services.AddTransient<MainWindow>();
 
-        return services.BuildServiceProvider();
+        var sp = services.BuildServiceProvider();
+        
+        // Eagerly resolve ThemeManager so it can apply the initial theme
+        sp.GetRequiredService<ThemeManager>();
+        
+        return sp;
     }
 }

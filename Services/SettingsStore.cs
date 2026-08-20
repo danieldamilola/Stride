@@ -32,7 +32,12 @@ public sealed class SettingsStore : ISettingsStore
             }
 
             var json = File.ReadAllText(FilePath);
-            return JsonSerializer.Deserialize<BrowserSettings>(json, JsonOpts) ?? new BrowserSettings();
+            var loaded = JsonSerializer.Deserialize<BrowserSettings>(json, JsonOpts) ?? new BrowserSettings();
+            // A hand-edited or older-format file can contain null collections, which
+            // would NRE in the settings page, new tab page, and shortcut handlers.
+            loaded.NewTabShortcuts ??= new();
+            loaded.CustomShortcuts ??= new();
+            return loaded;
         }
         catch (Exception ex)
         {

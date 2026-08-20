@@ -8,6 +8,7 @@ public static class InternalUrls
     public const string OneTab = "internal://onetab";
     public const string History = "internal://history";
     public const string Downloads = "internal://downloads";
+    public const string Onboarding = "internal://onboarding";
     public const string Focus = "internal://focus";
     public const string Prefix = "internal://";
 

@@ -18,6 +18,9 @@ obj/
 
 ## OS
 Thumbs.db
+
+## Update signing keys (secret - do not commit)
+tools/signing/
 Desktop.ini
 .DS_Store
 

@@ -10,89 +10,78 @@ namespace StrideBrowser.Services.Input;
 /// </summary>
 public sealed class KeyboardShortcutMap
 {
-    /// <summary>Describes a single keyboard shortcut binding.</summary>
-    public record ShortcutEntry(ModifierKeys Modifiers, Key Key, string Name, Func<Task> Action);
+    /// <summary>Describes a single keyboard shortcut binding. Action returns true only if it actually handled the key.</summary>
+    public record ShortcutEntry(ModifierKeys Modifiers, Key Key, string Name, Func<Task<bool>> Action);
 
-    private readonly Dictionary<string, Func<Task>> _actions = new();
+    private readonly Dictionary<string, Func<Task<bool>>> _actions = new();
     private List<ShortcutEntry> _entries = [];
 
-    public KeyboardShortcutMap(
-        TabEngine engine,
-        Func<Task> focusAddressBar,
-        Func<Task> saveAllTabs,
-        Func<bool, Task> cycleTab,
-        Func<Task> toggleFullscreen,
-        Func<bool> isFullscreen,
-        Func<Task> updateZoomIndicator,
-        Func<Task> openHistory,
-        Func<Task> openDownloads,
-        Func<int, Task> switchToTabIndex,
-        Action<string> copyUrl,
-        Func<List<(string url, string title)>> sendAllToOneTab,
-        Action<List<(string url, string title)>> saveOneTabGroup,
-        Action syncTabsBinding,
-        Func<Task> openOneTab,
-        Func<Task> openSettings,
-        Func<Task> launchTCLens)
+    public KeyboardShortcutMap(TabEngine engine, ShortcutActions actions)
     {
         // Register all actions by name (these never change, only the key bindings do)
-        _actions["TCLens"] = launchTCLens;
+        _actions["TCLens"] = async () => { await actions.LaunchTCLens(); return true; };
         _actions["RestoreClosedTab"] = async () =>
         {
             var tab = engine.RestoreClosedTab();
-            if (tab is not null) { engine.SwitchTo(tab); await engine.ActivateAsync(tab); }
+            if (tab is not null) { engine.SwitchTo(tab); await engine.ActivateAsync(tab); return true; }
+            return false;
         };
         _actions["NewTab"] = async () =>
         {
             var tab = engine.CreateTab();
             engine.SwitchTo(tab); await engine.ActivateAsync(tab);
-            await focusAddressBar();
+            await actions.FocusAddressBar();
+            return true;
         };
         _actions["CloseTab"] = () =>
         {
             if (engine.ActiveTab is not null && !engine.ActiveTab.IsPinned)
+            {
                 engine.CloseTab(engine.ActiveTab);
-            return Task.CompletedTask;
+                return Task.FromResult(true);
+            }
+            return Task.FromResult(false);
         };
-        _actions["FocusAddressBar"] = focusAddressBar;
+        _actions["FocusAddressBar"] = async () => { await actions.FocusAddressBar(); return true; };
         _actions["SendAllToOneTab"] = () =>
         {
-            var entries = sendAllToOneTab();
-            if (entries.Count > 0) saveOneTabGroup(entries);
-            syncTabsBinding();
-            return Task.CompletedTask;
+            var entries = actions.SendAllToOneTab();
+            if (entries.Count > 0) actions.SaveOneTabGroup(entries);
+            actions.SyncTabsBinding();
+            return Task.FromResult(true);
         };
-        _actions["SaveAllTabs"] = saveAllTabs;
-        _actions["Reload"] = () => { engine.Reload(); return Task.CompletedTask; };
-        _actions["GoBack"] = () => { engine.GoBack(); return Task.CompletedTask; };
-        _actions["GoForward"] = () => { engine.GoForward(); return Task.CompletedTask; };
-        _actions["ToggleFullscreen"] = toggleFullscreen;
+        _actions["SaveAllTabs"] = async () => { await actions.SaveAllTabs(); return true; };
+        _actions["Reload"] = () => { engine.Reload(); return Task.FromResult(true); };
+        _actions["GoBack"] = () => { engine.GoBack(); return Task.FromResult(true); };
+        _actions["GoForward"] = () => { engine.GoForward(); return Task.FromResult(true); };
+        _actions["ToggleFullscreen"] = async () => { await actions.ToggleFullscreen(); return true; };
         _actions["ExitFullscreen"] = async () =>
         {
-            if (isFullscreen()) await toggleFullscreen();
+            if (actions.IsFullscreen()) { await actions.ToggleFullscreen(); return true; }
+            return false;
         };
-        _actions["CycleTabForward"] = () => cycleTab(false);
-        _actions["CycleTabBackward"] = () => cycleTab(true);
-        _actions["FindInPage"] = async () => await engine.FindInPageAsync();
-        _actions["Print"] = () => { engine.Print(); return Task.CompletedTask; };
-        _actions["ZoomIn"] = async () => { engine.Zoom(0.1); await updateZoomIndicator(); };
-        _actions["ZoomOut"] = async () => { engine.Zoom(-0.1); await updateZoomIndicator(); };
-        _actions["ResetZoom"] = async () => { engine.ResetZoom(); await updateZoomIndicator(); };
+        _actions["CycleTabForward"] = async () => { await actions.CycleTab(false); return true; };
+        _actions["CycleTabBackward"] = async () => { await actions.CycleTab(true); return true; };
+        _actions["FindInPage"] = async () => { await engine.FindInPageAsync(); return true; };
+        _actions["Print"] = () => { engine.Print(); return Task.FromResult(true); };
+        _actions["ZoomIn"] = () => { engine.Zoom(0.1); return Task.FromResult(true); };
+        _actions["ZoomOut"] = () => { engine.Zoom(-0.1); return Task.FromResult(true); };
+        _actions["ResetZoom"] = () => { engine.ResetZoom(); return Task.FromResult(true); };
         _actions["CopyUrl"] = () =>
         {
             var url = engine.ActiveTab?.Url;
-            if (!string.IsNullOrEmpty(url)) copyUrl(url);
-            return Task.CompletedTask;
+            if (!string.IsNullOrEmpty(url)) actions.CopyUrl(url);
+            return Task.FromResult(true);
         };
         _actions["DevTools"] = () =>
         {
             engine.GetCoreWebView2()?.OpenDevToolsWindow();
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         };
-        _actions["History"] = openHistory;
-        _actions["Downloads"] = openDownloads;
-        _actions["OpenOneTab"] = openOneTab;
-        _actions["OpenSettings"] = openSettings;
+        _actions["History"] = async () => { await actions.OpenHistory(); return true; };
+        _actions["Downloads"] = async () => { await actions.OpenDownloads(); return true; };
+        _actions["OpenOneTab"] = async () => { await actions.OpenOneTab(); return true; };
+        _actions["OpenSettings"] = async () => { await actions.OpenSettings(); return true; };
 
         // Build default bindings
         RebuildBindings(null);
@@ -135,15 +124,11 @@ public sealed class KeyboardShortcutMap
 
     public async Task<bool> TryExecuteAsync(ModifierKeys modifiers, Key key)
     {
-        if (modifiers == ModifierKeys.Control && key >= Key.D1 && key <= Key.D9)
-            return false;
-
         foreach (var entry in _entries)
         {
             if (entry.Key == key && MatchModifiers(entry.Modifiers, modifiers))
             {
-                await entry.Action();
-                return true;
+                if (await entry.Action()) return true;
             }
         }
         return false;

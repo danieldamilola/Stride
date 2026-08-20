@@ -1,11 +1,11 @@
 {
-  "project_path": ".",
-  "total_files": 32,
-  "deficit_files": 4,
-  "clean_files": 28,
-  "avg_deficit_score": 10.665625,
-  "weighted_deficit_score": 10.714511228533686,
-  "avg_ldr": 0.3476625,
+  "project_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride",
+  "total_files": 70,
+  "deficit_files": 5,
+  "clean_files": 65,
+  "avg_deficit_score": 7.359,
+  "weighted_deficit_score": 7.3257211895910785,
+  "avg_ldr": 0.35313257142857146,
   "avg_inflation": 0.0,
   "avg_ddc": 0.0,
   "overall_status": "clean",
@@ -17,28 +17,28 @@
   "churn_analysis_available": false,
   "coverage_analysis_available": false,
   "next_steps": [
-    "Top concern: Logic Density Ratio (LDR) = 34.77% (Higher is healthier). Share of code lines that contain real implementation.",
+    "Top concern: Logic Density Ratio (LDR) = 35.31% (Higher is healthier). Share of code lines that contain real implementation.",
     "Run `slop-detector sweep dead-code .` for placeholder/dead files, then `slop-detector sweep dupes .` for duplicated logic.",
     "Run `slop-detector review .` to focus on slop introduced in your changed files only."
   ],
   "metric_guide": [
     {
       "label": "Average Deficit Score",
-      "value": "10.7/100",
+      "value": "7.4/100",
       "direction": "Lower",
       "health": "good",
       "means": "Mean file risk; 0 is clean, 100 is severe."
     },
     {
       "label": "Weighted Deficit Score",
-      "value": "10.7/100",
+      "value": "7.3/100",
       "direction": "Lower",
       "health": "good",
       "means": "Same risk score, weighted by each file's lines of code."
     },
     {
       "label": "Logic Density Ratio (LDR)",
-      "value": "34.77%",
+      "value": "35.31%",
       "direction": "Higher",
       "health": "bad",
       "means": "Share of code lines that contain real implementation."
@@ -61,7 +61,3107 @@
   "file_results": [],
   "js_file_results": [
     {
-      "file_path": "Resources\\Scripts\\darkreader.min.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\background.js",
+      "language": "javascript",
+      "total_lines": 151,
+      "code_lines": 107,
+      "comment_lines": 15,
+      "blank_lines": 29,
+      "ldr_equivalent": 0.7086,
+      "console_log_count": 1,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 2,
+      "masked_issues": [],
+      "max_complexity": 5,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 1.0,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_console_log",
+          "severity": "low",
+          "line": 130,
+          "column": 4,
+          "message": "console.warn in production code",
+          "suggestion": "Remove debug logs or use a proper logging library"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 12,
+          "end_line": 15,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 17,
+          "end_line": 19,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "registerContextMenu",
+          "start_line": 21,
+          "end_line": 29,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 22,
+          "end_line": 28,
+          "line_count": 7,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 33,
+          "end_line": 36,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 40,
+          "end_line": 44,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "openOrFocusDashboard",
+          "start_line": 48,
+          "end_line": 61,
+          "line_count": 14,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 65,
+          "end_line": 70,
+          "line_count": 6,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 68,
+          "end_line": 68,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "handleMessage",
+          "start_line": 72,
+          "end_line": 85,
+          "line_count": 14,
+          "complexity": 5,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "injectScraper",
+          "start_line": 89,
+          "end_line": 102,
+          "line_count": 14,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "forwardToContentScript",
+          "start_line": 104,
+          "end_line": 113,
+          "line_count": 10,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "setBadge",
+          "start_line": 117,
+          "end_line": 133,
+          "line_count": 17,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "migrateStorage",
+          "start_line": 137,
+          "end_line": 151,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\eslint.config.js",
+      "language": "javascript",
+      "total_lines": 42,
+      "code_lines": 39,
+      "comment_lines": 2,
+      "blank_lines": 1,
+      "ldr_equivalent": 0.9286,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 0,
+      "masked_issues": [],
+      "max_complexity": 0,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.0,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": []
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\content\\scraper.js",
+      "language": "javascript",
+      "total_lines": 177,
+      "code_lines": 124,
+      "comment_lines": 22,
+      "blank_lines": 31,
+      "ldr_equivalent": 0.7006,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 3,
+      "masked_issues": [],
+      "max_complexity": 7,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.0,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 11,
+          "end_line": 22,
+          "line_count": 12,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "extractPageText",
+          "start_line": 54,
+          "end_line": 68,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getByLegalSelectors",
+          "start_line": 72,
+          "end_line": 103,
+          "line_count": 32,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getBySemanticContainer",
+          "start_line": 107,
+          "end_line": 116,
+          "line_count": 10,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getByParagraphDensity",
+          "start_line": 120,
+          "end_line": 145,
+          "line_count": 26,
+          "complexity": 7,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 131,
+          "end_line": 131,
+          "line_count": 1,
+          "complexity": 2,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "getFullBodyText",
+          "start_line": 149,
+          "end_line": 151,
+          "line_count": 3,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "extractFromElement",
+          "start_line": 155,
+          "end_line": 164,
+          "line_count": 10,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "cleanText",
+          "start_line": 168,
+          "end_line": 177,
+          "line_count": 10,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\lib\\ai-client.js",
+      "language": "javascript",
+      "total_lines": 459,
+      "code_lines": 320,
+      "comment_lines": 70,
+      "blank_lines": 69,
+      "ldr_equivalent": 0.6972,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 4,
+      "masked_issues": [],
+      "max_complexity": 9,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.14,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "constructor",
+          "start_line": 16,
+          "end_line": 20,
+          "line_count": 5,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyze",
+          "start_line": 35,
+          "end_line": 69,
+          "line_count": 35,
+          "complexity": 9,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "estimateCost",
+          "start_line": 81,
+          "end_line": 99,
+          "line_count": 19,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 83,
+          "end_line": 83,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "getProviders",
+          "start_line": 106,
+          "end_line": 108,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "listAvailableModels",
+          "start_line": 118,
+          "end_line": 136,
+          "line_count": 19,
+          "complexity": 7,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "prepareTextForAI",
+          "start_line": 148,
+          "end_line": 158,
+          "line_count": 11,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "listGeminiModels",
+          "start_line": 162,
+          "end_line": 188,
+          "line_count": 27,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 178,
+          "end_line": 179,
+          "line_count": 2,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 181,
+          "end_line": 187,
+          "line_count": 7,
+          "complexity": 3,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "listOpenAICompatibleModels",
+          "start_line": 190,
+          "end_line": 213,
+          "line_count": 24,
+          "complexity": 7,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 210,
+          "end_line": 210,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithOpenAICompatible",
+          "start_line": 217,
+          "end_line": 243,
+          "line_count": 27,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithAnthropic",
+          "start_line": 245,
+          "end_line": 263,
+          "line_count": 19,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithGemini",
+          "start_line": 265,
+          "end_line": 285,
+          "line_count": 21,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithTCLens",
+          "start_line": 287,
+          "end_line": 306,
+          "line_count": 20,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "fetchWithRetry",
+          "start_line": 322,
+          "end_line": 356,
+          "line_count": 35,
+          "complexity": 9,
+          "max_depth": 4,
+          "is_god_function": false
+        },
+        {
+          "name": "fetchWithTimeout",
+          "start_line": 358,
+          "end_line": 376,
+          "line_count": 19,
+          "complexity": 3,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 360,
+          "end_line": 360,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "delay",
+          "start_line": 378,
+          "end_line": 380,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 379,
+          "end_line": 379,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "handleOpenAICompatibleResponse",
+          "start_line": 384,
+          "end_line": 391,
+          "line_count": 8,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "handleAnthropicResponse",
+          "start_line": 393,
+          "end_line": 400,
+          "line_count": 8,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "handleGeminiResponse",
+          "start_line": 402,
+          "end_line": 409,
+          "line_count": 8,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "throwProviderError",
+          "start_line": 413,
+          "end_line": 448,
+          "line_count": 36,
+          "complexity": 7,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getErrorDetails",
+          "start_line": 450,
+          "end_line": 457,
+          "line_count": 8,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\lib\\parser.js",
+      "language": "javascript",
+      "total_lines": 160,
+      "code_lines": 115,
+      "comment_lines": 18,
+      "blank_lines": 27,
+      "ldr_equivalent": 0.7188,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 3,
+      "masked_issues": [],
+      "max_complexity": 8,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.0,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "parse",
+          "start_line": 16,
+          "end_line": 33,
+          "line_count": 18,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "isGatekeeperRejection",
+          "start_line": 41,
+          "end_line": 48,
+          "line_count": 8,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "extractJSON",
+          "start_line": 50,
+          "end_line": 82,
+          "line_count": 33,
+          "complexity": 8,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "fixCommonJSONIssues",
+          "start_line": 84,
+          "end_line": 92,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "validateAnalysis",
+          "start_line": 94,
+          "end_line": 105,
+          "line_count": 12,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeRiskScore",
+          "start_line": 107,
+          "end_line": 119,
+          "line_count": 13,
+          "complexity": 6,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeRequiredString",
+          "start_line": 121,
+          "end_line": 127,
+          "line_count": 7,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeFindings",
+          "start_line": 129,
+          "end_line": 143,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 140,
+          "end_line": 141,
+          "line_count": 2,
+          "complexity": 2,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeFinding",
+          "start_line": 145,
+          "end_line": 160,
+          "line_count": 16,
+          "complexity": 7,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\lib\\prompt.js",
+      "language": "javascript",
+      "total_lines": 85,
+      "code_lines": 55,
+      "comment_lines": 12,
+      "blank_lines": 18,
+      "ldr_equivalent": 0.6471,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 1,
+      "masked_issues": [],
+      "max_complexity": 2,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 2.64,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "buildUserMessage",
+          "start_line": 82,
+          "end_line": 85,
+          "line_count": 4,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\lib\\providers.js",
+      "language": "javascript",
+      "total_lines": 306,
+      "code_lines": 277,
+      "comment_lines": 23,
+      "blank_lines": 6,
+      "ldr_equivalent": 0.9052,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 1,
+      "masked_issues": [],
+      "max_complexity": 11,
+      "god_function_count": 1,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 5.0,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_god_function",
+          "severity": "high",
+          "line": 267,
+          "column": 7,
+          "message": "God function 'normalizeOpenAICompatibleModel': 15 lines, complexity=11",
+          "suggestion": "Break into smaller single-responsibility functions"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "normalizeGeminiModelId",
+          "start_line": 257,
+          "end_line": 259,
+          "line_count": 3,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeOpenAICompatibleModel",
+          "start_line": 267,
+          "end_line": 281,
+          "line_count": 15,
+          "complexity": 11,
+          "max_depth": 1,
+          "is_god_function": true
+        },
+        {
+          "name": "isLikelyChatModel",
+          "start_line": 289,
+          "end_line": 306,
+          "line_count": 18,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 305,
+          "end_line": 305,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\lib\\storage.js",
+      "language": "javascript",
+      "total_lines": 145,
+      "code_lines": 64,
+      "comment_lines": 55,
+      "blank_lines": 26,
+      "ldr_equivalent": 0.4414,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 2,
+      "masked_issues": [],
+      "max_complexity": 3,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 12.93,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "getSettings",
+          "start_line": 20,
+          "end_line": 25,
+          "line_count": 6,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "saveSettings",
+          "start_line": 33,
+          "end_line": 40,
+          "line_count": 8,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getHistory",
+          "start_line": 47,
+          "end_line": 51,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "saveAnalysis",
+          "start_line": 59,
+          "end_line": 75,
+          "line_count": 17,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getAnalysis",
+          "start_line": 83,
+          "end_line": 87,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 86,
+          "end_line": 86,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "getLatestAnalysisForUrl",
+          "start_line": 95,
+          "end_line": 99,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 98,
+          "end_line": 98,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "deleteAnalysis",
+          "start_line": 107,
+          "end_line": 116,
+          "line_count": 10,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 109,
+          "end_line": 109,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "clearHistory",
+          "start_line": 123,
+          "end_line": 125,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getStorageStats",
+          "start_line": 132,
+          "end_line": 143,
+          "line_count": 12,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\options\\export.js",
+      "language": "javascript",
+      "total_lines": 45,
+      "code_lines": 31,
+      "comment_lines": 10,
+      "blank_lines": 4,
+      "ldr_equivalent": 0.6889,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 1,
+      "masked_issues": [],
+      "max_complexity": 4,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.55,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "exportAnalysis",
+          "start_line": 14,
+          "end_line": 45,
+          "line_count": 32,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 24,
+          "end_line": 31,
+          "line_count": 8,
+          "complexity": 2,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\options\\options.js",
+      "language": "javascript",
+      "total_lines": 447,
+      "code_lines": 332,
+      "comment_lines": 38,
+      "blank_lines": 77,
+      "ldr_equivalent": 0.7427,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 4,
+      "masked_issues": [],
+      "max_complexity": 10,
+      "god_function_count": 1,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 5.0,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_god_function",
+          "severity": "high",
+          "line": 281,
+          "column": 0,
+          "message": "God function 'analyzeCurrentPage': 87 lines, complexity=10",
+          "suggestion": "Break into smaller single-responsibility functions"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 52,
+          "end_line": 57,
+          "line_count": 6,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "bindElements",
+          "start_line": 61,
+          "end_line": 100,
+          "line_count": 40,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "bindEvents",
+          "start_line": 104,
+          "end_line": 130,
+          "line_count": 27,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 106,
+          "end_line": 106,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 109,
+          "end_line": 109,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 110,
+          "end_line": 111,
+          "line_count": 2,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 113,
+          "end_line": 116,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 120,
+          "end_line": 123,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "loadInitialState",
+          "start_line": 134,
+          "end_line": 146,
+          "line_count": 13,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "populateProviderOptions",
+          "start_line": 150,
+          "end_line": 158,
+          "line_count": 9,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "populateModelOptions",
+          "start_line": 160,
+          "end_line": 173,
+          "line_count": 14,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 171,
+          "end_line": 171,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "applySettingsToForm",
+          "start_line": 175,
+          "end_line": 180,
+          "line_count": 6,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "handleProviderChange",
+          "start_line": 182,
+          "end_line": 194,
+          "line_count": 13,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "updateCostEstimate",
+          "start_line": 196,
+          "end_line": 217,
+          "line_count": 22,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "refreshAvailableModels",
+          "start_line": 221,
+          "end_line": 255,
+          "line_count": 35,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "handleSettingsSubmit",
+          "start_line": 259,
+          "end_line": 270,
+          "line_count": 12,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeCurrentPage",
+          "start_line": 281,
+          "end_line": 367,
+          "line_count": 87,
+          "complexity": 10,
+          "max_depth": 4,
+          "is_god_function": true
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 358,
+          "end_line": 358,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "openHistoryEntry",
+          "start_line": 371,
+          "end_line": 377,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 372,
+          "end_line": 372,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 375,
+          "end_line": 375,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "handleClearHistory",
+          "start_line": 379,
+          "end_line": 385,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "showView",
+          "start_line": 389,
+          "end_line": 400,
+          "line_count": 12,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "setLoading",
+          "start_line": 404,
+          "end_line": 407,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "hideLoading",
+          "start_line": 409,
+          "end_line": 411,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "sendBg",
+          "start_line": 415,
+          "end_line": 421,
+          "line_count": 7,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getTargetTab",
+          "start_line": 425,
+          "end_line": 432,
+          "line_count": 8,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getModelLimit",
+          "start_line": 436,
+          "end_line": 447,
+          "line_count": 12,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 438,
+          "end_line": 438,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\options\\renderer.js",
+      "language": "javascript",
+      "total_lines": 209,
+      "code_lines": 137,
+      "comment_lines": 52,
+      "blank_lines": 20,
+      "ldr_equivalent": 0.6555,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 4,
+      "masked_issues": [],
+      "max_complexity": 6,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 2.22,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "renderDashboard",
+          "start_line": 23,
+          "end_line": 27,
+          "line_count": 5,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderTargetCell",
+          "start_line": 35,
+          "end_line": 49,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "renderProviderCell",
+          "start_line": 58,
+          "end_line": 70,
+          "line_count": 13,
+          "complexity": 5,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderLastAnalysis",
+          "start_line": 78,
+          "end_line": 88,
+          "line_count": 11,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "renderAnalysis",
+          "start_line": 97,
+          "end_line": 146,
+          "line_count": 50,
+          "complexity": 6,
+          "max_depth": 4,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 127,
+          "end_line": 132,
+          "line_count": 6,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 136,
+          "end_line": 144,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 141,
+          "end_line": 143,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderFinding",
+          "start_line": 154,
+          "end_line": 172,
+          "line_count": 19,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderHistory",
+          "start_line": 180,
+          "end_line": 209,
+          "line_count": 30,
+          "complexity": 6,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 190,
+          "end_line": 198,
+          "line_count": 9,
+          "complexity": 4,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 205,
+          "end_line": 206,
+          "line_count": 2,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\bin\\Debug\\net9.0-windows10.0.17763.0\\Resources\\Pages\\TCLens\\options\\utils.js",
+      "language": "javascript",
+      "total_lines": 185,
+      "code_lines": 92,
+      "comment_lines": 76,
+      "blank_lines": 17,
+      "ldr_equivalent": 0.4973,
+      "console_log_count": 1,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 3,
+      "masked_issues": [],
+      "max_complexity": 4,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 11.13,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_console_log",
+          "severity": "low",
+          "line": 147,
+          "column": 4,
+          "message": "console.error in production code",
+          "suggestion": "Remove debug logs or use a proper logging library"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "escapeHTML",
+          "start_line": 14,
+          "end_line": 22,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "setHTML",
+          "start_line": 33,
+          "end_line": 37,
+          "line_count": 5,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "showMessage",
+          "start_line": 46,
+          "end_line": 49,
+          "line_count": 4,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "showHtmlMessage",
+          "start_line": 58,
+          "end_line": 61,
+          "line_count": 4,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "hideMessage",
+          "start_line": 68,
+          "end_line": 71,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getRiskLevel",
+          "start_line": 79,
+          "end_line": 83,
+          "line_count": 5,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getUserMessage",
+          "start_line": 91,
+          "end_line": 107,
+          "line_count": 17,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getDomain",
+          "start_line": 115,
+          "end_line": 121,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "formatDate",
+          "start_line": 129,
+          "end_line": 136,
+          "line_count": 8,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "copyToClipboard",
+          "start_line": 143,
+          "end_line": 149,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "showConfirmModal",
+          "start_line": 158,
+          "end_line": 185,
+          "line_count": 28,
+          "complexity": 1,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 159,
+          "end_line": 184,
+          "line_count": 26,
+          "complexity": 1,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "cleanup",
+          "start_line": 168,
+          "end_line": 173,
+          "line_count": 6,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "onConfirm",
+          "start_line": 175,
+          "end_line": 177,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "onCancel",
+          "start_line": 178,
+          "end_line": 180,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\background.js",
+      "language": "javascript",
+      "total_lines": 151,
+      "code_lines": 107,
+      "comment_lines": 15,
+      "blank_lines": 29,
+      "ldr_equivalent": 0.7086,
+      "console_log_count": 1,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 2,
+      "masked_issues": [],
+      "max_complexity": 5,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 1.0,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_console_log",
+          "severity": "low",
+          "line": 130,
+          "column": 4,
+          "message": "console.warn in production code",
+          "suggestion": "Remove debug logs or use a proper logging library"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 12,
+          "end_line": 15,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 17,
+          "end_line": 19,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "registerContextMenu",
+          "start_line": 21,
+          "end_line": 29,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 22,
+          "end_line": 28,
+          "line_count": 7,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 33,
+          "end_line": 36,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 40,
+          "end_line": 44,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "openOrFocusDashboard",
+          "start_line": 48,
+          "end_line": 61,
+          "line_count": 14,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 65,
+          "end_line": 70,
+          "line_count": 6,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 68,
+          "end_line": 68,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "handleMessage",
+          "start_line": 72,
+          "end_line": 85,
+          "line_count": 14,
+          "complexity": 5,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "injectScraper",
+          "start_line": 89,
+          "end_line": 102,
+          "line_count": 14,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "forwardToContentScript",
+          "start_line": 104,
+          "end_line": 113,
+          "line_count": 10,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "setBadge",
+          "start_line": 117,
+          "end_line": 133,
+          "line_count": 17,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "migrateStorage",
+          "start_line": 137,
+          "end_line": 151,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\eslint.config.js",
+      "language": "javascript",
+      "total_lines": 42,
+      "code_lines": 39,
+      "comment_lines": 2,
+      "blank_lines": 1,
+      "ldr_equivalent": 0.9286,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 0,
+      "masked_issues": [],
+      "max_complexity": 0,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.0,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": []
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\content\\scraper.js",
+      "language": "javascript",
+      "total_lines": 177,
+      "code_lines": 124,
+      "comment_lines": 22,
+      "blank_lines": 31,
+      "ldr_equivalent": 0.7006,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 3,
+      "masked_issues": [],
+      "max_complexity": 7,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.0,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 11,
+          "end_line": 22,
+          "line_count": 12,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "extractPageText",
+          "start_line": 54,
+          "end_line": 68,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getByLegalSelectors",
+          "start_line": 72,
+          "end_line": 103,
+          "line_count": 32,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getBySemanticContainer",
+          "start_line": 107,
+          "end_line": 116,
+          "line_count": 10,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getByParagraphDensity",
+          "start_line": 120,
+          "end_line": 145,
+          "line_count": 26,
+          "complexity": 7,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 131,
+          "end_line": 131,
+          "line_count": 1,
+          "complexity": 2,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "getFullBodyText",
+          "start_line": 149,
+          "end_line": 151,
+          "line_count": 3,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "extractFromElement",
+          "start_line": 155,
+          "end_line": 164,
+          "line_count": 10,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "cleanText",
+          "start_line": 168,
+          "end_line": 177,
+          "line_count": 10,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\lib\\ai-client.js",
+      "language": "javascript",
+      "total_lines": 459,
+      "code_lines": 320,
+      "comment_lines": 70,
+      "blank_lines": 69,
+      "ldr_equivalent": 0.6972,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 4,
+      "masked_issues": [],
+      "max_complexity": 9,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.14,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "constructor",
+          "start_line": 16,
+          "end_line": 20,
+          "line_count": 5,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyze",
+          "start_line": 35,
+          "end_line": 69,
+          "line_count": 35,
+          "complexity": 9,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "estimateCost",
+          "start_line": 81,
+          "end_line": 99,
+          "line_count": 19,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 83,
+          "end_line": 83,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "getProviders",
+          "start_line": 106,
+          "end_line": 108,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "listAvailableModels",
+          "start_line": 118,
+          "end_line": 136,
+          "line_count": 19,
+          "complexity": 7,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "prepareTextForAI",
+          "start_line": 148,
+          "end_line": 158,
+          "line_count": 11,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "listGeminiModels",
+          "start_line": 162,
+          "end_line": 188,
+          "line_count": 27,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 178,
+          "end_line": 179,
+          "line_count": 2,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 181,
+          "end_line": 187,
+          "line_count": 7,
+          "complexity": 3,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "listOpenAICompatibleModels",
+          "start_line": 190,
+          "end_line": 213,
+          "line_count": 24,
+          "complexity": 7,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 210,
+          "end_line": 210,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithOpenAICompatible",
+          "start_line": 217,
+          "end_line": 243,
+          "line_count": 27,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithAnthropic",
+          "start_line": 245,
+          "end_line": 263,
+          "line_count": 19,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithGemini",
+          "start_line": 265,
+          "end_line": 285,
+          "line_count": 21,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithTCLens",
+          "start_line": 287,
+          "end_line": 306,
+          "line_count": 20,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "fetchWithRetry",
+          "start_line": 322,
+          "end_line": 356,
+          "line_count": 35,
+          "complexity": 9,
+          "max_depth": 4,
+          "is_god_function": false
+        },
+        {
+          "name": "fetchWithTimeout",
+          "start_line": 358,
+          "end_line": 376,
+          "line_count": 19,
+          "complexity": 3,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 360,
+          "end_line": 360,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "delay",
+          "start_line": 378,
+          "end_line": 380,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 379,
+          "end_line": 379,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "handleOpenAICompatibleResponse",
+          "start_line": 384,
+          "end_line": 391,
+          "line_count": 8,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "handleAnthropicResponse",
+          "start_line": 393,
+          "end_line": 400,
+          "line_count": 8,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "handleGeminiResponse",
+          "start_line": 402,
+          "end_line": 409,
+          "line_count": 8,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "throwProviderError",
+          "start_line": 413,
+          "end_line": 448,
+          "line_count": 36,
+          "complexity": 7,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getErrorDetails",
+          "start_line": 450,
+          "end_line": 457,
+          "line_count": 8,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\lib\\parser.js",
+      "language": "javascript",
+      "total_lines": 160,
+      "code_lines": 115,
+      "comment_lines": 18,
+      "blank_lines": 27,
+      "ldr_equivalent": 0.7188,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 3,
+      "masked_issues": [],
+      "max_complexity": 8,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.0,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "parse",
+          "start_line": 16,
+          "end_line": 33,
+          "line_count": 18,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "isGatekeeperRejection",
+          "start_line": 41,
+          "end_line": 48,
+          "line_count": 8,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "extractJSON",
+          "start_line": 50,
+          "end_line": 82,
+          "line_count": 33,
+          "complexity": 8,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "fixCommonJSONIssues",
+          "start_line": 84,
+          "end_line": 92,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "validateAnalysis",
+          "start_line": 94,
+          "end_line": 105,
+          "line_count": 12,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeRiskScore",
+          "start_line": 107,
+          "end_line": 119,
+          "line_count": 13,
+          "complexity": 6,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeRequiredString",
+          "start_line": 121,
+          "end_line": 127,
+          "line_count": 7,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeFindings",
+          "start_line": 129,
+          "end_line": 143,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 140,
+          "end_line": 141,
+          "line_count": 2,
+          "complexity": 2,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeFinding",
+          "start_line": 145,
+          "end_line": 160,
+          "line_count": 16,
+          "complexity": 7,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\lib\\prompt.js",
+      "language": "javascript",
+      "total_lines": 85,
+      "code_lines": 55,
+      "comment_lines": 12,
+      "blank_lines": 18,
+      "ldr_equivalent": 0.6471,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 1,
+      "masked_issues": [],
+      "max_complexity": 2,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 2.64,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "buildUserMessage",
+          "start_line": 82,
+          "end_line": 85,
+          "line_count": 4,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\lib\\providers.js",
+      "language": "javascript",
+      "total_lines": 306,
+      "code_lines": 277,
+      "comment_lines": 23,
+      "blank_lines": 6,
+      "ldr_equivalent": 0.9052,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 1,
+      "masked_issues": [],
+      "max_complexity": 11,
+      "god_function_count": 1,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 5.0,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_god_function",
+          "severity": "high",
+          "line": 267,
+          "column": 7,
+          "message": "God function 'normalizeOpenAICompatibleModel': 15 lines, complexity=11",
+          "suggestion": "Break into smaller single-responsibility functions"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "normalizeGeminiModelId",
+          "start_line": 257,
+          "end_line": 259,
+          "line_count": 3,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeOpenAICompatibleModel",
+          "start_line": 267,
+          "end_line": 281,
+          "line_count": 15,
+          "complexity": 11,
+          "max_depth": 1,
+          "is_god_function": true
+        },
+        {
+          "name": "isLikelyChatModel",
+          "start_line": 289,
+          "end_line": 306,
+          "line_count": 18,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 305,
+          "end_line": 305,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\lib\\storage.js",
+      "language": "javascript",
+      "total_lines": 145,
+      "code_lines": 64,
+      "comment_lines": 55,
+      "blank_lines": 26,
+      "ldr_equivalent": 0.4414,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 2,
+      "masked_issues": [],
+      "max_complexity": 3,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 12.93,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "getSettings",
+          "start_line": 20,
+          "end_line": 25,
+          "line_count": 6,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "saveSettings",
+          "start_line": 33,
+          "end_line": 40,
+          "line_count": 8,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getHistory",
+          "start_line": 47,
+          "end_line": 51,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "saveAnalysis",
+          "start_line": 59,
+          "end_line": 75,
+          "line_count": 17,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getAnalysis",
+          "start_line": 83,
+          "end_line": 87,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 86,
+          "end_line": 86,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "getLatestAnalysisForUrl",
+          "start_line": 95,
+          "end_line": 99,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 98,
+          "end_line": 98,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "deleteAnalysis",
+          "start_line": 107,
+          "end_line": 116,
+          "line_count": 10,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 109,
+          "end_line": 109,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "clearHistory",
+          "start_line": 123,
+          "end_line": 125,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getStorageStats",
+          "start_line": 132,
+          "end_line": 143,
+          "line_count": 12,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\options\\export.js",
+      "language": "javascript",
+      "total_lines": 45,
+      "code_lines": 31,
+      "comment_lines": 10,
+      "blank_lines": 4,
+      "ldr_equivalent": 0.6889,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 1,
+      "masked_issues": [],
+      "max_complexity": 4,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.55,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "exportAnalysis",
+          "start_line": 14,
+          "end_line": 45,
+          "line_count": 32,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 24,
+          "end_line": 31,
+          "line_count": 8,
+          "complexity": 2,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\options\\options.js",
+      "language": "javascript",
+      "total_lines": 447,
+      "code_lines": 332,
+      "comment_lines": 38,
+      "blank_lines": 77,
+      "ldr_equivalent": 0.7427,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 4,
+      "masked_issues": [],
+      "max_complexity": 10,
+      "god_function_count": 1,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 5.0,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_god_function",
+          "severity": "high",
+          "line": 281,
+          "column": 0,
+          "message": "God function 'analyzeCurrentPage': 87 lines, complexity=10",
+          "suggestion": "Break into smaller single-responsibility functions"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 52,
+          "end_line": 57,
+          "line_count": 6,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "bindElements",
+          "start_line": 61,
+          "end_line": 100,
+          "line_count": 40,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "bindEvents",
+          "start_line": 104,
+          "end_line": 130,
+          "line_count": 27,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 106,
+          "end_line": 106,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 109,
+          "end_line": 109,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 110,
+          "end_line": 111,
+          "line_count": 2,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 113,
+          "end_line": 116,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 120,
+          "end_line": 123,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "loadInitialState",
+          "start_line": 134,
+          "end_line": 146,
+          "line_count": 13,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "populateProviderOptions",
+          "start_line": 150,
+          "end_line": 158,
+          "line_count": 9,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "populateModelOptions",
+          "start_line": 160,
+          "end_line": 173,
+          "line_count": 14,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 171,
+          "end_line": 171,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "applySettingsToForm",
+          "start_line": 175,
+          "end_line": 180,
+          "line_count": 6,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "handleProviderChange",
+          "start_line": 182,
+          "end_line": 194,
+          "line_count": 13,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "updateCostEstimate",
+          "start_line": 196,
+          "end_line": 217,
+          "line_count": 22,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "refreshAvailableModels",
+          "start_line": 221,
+          "end_line": 255,
+          "line_count": 35,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "handleSettingsSubmit",
+          "start_line": 259,
+          "end_line": 270,
+          "line_count": 12,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeCurrentPage",
+          "start_line": 281,
+          "end_line": 367,
+          "line_count": 87,
+          "complexity": 10,
+          "max_depth": 4,
+          "is_god_function": true
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 358,
+          "end_line": 358,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "openHistoryEntry",
+          "start_line": 371,
+          "end_line": 377,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 372,
+          "end_line": 372,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 375,
+          "end_line": 375,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "handleClearHistory",
+          "start_line": 379,
+          "end_line": 385,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "showView",
+          "start_line": 389,
+          "end_line": 400,
+          "line_count": 12,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "setLoading",
+          "start_line": 404,
+          "end_line": 407,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "hideLoading",
+          "start_line": 409,
+          "end_line": 411,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "sendBg",
+          "start_line": 415,
+          "end_line": 421,
+          "line_count": 7,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getTargetTab",
+          "start_line": 425,
+          "end_line": 432,
+          "line_count": 8,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getModelLimit",
+          "start_line": 436,
+          "end_line": 447,
+          "line_count": 12,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 438,
+          "end_line": 438,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\options\\renderer.js",
+      "language": "javascript",
+      "total_lines": 209,
+      "code_lines": 137,
+      "comment_lines": 52,
+      "blank_lines": 20,
+      "ldr_equivalent": 0.6555,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 4,
+      "masked_issues": [],
+      "max_complexity": 6,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 2.22,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "renderDashboard",
+          "start_line": 23,
+          "end_line": 27,
+          "line_count": 5,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderTargetCell",
+          "start_line": 35,
+          "end_line": 49,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "renderProviderCell",
+          "start_line": 58,
+          "end_line": 70,
+          "line_count": 13,
+          "complexity": 5,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderLastAnalysis",
+          "start_line": 78,
+          "end_line": 88,
+          "line_count": 11,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "renderAnalysis",
+          "start_line": 97,
+          "end_line": 146,
+          "line_count": 50,
+          "complexity": 6,
+          "max_depth": 4,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 127,
+          "end_line": 132,
+          "line_count": 6,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 136,
+          "end_line": 144,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 141,
+          "end_line": 143,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderFinding",
+          "start_line": 154,
+          "end_line": 172,
+          "line_count": 19,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderHistory",
+          "start_line": 180,
+          "end_line": 209,
+          "line_count": 30,
+          "complexity": 6,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 190,
+          "end_line": 198,
+          "line_count": 9,
+          "complexity": 4,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 205,
+          "end_line": 206,
+          "line_count": 2,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\publish\\Resources\\Pages\\TCLens\\options\\utils.js",
+      "language": "javascript",
+      "total_lines": 185,
+      "code_lines": 92,
+      "comment_lines": 76,
+      "blank_lines": 17,
+      "ldr_equivalent": 0.4973,
+      "console_log_count": 1,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 3,
+      "masked_issues": [],
+      "max_complexity": 4,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 11.13,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_console_log",
+          "severity": "low",
+          "line": 147,
+          "column": 4,
+          "message": "console.error in production code",
+          "suggestion": "Remove debug logs or use a proper logging library"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "escapeHTML",
+          "start_line": 14,
+          "end_line": 22,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "setHTML",
+          "start_line": 33,
+          "end_line": 37,
+          "line_count": 5,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "showMessage",
+          "start_line": 46,
+          "end_line": 49,
+          "line_count": 4,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "showHtmlMessage",
+          "start_line": 58,
+          "end_line": 61,
+          "line_count": 4,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "hideMessage",
+          "start_line": 68,
+          "end_line": 71,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getRiskLevel",
+          "start_line": 79,
+          "end_line": 83,
+          "line_count": 5,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getUserMessage",
+          "start_line": 91,
+          "end_line": 107,
+          "line_count": 17,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getDomain",
+          "start_line": 115,
+          "end_line": 121,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "formatDate",
+          "start_line": 129,
+          "end_line": 136,
+          "line_count": 8,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "copyToClipboard",
+          "start_line": 143,
+          "end_line": 149,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "showConfirmModal",
+          "start_line": 158,
+          "end_line": 185,
+          "line_count": 28,
+          "complexity": 1,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 159,
+          "end_line": 184,
+          "line_count": 26,
+          "complexity": 1,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "cleanup",
+          "start_line": 168,
+          "end_line": 173,
+          "line_count": 6,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "onConfirm",
+          "start_line": 175,
+          "end_line": 177,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "onCancel",
+          "start_line": 178,
+          "end_line": 180,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Scripts\\darkreader.min.js",
       "language": "javascript",
       "total_lines": 8,
       "code_lines": 1,
@@ -8049,7 +11149,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Scripts\\find-in-page.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Scripts\\find-in-page.js",
       "language": "javascript",
       "total_lines": 79,
       "code_lines": 58,
@@ -8146,7 +11246,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Scripts\\force-dark-mode.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Scripts\\force-dark-mode.js",
       "language": "javascript",
       "total_lines": 40,
       "code_lines": 29,
@@ -8206,7 +11306,397 @@
       ]
     },
     {
-      "file_path": "Resources\\Scripts\\wallhaven-downloader.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Scripts\\theme-color.js",
+      "language": "javascript",
+      "total_lines": 155,
+      "code_lines": 134,
+      "comment_lines": 3,
+      "blank_lines": 18,
+      "ldr_equivalent": 0.8645,
+      "console_log_count": 0,
+      "var_usage_count": 28,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 7,
+      "masked_issues": [],
+      "max_complexity": 48,
+      "god_function_count": 3,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 50.0,
+      "status": "critical_deficit",
+      "issues": [
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 4,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 7,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 11,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 14,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 18,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 27,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 33,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 34,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 35,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 36,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 40,
+          "column": 12,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 41,
+          "column": 17,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 42,
+          "column": 16,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 44,
+          "column": 20,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 45,
+          "column": 20,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 47,
+          "column": 24,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 58,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 59,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 60,
+          "column": 13,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 61,
+          "column": 12,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 70,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 79,
+          "column": 16,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 80,
+          "column": 16,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 82,
+          "column": 20,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 91,
+          "column": 16,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 92,
+          "column": 16,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 94,
+          "column": 20,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 138,
+          "column": 8,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        },
+        {
+          "pattern_id": "js_god_function",
+          "severity": "high",
+          "line": 1,
+          "column": 1,
+          "message": "God function '(anonymous)': 155 lines, complexity=48",
+          "suggestion": "Break into smaller single-responsibility functions"
+        },
+        {
+          "pattern_id": "js_god_function",
+          "severity": "high",
+          "line": 2,
+          "column": 4,
+          "message": "God function 'colorToHex': 29 lines, complexity=11",
+          "suggestion": "Break into smaller single-responsibility functions"
+        },
+        {
+          "pattern_id": "js_god_function",
+          "severity": "high",
+          "line": 32,
+          "column": 4,
+          "message": "God function 'extractThemeColor': 73 lines, complexity=33",
+          "suggestion": "Break into smaller single-responsibility functions"
+        },
+        {
+          "pattern_id": "js_callback_hell",
+          "severity": "high",
+          "line": 1,
+          "column": 0,
+          "message": "Max nesting depth 7 \u2014 callback hell risk",
+          "suggestion": "Refactor to async/await or flatten promise chains"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 1,
+          "end_line": 155,
+          "line_count": 155,
+          "complexity": 48,
+          "max_depth": 7,
+          "is_god_function": true
+        },
+        {
+          "name": "colorToHex",
+          "start_line": 2,
+          "end_line": 30,
+          "line_count": 29,
+          "complexity": 11,
+          "max_depth": 2,
+          "is_god_function": true
+        },
+        {
+          "name": "hex",
+          "start_line": 28,
+          "end_line": 28,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "extractThemeColor",
+          "start_line": 32,
+          "end_line": 104,
+          "line_count": 73,
+          "complexity": 33,
+          "max_depth": 6,
+          "is_god_function": true
+        },
+        {
+          "name": "sendColour",
+          "start_line": 110,
+          "end_line": 123,
+          "line_count": 14,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 113,
+          "end_line": 117,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "sendColourRequiresFocus",
+          "start_line": 125,
+          "end_line": 127,
+          "line_count": 3,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "enableDynamic",
+          "start_line": 129,
+          "end_line": 152,
+          "line_count": 24,
+          "complexity": 3,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 130,
+          "end_line": 132,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 134,
+          "end_line": 136,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 138,
+          "end_line": 140,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "tryObserve",
+          "start_line": 142,
+          "end_line": 150,
+          "line_count": 9,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Scripts\\wallhaven-downloader.js",
       "language": "javascript",
       "total_lines": 93,
       "code_lines": 69,
@@ -8310,7 +11800,50 @@
       ]
     },
     {
-      "file_path": "Resources\\Scripts\\youtube-adnuke.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Scripts\\wallhaven-token.js",
+      "language": "javascript",
+      "total_lines": 6,
+      "code_lines": 6,
+      "comment_lines": 0,
+      "blank_lines": 0,
+      "ldr_equivalent": 1.0,
+      "console_log_count": 0,
+      "var_usage_count": 1,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 2,
+      "masked_issues": [],
+      "max_complexity": 2,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 2.0,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_var_usage",
+          "severity": "medium",
+          "line": 2,
+          "column": 4,
+          "message": "var declaration \u2014 use let or const",
+          "suggestion": "Replace var with let (mutable) or const (immutable)"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 1,
+          "end_line": 6,
+          "line_count": 6,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Scripts\\youtube-adnuke.js",
       "language": "javascript",
       "total_lines": 265,
       "code_lines": 200,
@@ -8683,7 +12216,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Scripts\\youtube-enhancer.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Scripts\\youtube-enhancer.js",
       "language": "javascript",
       "total_lines": 308,
       "code_lines": 219,
@@ -9273,7 +12806,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Scripts\\youtube-unhook.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Scripts\\youtube-unhook.js",
       "language": "javascript",
       "total_lines": 295,
       "code_lines": 214,
@@ -9680,7 +13213,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\WallhavenDownloader\\content.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\WallhavenDownloader\\content.js",
       "language": "javascript",
       "total_lines": 179,
       "code_lines": 115,
@@ -9848,7 +13381,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\background.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\background.js",
       "language": "javascript",
       "total_lines": 151,
       "code_lines": 107,
@@ -10008,7 +13541,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\eslint.config.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\eslint.config.js",
       "language": "javascript",
       "total_lines": 42,
       "code_lines": 39,
@@ -10032,7 +13565,7 @@
       "function_metrics": []
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\content\\scraper.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\content\\scraper.js",
       "language": "javascript",
       "total_lines": 177,
       "code_lines": 124,
@@ -10138,7 +13671,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\lib\\ai-client.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\lib\\ai-client.js",
       "language": "javascript",
       "total_lines": 436,
       "code_lines": 300,
@@ -10388,7 +13921,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\lib\\parser.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\lib\\parser.js",
       "language": "javascript",
       "total_lines": 160,
       "code_lines": 115,
@@ -10503,7 +14036,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\lib\\prompt.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\lib\\prompt.js",
       "language": "javascript",
       "total_lines": 85,
       "code_lines": 55,
@@ -10537,7 +14070,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\lib\\providers.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\lib\\providers.js",
       "language": "javascript",
       "total_lines": 298,
       "code_lines": 269,
@@ -10607,7 +14140,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\lib\\storage.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\lib\\storage.js",
       "language": "javascript",
       "total_lines": 145,
       "code_lines": 64,
@@ -10740,7 +14273,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\options\\export.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\options\\export.js",
       "language": "javascript",
       "total_lines": 45,
       "code_lines": 31,
@@ -10783,7 +14316,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\options\\options.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\options\\options.js",
       "language": "javascript",
       "total_lines": 445,
       "code_lines": 331,
@@ -11087,7 +14620,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\options\\renderer.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\options\\renderer.js",
       "language": "javascript",
       "total_lines": 209,
       "code_lines": 137,
@@ -11220,7 +14753,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Extensions\\T-C-main-temp\\T-C-main\\options\\utils.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Extensions\\T-C-main-temp\\T-C-main\\options\\utils.js",
       "language": "javascript",
       "total_lines": 185,
       "code_lines": 92,
@@ -11389,7 +14922,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\background.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\background.js",
       "language": "javascript",
       "total_lines": 151,
       "code_lines": 107,
@@ -11549,7 +15082,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\eslint.config.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\eslint.config.js",
       "language": "javascript",
       "total_lines": 42,
       "code_lines": 39,
@@ -11573,7 +15106,7 @@
       "function_metrics": []
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\content\\scraper.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\content\\scraper.js",
       "language": "javascript",
       "total_lines": 177,
       "code_lines": 124,
@@ -11679,7 +15212,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\lib\\ai-client.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\lib\\ai-client.js",
       "language": "javascript",
       "total_lines": 459,
       "code_lines": 320,
@@ -11938,7 +15471,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\lib\\parser.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\lib\\parser.js",
       "language": "javascript",
       "total_lines": 160,
       "code_lines": 115,
@@ -12053,7 +15586,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\lib\\prompt.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\lib\\prompt.js",
       "language": "javascript",
       "total_lines": 85,
       "code_lines": 55,
@@ -12087,7 +15620,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\lib\\providers.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\lib\\providers.js",
       "language": "javascript",
       "total_lines": 306,
       "code_lines": 277,
@@ -12157,7 +15690,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\lib\\storage.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\lib\\storage.js",
       "language": "javascript",
       "total_lines": 145,
       "code_lines": 64,
@@ -12290,7 +15823,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\options\\export.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\options\\export.js",
       "language": "javascript",
       "total_lines": 45,
       "code_lines": 31,
@@ -12333,7 +15866,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\options\\options.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\options\\options.js",
       "language": "javascript",
       "total_lines": 447,
       "code_lines": 332,
@@ -12637,7 +16170,7 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\options\\renderer.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\options\\renderer.js",
       "language": "javascript",
       "total_lines": 209,
       "code_lines": 137,
@@ -12770,7 +16303,1557 @@
       ]
     },
     {
-      "file_path": "Resources\\Pages\\TCLens\\options\\utils.js",
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\Resources\\Pages\\TCLens\\options\\utils.js",
+      "language": "javascript",
+      "total_lines": 185,
+      "code_lines": 92,
+      "comment_lines": 76,
+      "blank_lines": 17,
+      "ldr_equivalent": 0.4973,
+      "console_log_count": 1,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 3,
+      "masked_issues": [],
+      "max_complexity": 4,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 11.13,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_console_log",
+          "severity": "low",
+          "line": 147,
+          "column": 4,
+          "message": "console.error in production code",
+          "suggestion": "Remove debug logs or use a proper logging library"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "escapeHTML",
+          "start_line": 14,
+          "end_line": 22,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "setHTML",
+          "start_line": 33,
+          "end_line": 37,
+          "line_count": 5,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "showMessage",
+          "start_line": 46,
+          "end_line": 49,
+          "line_count": 4,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "showHtmlMessage",
+          "start_line": 58,
+          "end_line": 61,
+          "line_count": 4,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "hideMessage",
+          "start_line": 68,
+          "end_line": 71,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getRiskLevel",
+          "start_line": 79,
+          "end_line": 83,
+          "line_count": 5,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getUserMessage",
+          "start_line": 91,
+          "end_line": 107,
+          "line_count": 17,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getDomain",
+          "start_line": 115,
+          "end_line": 121,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "formatDate",
+          "start_line": 129,
+          "end_line": 136,
+          "line_count": 8,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "copyToClipboard",
+          "start_line": 143,
+          "end_line": 149,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "showConfirmModal",
+          "start_line": 158,
+          "end_line": 185,
+          "line_count": 28,
+          "complexity": 1,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 159,
+          "end_line": 184,
+          "line_count": 26,
+          "complexity": 1,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "cleanup",
+          "start_line": 168,
+          "end_line": 173,
+          "line_count": 6,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "onConfirm",
+          "start_line": 175,
+          "end_line": 177,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "onCancel",
+          "start_line": 178,
+          "end_line": 180,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\background.js",
+      "language": "javascript",
+      "total_lines": 151,
+      "code_lines": 107,
+      "comment_lines": 15,
+      "blank_lines": 29,
+      "ldr_equivalent": 0.7086,
+      "console_log_count": 1,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 2,
+      "masked_issues": [],
+      "max_complexity": 5,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 1.0,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_console_log",
+          "severity": "low",
+          "line": 130,
+          "column": 4,
+          "message": "console.warn in production code",
+          "suggestion": "Remove debug logs or use a proper logging library"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 12,
+          "end_line": 15,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 17,
+          "end_line": 19,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "registerContextMenu",
+          "start_line": 21,
+          "end_line": 29,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 22,
+          "end_line": 28,
+          "line_count": 7,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 33,
+          "end_line": 36,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 40,
+          "end_line": 44,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "openOrFocusDashboard",
+          "start_line": 48,
+          "end_line": 61,
+          "line_count": 14,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 65,
+          "end_line": 70,
+          "line_count": 6,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 68,
+          "end_line": 68,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "handleMessage",
+          "start_line": 72,
+          "end_line": 85,
+          "line_count": 14,
+          "complexity": 5,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "injectScraper",
+          "start_line": 89,
+          "end_line": 102,
+          "line_count": 14,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "forwardToContentScript",
+          "start_line": 104,
+          "end_line": 113,
+          "line_count": 10,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "setBadge",
+          "start_line": 117,
+          "end_line": 133,
+          "line_count": 17,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "migrateStorage",
+          "start_line": 137,
+          "end_line": 151,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\eslint.config.js",
+      "language": "javascript",
+      "total_lines": 42,
+      "code_lines": 39,
+      "comment_lines": 2,
+      "blank_lines": 1,
+      "ldr_equivalent": 0.9286,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 0,
+      "masked_issues": [],
+      "max_complexity": 0,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.0,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": []
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\content\\scraper.js",
+      "language": "javascript",
+      "total_lines": 177,
+      "code_lines": 124,
+      "comment_lines": 22,
+      "blank_lines": 31,
+      "ldr_equivalent": 0.7006,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 3,
+      "masked_issues": [],
+      "max_complexity": 7,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.0,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 11,
+          "end_line": 22,
+          "line_count": 12,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "extractPageText",
+          "start_line": 54,
+          "end_line": 68,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getByLegalSelectors",
+          "start_line": 72,
+          "end_line": 103,
+          "line_count": 32,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getBySemanticContainer",
+          "start_line": 107,
+          "end_line": 116,
+          "line_count": 10,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getByParagraphDensity",
+          "start_line": 120,
+          "end_line": 145,
+          "line_count": 26,
+          "complexity": 7,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 131,
+          "end_line": 131,
+          "line_count": 1,
+          "complexity": 2,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "getFullBodyText",
+          "start_line": 149,
+          "end_line": 151,
+          "line_count": 3,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "extractFromElement",
+          "start_line": 155,
+          "end_line": 164,
+          "line_count": 10,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "cleanText",
+          "start_line": 168,
+          "end_line": 177,
+          "line_count": 10,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\lib\\ai-client.js",
+      "language": "javascript",
+      "total_lines": 459,
+      "code_lines": 320,
+      "comment_lines": 70,
+      "blank_lines": 69,
+      "ldr_equivalent": 0.6972,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 4,
+      "masked_issues": [],
+      "max_complexity": 9,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.14,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "constructor",
+          "start_line": 16,
+          "end_line": 20,
+          "line_count": 5,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyze",
+          "start_line": 35,
+          "end_line": 69,
+          "line_count": 35,
+          "complexity": 9,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "estimateCost",
+          "start_line": 81,
+          "end_line": 99,
+          "line_count": 19,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 83,
+          "end_line": 83,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "getProviders",
+          "start_line": 106,
+          "end_line": 108,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "listAvailableModels",
+          "start_line": 118,
+          "end_line": 136,
+          "line_count": 19,
+          "complexity": 7,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "prepareTextForAI",
+          "start_line": 148,
+          "end_line": 158,
+          "line_count": 11,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "listGeminiModels",
+          "start_line": 162,
+          "end_line": 188,
+          "line_count": 27,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 178,
+          "end_line": 179,
+          "line_count": 2,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 181,
+          "end_line": 187,
+          "line_count": 7,
+          "complexity": 3,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "listOpenAICompatibleModels",
+          "start_line": 190,
+          "end_line": 213,
+          "line_count": 24,
+          "complexity": 7,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 210,
+          "end_line": 210,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithOpenAICompatible",
+          "start_line": 217,
+          "end_line": 243,
+          "line_count": 27,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithAnthropic",
+          "start_line": 245,
+          "end_line": 263,
+          "line_count": 19,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithGemini",
+          "start_line": 265,
+          "end_line": 285,
+          "line_count": 21,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeWithTCLens",
+          "start_line": 287,
+          "end_line": 306,
+          "line_count": 20,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "fetchWithRetry",
+          "start_line": 322,
+          "end_line": 356,
+          "line_count": 35,
+          "complexity": 9,
+          "max_depth": 4,
+          "is_god_function": false
+        },
+        {
+          "name": "fetchWithTimeout",
+          "start_line": 358,
+          "end_line": 376,
+          "line_count": 19,
+          "complexity": 3,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 360,
+          "end_line": 360,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "delay",
+          "start_line": 378,
+          "end_line": 380,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 379,
+          "end_line": 379,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "handleOpenAICompatibleResponse",
+          "start_line": 384,
+          "end_line": 391,
+          "line_count": 8,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "handleAnthropicResponse",
+          "start_line": 393,
+          "end_line": 400,
+          "line_count": 8,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "handleGeminiResponse",
+          "start_line": 402,
+          "end_line": 409,
+          "line_count": 8,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "throwProviderError",
+          "start_line": 413,
+          "end_line": 448,
+          "line_count": 36,
+          "complexity": 7,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getErrorDetails",
+          "start_line": 450,
+          "end_line": 457,
+          "line_count": 8,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\lib\\parser.js",
+      "language": "javascript",
+      "total_lines": 160,
+      "code_lines": 115,
+      "comment_lines": 18,
+      "blank_lines": 27,
+      "ldr_equivalent": 0.7188,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 3,
+      "masked_issues": [],
+      "max_complexity": 8,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.0,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "parse",
+          "start_line": 16,
+          "end_line": 33,
+          "line_count": 18,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "isGatekeeperRejection",
+          "start_line": 41,
+          "end_line": 48,
+          "line_count": 8,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "extractJSON",
+          "start_line": 50,
+          "end_line": 82,
+          "line_count": 33,
+          "complexity": 8,
+          "max_depth": 3,
+          "is_god_function": false
+        },
+        {
+          "name": "fixCommonJSONIssues",
+          "start_line": 84,
+          "end_line": 92,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "validateAnalysis",
+          "start_line": 94,
+          "end_line": 105,
+          "line_count": 12,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeRiskScore",
+          "start_line": 107,
+          "end_line": 119,
+          "line_count": 13,
+          "complexity": 6,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeRequiredString",
+          "start_line": 121,
+          "end_line": 127,
+          "line_count": 7,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeFindings",
+          "start_line": 129,
+          "end_line": 143,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 140,
+          "end_line": 141,
+          "line_count": 2,
+          "complexity": 2,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeFinding",
+          "start_line": 145,
+          "end_line": 160,
+          "line_count": 16,
+          "complexity": 7,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\lib\\prompt.js",
+      "language": "javascript",
+      "total_lines": 85,
+      "code_lines": 55,
+      "comment_lines": 12,
+      "blank_lines": 18,
+      "ldr_equivalent": 0.6471,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 1,
+      "masked_issues": [],
+      "max_complexity": 2,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 2.64,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "buildUserMessage",
+          "start_line": 82,
+          "end_line": 85,
+          "line_count": 4,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\lib\\providers.js",
+      "language": "javascript",
+      "total_lines": 306,
+      "code_lines": 277,
+      "comment_lines": 23,
+      "blank_lines": 6,
+      "ldr_equivalent": 0.9052,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 1,
+      "masked_issues": [],
+      "max_complexity": 11,
+      "god_function_count": 1,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 5.0,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_god_function",
+          "severity": "high",
+          "line": 267,
+          "column": 7,
+          "message": "God function 'normalizeOpenAICompatibleModel': 15 lines, complexity=11",
+          "suggestion": "Break into smaller single-responsibility functions"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "normalizeGeminiModelId",
+          "start_line": 257,
+          "end_line": 259,
+          "line_count": 3,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "normalizeOpenAICompatibleModel",
+          "start_line": 267,
+          "end_line": 281,
+          "line_count": 15,
+          "complexity": 11,
+          "max_depth": 1,
+          "is_god_function": true
+        },
+        {
+          "name": "isLikelyChatModel",
+          "start_line": 289,
+          "end_line": 306,
+          "line_count": 18,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 305,
+          "end_line": 305,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\lib\\storage.js",
+      "language": "javascript",
+      "total_lines": 145,
+      "code_lines": 64,
+      "comment_lines": 55,
+      "blank_lines": 26,
+      "ldr_equivalent": 0.4414,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 2,
+      "masked_issues": [],
+      "max_complexity": 3,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 12.93,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "getSettings",
+          "start_line": 20,
+          "end_line": 25,
+          "line_count": 6,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "saveSettings",
+          "start_line": 33,
+          "end_line": 40,
+          "line_count": 8,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getHistory",
+          "start_line": 47,
+          "end_line": 51,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "saveAnalysis",
+          "start_line": 59,
+          "end_line": 75,
+          "line_count": 17,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getAnalysis",
+          "start_line": 83,
+          "end_line": 87,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 86,
+          "end_line": 86,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "getLatestAnalysisForUrl",
+          "start_line": 95,
+          "end_line": 99,
+          "line_count": 5,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 98,
+          "end_line": 98,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "deleteAnalysis",
+          "start_line": 107,
+          "end_line": 116,
+          "line_count": 10,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 109,
+          "end_line": 109,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "clearHistory",
+          "start_line": 123,
+          "end_line": 125,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "getStorageStats",
+          "start_line": 132,
+          "end_line": 143,
+          "line_count": 12,
+          "complexity": 3,
+          "max_depth": 1,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\options\\export.js",
+      "language": "javascript",
+      "total_lines": 45,
+      "code_lines": 31,
+      "comment_lines": 10,
+      "blank_lines": 4,
+      "ldr_equivalent": 0.6889,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 1,
+      "masked_issues": [],
+      "max_complexity": 4,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 0.55,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "exportAnalysis",
+          "start_line": 14,
+          "end_line": 45,
+          "line_count": 32,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 24,
+          "end_line": 31,
+          "line_count": 8,
+          "complexity": 2,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\options\\options.js",
+      "language": "javascript",
+      "total_lines": 447,
+      "code_lines": 332,
+      "comment_lines": 38,
+      "blank_lines": 77,
+      "ldr_equivalent": 0.7427,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 4,
+      "masked_issues": [],
+      "max_complexity": 10,
+      "god_function_count": 1,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 5.0,
+      "status": "clean",
+      "issues": [
+        {
+          "pattern_id": "js_god_function",
+          "severity": "high",
+          "line": 281,
+          "column": 0,
+          "message": "God function 'analyzeCurrentPage': 87 lines, complexity=10",
+          "suggestion": "Break into smaller single-responsibility functions"
+        }
+      ],
+      "function_metrics": [
+        {
+          "name": "(anonymous)",
+          "start_line": 52,
+          "end_line": 57,
+          "line_count": 6,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "bindElements",
+          "start_line": 61,
+          "end_line": 100,
+          "line_count": 40,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "bindEvents",
+          "start_line": 104,
+          "end_line": 130,
+          "line_count": 27,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 106,
+          "end_line": 106,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 109,
+          "end_line": 109,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 110,
+          "end_line": 111,
+          "line_count": 2,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 113,
+          "end_line": 116,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 120,
+          "end_line": 123,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "loadInitialState",
+          "start_line": 134,
+          "end_line": 146,
+          "line_count": 13,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "populateProviderOptions",
+          "start_line": 150,
+          "end_line": 158,
+          "line_count": 9,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "populateModelOptions",
+          "start_line": 160,
+          "end_line": 173,
+          "line_count": 14,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 171,
+          "end_line": 171,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "applySettingsToForm",
+          "start_line": 175,
+          "end_line": 180,
+          "line_count": 6,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "handleProviderChange",
+          "start_line": 182,
+          "end_line": 194,
+          "line_count": 13,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "updateCostEstimate",
+          "start_line": 196,
+          "end_line": 217,
+          "line_count": 22,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "refreshAvailableModels",
+          "start_line": 221,
+          "end_line": 255,
+          "line_count": 35,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "handleSettingsSubmit",
+          "start_line": 259,
+          "end_line": 270,
+          "line_count": 12,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "analyzeCurrentPage",
+          "start_line": 281,
+          "end_line": 367,
+          "line_count": 87,
+          "complexity": 10,
+          "max_depth": 4,
+          "is_god_function": true
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 358,
+          "end_line": 358,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "openHistoryEntry",
+          "start_line": 371,
+          "end_line": 377,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 372,
+          "end_line": 372,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 375,
+          "end_line": 375,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "handleClearHistory",
+          "start_line": 379,
+          "end_line": 385,
+          "line_count": 7,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "showView",
+          "start_line": 389,
+          "end_line": 400,
+          "line_count": 12,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "setLoading",
+          "start_line": 404,
+          "end_line": 407,
+          "line_count": 4,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "hideLoading",
+          "start_line": 409,
+          "end_line": 411,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "sendBg",
+          "start_line": 415,
+          "end_line": 421,
+          "line_count": 7,
+          "complexity": 5,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getTargetTab",
+          "start_line": 425,
+          "end_line": 432,
+          "line_count": 8,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "getModelLimit",
+          "start_line": 436,
+          "end_line": 447,
+          "line_count": 12,
+          "complexity": 4,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 438,
+          "end_line": 438,
+          "line_count": 1,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\options\\renderer.js",
+      "language": "javascript",
+      "total_lines": 209,
+      "code_lines": 137,
+      "comment_lines": 52,
+      "blank_lines": 20,
+      "ldr_equivalent": 0.6555,
+      "console_log_count": 0,
+      "var_usage_count": 0,
+      "any_type_count": 0,
+      "double_equals_count": 0,
+      "empty_arrow_count": 0,
+      "max_nesting_depth": 4,
+      "masked_issues": [],
+      "max_complexity": 6,
+      "god_function_count": 0,
+      "dead_code_count": 0,
+      "ast_mode": true,
+      "slop_score": 2.22,
+      "status": "clean",
+      "issues": [],
+      "function_metrics": [
+        {
+          "name": "renderDashboard",
+          "start_line": 23,
+          "end_line": 27,
+          "line_count": 5,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderTargetCell",
+          "start_line": 35,
+          "end_line": 49,
+          "line_count": 15,
+          "complexity": 4,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "renderProviderCell",
+          "start_line": 58,
+          "end_line": 70,
+          "line_count": 13,
+          "complexity": 5,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderLastAnalysis",
+          "start_line": 78,
+          "end_line": 88,
+          "line_count": 11,
+          "complexity": 3,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "renderAnalysis",
+          "start_line": 97,
+          "end_line": 146,
+          "line_count": 50,
+          "complexity": 6,
+          "max_depth": 4,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 127,
+          "end_line": 132,
+          "line_count": 6,
+          "complexity": 2,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 136,
+          "end_line": 144,
+          "line_count": 9,
+          "complexity": 1,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 141,
+          "end_line": 143,
+          "line_count": 3,
+          "complexity": 1,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderFinding",
+          "start_line": 154,
+          "end_line": 172,
+          "line_count": 19,
+          "complexity": 2,
+          "max_depth": 1,
+          "is_god_function": false
+        },
+        {
+          "name": "renderHistory",
+          "start_line": 180,
+          "end_line": 209,
+          "line_count": 30,
+          "complexity": 6,
+          "max_depth": 2,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 190,
+          "end_line": 198,
+          "line_count": 9,
+          "complexity": 4,
+          "max_depth": 0,
+          "is_god_function": false
+        },
+        {
+          "name": "(anonymous)",
+          "start_line": 205,
+          "end_line": 206,
+          "line_count": 2,
+          "complexity": 1,
+          "max_depth": 0,
+          "is_god_function": false
+        }
+      ]
+    },
+    {
+      "file_path": "c:\\Users\\ifeol\\Music\\Daniel\\Stride\\SpurBrowser.Tests\\bin\\Debug\\net9.0-windows10.0.17763\\Resources\\Pages\\TCLens\\options\\utils.js",
       "language": "javascript",
       "total_lines": 185,
       "code_lines": 92,

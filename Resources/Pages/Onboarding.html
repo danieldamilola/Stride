@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>Welcome to Stride</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap');
+  :root { --accent: #7fb89a; --accent-rgb: 127,184,154; }
+  :root, :root[data-theme="dark"] {
+    --bg-base: #0e0d0b;
+    --bg-surface: #111009;
+    --bg-hover: #1a1815;
+    --border: #2a2824;
+    --text-main: #e8e2d7;
+    --text-muted: #6b6560;
+    --text-dim: #4a4540;
+  }
+  :root[data-theme="light"] {
+    --bg-base: #F5F5F3;
+    --bg-surface: #FFFFFF;
+    --bg-hover: #E6E6E5;
+    --border: #D4D4D2;
+    --text-main: #111113;
+    --text-muted: #666461;
+    --text-dim: #A5A3A0;
+  }
+  @media (prefers-color-scheme: light) {
+    :root[data-theme="system"] {
+      --bg-base: #F5F5F3;
+      --bg-surface: #FFFFFF;
+      --bg-hover: #E6E6E5;
+      --border: #D4D4D2;
+      --text-main: #111113;
+      --text-muted: #666461;
+      --text-dim: #A5A3A0;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg-base);
+    color: var(--text-main);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .shell {
+    width: 100%;
+    padding: 32px 40px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .top { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; letter-spacing: -0.02em; color: #e8e2d7; opacity: 0.8; }
+  .brand-mark { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; }
+  .progress { display: flex; gap: 4px; }
+  .progress .bar { height: 2px; border-radius: 999px; transition: all 0.5s cubic-bezier(0.2,0.8,0.2,1); }
+  .skip { font-size: 12px; color: #4a4540; transition: color 0.15s; }
+  .skip:hover { color: #8a8278; }
+  .stage { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 40px 0; }
+  .step { display: none; max-width: 640px; margin: 0 auto; width: 100%; }
+  .step.active { display: block; animation: rise 400ms cubic-bezier(0.2,0.8,0.2,1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  h1 { font-size: 44px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.05; color: #e8e2d7; }
+  h2 { font-size: 30px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
+  .eyebrow { font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.12em; color: #4a4540; margin-bottom: 20px; }
+  .sub { color: #6b6560; font-size: 14px; line-height: 1.6; }
+  .highlights { list-style: none; margin-top: 32px; display: flex; flex-direction: column; gap: 10px; }
+  .highlights li { display: flex; gap: 12px; align-items: flex-start; }
+  .highlights .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; }
+  .highlights strong { font-size: 14px; font-weight: 500; color: #e8e2d7; }
+  .highlights span { font-size: 13px; color: #4a4540; }
+  .group { margin-top: 28px; }
+  .group-title { font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; color: #4a4540; margin-bottom: 12px; }
+  .card { background: #111009; border: 1px solid #2a2824; border-radius: 16px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; }
+  .row + .row { border-top: 1px solid rgba(255,255,255,0.05); }
+  .row .info { flex: 1; min-width: 0; }
+  .row .label { font-size: 13px; font-weight: 500; color: #e8e2d7; }
+  .row .desc { font-size: 12px; color: #6b6560; line-height: 1.4; margin-top: 2px; }
+  .toggle { appearance: none; -webkit-appearance: none; width: 40px; height: 22px; flex-shrink: 0; border-radius: 999px; background: #2a2824; position: relative; transition: background 0.2s; cursor: pointer; border: none; }
+  .toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #0e0d0b; transition: transform 0.2s; }
+  .toggle:checked { background: var(--accent); }
+  .toggle:checked::after { transform: translateX(18px); }
+  .checkbox { width: 18px; height: 18px; flex-shrink: 0; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; cursor: pointer; border: 1.5px solid #3a3630; background: transparent; }
+  .checkbox.on { background: var(--accent); border-color: var(--accent); }
+  .tool-grid { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tool { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: #111009; border: 1px solid #2a2824; border-radius: 16px; }
+  .tool .t-head { display: flex; align-items: center; gap: 10px; }
+  .tool .t-icon { width: 28px; height: 28px; flex-shrink: 0; border-radius: 8px; background: rgba(127,184,154,0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; }
+  .tool .t-icon svg { width: 15px; height: 15px; }
+  .tool .t-name { font-size: 13px; font-weight: 500; flex: 1; color: #e8e2d7; }
+  .tool .t-desc { font-size: 12px; color: #6b6560; line-height: 1.5; }
+  .tool .t-state { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .addr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+  .addr-card { text-align: left; border-radius: 16px; overflow: hidden; transition: all 0.15s; border: 1.5px solid #2a2824; background: #161512; }
+  .addr-card.on { border-color: var(--accent); background: rgba(127,184,154,0.04); }
+  .addr-preview { background: #0e0d0b; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 16px; height: 112px; position: relative; display: flex; align-items: center; justify-content: center; }
+  .addr-body { padding: 14px; }
+  .addr-title { font-size: 13px; font-weight: 500; color: #e8e2d7; margin-bottom: 4px; }
+  .addr-desc { font-size: 12px; color: #6b6560; line-height: 1.4; }
+  .tiles { display: flex; gap: 8px; }
+  .tile { flex: 1; padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; transition: all 0.15s; border: 1px solid #2a2824; background: #111009; color: #4a4540; }
+  .tile.on { background: rgba(127,184,154,0.08); border-color: rgba(127,184,154,0.5); color: #e8e2d7; }
+  .swatches { display: flex; gap: 10px; }
+  .swatches button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #2a2824; transition: transform 0.1s, box-shadow 0.1s; }
+  .swatches button.on { box-shadow: 0 0 0 2px #0e0d0b, 0 0 0 4px var(--accent); transform: scale(1.05); }
+  .segmented { display: flex; background: #111009; border: 1px solid #2a2824; border-radius: 12px; padding: 3px; gap: 3px; }
+  .segmented button { flex: 1; padding: 8px 10px; border-radius: 8px; font-size: 12px; color: #4a4540; transition: all 0.15s; }
+  .segmented button.on { background: rgba(127,184,154,0.12); color: #e8e2d7; }
+  .engine { width: 100%; text-align: left; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; transition: all 0.15s; border: 1px solid #2a2824; background: #111009; margin-bottom: 6px; }
+  .engine.on { background: rgba(127,184,154,0.06); border-color: rgba(127,184,154,0.5); }
+  .engine .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #3a3630; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .engine.on .radio { border-color: var(--accent); background: var(--accent); }
+  .engine .radio-dot { width: 6px; height: 6px; border-radius: 50%; background: #0e0d0b; display: none; }
+  .engine.on .radio-dot { display: block; }
+  .gratitude { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 20px; padding: 20px 0; }
+  .g-check { width: 56px; height: 56px; border-radius: 50%; background: rgba(127,184,154,0.12); color: #7fb89a; display: flex; align-items: center; justify-content: center; }
+  .g-check svg { width: 28px; height: 28px; }
+  .foot { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.05); }
+  .primary { background: var(--accent); color: #0e0d0b; font-size: 13px; font-weight: 600; padding: 10px 22px; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: opacity 0.15s, transform 0.1s; }
+  .primary:hover { opacity: 0.9; }
+  .primary:active { transform: scale(0.97); }
+  .ghost { color: #4a4540; font-size: 12px; transition: color 0.15s; }
+  .ghost:hover { color: #8a8278; }
+  .ghost:disabled { opacity: 0; pointer-events: none; }
+  .mono { font-family: 'DM Mono', monospace; }
+  kbd { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-family: 'DM Mono', monospace; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #8a8278; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAQAElEQVR4AexdDZhNZR7/H5lnN0+75mr1QfnOR2ptiRahWFSkbERENJRRiHznm3wlVlNMMRQps6ZVotaILRpFUraEQpKvstyZfZ5V22jP/n/nzh1m7syZ9z1f99x73/ucd87H+//8/X/nPeeec+6ZcuTSJ5k/gUCgI88m8HwVz3cEAslHuf2H2/+46aolX4gBMAE2R0NYBYAZsAOGyS6ViRwlAAdeIxCoOJILu0XTKEikr+P5VJ5353kTTqIqtwrcNG5qKooAMAE2VUNY6cAM2AHDIDAFtsC4qJq9NUcIEOA9PRBIfpMD/4ZIm0NELbmpyVkEGFNtDjAG1gHG3AnztgiAIAKB5C28h6/jYDpzU5M3CDDW+jpgH7BJBEsEwDDEjlcVFJ6Z6U3WyksEAow9iGCcL9SI6BXYIE2ASpUq9udhaA8Xv7uAfSXiCQLG+cIe1EbWnRQB+CRkka5ri9kJTlZ4piYfIVABtUGNZGISIgAP+ck85G8g0gaS+vgcAW0gaoWamQUa7iuTAJUrV76ChbN5yG/PczXFBAI6apVdUDvTiE0JkMyf/Pz8tXzMx3d4U0Oq018IoGaoHZfQ9CKSKQE0TcvUNFLF91dthaNB7TSuoZlCqQQInUwYQ4mZvurzPQJ6+1AtSw60RAKEvk6oE76SIYvFrdrAUE0jY48gAB8zavDXiQWRompLLCOAmqK2xXOIIAAfM2axkPqezyDE2VShoLZF0ipCAP7+2JG/7qkrfEUgiqcVvXuoxudzKkIALv7o811qKT4R0IvUuJAABczgmwvxmbbKqhCBlgW1NjYUEoD3/oeNLepPAiCgF9baIEDB2SHfY06A3FWKQKBzQc1Dj4Rpmt4NW1VLHATCNTdGACLtLlKfBEMgVPNyPBTgZoE6+Uuw8nO6LVH7cnxxoAWvJMRUseJvqVbN6tTkxkbU4U+3Us/7uhjzaldVjfv8S0oQtS+n6/qNJXXG8rby5cvTH5s2plHDBtHSRfPojcxltHXjGnpnzSv0SkYaLZg7jSaNG06PDexnzFctX0SLFsyiJo3/EMtpS8eO2mMEaCit6UOFKldeQXfd2Y6mTRxFm9Zn0rxZk+ieu26n+vXq0GWVL6WLLrrINOpG119LC56eSjVrVDOVi6dOHgEaYgSoFatJYUhPefB+en7+DMpa+SKNHTGY2t56CyUlJVlOqU/PrpZ1Y02RR4BaPAJQlVgLHEN8j653U8bCuQQC3NDoOsdSwLlBoowCmkZV8DUw4Bh6HhjCML+ECz9kUAph2HfD5XXX1nPDrB9tBkCAi/0YWfGY2rRuYQz1GObr1nH3qPXzz/nF3cfr+sUggObn7KpceTnNnDKWpk8aTU4O9WY57933tVl3PPVpIIBvE7qleVOaP3sKtW7ZzLMYd3/+JR05eswzf247Ksu+bwnwYK9uNGf6eLr6Km/PUZcuX1UWZnHV70sCTBk/gh5J6e0p0BvefY96PfQYffzJZ576jbYz3xEAV+ratWnlOC4//fRfOnHyB8Lxfdv2nfT2hk20MvNvNHNumlH4KTPm0TeHjzju1+8GfUWAbZvXGtfqnQJt7/4DlJ6xgu7vO4ja3NmN7u3Zn1IGPUEjxk6l6bMX0PMvvERvvb0xIQsfxtg3BPjLnCnhmGzN9311gBYvW0l9H36cUlKH0/KVq+nbI0dt2YxnZV8QAHflmt50gy2cUfjZ856nhwYOp2UrMumrA4ds2UsU5agToGWLm427clYBv7Dwb67bYNVMwupFlQD1rqlNs6c9aRl8DPXY41XhIyEU3RI1AgSSK9LIYamicUbIPZe+zBjqIzrUBikEokaAkY+n0rX160oFGxaeOnM+vfrXNeFVNbeBQFQIgBs7t7ZqbinsPgOG0N83/sOSrlKKRCAqBLj3no6RkQhsad6mMx04eFhAUomIIuA5AXA/38pdvS49UkRzUnISCHhKADzJY2XvTx06hr7/4ZREWkpUFAFPCdCVh37ZhzkmP/UM4RataEJKTg4BzwiABzi7dpE79i9avJyyN70vl1GCS8um7xkBsPfLPMOHK3wrXsuSzUfJSyLgGQGaNJb70YW6uidZSYvinhCg2tVV6ffXNRAOEXu/IoAwXLYEPSFAs5sbSwWpii8Fly1hTwggM/yrvd9WPaWVXSdAUlJ5atpY/Pj/4fZPpJNQCtYRcJ0AzW6+iXABSDTEj3a4S4Arr7iMunbpRBPGDKNn504zGpaxDX2iccaLnOsEaM4EEAXr4KFv6fM9+0TFpeRQXBT69VeX0PDBD9Md7W+jm25sZDQsYxv6IANZKeM+ELYagusEqCvxM66cj3ZYzcNUD3ceVyxJM4puKsidIANkocOrcT+5ToBKlcR/e7px0xbHAUchZ0weQxUqXCxsG7LQga6wUowKuk6ASyslC0GD5/YPfvOtkKyoEIby8aOGiopHyEEXNiI6HN6AV9TgZ+loWHbYvKk5VwmA6/9lvZkjHF0wNy+86Ni8f99eUnt+cccYCWCj+Han1vH1GK+mwStq8MoaNCxjG/qc8mNmx1UCXCox/Oc6TADsuTiemyUv0gcbsCUiKyODl1DglTR4NU1xPWxDH2SK9zm97i4BAmLDP5IK5jk7ArRo1hRmHWlO2goHJPIqGhGZsD2rc1cJIHMC6PQI0KDeNVYxidBz0haMY8/G8R7LZg0ykDWTsdvnKgFkDgFOnwNU/l0lu9gU6jtpC0ZlXkFTlizs2WmuEsBOYPGsi7ujovn95pJLREUtyblKgNNngsJB4YciwsICgqf+dUZASkzESVvwKJOrDIawLdtcJcAZCQIkJ1eUjd1Ufu/+r037ZTqdtAW/MrnKYAjbss1VApwO5grHE6joLAFyPnTusrKTtgCITK4yGMK2bHOXAFEcAfA2kHey7f+CCDZgSxZYM3mZESCmDwF5ef+mX375xQyLwj6Z42KhUhkLS15aSWfP/liGVOnd0IWN0iWs9YjmCuyAoTUvYlqujgAI4fQZscPAr3/9K6pe7SqoONaw506fs8CyPejChmUDJSgiR+RaQlfEJlHsIhQlNrhOAJmTGDfeB/jelm00bvIsqZEAez50oCuBpZCoTI5m2Ak5ExBynQB4xk8gDkOk9S3uvBAShezdfzDheG44MvkDGchCx0TMcpdMjjLYWQ3IdQJsydkuHFuDenVI5gESYcMsiKF82qz5hDeFzUt70SDDzl27CQ1Fxzb0QQayrOL4hNyQo6hhGexEbRaXc50AADg/P7+431LXWzRrUmqfEx0obtaadYRCDxkxgdCwjG3oc8JHaTZkcgNmwK40W05td50A586dIxkm46VRTiXnNzsyuQEzYOd2Dq4TAAns2PkpZkKtft06dHenDkKysSSEnJCbaMwymInaLEnOEwJ88unnJfkudRvAKrUzRjtkc5LFzCosnhDg+ImT9OnuL4RjxJ4iC5iw8SgIIhfkJOoaWAEzUXk7cp4QAAHu+ixxRwEQABiINjOsRG2IynlGgKw31pMMq7HH9OvdXTQP38ohB+QiGiAwAlai8nblPCMArmlnrVkvFe+Afr0I7xGWUvKRMGJHDjIhASNgJaNjR9YzAiBIMFv2Jc747563t7sN6jHVEDNilwka2AAjGR27sp4SAN9rX+dDgWzQE8cOozq1a8iqRU0esSJm2QCADTCS1bMj7ykBECj+QQPOcrEs05YvflZGPKqyVmIFJsDG68A9JwASBNMxl234jyKXX1ZZVs0zecSGGK04tIqJFV8X6kSFAJvfz6H3t354YRzCy2tWZRB+OSOs4JEgYkJsVtwBC2BiRdeuTlQIgKDT0pfSd0ePY1G64bdz7du2ltZzSwGxICYr9oEBsChL163+qBHg+InvyU7ik598gnrf39UtXITtIgbEIqxQTBAYAItimz1bjRoBkOEH23bQCxkrsGippQ7oQ0vT50Xl5hGu7sE3YrAUPCshd2DAi1GbokoAZP3yytW0cbP1F0PgKtvo4Y96RoRw4eETvpGDlYackbsVXSd1ok4AJDNp+lw6ZPPlECgGioK9Elffrm9YH6YdabAFm7ANH/BlxzByRc52bDil6wsCIJkHUgZjZruhOLj+/kLaHMK7fgb27021a1aXtgsd6MIGbMEmbEsbKkHBqVxLMC29yTcEQOT4jyBOPghRu1Z16tOzG63ISKPNb68mvAUsY+EzNHfmRBo/eig9+khfo2EZ29AHGchCB7qwgdicaMgNOTphyykbviIAknp81CTCfwTDspMNz+LjTR8N6l9DeHXdnR3aUq/ufzYalrENfZCBrJO+YQs5ITcs+6n5jgAAB/8RbPSEp7AYFw25ICcrybit40sCIOmtOdup3yPD6Mt9X2E1JhtiRw7Ixa8J+JYAAGz/1wdp5Lhp5NaPNODDrYaYETtycMuHE3ZBAN0JQ27ZwKtj8DOt8VNmSz1X6FY8ZdnFXT3EipgRe1nyUe7XQYAfoxyEkHvcLHl02DiaOTeN8OCEkJKHQogJsSFGxOqhazuufgQBgnYseK2Le+b9B42gZxdmSD1j6Facx0+cNGJBTIjNLT8u2Q2W03WydkvOpYhEzOKpmVVZb1IKEyHj5dfon1/sFVFzVAY+4RsxIBbE5KgDD4yh9uU0TTvkgS9XXODhSRRh4JDR1OPBVFqwcAlt276T3CgGbMI2fMAXfMI3YnAlOQ+MovY8Auh7PPDluosj3x2jzKy1NGLsVGrb8T4aM3EGrV2fTfv2H6AfTp0WflMJAsWbOaADXdiALdiEbfiAL8i52bywrev6HowAu7xw5qWP/PxztOWDj2jWM8/RQ6nD6Z7u/ahluy50R5cHCNfhh46YQFNmzDOuOOIKHZaxDX2QgSx0oAsbsAWbXubghS8eAXZhBMjxwpkffGC4xp24j3ftpg3vvke4OoeGZWxDH2T8EKsXMfAIkFMulz/sbCs3NSUWAlu59Ln4Gshp62/xHzUlFAKhmhsE0HVtdULlrpKlcM0NAvBQcJgxWctNTYmBwNqCmpNBgFDO2ouhufob/wicr3UhAYLBIH66q04Go1x9D9xvLai14aqQAMYaabNDc/U3fhEoWuMiBAgxQ8uM3+QTPTMtM1Tj8zgUIQA288WBMTw/y01N8YXA2YLaFskqggA4O9Q03fp/WyxiXq34BQHUFLUtHk8EASBw5kzeEiI9HcuqxQMCenqoppG5lEgAiAWDealEWjapT4wjoGWHallyGqUSAOJ8zOiu6/QxllWLPQRQO9TQLHJTAvAxIzcpKakzDJkZUX32EXDaAmqG2qGGZrZNCQDFU6dOneR5e1KHA4qdj3Hobl9QO9OwyyQAtMEi/v7YQZ0YAg2/Nz0dtULNRCIVIkDYEE4m+OvEAF5X1wkYBJ9NZ1Eb1EgmLikCwDC+TvDxpSGRumJIvvlomagJaiMbkjQB4ICHl8M8zPQg0joRkbqBxCBEaWLstU6oBWpiJQZLBAg7Ysfrg8HcVhQignqebqMShAAAAHpJREFUgDz7MNYofG4r1MCOV1sECDtGEEyEu3kYqskniqN4OzOT/6rJSQQYU30UMAbWwNwJ444QIBwIhqFgMO/pII8KHGiAeGTg+USe4xiFC0rHiAgnkDrP1UREF4AATIDNMcaMsTKO68CuE68HgGmQsQXGF+jYXvw/AAAA//8uxYgrAAAABklEQVQDAP0i5Kr1tkuEAAAAAElFTkSuQmCC" class="brand-mark" alt="Stride" style="width:28px;height:28px;border-radius:8px" /> Stride</div>
+    <div class="progress" id="progress"></div>
+    <button class="skip" id="skipBtn">skip</button>
+  </header>
+
+  <main class="stage">
+    <!-- Step 1 · Welcome -->
+    <section class="step active" data-step="0">
+      <p class="eyebrow">First run</p>
+      <h1>A browser that<br>works for you.</h1>
+      <p class="sub" style="margin-top:16px">Stride is a light, customizable, and opinionated browser for Windows. Built to stay out of your way and do exactly what you configure it to do.</p>
+      <ul class="highlights">
+        <li><span class="dot" style="background:var(--accent)"></span><span><strong>Light by design.</strong> <span>Tab hibernation and sleep keep RAM and CPU low as your session grows.</span></span></li>
+        <li><span class="dot" style="background:var(--accent)"></span><span><strong>uBlock Origin built in.</strong> <span>Ad and tracker blocking from the very first page load.</span></span></li>
+        <li><span class="dot" style="background:var(--accent)"></span><span><strong>Focus mode.</strong> <span>A hard lock that keeps you off distraction sites when you need to work.</span></span></li>
+        <li><span class="dot" style="background:var(--accent)"></span><span><strong>YouTube tools.</strong> <span>Quality control, speed presets, and hide anything you don't want to see.</span></span></li>
+      </ul>
+    </section>
+
+    <!-- Step 2 · Address bar -->
+    <section class="step" data-step="1">
+      <p class="eyebrow">Address bar</p>
+      <h2>How do you want to navigate?</h2>
+      <p class="sub">Stride has two address bar modes. You can switch between them later in Settings. This just picks your starting point.</p>
+      <div class="addr-grid">
+        <button class="addr-card" data-floating="true" id="addrFloating">
+          <div class="addr-preview">
+            <div style="position:absolute;top:8px;left:12px;display:flex;gap:4px">
+              <div style="height:18px;width:72px;border-radius:6px;display:flex;align-items:center;gap:4px;padding:0 6px;background:#1e1c18"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></span><span style="height:5px;flex:1;border-radius:999px;background:rgba(255,255,255,0.1)"></span></div>
+              <div style="height:18px;width:14px;border-radius:6px;background:#1a1815"></div>
+            </div>
+            <div style="width:160px;height:26px;border-radius:999px;display:flex;align-items:center;padding:0 10px;gap:6px;background:#1e1c18;border:1px solid rgba(127,184,154,0.25);box-shadow:0 4px 16px rgba(0,0,0,0.3)"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent)"></span><span style="height:5px;flex:1;border-radius:999px;background:#3a3630"></span></div>
+          </div>
+          <div class="addr-body"><div class="addr-title">Floating command bar</div><div class="addr-desc">Centered overlay on top of the page. Toggle it with <kbd>Ctrl+L</kbd>. Feels like a launcher.</div></div>
+        </button>
+        <button class="addr-card" data-floating="false" id="addrStandard">
+          <div class="addr-preview" style="flex-direction:column;justify-content:flex-start;gap:8px;padding-top:12px">
+            <div style="display:flex;align-items:center;gap:6px;width:100%"><span style="display:flex;gap:4px"><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span></span><span style="flex:1;height:22px;border-radius:6px;display:flex;align-items:center;padding:0 8px;gap:6px;background:#1e1c18;border:1px solid #2a2824"><span style="width:6px;height:6px;border-radius:50%;background:#3a3630"></span><span style="height:5px;flex:1;border-radius:999px;background:rgba(255,255,255,0.1)"></span></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span></div>
+            <div style="flex:1;width:100%;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05)"></div>
+          </div>
+          <div class="addr-body"><div class="addr-title">Standard address bar</div><div class="addr-desc">Inline in the toolbar. Classic browser feel. Can be positioned left or right of the tab strip.</div></div>
+        </button>
+      </div>
+      <p style="font-size:11px;color:#3a3630;margin-top:14px">Note: switching modes requires a restart.</p>
+    </section>
+
+    <!-- Step 3 · Privacy -->
+    <section class="step" data-step="2">
+      <p class="eyebrow">Privacy</p>
+      <h2>Defaults that don't phone home.</h2>
+      <p class="sub">Everything below is on unless you turn it off. Stride keeps your data on your machine.</p>
+      <div class="card" style="margin-top:20px">
+        <div class="row"><div class="info"><div class="label">Ad & tracker blocking</div><div class="desc">uBlock Origin v1.73.0, runs locally with no cloud dependency.</div></div><input type="checkbox" class="toggle" data-k="adBlock" checked></div>
+        <div class="row"><div class="info"><div class="label">Force HTTPS</div><div class="desc">Upgrades http:// to https:// automatically. Localhost stays http.</div></div><input type="checkbox" class="toggle" data-k="forceHttps" checked></div>
+        <div class="row"><div class="info"><div class="label">SmartScreen</div><div class="desc">Checks URLs and downloads against reputation data. Requires restart to change.</div></div><input type="checkbox" class="toggle" data-k="smartScreen" checked></div>
+        <div class="row"><div class="info"><div class="label">Tab hibernation</div><div class="desc">Unloads tabs after 1 to 5 minutes of inactivity based on open tab count.</div></div><input type="checkbox" class="toggle" data-k="hibernate" checked></div>
+        <div class="row"><div class="info"><div class="label">Clear data on exit</div><div class="desc">Wipes history, cookies, and cache every time you close the window.</div></div><input type="checkbox" class="toggle" data-k="clearOnExit"></div>
+      </div>
+    </section>
+
+    <!-- Step 4 · Extensions -->
+    <section class="step" data-step="3">
+      <p class="eyebrow">Extensions</p>
+      <h2>Two tools, already installed.</h2>
+      <p class="sub">Stride ships with two built-in extensions. No extension store, no installs. They're always there.</p>
+      <div class="tool-grid">
+        <div class="tool">
+          <div class="t-head"><span class="t-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="t-name">uBlock Origin</span><span style="font-size:10px;padding:3px 7px;border-radius:6px;font-family:'DM Mono',monospace;background:rgba(127,184,154,0.12);color:var(--accent)">Always on</span></div>
+          <div class="t-desc">Blocks ads, trackers, and malware domains. The zip ships with Stride and is SHA-verified on load. It never downloads from the web after install. YouTube ads, banner ads, cookie banners: gone.</div>
+        </div>
+        <div class="tool">
+          <div class="t-head"><span class="t-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg></span><span class="t-name">T&C Lens</span><span style="font-size:10px;padding:3px 7px;border-radius:6px;font-family:'DM Mono',monospace;background:#1a1815;color:#6b6560">On demand</span></div>
+          <div class="t-desc">Press <kbd>Alt+T</kbd> on any page. Stride extracts the page text and opens it in a clean reader view so you can actually read what you're agreeing to.</div>
+          <div style="margin-top:12px;border-radius:10px;overflow:hidden;border:1px solid #1e1c18;background:#0e0d0b;font-size:10px;font-family:'DM Mono',monospace">
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.05)"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span><span style="color:#4a4540">T&C Lens / some-service.com</span><span style="margin-left:auto;display:flex;gap:6px"><span style="height:10px;width:44px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="height:10px;width:56px;border-radius:4px;background:rgba(127,184,154,0.12)"></span></span></div>
+            <div style="padding:10px 12px;display:flex;flex-direction:column;gap:6px"><span style="height:6px;border-radius:999px;background:rgba(127,184,154,0.18);width:92%"></span><span style="height:6px;border-radius:999px;background:rgba(127,184,154,0.28);width:85%"></span><span style="height:6px;border-radius:999px;background:#1e1c18;width:78%"></span><span style="height:6px;border-radius:999px;background:#1e1c18;width:70%"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 5 · Search -->
+    <section class="step" data-step="4">
+      <p class="eyebrow">Search</p>
+      <h2>Who handles your queries?</h2>
+      <p class="sub">Default is DuckDuckGo. Suggestions are fetched locally first and debounced at 150ms before any network request.</p>
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:6px" id="engineList"></div>
+    </section>
+
+    <!-- Step 6 · Appearance & Import -->
+    <section class="step" data-step="5">
+      <p class="eyebrow">Appearance & import</p>
+      <h2>Last things.</h2>
+      <div style="margin-top:20px">
+        <div class="group-title">Theme</div>
+        <div class="tiles" id="themeTiles">
+          <button class="tile" data-theme="system"><span class="swatch" style="background:linear-gradient(135deg,#0e0d0b 50%,#e8e2d7 50%)"></span>System</button>
+          <button class="tile" data-theme="light"><span class="swatch" style="background:#e8e2d7"></span>Light</button>
+          <button class="tile" data-theme="dark"><span class="swatch" style="background:#0e0d0b"></span>Dark</button>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="group-title">Accent color</div>
+        <div class="swatches" id="accentSwatches">
+          <button data-accent="#7fb89a" style="background:#7fb89a" aria-label="Sage"></button>
+          <button data-accent="#c9a86c" style="background:#c9a86c" aria-label="Gold"></button>
+          <button data-accent="#7c9cbf" style="background:#7c9cbf" aria-label="Blue"></button>
+          <button data-accent="#9b8ec4" style="background:#9b8ec4" aria-label="Violet"></button>
+          <button data-accent="#e8e2d7" style="background:#e8e2d7" aria-label="Cream"></button>
+          <button data-accent="#c47b6a" style="background:#c47b6a" aria-label="Terracotta"></button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="group-title">Import from</div>
+        <div class="tiles" id="importTiles">
+          <button class="tile" data-import="chrome">Chrome</button>
+          <button class="tile" data-import="edge">Edge</button>
+          <button class="tile" data-import="none">Skip</button>
+        </div>
+      </div>
+      <div class="card" id="importOpts" style="margin-top:12px;display:none">
+        <div class="row"><div class="info"><div class="label">Browsing history</div><div class="desc">Last 90 days</div></div><button class="checkbox" data-k="importHistory" aria-label="Import history"></button></div>
+        <div class="row"><div class="info"><div class="label">Bookmarks</div><div class="desc">All folders</div></div><button class="checkbox" data-k="importBookmarks" aria-label="Import bookmarks"></button></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="row"><div class="info"><div class="label">Set Stride as default browser</div><div class="desc">Links from other apps will open in Stride.</div></div><input type="checkbox" class="toggle" data-k="setDefault" checked></div>
+      </div>
+    </section>
+
+    <!-- Step 7 · Done -->
+    <section class="step" data-step="6">
+      <div class="gratitude">
+        <img src="data:image/png;base64,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" style="width:56px;height:56px;border-radius:16px" alt="Stride" />
+        <h2>Ready.<br>Start browsing.</h2>
+        <p class="sub" style="text-align:center">84 features, all yours. Open Settings anytime to go deeper.</p>
+      </div>
+      <div style="margin-top:40px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">New tab, close tab</span><kbd>Ctrl+T / Ctrl+W</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">Focus address bar</span><kbd>Ctrl+L</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">Open OneTab</span><kbd>Ctrl+Shift+O</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">T&C Lens on current page</span><kbd>Alt+T</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">History</span><kbd>Ctrl+H</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">Settings</span><kbd>Ctrl+,</kbd></div>
+      </div>
+      <button class="primary" id="doneBtn" style="width:100%;justify-content:center;margin-top:40px;padding:14px">Open new tab</button>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <button class="ghost" id="backBtn" style="display:flex;align-items:center;gap:6px;font-size:12px"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2.5L4.5 7 9 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> back</button>
+    <span class="mono" id="pageNum" style="font-size:11px;color:#3a3630">01 / 06</span>
+    <button class="primary" id="nextBtn" style="display:flex;align-items:center;gap:6px">Continue <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2.5L9.5 7 5 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </footer>
+</div>
+
+<script type="application/json" id="onboardingData">{{ONBOARDING_DATA}}</script>
+<script>
+  const __T = '{{IPC_TOKEN}}:';
+  const dataEl = document.getElementById('onboardingData');
+  let initial = {};
+  try { initial = JSON.parse(dataEl.textContent || '{}'); } catch (e) {}
+  // dataEl holds Stride settings snapshot when hosted; fallback to localStorage for standalone preview
+  const LS_KEY = 'stride.onboarding.figma';
+  const ls = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch(e) { return {}; }})();
+  const S = Object.assign({ theme: 'dark', accent: '#7fb89a', floatingBar: true, adBlock: true, smartScreen: true, httpsForce: true, clearOnExit: false, hibernate: true, engine: 'ddg', importFrom: 'chrome', importHistory: true, importBookmarks: true, setDefault: true }, initial, ls);
+  const save = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e) {} };
+  const post = (msg) => { if (window.chrome?.webview) window.chrome.webview.postMessage(__T + msg); };
+  const postSetting = (k, v) => post('setting:' + k + ':' + v);
+
+  const steps = [...document.querySelectorAll('.step')];
+  const progressEl = document.getElementById('progress');
+  const total = 6;
+  for (let i = 0; i < total; i++) {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    b.style.cssText = 'height:2px;border-radius:999px;transition:all 0.5s;';
+    progressEl.appendChild(b);
+  }
+  const bars = [...progressEl.children];
+  let cur = 0;
+  const backBtn = document.getElementById('backBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const pageNum = document.getElementById('pageNum');
+  const skipBtn = document.getElementById('skipBtn');
+  const foot = document.querySelector('.foot');
+
+  function render() {
+    steps.forEach((s,i) => s.classList.toggle('active', i === cur));
+    bars.forEach((b,i) => {
+      b.style.width = i === cur ? '2.5rem' : '0.5rem';
+      b.style.background = i <= cur ? (S.accent || '#7fb89a') : '#2a2824';
+    });
+    pageNum.textContent = String(cur+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+    backBtn.style.visibility = cur === 0 ? 'hidden' : 'visible';
+    const isDone = cur === 6;
+    foot.style.display = isDone ? 'none' : 'flex';
+    document.documentElement.dataset.theme = S.theme || 'dark';
+    document.documentElement.style.setProperty('--accent', S.accent);
+    const hexToRgb = h => { const v=h.replace('#',''); return [parseInt(v.slice(0,2),16),parseInt(v.slice(2,4),16),parseInt(v.slice(4,6),16)].join(','); };
+    document.documentElement.style.setProperty('--accent-rgb', hexToRgb(S.accent));
+  }
+
+  // Top skip goes to done
+  document.getElementById('skipBtn').addEventListener('click', () => { cur = 6; render(); });
+  backBtn.addEventListener('click', () => { if (cur > 0) { cur--; render(); }});
+  nextBtn.addEventListener('click', () => {
+    if (cur < 6) { cur++; render(); }
+  });
+  document.getElementById('doneBtn')?.addEventListener('click', () => {
+    post('onboarding-done');
+    // standalone fallback
+    if (!window.chrome?.webview) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#6b6560;font-family:DM Sans,sans-serif">Done. In Stride this opens a new tab.</div>'; }
+  });
+
+  // Address bar cards
+  const floatCard = document.getElementById('addrFloating');
+  const stdCard = document.getElementById('addrStandard');
+  function syncAddr() {
+    const on = !!S.floatingBar;
+    floatCard.classList.toggle('on', on);
+    stdCard.classList.toggle('on', !on);
+    floatCard.style.borderColor = on ? S.accent : '#2a2824';
+    floatCard.style.background = on ? S.accent + '08' : '#161512';
+    stdCard.style.borderColor = !on ? S.accent : '#2a2824';
+    stdCard.style.background = !on ? S.accent + '08' : '#161512';
+  }
+  floatCard.addEventListener('click', () => { S.floatingBar = true; save(); postSetting('useFloatingBar','true'); syncAddr(); });
+  stdCard.addEventListener('click', () => { S.floatingBar = false; save(); postSetting('useFloatingBar','false'); syncAddr(); });
+  syncAddr();
+
+  // Toggles
+  document.querySelectorAll('input.toggle[data-k]').forEach(el => {
+    const k = el.dataset.k;
+    const map = { adBlock:'adBlock', smartScreen:'smartScreen', httpsForce:'forceHttps', clearOnExit:'clearOnExit', hibernate:'tabHibernation', setDefault:'setDefault' };
+    const sk = map[k] || k;
+    if (S[sk] !== undefined) el.checked = !!S[sk];
+    // also handle direct keys
+    if (S[k] !== undefined) el.checked = !!S[k];
+    el.addEventListener('change', () => {
+      S[k] = el.checked; S[sk] = el.checked; save();
+      const ipcMap = { adBlock:'adBlock', httpsForce:'forceHttps', smartScreen:'smartScreen', clearOnExit:'clearOnExit', hibernate:'tabHibernation' };
+      if (ipcMap[k]) postSetting(ipcMap[k], el.checked ? 'true' : 'false');
+      if (k === 'setDefault' && el.checked) post('set-default-browser');
+    });
+  });
+
+  // Search engines
+  const ENGINES = [
+    { id:'ddg', name:'DuckDuckGo', tag:'no tracking', note:'No profile, no history sold.' },
+    { id:'brave', name:'Brave Search', tag:'independent', note:'Own index. No Google, no Bing.' },
+    { id:'start', name:'Startpage', tag:'private Google', note:'Google results, zero tracking.' },
+    { id:'google', name:'Google', tag:'tracks you', note:'Most comprehensive. Extensive profiling.' },
+    { id:'bing', name:'Bing', tag:'tracks you', note:'Microsoft telemetry on every query.' },
+  ];
+  const engineList = document.getElementById('engineList');
+  const engineMap = { ddg:'DuckDuckGo', brave:'Brave', start:'Startpage', google:'Google', bing:'Bing' };
+  function renderEngines() {
+    engineList.innerHTML = '';
+    ENGINES.forEach(e => {
+      const sel = S.engine === e.id;
+      const isPrivate = ['ddg','brave','start'].includes(e.id);
+      const btn = document.createElement('button');
+      btn.className = 'engine' + (sel ? ' on' : '');
+      btn.innerHTML = '<span class="radio"><span class="radio-dot"></span></span><span style="flex:1;min-width:0"><span style="font-size:13px;color:#e8e2d7">' + e.name + '</span><span style="font-size:11px;color:#4a4540;margin-left:8px">' + e.note + '</span></span><span style="font-size:9px;padding:3px 6px;border-radius:4px;font-family:DM Mono,monospace;background:' + (isPrivate ? 'rgba(127,184,154,0.08)' : '#1a1815') + ';color:' + (isPrivate ? S.accent : '#6b6560') + '">' + e.tag + '</span>';
+      if (sel) { btn.style.background = S.accent + '0a'; btn.style.borderColor = S.accent + '80'; }
+      btn.addEventListener('click', () => { S.engine = e.id; save(); postSetting('search', engineMap[e.id]); renderEngines(); });
+      engineList.appendChild(btn);
+    });
+  }
+  renderEngines();
+
+  // Theme tiles
+  document.querySelectorAll('#themeTiles .tile').forEach(t => {
+    if (S.theme === t.dataset.theme) t.classList.add('on');
+    t.addEventListener('click', () => {
+      document.querySelectorAll('#themeTiles .tile').forEach(x => x.classList.remove('on'));
+      t.classList.add('on');
+      S.theme = t.dataset.theme; save();
+      document.documentElement.dataset.theme = S.theme;
+      postSetting('appTheme', S.theme);
+    });
+  });
+  // Accent
+  document.querySelectorAll('#accentSwatches button').forEach(b => {
+    if (S.accent === b.dataset.accent) b.classList.add('on');
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#accentSwatches button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      S.accent = b.dataset.accent; save();
+      document.documentElement.style.setProperty('--accent', S.accent);
+      const v=S.accent.replace('#','');
+      document.documentElement.style.setProperty('--accent-rgb', [parseInt(v.slice(0,2),16),parseInt(v.slice(2,4),16),parseInt(v.slice(4,6),16)].join(','));
+      postSetting('accentColor', S.accent);
+    });
+  });
+  // Tab style
+  document.querySelectorAll('#tabStyle button').forEach(b => {
+    const want = b.dataset.showtabnames === 'true';
+    if (!!S.showTabNames === want) b.classList.add('on');
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#tabStyle button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      S.showTabNames = want; save();
+      postSetting('showTabNames', want ? 'true' : 'false');
+    });
+  });
+  // Import
+  const importTiles = document.querySelectorAll('#importTiles .tile');
+  const importOpts = document.getElementById('importOpts');
+  function syncImport() {
+    importTiles.forEach(t => t.classList.toggle('on', t.dataset.import === S.importFrom));
+    importOpts.style.display = S.importFrom === 'none' ? 'none' : 'block';
+    document.querySelectorAll('#importOpts .checkbox').forEach(cb => {
+      const k = cb.dataset.k;
+      const on = !!S[k];
+      cb.classList.toggle('on', on);
+      cb.innerHTML = on ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 3.5-4" stroke="#0e0d0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+    });
+  }
+  importTiles.forEach(t => t.addEventListener('click', () => { S.importFrom = t.dataset.import; save(); syncImport(); }));
+  document.querySelectorAll('#importOpts .checkbox').forEach(cb => {
+    const k = cb.dataset.k;
+    if (S[k] !== undefined) { cb.classList.toggle('on', !!S[k]); if (S[k]) cb.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 3.5-4" stroke="#0e0d0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+    cb.addEventListener('click', () => { S[k] = !S[k]; save(); syncImport(); });
+  });
+  syncImport();
+
+  // Receive host snapshot
+  if (window.chrome?.webview) {
+    window.chrome.webview.addEventListener('message', e => {
+      try {
+        const msg = String(e.data || '');
+        if (msg.startsWith('onboarding-data:')) {
+          const j = JSON.parse(msg.slice('onboarding-data:'.length));
+          Object.assign(S, j); save(); render(); syncAddr(); renderEngines(); syncImport();
+        }
+      } catch(err) {}
+    });
+    post('onboarding-ready');
+  }
+
+  render();
+</script>
+</body>
+</html>

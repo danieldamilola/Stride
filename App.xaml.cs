@@ -3,8 +3,6 @@ using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using StrideBrowser.Services;
-using StrideBrowser.ViewModels;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace StrideBrowser;
 
@@ -26,8 +24,8 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
-        // Trace log lives under %LocalAppData%\StrideBrowser — never repo/working-directory local.
-        Directory.CreateDirectory(Path.GetDirectoryName(Helpers.AppPaths.LogFile)!);
+        // Ensure all data directories exist: base, favicon cache, extensions, WebView2, focus cache.
+        Helpers.AppPaths.EnsureDirectories();
         System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Helpers.AppPaths.LogFile));
         System.Diagnostics.Trace.AutoFlush = true;
         System.Diagnostics.Trace.WriteLine("--- STRIDE STARTED ---");
@@ -53,9 +51,7 @@ public partial class App : Application
         CheckForPreviousCrash();
 
         // Create and show MainWindow via DI
-        var vm = _serviceProvider.GetRequiredService<BrowserViewModel>();
-        
-        var window = new MainWindow(_serviceProvider, vm);
+        var window = _serviceProvider.GetRequiredService<MainWindow>();
         window.Show();
     }
 

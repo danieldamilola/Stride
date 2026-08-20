@@ -57,7 +57,7 @@ dotnet run --project Stride.csproj -c Debug
 
 - Follow standard C# and WPF naming conventions.
 - Keep the `MainWindow.xaml.cs` (Code-Behind) as clean as possible. Offload logic to `ViewModels` and `Services`.
-- Write unit tests for pure logic classes (e.g., Services, Parsers) in the `SpurBrowser.Tests` project.
+- Write unit tests for pure logic classes (e.g., Services, Parsers) in the `StrideBrowser.Tests` project.
 - **Do not introduce arbitrary NuGet packages** without discussing it in an issue first. We try to keep our dependency tree lean for performance and security reasons.
 
 #### 4. The Pull Request (PR) Process

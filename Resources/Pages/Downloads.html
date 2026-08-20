@@ -12,413 +12,198 @@
             color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
             user-select: none;
-            overflow: hidden;
-        }
-
-        .settings-layout {
             display: flex;
+            flex-direction: column;
             height: 100vh;
             overflow: hidden;
         }
 
-        .sidebar {
-            padding: 40px 20px;
+        .toolbar {
+            padding: 8px 12px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
             display: flex;
-            flex-direction: column;
-            width: 240px;
+            align-items: center;
+            gap: 8px;
             flex-shrink: 0;
-            background: #181818;
-            border-right: 1px solid #2A2A2A;
         }
-        .sidebar .page-header {
-            margin-bottom: 24px;
-            padding: 0 12px;
+        .toolbar .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
         }
-        .sidebar .page-header h1 {
-            font-size: 24px;
+        .toolbar .count {
+            color: var(--accent);
             font-weight: 600;
-            color: var(--white);
+            min-width: 20px;
+            text-align: right;
+        }
+        .toolbar .spacer { flex: 1; }
+
+        .main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 40px;
         }
 
-        .nav {
-            list-style: none;
+        .empty-state {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            text-align: center;
         }
-        .sidebar-nav-item {
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+            opacity: 0.3;
+        }
+        .empty-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 12px;
-            border-radius: 6px;
-            color: var(--text-muted);
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .sidebar-nav-item.active {
-            background: rgba(255,255,255,0.06);
-            color: #fff;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .content-container {
-            width: 100%;
-            max-width: 800px;
-        }
-
-        .header-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 24px;
-        }
-        .clear-btn {
-            padding: 8px 16px;
-            background: var(--border);
+            padding: 12px 16px;
+            background: var(--bg-surface);
             border: 1px solid var(--border);
-            color: var(--text-main);
+            border-radius: 8px;
+            margin: 4px 0;
+            transition: background 0.15s;
+        }
+        .item:hover { background: var(--bg-hover); }
+        .item .icon {
+            width: 32px;
+            height: 32px;
             border-radius: 6px;
-            font-size: 13px;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-        .clear-btn:hover { background: #2A2A2A; border-color: var(--text-muted); }
-
-        .empty {
-            text-align: center;
-            color: #666;
-            font-size: 15px;
-            margin-top: 120px;
-        }
-        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.2; }
-
-        .download-list { display: flex; flex-direction: column; gap: 8px; }
-
-        .download-item {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px 20px;
-            background: #18181B;
-            border: 1px solid #27272A;
-            border-radius: 12px;
-            transition: border-color 0.15s;
-        }
-        .download-item:hover { border-color: #3F3F46; }
-
-        .file-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
             background: rgba(var(--accent-rgb), 0.15);
             color: var(--accent);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
         }
-
-        .download-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .download-name {
-            font-size: 15px;
-            font-weight: 500;
-            color: #F4F4F5;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 4px;
-        }
-        .download-meta {
-            font-size: 13px;
-            color: #A1A1AA;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            flex-shrink: 0;
-        }
-        .status-dot.completed { background: #10B981; }
-        .status-dot.in-progress { background: var(--accent); box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5); }
-        .status-dot.paused { background: #F59E0B; }
-        .status-dot.failed { background: #EF4444; }
-        .status-dot.cancelled { background: #71717A; }
-
-        .progress-bar-bg {
-            width: 100%;
-            height: 4px;
-            background: #27272A;
-            border-radius: 2px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-        .progress-bar-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 2px;
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .download-actions {
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-            align-items: center;
-        }
-        .action-btn {
-            width: 36px;
-            height: 36px;
-            border: 1px solid #27272A;
-            background: #18181B;
-            color: #A1A1AA;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s;
-        }
-        .action-btn:hover { background: #27272A; color: #F4F4F5; }
-        .action-btn svg {
-            width: 18px;
-            height: 18px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        /* Confirm dialog */
-        .confirm-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-        }
-        .confirm-overlay.open { display: flex; }
-        .confirm-dialog {
-            background: #18181B;
-            border: 1px solid #27272A;
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 360px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .confirm-dialog h3 { font-size: 16px; color: #F4F4F5; margin-bottom: 8px; }
-        .confirm-dialog p { font-size: 13px; color: #A1A1AA; margin-bottom: 24px; }
-        .confirm-actions { display: flex; gap: 12px; justify-content: center; }
-        .confirm-actions button {
-            padding: 8px 24px;
-            border-radius: 6px;
-            border: none;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: inherit;
-            transition: opacity 0.15s;
-        }
-        .confirm-actions .cancel-btn { background: #27272A; color: #F4F4F5; }
-        .confirm-actions .cancel-btn:hover { background: #3F3F46; }
-        .confirm-actions .danger-btn { background: #EF4444; color: #fff; }
-        .confirm-actions .danger-btn:hover { opacity: 0.9; }
-
+        .info { flex: 1; min-width: 0; }
+        .name { font-size: 13px; font-weight: 500; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .meta { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .dot.completed { background: #10B981; }
+        .dot.in-progress { background: var(--accent); box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5); }
+        .dot.paused { background: #F59E0B; }
+        .dot.failed { background: #EF4444; }
+        .dot.cancelled { background: #71717A; }
+        .progress { width: 100%; height: 6px; background: var(--border); border-radius: 3px; margin: 6px 0; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+        .btn { padding: 4px 8px; font-size: 11px; border: 1px solid var(--border); background: var(--bg-surface); border-radius: 4px; cursor: pointer; color: var(--text-main); transition: all 0.1s; }
+        .btn:hover { background: var(--bg-hover); }
     </style>
-<style>
-:root, :root[data-theme="dark"] {
-    --bg-base: var(--bg-base);
-    --bg-dark: var(--bg-dark);
-    --bg-surface: var(--bg-surface);
-    --bg-hover: var(--bg-hover);
-    --border: var(--border);
-    --text-main: var(--text-main);
-    --text-bright: var(--text-bright);
-    --text-muted: var(--text-muted);
-    --text-dim: var(--text-dim);
-    --white: var(--white);
-}
-:root[data-theme="light"] {
-    --bg-base: #F5F5F3;
-    --bg-dark: #EFEFEE;
-    --bg-surface: var(--white);
-    --bg-hover: #E6E6E5;
-    --border: #D4D4D2;
-    --text-main: #111113;
-    --text-bright: #000000;
-    --text-muted: #666461;
-    --text-dim: #A5A3A0;
-    --white: #000000;
-}
-@media (prefers-color-scheme: light) {
-    :root[data-theme="system"] {
-        --bg-base: #F5F5F3;
-        --bg-dark: #EFEFEE;
-        --bg-surface: var(--white);
-        --bg-hover: #E6E6E5;
-        --border: #D4D4D2;
-        --text-main: #111113;
-        --text-bright: #000000;
-        --text-muted: #666461;
-        --text-dim: #A5A3A0;
-        --white: #000000;
-    }
-}
-</style>
-<style>
-:root, :root[data-theme="dark"] {
-    --bg-base: #121212;
-    --bg-dark: #0C0C0C;
-    --bg-surface: #1A1A1A;
-    --bg-hover: #242424;
-    --border: var(--border)333;
-    --text-main: #E0E0E0;
-    --text-bright: #D4D4D4;
-    --text-muted: #A3A3A3;
-    --text-dim: #808080;
-    --white: #FFFFFF;
-}
-:root[data-theme="light"] {
-    --bg-base: #F5F5F3;
-    --bg-dark: #EFEFEE;
-    --bg-surface: #FFFFFF;
-    --bg-hover: #E6E6E5;
-    --border: #D4D4D2;
-    --text-main: #111113;
-    --text-bright: #000000;
-    --text-muted: #666461;
-    --text-dim: #A5A3A0;
-    --white: #000000;
-}
-@media (prefers-color-scheme: light) {
-    :root[data-theme="system"] {
-        --bg-base: #F5F5F3;
-        --bg-dark: #EFEFEE;
-        --bg-surface: #FFFFFF;
-        --bg-hover: #E6E6E5;
-        --border: #D4D4D2;
-        --text-main: #111113;
-        --text-bright: #000000;
-        --text-muted: #666461;
-        --text-dim: #A5A3A0;
-        --white: #000000;
-    }
-}
-</style>
+    <style>
+        :root, :root[data-theme="dark"] {
+            --bg-base: #121212;
+            --bg-dark: #0C0C0C;
+            --bg-surface: #1A1A1A;
+            --bg-hover: #242424;
+            --border: #333333;
+            --text-main: #E0E0E0;
+            --text-bright: #D4D4D4;
+            --text-muted: #A3A3A3;
+            --text-dim: #808080;
+            --white: #FFFFFF;
+        }
+        :root[data-theme="light"] {
+            --bg-base: #F5F5F3;
+            --bg-dark: #EFEFEE;
+            --bg-surface: #FFFFFF;
+            --bg-hover: #E6E6E5;
+            --border: #D4D4D2;
+            --text-main: #111113;
+            --text-bright: #000000;
+            --text-muted: #666461;
+            --text-dim: #A5A3A0;
+            --white: #000000;
+        }
+        @media (prefers-color-scheme: light) {
+            :root[data-theme="system"] {
+                --bg-base: #F5F5F3;
+                --bg-dark: #EFEFEE;
+                --bg-surface: #FFFFFF;
+                --bg-hover: #E6E6E5;
+                --border: #D4D4D2;
+                --text-main: #111113;
+                --text-bright: #000000;
+                --text-muted: #666461;
+                --text-dim: #A5A3A0;
+                --white: #000000;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="settings-layout">
-        <div class="sidebar">
-            <div class="page-header">
-                <h1>Downloads</h1>
-            </div>
-            <ul class="nav">
-                <li class="sidebar-nav-item active">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    All Downloads
-                </li>
-            </ul>
-        </div>
-        
-        <div class="main-content">
-            <div class="content-container">
-                <div class="header-actions">
-                    <button class="clear-btn" id="clearBtn">Clear completed</button>
-                </div>
-                <div class="download-list" id="downloadList"></div>
-            </div>
-        </div>
+    <div class="toolbar">
+        <span class="label">Downloads</span>
+        <span class="count" id="downloadCount">0</span>
+        <span class="spacer"></span>
+        <button class="btn" id="clearBtn" title="Clear completed downloads">Clear completed</button>
+        <button class="btn" id="clearAllBtn" title="Cancel and remove all downloads">Clear all</button>
     </div>
 
-    <div class="confirm-overlay" id="confirmDialog">
-        <div class="confirm-dialog">
-            <h3>Clear completed downloads?</h3>
-            <p>This only removes them from this list — your files will remain safe on your computer.</p>
-            <div class="confirm-actions">
-                <button class="cancel-btn" onclick="closeConfirm()">Cancel</button>
-                <button class="danger-btn" onclick="confirmClear()">Clear All</button>
-            </div>
+    <div class="main">
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">📂</div>
+            <div class="empty-text">No downloads yet</div>
         </div>
+        <div id="downloadList"></div>
     </div>
 
+    <script type="application/json" id="downloadsData">{{DOWNLOADS}}</script>
     <script>
         const __T = '{{IPC_TOKEN}}:';
-        let downloads = JSON.parse('{{DOWNLOADS}}' || '[]');
+        const dataEl = document.getElementById('downloadsData');
+        let downloads = [];
+        try { downloads = JSON.parse(dataEl.textContent || '[]'); } catch (err) { }
 
-        function formatBytes(bytes) {
+        const list = document.getElementById('downloadList');
+        const emptyState = document.getElementById('emptyState');
+        const countNode = document.getElementById('downloadCount');
+        const itemMap = new Map();
+
+        const STATES = {
+            0: { label: 'Downloading...', cls: 'in-progress', active: true },
+            1: { label: 'Paused', cls: 'paused', active: true },
+            2: { label: 'Completed', cls: 'completed', active: false },
+            3: { label: 'Cancelled', cls: 'cancelled', active: false },
+            4: { label: 'Failed', cls: 'failed', active: false }
+        };
+
+        function stateInfo(state) {
+            return STATES[state] || { label: String(state), cls: '', active: false };
+        }
+
+        function fmtBytes(bytes) {
             if (bytes <= 0) return '0 B';
             const units = ['B', 'KB', 'MB', 'GB'];
             const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
             return (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
         }
 
-        function formatTime(iso) {
+        function fmtTime(iso) {
             const d = new Date(iso);
             const now = new Date();
             const isToday = d.toDateString() === now.toDateString();
-            const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            return isToday ? time : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + time;
+            const t = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return isToday ? t : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + t;
         }
 
-        function getExtension(name) {
-            const dot = name.lastIndexOf('.');
-            return dot > 0 ? name.substring(dot + 1).toUpperCase().slice(0, 4) : '?';
-        }
-
-        function stateLabel(state) {
-            switch (state) {
-                case 2: return 'Completed';
-                case 0: return 'Downloading...';
-                case 1: return 'Paused';
-                case 3: return 'Cancelled';
-                case 4: return 'Failed'; 
-                // Fallbacks for string enum
-                case 'Completed': return 'Completed';
-                case 'InProgress': return 'Downloading...';
-                case 'Paused': return 'Paused';
-                case 'Cancelled': return 'Cancelled';
-                case 'Failed': return 'Failed';
-                default: return state;
-            }
-        }
-
-        function stateClass(state) {
-            switch (state) {
-                case 2:
-                case 'Completed': return 'completed';
-                case 0:
-                case 'InProgress': return 'in-progress';
-                case 1:
-                case 'Paused': return 'paused';
-                case 3:
-                case 'Cancelled': return 'cancelled';
-                case 4:
-                case 'Failed': return 'failed';
-                default: return '';
-            }
+        function getExt(name) {
+            const d = name.lastIndexOf('.');
+            return d > 0 ? name.substring(d + 1).toUpperCase().slice(0, 4) : '?';
         }
 
         function escapeHtml(s) {
@@ -427,149 +212,119 @@
             return d.innerHTML;
         }
 
-        function render() {
-            const container = document.getElementById('downloadList');
-
-            if (downloads.length === 0) {
-                container.innerHTML = `<div class="empty"><div class="empty-icon">📂</div>No downloads yet.</div>`;
-                return;
-            }
-
-            let html = '';
-            for (const dl of downloads) {
-                const ext = getExtension(dl.FileName);
-                const sc = stateClass(dl.State);
-                const isActive = dl.State === 'InProgress' || dl.State === 0 || dl.State === 'Paused' || dl.State === 1;
-                
-                let sizeText = '';
-                if (dl.TotalBytes > 0) {
-                    if (isActive) sizeText = `${formatBytes(dl.ReceivedBytes)} / ${formatBytes(dl.TotalBytes)}`;
-                    else sizeText = formatBytes(dl.TotalBytes);
-                } else if (dl.ReceivedBytes > 0) {
-                    sizeText = formatBytes(dl.ReceivedBytes);
-                }
-
-                const progress = dl.TotalBytes > 0 ? Math.min(100, Math.round(dl.ReceivedBytes * 100 / dl.TotalBytes)) : 0;
-
-                let speedEtaText = '';
-                if (isActive && dl.SpeedText && dl.SpeedText !== '') {
-                    speedEtaText = dl.SpeedText;
-                    if (dl.EtaText && dl.EtaText !== '') speedEtaText += ` · ${dl.EtaText}`;
-                }
-
-                html += `<div class="download-item" data-id="${escapeHtml(dl.Id)}">`;
-                html += `<div class="file-icon">${escapeHtml(ext)}</div>`;
-                html += `<div class="download-info">`;
-                html += `<div class="download-name" title="${escapeHtml(dl.FileName)}">${escapeHtml(dl.FileName)}</div>`;
-                html += `<div class="download-meta">`;
-                html += `<span class="status-dot ${sc}"></span>`;
-                html += `<span>${stateLabel(dl.State)}</span>`;
-                if (sizeText) html += `<span>·</span><span>${sizeText}</span>`;
-                if (speedEtaText) html += `<span>·</span><span>${speedEtaText}</span>`;
-                html += `<span>·</span><span>${formatTime(dl.StartedAt)}</span>`;
-                html += `</div>`;
-                
-                if (isActive) {
-                    html += `<div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${progress}%"></div></div>`;
-                }
-                
-                html += `</div>`;
-                html += `<div class="download-actions">`;
-
-                if (dl.State === 'Completed' || dl.State === 2) {
-                    html += `<button class="action-btn" title="Open file" onclick="openFile('${escapeHtml(dl.Id)}')">
-                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    </button>`;
-                    html += `<button class="action-btn" title="Show in folder" onclick="openFolder('${escapeHtml(dl.Id)}')">
-                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                    </button>`;
-                }
-                
-                if (dl.State === 'InProgress' || dl.State === 0) {
-                    html += `<button class="action-btn" title="Pause" onclick="pauseDownload('${escapeHtml(dl.Id)}')">
-                        <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                    </button>`;
-                }
-                
-                if (dl.State === 'Paused' || dl.State === 1) {
-                    html += `<button class="action-btn" title="Resume" onclick="resumeDownload('${escapeHtml(dl.Id)}')">
-                        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    </button>`;
-                }
-
-                if (isActive) {
-                    html += `<button class="action-btn" title="Cancel" onclick="cancelDownload('${escapeHtml(dl.Id)}')">
-                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>`;
-                }
-
-                html += `</div></div>`;
-            }
-
-            container.innerHTML = html;
+        function sizeText(dl) {
+            if (dl.totalBytes > 0) return fmtBytes(dl.receivedBytes) + ' / ' + fmtBytes(dl.totalBytes);
+            return dl.receivedBytes > 0 ? fmtBytes(dl.receivedBytes) : '';
         }
 
-        function pauseDownload(id) {
-            if (window.chrome?.webview) {
-                window.chrome.webview.postMessage(__T + 'download-pause:' + id);
-            }
+        function speedEtaText(dl) {
+            if (!dl.speedText) return '';
+            return dl.speedText + (dl.etaText ? ' · ' + dl.etaText : '');
         }
 
-        function resumeDownload(id) {
-            if (window.chrome?.webview) {
-                window.chrome.webview.postMessage(__T + 'download-resume:' + id);
-            }
+        function buildItem(dl) {
+            const el = document.createElement('div');
+            el.className = 'item';
+            el.dataset.id = dl.id;
+            el.innerHTML = `
+                <div class="icon"></div>
+                <div class="info">
+                    <div class="name"></div>
+                    <div class="progress"><div class="progress-fill"></div></div>
+                    <div class="meta">
+                        <span class="dot"></span>
+                        <span class="state-label"></span>
+                        <span class="size"></span>
+                        <span class="speed"></span>
+                        <span class="time"></span>
+                    </div>
+                </div>
+                <div class="actions"></div>`;
+            return updateItem(el, dl);
         }
 
-        function cancelDownload(id) {
-            if (window.chrome?.webview) {
-                window.chrome.webview.postMessage(__T + 'download-cancel:' + id);
+        function updateItem(el, dl) {
+            const st = stateInfo(dl.state);
+            el.querySelector('.icon').textContent = getExt(dl.fileName);
+            el.querySelector('.name').textContent = dl.fileName;
+            el.querySelector('.name').title = dl.fileName;
+            el.querySelector('.dot').className = 'dot ' + st.cls;
+            el.querySelector('.state-label').textContent = st.label;
+            el.querySelector('.size').textContent = sizeText(dl);
+            el.querySelector('.speed').textContent = speedEtaText(dl);
+            el.querySelector('.time').textContent = fmtTime(dl.startedAt);
+
+            const pct = dl.totalBytes > 0 ? Math.min(100, Math.round(dl.receivedBytes * 100 / dl.totalBytes)) : 0;
+            el.querySelector('.progress-fill').style.width = pct + '%';
+
+            const actions = el.querySelector('.actions');
+            actions.innerHTML = '';
+            const addBtn = (label, title, fn) => {
+                const b = document.createElement('button');
+                b.className = 'btn';
+                b.textContent = label;
+                b.title = title;
+                b.addEventListener('click', () => fn(dl.id));
+                actions.appendChild(b);
+            };
+            if (dl.state === 2) {
+                addBtn('Open', 'Open file', openFile);
+                addBtn('Folder', 'Show in folder', openFolder);
+            } else if (dl.state === 0) {
+                addBtn('Pause', 'Pause', pause);
+                addBtn('Cancel', 'Cancel', cancel);
+            } else if (dl.state === 1) {
+                addBtn('Resume', 'Resume', resume);
+                addBtn('Cancel', 'Cancel', cancel);
             }
+            return el;
         }
 
-        function openFile(id) {
-            if (window.chrome?.webview) {
-                window.chrome.webview.postMessage(__T + 'download-open:' + id);
+        function sync(newDownloads) {
+            const seen = new Set();
+            for (const dl of newDownloads) {
+                seen.add(dl.id);
+                const existing = itemMap.get(dl.id);
+                if (existing) updateItem(existing, dl);
+                else { const el = buildItem(dl); itemMap.set(dl.id, el); list.appendChild(el); }
             }
+            for (const [id, el] of itemMap) {
+                if (!seen.has(id)) { el.remove(); itemMap.delete(id); }
+            }
+            emptyState.style.display = newDownloads.length ? 'none' : 'flex';
+            countNode.textContent = newDownloads.length;
         }
 
-        function openFolder(id) {
-            if (window.chrome?.webview) {
-                window.chrome.webview.postMessage(__T + 'download-folder:' + id);
-            }
-        } 
-        
+        function post(msg) {
+            if (window.chrome?.webview) window.chrome.webview.postMessage(msg);
+        }
+
+        function pause(id) { post(__T + 'download-pause:' + id); }
+        function resume(id) { post(__T + 'download-resume:' + id); }
+        function cancel(id) { post(__T + 'download-cancel:' + id); }
+        function openFile(id) { post(__T + 'download-open:' + id); }
+        function openFolder(id) { post(__T + 'download-folder:' + id); }
+
         document.getElementById('clearBtn').addEventListener('click', () => {
-            document.getElementById('confirmDialog').classList.add('open');
+            if (confirm('Clear completed downloads?')) post(__T + 'download-clear');
         });
-        function closeConfirm() { document.getElementById('confirmDialog').classList.remove('open'); }
-        function confirmClear() {
-            window.chrome.webview.postMessage(__T + 'download-clear');
-            closeConfirm();
+        document.getElementById('clearAllBtn').addEventListener('click', () => {
+            if (confirm('Cancel and remove all downloads?')) post(__T + 'download-clear-all');
+        });
+
+        if (window.chrome?.webview) {
+            window.chrome.webview.addEventListener('message', (e) => {
+                const msg = String(e.data || '');
+                const prefix = __T + 'downloads:';
+                if (msg.startsWith(prefix)) {
+                    try { downloads = JSON.parse(msg.slice(prefix.length)); sync(downloads); } catch (err) { }
+                }
+            });
         }
-        document.getElementById('confirmDialog').addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) closeConfirm();
-        });
 
-        // Live polling from backend
-        window.updateDownloads = function(json) {
-            try {
-                downloads = JSON.parse(json);
-                render();
-            } catch (e) { }
-        };
+        setInterval(() => post(__T + 'download-sync'), 500);
 
-        setInterval(() => {
-            if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage(__T + 'download-sync');
-            }
-        }, 500);
-
-        render();
+        sync(downloads);
     </script>
 </body>
 </html>
-
-
-
-

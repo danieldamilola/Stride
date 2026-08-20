@@ -442,9 +442,7 @@
                                  Margin="4,0,4,0"
                                  VerticalAlignment="Center"
                                  PreviewMouseWheel="TabList_PreviewMouseWheel"
-                                 PreviewMouseLeftButtonDown="TabList_PreviewMouseLeftButtonDown"
-                                 PreviewMouseMove="TabList_PreviewMouseMove"
-                                 Drop="TabList_Drop" AllowDrop="True"
+                                 AllowDrop="True"
                                  ItemTemplate="{StaticResource TabItemTemplate}">
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>

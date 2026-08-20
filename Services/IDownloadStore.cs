@@ -9,5 +9,6 @@ public interface IDownloadStore
     void Add(DownloadItem item);
     void Remove(string id);
     void ClearCompleted();
+    void ClearAll();
     DownloadItem? Get(string id);
 }

@@ -131,11 +131,12 @@ public sealed class FocusBlocklistService
                     if (string.IsNullOrEmpty(clean) || clean.StartsWith('#')) continue;
 
                     // Some lists like BlocklistProject have "0.0.0.0 badsite.com" format sometimes,
-                    // or just "badsite.com". Handle simple cases:
+                    // or just "badsite.com". Handle simple cases, skipping inline comments
+                    // like "0.0.0.0 badsite.com # ads".
                     var parts = clean.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                    var domain = parts.LastOrDefault();
+                    var domain = parts.Where(p => !p.StartsWith('#')).LastOrDefault();
 
-                    if (!string.IsNullOrEmpty(domain) && !domain.StartsWith('#'))
+                    if (!string.IsNullOrEmpty(domain))
                     {
                         tempSet.Add(domain);
                     }

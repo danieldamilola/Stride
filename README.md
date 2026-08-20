@@ -72,7 +72,7 @@ If you want to build Stride yourself, you'll need the following prerequisites:
    ```
 4. **Run Unit Tests:**
    ```bash
-   dotnet test SpurBrowser.Tests/SpurBrowser.Tests.csproj
+   dotnet test StrideBrowser.Tests/StrideBrowser.Tests.csproj
    ```
 
 ### Building the Installer

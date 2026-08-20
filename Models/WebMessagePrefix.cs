@@ -24,6 +24,7 @@ public static class WebMessagePrefix
     public const string DownloadFolder = "download-folder:";
     public const string DownloadCancel = "download-cancel:";
     public const string DownloadClear = "download-clear";
+    public const string DownloadClearAll = "download-clear-all";
     public const string DownloadRequestSync = "download-sync";
     public const string DownloadRequest = "download-request:";
     public const string DownloadPause = "download-pause:";
@@ -33,4 +34,5 @@ public static class WebMessagePrefix
     public const string OpenBackgroundsFolder = "open-backgrounds-folder";
     public const string CheckForUpdate = "check-for-update";
     public const string InstallUpdate = "install-update";
+    public const string ResetSettings = "reset-settings";
 }

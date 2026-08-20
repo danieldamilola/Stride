@@ -6,13 +6,13 @@ using StrideBrowser.Models;
 
 namespace StrideBrowser.Services;
 
-public static class ThemeManager
+public sealed class ThemeManager
 {
-    private static BrowserSettings? _settings;
+    private readonly BrowserSettings _settings;
 
-    public static event Action? ThemeChanged;
+    public event Action? ThemeChanged;
 
-    public static void Initialize(BrowserSettings settings)
+    public ThemeManager(BrowserSettings settings)
     {
         _settings = settings;
         _settings.PropertyChanged += (s, e) =>
@@ -35,9 +35,8 @@ public static class ThemeManager
         ApplyTheme();
     }
 
-    public static void ApplyTheme()
+    public void ApplyTheme()
     {
-        if (_settings is null) return;
 
         bool isDark = _settings.AppTheme switch
         {
@@ -63,9 +62,8 @@ public static class ThemeManager
         ThemeChanged?.Invoke();
     }
 
-    public static bool IsCurrentlyDark()
+    public bool IsCurrentlyDark()
     {
-        if (_settings is null) return true;
         return _settings.AppTheme switch
         {
             AppThemeMode.Dark => true,
@@ -74,12 +72,12 @@ public static class ThemeManager
         };
     }
 
-    public static string GetThemeString()
+    public string GetThemeString()
     {
-        return _settings?.AppTheme.ToString().ToLowerInvariant() ?? "system";
+        return _settings.AppTheme.ToString().ToLowerInvariant();
     }
 
-    private static bool IsSystemThemeDark()
+    private bool IsSystemThemeDark()
     {
         try
         {

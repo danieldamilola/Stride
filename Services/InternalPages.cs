@@ -14,9 +14,16 @@ public sealed class InternalPages
     private readonly SettingsPage _settings = new();
     private readonly HistoryPage _history = new();
     private readonly DownloadPage _downloads = new();
+    private readonly OnboardingPage _onboarding = new();
     private readonly ErrorPage _error = new();
+    private readonly ThemeManager _themeManager;
 
-    private static string ApplyTheme(string html) => html.Replace("{{THEME}}", ThemeManager.GetThemeString());
+    public InternalPages(ThemeManager themeManager)
+    {
+        _themeManager = themeManager;
+    }
+
+    private string ApplyTheme(string html) => html.Replace("{{THEME}}", _themeManager.GetThemeString());
 
     /// <summary>Returns the new tab page HTML.</summary>
     public string NewTabPage(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "") =>
@@ -41,6 +48,10 @@ public sealed class InternalPages
     public string DownloadsPage(List<DownloadItem> items, string accentColor, string accentRgb, string ipcToken) =>
         ApplyTheme(_downloads.Render(items, accentColor, accentRgb, ipcToken));
 
+    /// <summary>Returns the onboarding page HTML.</summary>
+    public string OnboardingPage(BrowserSettings settings, string accentColor, string accentRgb, string ipcToken) =>
+        ApplyTheme(_onboarding.Render(settings, accentColor, accentRgb, ipcToken));
+
     /// <summary>Returns the error page HTML.</summary>
     public string ErrorPage(string url, string errorMessage, string accentColor, string accentRgb) =>
         ApplyTheme(_error.Render(url, errorMessage, accentColor, accentRgb));
@@ -48,14 +59,19 @@ public sealed class InternalPages
     /// <summary>Returns the focus block page HTML.</summary>
     public string FocusPage() => Helpers.ResourceLoader.Load("Resources.Pages.Focus.html");
 
-    /// <summary>Converts a hex color like #D4A574 to an RGB triplet like 212,165,116.</summary>
+    /// <summary>Converts a hex color like #7fb89a to an RGB triplet like 127,184,154.</summary>
     public static string HexToRgb(string hex)
     {
         hex = hex.TrimStart('#');
-        if (hex.Length != 6) return "212,165,116";
-        var r = Convert.ToInt32(hex[..2], 16);
-        var g = Convert.ToInt32(hex[2..4], 16);
-        var b = Convert.ToInt32(hex[4..6], 16);
-        return $"{r},{g},{b}";
+        if (hex.Length != 6) return "127,184,154";
+        try
+        {
+            var r = Convert.ToInt32(hex[..2], 16);
+            var g = Convert.ToInt32(hex[2..4], 16);
+            var b = Convert.ToInt32(hex[4..6], 16);
+            return $"{r},{g},{b}";
+        }
+        catch (FormatException) { return "127,184,154"; }
+        catch (OverflowException) { return "127,184,154"; }
     }
 }

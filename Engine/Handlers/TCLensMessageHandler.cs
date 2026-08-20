@@ -1,0 +1,44 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Threading.Tasks;
+using StrideBrowser.Engine;
+using StrideBrowser.Models;
+using StrideBrowser.Services;
+
+namespace StrideBrowser.Engine.Handlers;
+
+public class TCLensMessageHandler : IWebMessageHandler
+{
+    private readonly TabEngine _engine;
+    private readonly TCLensTransferService _transfer;
+
+    public TCLensMessageHandler(TabEngine engine, TCLensTransferService transfer)
+    {
+        _engine = engine;
+        _transfer = transfer;
+    }
+
+    public IEnumerable<MessageRoute> GetRoutes()
+    {
+        yield return MessageRoute.Prefix(WebMessagePrefix.TCLensGetText, HandleTCLensGetText);
+    }
+
+    private async Task HandleTCLensGetText(string _)
+    {
+        var activeTab = _engine.ActiveTab;
+        if (activeTab == null) return;
+        var wv = _engine.GetCoreWebView2();
+        if (wv == null) return;
+
+        var payload = new Dictionary<string, string>
+        {
+            ["text"] = _transfer.PendingText ?? "",
+            ["url"] = _transfer.PendingUrl ?? "",
+            ["title"] = _transfer.PendingTitle ?? ""
+        };
+        
+        var jsonPayload = JsonSerializer.Serialize(payload);
+        await wv.ExecuteScriptAsync($"if (window.tclensProcessInjection) window.tclensProcessInjection({jsonPayload});");
+    }
+}

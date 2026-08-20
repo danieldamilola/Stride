@@ -17,7 +17,7 @@
         }
 
         body {
-            zoom: {{ZOOM}}%;
+            min-height: 100vh;
             background-color: #111113;
             background-image: url('{{BACKGROUND}}');
             background-size: cover;
@@ -26,17 +26,24 @@
             background-attachment: fixed;
             color: #E8E4DF;
             font-family: 'Outfit', -apple-system, 'Segoe UI', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
         }
 
+        .zoom-wrapper {
+            zoom: {{ZOOM}}%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            width: 100%;
+        }
+
         /* ── Background Overlay to ensure text readability ── */
         .bg-overlay {
-            position: absolute;
+            position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.4);
             z-index: 1;
@@ -499,24 +506,26 @@
 <body>
     <div class="bg-overlay"></div>
 
-    <div class="content">
-        <div class="search-container">
-            <input type="text" class="search-input"
-                   placeholder="Search the web or type a URL"
-                   autofocus
-                   onkeydown="if(event.key==='Enter'){window.chrome.webview.postMessage(__T+'search:'+this.value)}">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <circle cx="11" cy="11" r="7"/>
-                <line x1="16.2" y1="16.2" x2="21" y2="21"/>
-            </svg>
+    <div class="zoom-wrapper">
+        <div class="content">
+            <div class="search-container">
+                <input type="text" class="search-input"
+                       placeholder="Search the web or type a URL"
+                       autofocus
+                       onkeydown="if(event.key==='Enter'){window.chrome.webview.postMessage(__T+'search:'+this.value)}">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="7"/>
+                    <line x1="16.2" y1="16.2" x2="21" y2="21"/>
+                </svg>
+            </div>
+            <div class="shortcut-grid" id="shortcutGrid"></div>
         </div>
-        <div class="shortcut-grid" id="shortcutGrid"></div>
-    </div>
 
-    <div class="shortcuts">
-        <span class="shortcut"><kbd>Ctrl</kbd><kbd>L</kbd> URL</span>
-        <span class="shortcut"><kbd>Ctrl</kbd><kbd>T</kbd> Tab</span>
-        <span class="shortcut"><kbd>Ctrl</kbd><kbd>H</kbd> History</span>
+        <div class="shortcuts">
+            <span class="shortcut"><kbd>Ctrl</kbd><kbd>L</kbd> URL</span>
+            <span class="shortcut"><kbd>Ctrl</kbd><kbd>T</kbd> Tab</span>
+            <span class="shortcut"><kbd>Ctrl</kbd><kbd>H</kbd> History</span>
+        </div>
     </div>
 
     <!-- Add Shortcut Dialog -->

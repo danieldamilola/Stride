@@ -374,9 +374,12 @@
         </div>
     </div>
 
+    <script type="application/json" id="historyData">{{ENTRIES}}</script>
     <script>
         const __T = '{{IPC_TOKEN}}:';
-        const entries = JSON.parse('{{ENTRIES}}' || '[]');
+        const historyDataEl = document.getElementById('historyData');
+        let entries = [];
+        try { entries = JSON.parse(historyDataEl.textContent || '[]'); } catch (err) { }
 
         function getDomain(url) {
             try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }

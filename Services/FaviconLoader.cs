@@ -183,6 +183,7 @@ public sealed class FaviconLoader
     {
         try
         {
+            Directory.CreateDirectory(CacheDir);
             var path = Path.Combine(CacheDir, $"{host}.png");
             await File.WriteAllBytesAsync(path, data);
         }

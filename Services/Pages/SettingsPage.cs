@@ -48,6 +48,8 @@ public sealed class SettingsPage
                 ["CHK_ADBLOCK"] = Chk(settings.AdBlockEnabled),
                 ["CHK_CLEAR"] = Chk(settings.ClearDataOnExit),
                 ["CHK_DUPES"] = Chk(settings.BlockDuplicateTabs),
+                ["CHK_TAB_HIBERNATION"] = Chk(settings.TabHibernationEnabled),
+                ["CHK_TAB_SLEEP"] = Chk(settings.TabSleepEnabled),
                 ["SIDEBAR_LEFT"] = settings.IsSidebarOnRight ? "" : " selected",
                 ["SIDEBAR_RIGHT"] = settings.IsSidebarOnRight ? " selected" : "",
                 ["ADDR_LEFT"] = settings.AddressBarOnLeft ? " selected" : "",
@@ -61,7 +63,9 @@ public sealed class SettingsPage
                 ["CHK_SETTINGSICON"] = Chk(settings.ShowSettingsIcon),
                 ["CHK_USE_FLOATING_BAR"] = Chk(settings.UseFloatingCommandBar),
                 ["CHK_AUTO_CHECK_FOR_UPDATES"] = Chk(settings.AutoCheckForUpdates),
-                ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0",
+                ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.1.3",
+                ["WEBVIEW2_VERSION"] = typeof(Microsoft.Web.WebView2.Core.CoreWebView2).Assembly.GetName().Version?.ToString(3) ?? "1.0.4181",
+                ["DOTNET_VERSION"] = System.Environment.Version.ToString(2),
                 ["ACCENT_COLOR"] = settings.AccentColor,
                 ["ACCENT"] = settings.AccentColor,
                 ["ACCENT_RGB"] = HexToRgb(settings.AccentColor),
@@ -171,10 +175,15 @@ public sealed class SettingsPage
     private static string HexToRgb(string hex)
     {
         hex = hex.TrimStart('#');
-        if (hex.Length != 6) return "212,165,116";
-        var r = Convert.ToInt32(hex[..2], 16);
-        var g = Convert.ToInt32(hex[2..4], 16);
-        var b = Convert.ToInt32(hex[4..6], 16);
-        return $"{r},{g},{b}";
+        if (hex.Length != 6) return "127,184,154";
+        try
+        {
+            var r = Convert.ToInt32(hex[..2], 16);
+            var g = Convert.ToInt32(hex[2..4], 16);
+            var b = Convert.ToInt32(hex[4..6], 16);
+            return $"{r},{g},{b}";
+        }
+        catch (FormatException) { return "127,184,154"; }
+        catch (OverflowException) { return "127,184,154"; }
     }
 }
