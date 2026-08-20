@@ -25,7 +25,7 @@ public sealed class ReaderExtractor : IReaderExtractor
         if (extractorJs is null) return false;
 
         var script = extractorJs + "\nwindow.__strideReaderIsReadable();";
-        var raw = await _engine.ExecuteScriptAsync(tabId, script);
+        var raw = await ExecuteWithTimeoutAsync(tabId, script, 2500);
         if (string.IsNullOrWhiteSpace(raw)) return false;
 
         var trimmed = raw.Trim();
@@ -62,7 +62,7 @@ public sealed class ReaderExtractor : IReaderExtractor
         if (extractorJs is null) throw new InvalidOperationException("ReaderExtractor.js not found");
 
         var script = extractorJs + "\nwindow.__strideReaderExtract();";
-        var raw = await _engine.ExecuteScriptAsync(tabId, script);
+        var raw = await ExecuteWithTimeoutAsync(tabId, script, 4000);
         if (string.IsNullOrWhiteSpace(raw)) throw new InvalidOperationException("Extractor returned empty");
 
         // Outer decoding: ExecuteScriptAsync returns JSON-encoded string
@@ -96,6 +96,28 @@ public sealed class ReaderExtractor : IReaderExtractor
         {
             System.Diagnostics.Trace.WriteLine($"ReaderExtractor deserialize failed: {ex.Message} rawInner={inner}");
             throw;
+        }
+    }
+
+    private async Task<string> ExecuteWithTimeoutAsync(Guid tabId, string script, int timeoutMs)
+    {
+        var executeTask = _engine.ExecuteScriptAsync(tabId, script);
+        var delayTask = Task.Delay(timeoutMs);
+        var completed = await Task.WhenAny(executeTask, delayTask);
+        if (completed == delayTask)
+        {
+            System.Diagnostics.Trace.WriteLine($"ReaderExtractor timeout after {timeoutMs}ms for tab {tabId}");
+            return string.Empty;
+        }
+
+        try
+        {
+            return await executeTask;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Trace.WriteLine($"ReaderExtractor ExecuteScript failed: {ex.Message}");
+            return string.Empty;
         }
     }
 

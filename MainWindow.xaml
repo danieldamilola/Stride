@@ -546,11 +546,8 @@
                             </Border.Background>
                         </Border>
                     </Border>
-                    <!-- Page snapshot removed, no longer needed for airspace hack -->
-                    <!-- WebView2 host -->
+                    <!-- WebView2 host. Reader mode reuses the tab's own WebView2 with IsScriptEnabled toggled, no second instance. -->
                     <Grid x:Name="WebViewHost" Background="{DynamicResource BaseBrush}"/>
-                    <!-- Reader mode overlay. Single shared WebView2 with script disabled. Visibility bound to ReaderViewModel.IsInReader via code behind. -->
-                    <views:ReaderView x:Name="ReaderView" Visibility="Collapsed" Panel.ZIndex="5" />
                 </Grid>
             </Border>
         </DockPanel>

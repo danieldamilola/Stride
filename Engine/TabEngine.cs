@@ -79,6 +79,16 @@ public sealed class TabEngine : IDisposable
 
     public CoreWebView2Environment? WebViewEnvironment => _webViewFactory.Environment;
 
+    // Reader mode single-WebView guard. MainWindow sets this true around its own NavigateToString and Navigate calls
+    // so the NavigationStarting handler does not treat them as an implicit exit.
+    public bool IsProgrammaticReaderNavigation { get; set; }
+
+    // Injected after construction via Composition to avoid a constructor cycle. Returns true when the tab is in reader.
+    public Func<Guid, bool>? IsReaderActive { get; set; }
+
+    // Set by Composition to allow TabEngine to exit reader on link navigation without depending on the service at ctor time.
+    public Func<Guid, Task>? ExitReaderAsync { get; set; }
+
     private readonly Services.CustomDownloadManager _customDownloadManager;
     private readonly HashSet<string> _activeNativeDownloads = new();
 
@@ -443,6 +453,13 @@ public sealed class TabEngine : IDisposable
         }
     }
 
+    public CoreWebView2? GetCoreForTab(Guid tabId)
+    {
+        if (_webViews.TryGetValue(tabId, out var wv))
+            return wv.CoreWebView2;
+        return null;
+    }
+
     public Task<string> ExecuteScriptAsync(Guid tabId, string script)
     {
         if (_webViews.TryGetValue(tabId, out var wv) && wv.CoreWebView2 is not null)
@@ -615,6 +632,15 @@ public sealed class TabEngine : IDisposable
         core.NavigationStarting += (_, e) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
+
+            // Reader mode single-WebView implicit exit. If the tab is in reader and this navigation
+            // was not our own Enter or Exit NavigateToString, treat it as a link click inside reader.
+            if (IsReaderActive?.Invoke(tab.Id) == true && !IsProgrammaticReaderNavigation)
+            {
+                try { core.Settings.IsScriptEnabled = true; } catch (Exception ex) { Trace.WriteLine($"Reader implicit exit script enable failed: {ex.Message}"); }
+                if (ExitReaderAsync != null) _ = ExitReaderAsync(tab.Id);
+                // Do not cancel, let the navigation proceed as a normal page load.
+            }
 
             ApplyNavigationBackground(wv, e.Uri);
 

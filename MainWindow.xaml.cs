@@ -35,7 +35,6 @@ public partial class MainWindow : Window
     private readonly WebMessageRouter _router;
     private readonly ThemeManager _themeManager;
     private readonly IReaderService _readerService;
-    private Microsoft.Web.WebView2.Wpf.WebView2? _readerWebView;
 
     private readonly CommandBarController _commandBar;
     private readonly TabStripController _tabStrip;
@@ -773,7 +772,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"Reader toggle failed: {ex.Message}");
+            Trace.WriteLine($"Reader toggle failed: {ex}");
         }
     }
 
@@ -783,39 +782,91 @@ public partial class MainWindow : Window
         {
             var isInReader = _readerVm.IsInReader;
             var current = _readerVm.Current;
+            var error = _readerVm.Error;
 
-            // Reader button visible when readable or already in reader
             ReaderButton.Visibility = (_readerVm.IsReaderAvailable || isInReader) ? Visibility.Visible : Visibility.Collapsed;
             ReaderButton.Opacity = isInReader ? 1.0 : 0.7;
             ReaderButton.ToolTip = isInReader ? "Exit reader view (Ctrl+Shift+R)" : "Reader view (Ctrl+Shift+R)";
 
+            if (!string.IsNullOrEmpty(error))
+            {
+                Trace.WriteLine($"Reader error surfaced: {error}");
+                Title = $"Reader error: {error}";
+                return;
+            }
+
+            var tabId = _engine.ActiveTab?.Id;
+            if (tabId is null) return;
+            var core = _engine.GetCoreForTab(tabId.Value);
+
             if (isInReader && current is not null)
             {
-                var wv = await EnsureReaderWebViewAsync();
-                if (wv is null) return;
-
-                ReaderView.Visibility = Visibility.Visible;
-                WebViewHost.Visibility = Visibility.Collapsed;
-                ReaderView.HideError();
+                if (core is null)
+                {
+                    Trace.WriteLine("Reader enter: CoreWebView2 is null for active tab");
+                    return;
+                }
 
                 try
                 {
-                    wv.NavigateToString(current.Html);
+                    _engine.IsProgrammaticReaderNavigation = true;
+                    try { core.Settings.IsScriptEnabled = false; } catch (Exception ex) { Trace.WriteLine($"Reader disable script failed: {ex.Message}"); }
+                    core.NavigateToString(current.Html);
                 }
                 catch (Exception ex)
                 {
-                    Trace.WriteLine($"Reader NavigateToString failed: {ex.Message}");
-                    ReaderView.ShowError($"Reader failed: {ex.Message}");
+                    Trace.WriteLine($"Reader NavigateToString failed: {ex}");
+                }
+                finally
+                {
+                    Dispatcher.InvokeAsync(() => _engine.IsProgrammaticReaderNavigation = false, System.Windows.Threading.DispatcherPriority.Background);
                 }
             }
-            else
+            else if (!isInReader)
             {
-                ReaderView.Visibility = Visibility.Collapsed;
-                WebViewHost.Visibility = Visibility.Visible;
-
-                if (!string.IsNullOrEmpty(_readerVm.Error))
+                // Exit path. If we were in reader, the session still holds OriginalUrl. Navigate back and re-enable script.
+                var session = _readerService.GetSession(tabId.Value);
+                if (session is not null && !string.IsNullOrEmpty(session.OriginalUrl) && core is not null)
                 {
-                    ReaderView.ShowError(_readerVm.Error!);
+                    var currentSource = core.Source ?? string.Empty;
+                    var isReaderDocument = currentSource.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || currentSource == string.Empty;
+                    if (isReaderDocument || currentSource != session.OriginalUrl)
+                    {
+                        // Only navigate back if we are still showing the reader document or have diverged
+                        // Check if we previously were in reader by seeing if core's last navigation was reader HTML
+                        // For now, if not in reader and session has OriginalUrl, ensure script is enabled and navigate if needed.
+                        // The service's Exit already cleared IsInReader, so we re-enable script here.
+                        try { core.Settings.IsScriptEnabled = true; } catch (Exception ex) { Trace.WriteLine($"Reader re-enable script failed: {ex.Message}"); }
+
+                        // Only navigate if the tab's Url is still the reader's OriginalUrl and core Source is about:blank
+                        // To avoid double navigation on tab switch, check if tab.Url is still OriginalUrl and core.Source is about:blank
+                        if (currentSource.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || currentSource == "about:srcdoc")
+                        {
+                            try
+                            {
+                                _engine.IsProgrammaticReaderNavigation = true;
+                                var tab = _engine.Tabs.FirstOrDefault(t => t.Id == tabId.Value);
+                                if (tab is not null)
+                                {
+                                    tab.Url = session.OriginalUrl!;
+                                    _engine.Navigate(tab, session.OriginalUrl!);
+                                }
+                            }
+                            finally
+                            {
+                                Dispatcher.InvokeAsync(() => _engine.IsProgrammaticReaderNavigation = false, System.Windows.Threading.DispatcherPriority.Background);
+                            }
+                        }
+                        else
+                        {
+                            // Already navigated via implicit exit, just ensure script is on
+                            try { core.Settings.IsScriptEnabled = true; } catch { }
+                        }
+                    }
+                }
+                else if (core is not null)
+                {
+                    try { core.Settings.IsScriptEnabled = true; } catch { }
                 }
             }
         }
@@ -823,119 +874,6 @@ public partial class MainWindow : Window
         {
             Trace.WriteLine($"UpdateReaderOverlay failed: {ex}");
         }
-    }
-
-    private async Task<Microsoft.Web.WebView2.Wpf.WebView2?> EnsureReaderWebViewAsync()
-    {
-        if (_readerWebView is not null && _readerWebView.CoreWebView2 is not null)
-            return _readerWebView;
-
-        var env = _engine.WebViewEnvironment;
-        if (env is null) return null;
-
-        if (_readerWebView is null)
-        {
-            _readerWebView = new Microsoft.Web.WebView2.Wpf.WebView2
-            {
-                DefaultBackgroundColor = System.Drawing.Color.Transparent
-            };
-            ReaderView.SetWebView(_readerWebView);
-        }
-
-        if (_readerWebView.CoreWebView2 is null)
-        {
-            try
-            {
-                await _readerWebView.EnsureCoreWebView2Async(env);
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"Reader WebView2 ensure failed: {ex.Message}");
-                return null;
-            }
-
-            var core = _readerWebView.CoreWebView2;
-            if (core is not null)
-            {
-                try
-                {
-                    core.Settings.IsScriptEnabled = false;
-                    core.Settings.AreDefaultScriptDialogsEnabled = false;
-                    core.Settings.IsStatusBarEnabled = false;
-                    core.Settings.AreDefaultContextMenusEnabled = true;
-                }
-                catch (Exception ex) { Trace.WriteLine($"Reader settings failed: {ex.Message}"); }
-
-                core.NavigationStarting += async (s, e) =>
-                {
-                    try
-                    {
-                        var uri = e.Uri;
-                        if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase))
-                            return;
-
-                        e.Cancel = true;
-
-                        var tabId = _engine.ActiveTab?.Id;
-                        if (tabId is null) return;
-
-                        await _readerService.HandleReaderLinkNavigationAsync(tabId.Value, uri, (id, u) =>
-                        {
-                            try
-                            {
-                                var tab = _engine.Tabs.FirstOrDefault(t => t.Id == id);
-                                if (tab is not null)
-                                    _engine.Navigate(tab, u);
-                            }
-                            catch (Exception ex)
-                            {
-                                Trace.WriteLine($"Reader link navigate failed: {ex.Message}");
-                            }
-
-                            return Task.CompletedTask;
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.WriteLine($"Reader NavigationStarting handler failed: {ex.Message}");
-                    }
-                };
-
-                core.NewWindowRequested += async (s, e) =>
-                {
-                    try
-                    {
-                        var uri = e.Uri;
-                        e.Handled = true;
-
-                        var tabId = _engine.ActiveTab?.Id;
-                        if (tabId is null) return;
-
-                        await _readerService.HandleReaderLinkNavigationAsync(tabId.Value, uri, (id, u) =>
-                        {
-                            try
-                            {
-                                var tab = _engine.Tabs.FirstOrDefault(t => t.Id == id);
-                                if (tab is not null)
-                                    _engine.Navigate(tab, u);
-                            }
-                            catch (Exception ex)
-                            {
-                                Trace.WriteLine($"Reader NewWindowRequested navigate failed: {ex.Message}");
-                            }
-
-                            return Task.CompletedTask;
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.WriteLine($"Reader NewWindowRequested handler failed: {ex.Message}");
-                    }
-                };
-            }
-        }
-
-        return _readerWebView;
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e) =>

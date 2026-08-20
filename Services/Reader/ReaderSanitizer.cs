@@ -17,13 +17,14 @@ public sealed class ReaderSanitizer : IReaderSanitizer
 
     private static readonly HashSet<string> DropEntirelyTags = new(StringComparer.OrdinalIgnoreCase)
     {
-        "script", "style", "iframe", "object", "embed", "form", "link", "meta", "noscript", "template", "svg", "math", "canvas", "video", "audio", "picture", "source", "track", "frame", "frameset", "applet", "base"
+        "script", "style", "iframe", "object", "embed", "form", "link", "meta", "noscript", "template", "svg", "math", "canvas", "video", "audio", "picture", "source", "track", "frame", "frameset", "applet", "base",
+        "nav", "aside", "header", "footer", "button", "select", "textarea", "input", "label", "menu", "dialog"
     };
 
     private static readonly Regex TagRegex = new(@"<\s*(/?)\s*([a-zA-Z0-9]+)([^>]*?)(/?)\s*>", RegexOptions.Compiled);
     private static readonly Regex AttrRegex = new(@"([a-zA-Z_:][a-zA-Z0-9:_\-\.]*)\s*=\s*(?:""([^""]*)""|'([^']*)'|([^\s""'`=<>]+))", RegexOptions.Compiled);
     private static readonly Regex CommentRegex = new(@"<!--.*?-->", RegexOptions.Compiled | RegexOptions.Singleline);
-    private static readonly Regex DropEntirelyRegex = new(@"<\s*(script|style|iframe|object|embed|form|link|meta|noscript|template|svg|math|canvas|video|audio|picture|source|track|frame|frameset|applet|base)\b[^>]*>.*?<\s*/\s*\1\s*>", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+    private static readonly Regex DropEntirelyRegex = new(@"<\s*(script|style|iframe|object|embed|form|link|meta|noscript|template|svg|math|canvas|video|audio|picture|source|track|frame|frameset|applet|base|nav|aside|header|footer|button|select|textarea|input|label|menu|dialog)\b[^>]*>.*?<\s*/\s*\1\s*>", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
     // Self-closing drop-entirely without closing tag, e.g. <link ...> or <meta ...>
     private static readonly Regex DropEntirelySelfClosingRegex = new(@"<\s*(link|meta|base|source|track|frame)\b[^>]*/?\s*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);

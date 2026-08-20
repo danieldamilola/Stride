@@ -116,15 +116,17 @@ public sealed partial class ReaderViewModel : ObservableObject
             await _readerService.EnterReaderAsync(tabId.Value);
             SyncFromService(tabId.Value);
         }
-        catch (NotImplementedException)
+        catch (NotImplementedException ex)
         {
-            Error = "Reader not yet implemented in this scaffold.";
-            throw;
+            Error = "Reader not yet implemented in this scaffold: " + ex.Message;
+            System.Diagnostics.Trace.WriteLine($"Reader enter failed scaffold: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Reader enter failed scaffold: {ex}");
         }
         catch (Exception ex)
         {
             Error = ex.Message;
-            System.Diagnostics.Trace.WriteLine($"Reader enter failed: {ex.Message}");
+            System.Diagnostics.Trace.WriteLine($"Reader enter failed: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Reader enter failed: {ex}");
         }
         finally
         {
