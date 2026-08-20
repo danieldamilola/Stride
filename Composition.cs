@@ -50,6 +50,12 @@ public static class Composition
         services.AddSingleton<TabHibernationManager>();
         services.AddSingleton<NavigationPolicyEngine>();
 
+        // Reader mode - scaffold: interfaces registered, real bodies in step 2
+        services.AddSingleton<Services.Reader.IReaderSanitizer, Services.Reader.ReaderSanitizer>();
+        services.AddSingleton<Services.Reader.IReaderExtractor, Services.Reader.ReaderExtractor>();
+        services.AddSingleton<Services.Reader.IReaderTemplateRenderer, Services.Reader.ReaderTemplateRenderer>();
+        services.AddSingleton<Services.Reader.IReaderService, Services.Reader.ReaderService>();
+
         // Engine dependencies record
         services.AddSingleton(sp => new EngineDependencies
         {

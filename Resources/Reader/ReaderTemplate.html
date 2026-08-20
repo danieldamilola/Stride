@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{Theme}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src http: https:; style-src 'unsafe-inline'; font-src 'none'; connect-src 'none'; script-src 'none';">
+<title>{{Title}}</title>
+<style>
+/* Inlined from ReaderTemplate.css at render time with {{FontScale}} substituted. No external stylesheet link. */
+{{InlinedCss}}
+</style>
+</head>
+<body>
+<article class="reader-article" style="max-width: {{ContentWidth}}px; font-size: calc(1rem * {{FontScale}});">
+<h1 class="reader-title">{{Title}}</h1>
+<p class="reader-byline">{{Byline}}</p>
+<div class="reader-content">
+{{SanitizedContent}}
+</div>
+</article>
+</body>
+</html>
