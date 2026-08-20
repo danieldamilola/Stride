@@ -99,6 +99,7 @@ public sealed class FakeDownloadStore : IDownloadStore
     public void Add(DownloadItem item) => Items.Add(item);
     public void Remove(string id) { }
     public void ClearCompleted() { }
+    public void ClearAll() { }
     public DownloadItem? Get(string id) => null;
 }
 

@@ -173,7 +173,7 @@ public sealed class SettingsPage
     private static string HexToRgb(string hex)
     {
         hex = hex.TrimStart('#');
-        if (hex.Length != 6) return "212,165,116";
+        if (hex.Length != 6) return "127,184,154";
         try
         {
             var r = Convert.ToInt32(hex[..2], 16);
@@ -181,7 +181,7 @@ public sealed class SettingsPage
             var b = Convert.ToInt32(hex[4..6], 16);
             return $"{r},{g},{b}";
         }
-        catch (FormatException) { return "212,165,116"; }
-        catch (OverflowException) { return "212,165,116"; }
+        catch (FormatException) { return "127,184,154"; }
+        catch (OverflowException) { return "127,184,154"; }
     }
 }

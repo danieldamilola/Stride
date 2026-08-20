@@ -118,11 +118,23 @@ public sealed class WindowLifecycleController
             }
         }
 
-        if (!restored)
+        if (!_vm.Settings.HasCompletedOnboarding)
         {
-            var tab = _engine.CreateTab();
+            var tab = _engine.CreateTab(InternalUrls.Onboarding);
+            tab.Title = "Welcome to Stride";
             _engine.SwitchTo(tab);
             await _engine.ActivateAsync(tab);
+            _engine.NavigateToOnboarding(tab);
+            _vm.Settings.HasCompletedOnboarding = true;
+            _settingsStore.Save(_vm.Settings);
+            if (!restored) return;
+        }
+
+        if (!restored)
+        {
+            var newTab = _engine.CreateTab();
+            _engine.SwitchTo(newTab);
+            await _engine.ActivateAsync(newTab);
         }
     }
 

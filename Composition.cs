@@ -77,6 +77,7 @@ public static class Composition
         services.AddSingleton<IWebMessageHandler, HistoryMessageHandler>();
         services.AddSingleton<IWebMessageHandler, ShortcutMessageHandler>();
         services.AddSingleton<IWebMessageHandler, DownloadMessageHandler>();
+        services.AddSingleton<IWebMessageHandler, OnboardingMessageHandler>();
         services.AddSingleton<IWebMessageHandler, TCLensMessageHandler>();
 
         services.AddSingleton<WebMessageRouter>();

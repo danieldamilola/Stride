@@ -117,7 +117,7 @@ public partial class MainWindow : Window
 
         WireEngineEvents();
 
-        if (_vm.Settings.AccentColor != "#D4A574")
+        if (_vm.Settings.AccentColor != "#7fb89a")
             ApplyAccentColor(_vm.Settings.AccentColor);
 
         Loaded += _lifecycle.OnWindowLoaded;

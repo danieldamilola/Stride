@@ -64,17 +64,47 @@ public sealed class TabHibernationManager
         foreach (var (id, wv) in _getWebViews())
         {
             if (id == activeTab.Id) continue;
-            if (wv.CoreWebView2 is null) continue;
+
+            dynamic core;
+            try { core = wv.CoreWebView2; }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"SuspendBackgroundTabs skipped disposed tab {id}: {ex.Message}");
+                continue;
+            }
+            if (core is null) continue;
 
             try
             {
-                wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
-                _ = wv.CoreWebView2.TrySuspendAsync();
+                core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"SuspendBackgroundTabs failed for tab {id}: {ex.Message}");
+                Trace.WriteLine($"SuspendBackgroundTabs MemoryUsageTargetLevel failed for tab {id}: {ex.Message}");
+                continue;
             }
+
+            _ = TrySuspendSafeAsync(core, id);
+        }
+    }
+
+    private static async Task TrySuspendSafeAsync(dynamic core, Guid tabId)
+    {
+        try
+        {
+            await core.TrySuspendAsync();
+        }
+        catch (InvalidOperationException ex)
+        {
+            Trace.WriteLine($"TrySuspendAsync skipped for disposed tab {tabId}: {ex.Message}");
+        }
+        catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x8007139F)
+        {
+            Trace.WriteLine($"TrySuspendAsync not in correct state for tab {tabId}: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"TrySuspendAsync failed for tab {tabId}: {ex.Message}");
         }
     }
 

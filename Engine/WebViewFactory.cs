@@ -170,11 +170,11 @@ public sealed class WebViewFactory
 
     public void NavigateInitialUrl(dynamic wv, BrowserTab tab)
     {
-        // Settings/OneTab/History are navigated by NavigateToSettings/OneTab/History
-        // after activation — skip here to avoid a double load.
+        // Settings/OneTab/History/Downloads/Onboarding are navigated by the NavigateTo*
+        // calls after activation — skip here to avoid a double load.
         var callerManagedUrls = new System.Collections.Generic.HashSet<string>
         {
-            InternalUrls.Settings, InternalUrls.OneTab, InternalUrls.History, "internal://pending-native"
+            InternalUrls.Settings, InternalUrls.OneTab, InternalUrls.History, InternalUrls.Downloads, InternalUrls.Onboarding, "internal://pending-native"
         };
         if (callerManagedUrls.Contains(tab.Url))
             return;

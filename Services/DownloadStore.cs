@@ -10,12 +10,6 @@ namespace StrideBrowser.Services;
 public sealed class DownloadStore : IDownloadStore
 {
     private static readonly string FilePath = AppPaths.DownloadsFile;
-    private static readonly JsonSerializerOptions JsonOpts = new()
-    {
-        WriteIndented = false,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true
-    };
 
     public ObservableCollection<DownloadItem> Items { get; } = new();
 
@@ -26,7 +20,7 @@ public sealed class DownloadStore : IDownloadStore
             if (File.Exists(FilePath))
             {
                 var json = File.ReadAllText(FilePath);
-                var items = JsonSerializer.Deserialize<List<DownloadItem>>(json, JsonOpts);
+                var items = JsonSerializer.Deserialize<List<DownloadItem>>(json, DownloadJson.Options);
                 if (items != null)
                 {
                     foreach (var item in items)
@@ -61,7 +55,7 @@ public sealed class DownloadStore : IDownloadStore
         {
             var dir = Path.GetDirectoryName(FilePath)!;
             Directory.CreateDirectory(dir);
-            var json = JsonSerializer.Serialize(Items.ToList(), JsonOpts);
+            var json = JsonSerializer.Serialize(Items.ToList(), DownloadJson.Options);
             AtomicFileWriter.WriteAllText(FilePath, json);
         }
         catch (Exception ex)
@@ -98,6 +92,16 @@ public sealed class DownloadStore : IDownloadStore
         }
         if (toRemove.Any())
             Save();
+    }
+
+    public void ClearAll()
+    {
+        foreach (var item in Items.ToList())
+        {
+            item.PropertyChanged -= Item_PropertyChanged;
+            Items.Remove(item);
+        }
+        Save();
     }
 
     public DownloadItem? Get(string id) => Items.FirstOrDefault(i => i.Id == id);

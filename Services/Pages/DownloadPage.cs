@@ -1,3 +1,4 @@
+using System.Text.Json;
 using StrideBrowser.Models;
 
 namespace StrideBrowser.Services.Pages;
@@ -7,6 +8,7 @@ public sealed class DownloadPage
 {
     public string Render(List<DownloadItem> items, string accentColor, string accentRgb, string ipcToken)
     {
-        return TemplateRenderer.RenderJsonPage("Resources.Pages.Downloads.html", "DOWNLOADS", items, accentColor, accentRgb, ipcToken);
+        var json = JsonSerializer.Serialize(items, DownloadJson.Options);
+        return TemplateRenderer.RenderJsonPage("Resources.Pages.Downloads.html", "DOWNLOADS", json, accentColor, accentRgb, ipcToken);
     }
 }

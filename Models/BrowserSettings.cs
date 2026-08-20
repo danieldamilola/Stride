@@ -25,7 +25,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _adBlockEnabled = true;
 
     [ObservableProperty]
-    private string _accentColor = "#D4A574";
+    private string _accentColor = "#7fb89a";
 
     [ObservableProperty]
     private int _defaultZoom = 100;
@@ -110,6 +110,9 @@ public sealed partial class BrowserSettings : ObservableObject
     /// </summary>
     [ObservableProperty]
     private Dictionary<string, string> _customShortcuts = new();
+
+    [ObservableProperty]
+    private bool _hasCompletedOnboarding;
 
     // ── YouTube Enhancer ──
 
@@ -198,5 +201,69 @@ public sealed partial class BrowserSettings : ObservableObject
 
     [ObservableProperty]
     private bool _unhookDisableAnnotations = true;
+
+    public void ResetToDefaults()
+    {
+        var d = new BrowserSettings();
+        SearchEngine = d.SearchEngine;
+        AppTheme = d.AppTheme;
+        IsSidebarOnRight = d.IsSidebarOnRight;
+        IsCompactMode = d.IsCompactMode;
+        AdBlockEnabled = d.AdBlockEnabled;
+        AccentColor = d.AccentColor;
+        DefaultZoom = d.DefaultZoom;
+        RestoreSessionOnStartup = d.RestoreSessionOnStartup;
+        HardwareAccelerationEnabled = d.HardwareAccelerationEnabled;
+        ForceDarkMode = d.ForceDarkMode;
+        ForceHttps = d.ForceHttps;
+        SmartScreenEnabled = d.SmartScreenEnabled;
+        ClearDataOnExit = d.ClearDataOnExit;
+        BlockDuplicateTabs = d.BlockDuplicateTabs;
+        TabHibernationEnabled = d.TabHibernationEnabled;
+        TabSleepEnabled = d.TabSleepEnabled;
+        AutoCheckForUpdates = d.AutoCheckForUpdates;
+        UseFloatingCommandBar = d.UseFloatingCommandBar;
+        IsSidebarPinned = d.IsSidebarPinned;
+        ShowSettingsIcon = d.ShowSettingsIcon;
+        ShowDownloadsIcon = d.ShowDownloadsIcon;
+        ShowBackArrow = d.ShowBackArrow;
+        ShowForwardArrow = d.ShowForwardArrow;
+        ShowRefreshButton = d.ShowRefreshButton;
+        ShowTabNames = d.ShowTabNames;
+        AddressBarOnLeft = d.AddressBarOnLeft;
+        NewTabBackground = d.NewTabBackground;
+        NewTabShortcuts = new List<ShortcutItem>(d.NewTabShortcuts);
+        FocusLocked = d.FocusLocked;
+        FocusDomains = d.FocusDomains;
+        CustomShortcuts = new Dictionary<string, string>(d.CustomShortcuts);
+        YtEnhancerEnabled = d.YtEnhancerEnabled;
+        YtDefaultQuality = d.YtDefaultQuality;
+        YtDisableAutoplay = d.YtDisableAutoplay;
+        YtPauseOnTabSwitch = d.YtPauseOnTabSwitch;
+        YtDefaultSpeed = d.YtDefaultSpeed;
+        YtLoopVideo = d.YtLoopVideo;
+        UnhookEnabled = d.UnhookEnabled;
+        UnhookHideHomeFeed = d.UnhookHideHomeFeed;
+        UnhookHideVideoSidebar = d.UnhookHideVideoSidebar;
+        UnhookHideRecommended = d.UnhookHideRecommended;
+        UnhookHideLiveChat = d.UnhookHideLiveChat;
+        UnhookHidePlaylist = d.UnhookHidePlaylist;
+        UnhookHideFundraiser = d.UnhookHideFundraiser;
+        UnhookHideEndScreenFeed = d.UnhookHideEndScreenFeed;
+        UnhookHideEndScreenCards = d.UnhookHideEndScreenCards;
+        UnhookHideShorts = d.UnhookHideShorts;
+        UnhookHideComments = d.UnhookHideComments;
+        UnhookHideMixes = d.UnhookHideMixes;
+        UnhookHideMerch = d.UnhookHideMerch;
+        UnhookHideVideoInfo = d.UnhookHideVideoInfo;
+        UnhookHideTopHeader = d.UnhookHideTopHeader;
+        UnhookHideNotifications = d.UnhookHideNotifications;
+        UnhookHideInaptSearch = d.UnhookHideInaptSearch;
+        UnhookHideExplore = d.UnhookHideExplore;
+        UnhookHideMoreYT = d.UnhookHideMoreYT;
+        UnhookHideSubscriptions = d.UnhookHideSubscriptions;
+        UnhookDisableAutoplay = d.UnhookDisableAutoplay;
+        UnhookDisableAnnotations = d.UnhookDisableAnnotations;
+    }
 
 }

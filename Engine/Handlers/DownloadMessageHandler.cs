@@ -32,6 +32,7 @@ public class DownloadMessageHandler : IWebMessageHandler
         yield return MessageRoute.Prefix(WebMessagePrefix.DownloadResume, HandleDownloadResume);
         yield return MessageRoute.Prefix(WebMessagePrefix.DownloadRequest, HandleDownloadRequest);
         yield return MessageRoute.Exact(WebMessagePrefix.DownloadClear, HandleDownloadClear);
+        yield return MessageRoute.Exact(WebMessagePrefix.DownloadClearAll, HandleDownloadClearAll);
         yield return MessageRoute.Exact(WebMessagePrefix.DownloadRequestSync, HandleDownloadSync);
     }
 
@@ -68,12 +69,12 @@ public class DownloadMessageHandler : IWebMessageHandler
         var item = _downloadStore.Items.FirstOrDefault(d => d.Id == id);
         if (item != null)
         {
-            _customDownloadManager.CancelDownload(item);
+            _customDownloadManager.Cancel(item.Id);
         }
         return Task.CompletedTask;
     }
 
-    private async Task HandleDownloadRequest(string url)
+    private Task HandleDownloadRequest(string url)
     {
         var uri = new Uri(url);
         var fileName = System.IO.Path.GetFileName(uri.LocalPath);
@@ -100,9 +101,9 @@ public class DownloadMessageHandler : IWebMessageHandler
             State = DownloadState.InProgress
         };
         _downloadStore.Add(item);
-
-        // Transfer runs in CustomDownloadManager so Pause/Cancel can abort it.
-        await _customDownloadManager.StartDownloadAsync(item);
+        _customDownloadManager.Add(item); // WebView2 handles the download natively;
+        // the manager tracks the item and fires events; Downloads.html refreshes via sync.
+        return Task.CompletedTask;
     }
 
     private Task HandleDownloadPause(string id)
@@ -110,7 +111,7 @@ public class DownloadMessageHandler : IWebMessageHandler
         var item = _downloadStore.Get(id);
         if (item?.State == DownloadState.InProgress)
         {
-            _customDownloadManager.PauseDownload(item);
+            _customDownloadManager.Pause(item.Id);
         }
         return Task.CompletedTask;
     }
@@ -121,6 +122,7 @@ public class DownloadMessageHandler : IWebMessageHandler
         if (item?.State == DownloadState.Paused)
         {
             item.State = DownloadState.InProgress;
+            _customDownloadManager.Resume(item.Id);
         }
         return Task.CompletedTask;
     }
@@ -128,7 +130,17 @@ public class DownloadMessageHandler : IWebMessageHandler
     private Task HandleDownloadClear()
     {
         _downloadStore.ClearCompleted();
-        if (_engine.ActiveTab?.Url == InternalUrls.Downloads) _engine.Reload();
+        return Task.CompletedTask;
+    }
+
+    private Task HandleDownloadClearAll()
+    {
+        // Cancel anything still running so WebView2 stops the transfer, then drop the whole list.
+        foreach (var item in _downloadStore.Items.Where(i => i.State is DownloadState.InProgress or DownloadState.Paused))
+        {
+            _customDownloadManager.Cancel(item.Id);
+        }
+        _downloadStore.ClearAll();
         return Task.CompletedTask;
     }
 
@@ -138,10 +150,9 @@ public class DownloadMessageHandler : IWebMessageHandler
         var wv = _engine.GetCoreWebView2();
         if (wv == null) return;
         
-        var items = _downloadStore.Items.ToList();
-        var json = JsonSerializer.Serialize(items, new JsonSerializerOptions { PropertyNamingPolicy = null });
-        json = json.Replace("\\", "\\\\").Replace("'", "\\'");
-        
-        await wv.ExecuteScriptAsync($"if (typeof updateDownloads === 'function') updateDownloads('{json}');");
+        var json = JsonSerializer.Serialize(_downloadStore.Items.ToList(), DownloadJson.Options);
+        // Frame the payload with the token so the page can verify it came from the host.
+        wv.PostWebMessageAsString(_engine.IpcToken + ":downloads:" + json);
+        await Task.CompletedTask;
     }
 }

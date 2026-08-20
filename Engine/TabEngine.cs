@@ -48,6 +48,9 @@ public sealed class TabEngine : IDisposable
     // which broke when internal pages ran on about:blank.
     private readonly string _ipcToken = Guid.NewGuid().ToString("N");
 
+    /// <summary>The per-session token embedded in internal pages. Used to frame host-to-page messages.</summary>
+    public string IpcToken => _ipcToken;
+
 
 
     public ObservableCollection<BrowserTab> Tabs { get; } = [];
@@ -114,36 +117,15 @@ public sealed class TabEngine : IDisposable
 
         foreach (var item in _downloadStore.Items)
         {
-            AttachCustomResumeHandler(item);
+            // No-op: WebView2 handles download resume natively;
+            // no need to attach custom resume handlers.
         }
 
         _downloadStore.Items.CollectionChanged += (s, e) =>
         {
             if (e.NewItems != null)
             {
-                foreach (Models.DownloadItem item in e.NewItems)
-                {
-                    AttachCustomResumeHandler(item);
-                }
-            }
-        };
-    }
-
-    private void AttachCustomResumeHandler(Models.DownloadItem item)
-    {
-        item.PropertyChanged += async (s, args) =>
-        {
-            if (args.PropertyName == nameof(Models.DownloadItem.State) && item.State == Models.DownloadState.InProgress)
-            {
-                // If it's in the active native set, do nothing. Native handles it.
-                if (_activeNativeDownloads.Contains(item.Id)) return;
-
-                // Try to get a cookie manager from any active WebView2 instance
-                var anyWv = _webViews.Values.FirstOrDefault(w => w.CoreWebView2 != null);
-                if (anyWv?.CoreWebView2 != null)
-                {
-                    await _customDownloadManager.ResumeDownloadAsync(item, anyWv.CoreWebView2.CookieManager);
-                }
+                // No-op: no custom resume handler needed.
             }
         };
     }
@@ -153,11 +135,11 @@ public sealed class TabEngine : IDisposable
         _webViewHost = webViewHost;
     }
 
-    /// <summary>Must be called once at startup to create the WebView2 environment.</summary>
+/// <summary>Must be called once at startup to create the WebView2 environment.</summary>
     public async Task InitializeAsync()
     {
+        _webViewFactory.InitializeAsync();
         _webViewFactory.BrowserProcessExited += () => _dispatcher.Invoke(HandleBrowserProcessDeath);
-        await _webViewFactory.InitializeAsync();
     }
 
     // ──── Tab Lifecycle ────
@@ -342,6 +324,12 @@ public sealed class TabEngine : IDisposable
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
         try { wv.CoreWebView2.NavigateToString(_pages.DownloadsPage(_downloadStore.Items.ToList(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+    }
+
+    public void NavigateToOnboarding(BrowserTab tab)
+    {
+        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
+        try { wv.CoreWebView2.NavigateToString(_pages.OnboardingPage(_settings, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToFocus(BrowserTab tab)

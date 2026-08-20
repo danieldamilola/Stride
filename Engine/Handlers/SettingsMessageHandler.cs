@@ -29,6 +29,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
     public IEnumerable<MessageRoute> GetRoutes()
     {
         yield return MessageRoute.Prefix(WebMessagePrefix.Setting, HandleSetting);
+        yield return MessageRoute.Exact(WebMessagePrefix.ResetSettings, HandleResetSettings);
         yield return MessageRoute.Prefix("install-update:", async (_) => { await _updateService.DownloadAndInstallUpdateAsync(); });
         yield return MessageRoute.Exact(WebMessagePrefix.OpenBackgroundsFolder, HandleOpenBackgroundsFolder);
         yield return MessageRoute.Exact("check-for-update", async () =>
@@ -39,6 +40,20 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
             var url = item?.DownloadLink ?? "";
             _engine.PostMessageToActiveTab($"update-check-result:{status}:{version}:{url}");
         });
+    }
+
+    private Task HandleResetSettings()
+    {
+        var keepOnboarding = _settings.HasCompletedOnboarding;
+        _settings.ResetToDefaults();
+        _settings.HasCompletedOnboarding = keepOnboarding;
+        _settingsStore.Save(_settings);
+        SettingChanged?.Invoke("reset", "true");
+
+        if (_engine.ActiveTab?.Url == InternalUrls.Settings)
+            _engine.NavigateToSettings(_engine.ActiveTab, _settings);
+
+        return Task.CompletedTask;
     }
 
     private Task HandleOpenBackgroundsFolder()
