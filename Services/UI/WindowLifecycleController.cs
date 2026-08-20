@@ -84,7 +84,9 @@ public sealed class WindowLifecycleController
             foreach (var arg in args)
             {
                 if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                    arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                    arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                    arg.StartsWith("file://", StringComparison.OrdinalIgnoreCase) ||
+                    System.IO.File.Exists(arg))
                 {
                     var tab = _engine.CreateTab(arg);
                     _engine.SwitchTo(tab);
@@ -144,7 +146,9 @@ public sealed class WindowLifecycleController
         foreach (var arg in args.Skip(1))
         {
             if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                arg.StartsWith("file://", StringComparison.OrdinalIgnoreCase) ||
+                System.IO.File.Exists(arg))
             {
                 var tab = _engine.CreateTab(arg);
                 _engine.SwitchTo(tab);
