@@ -36,6 +36,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Pages\*.html" />
     <EmbeddedResource Include="Resources\Scripts\*.js" />
+    <EmbeddedResource Include="Resources\Reader\*.html" />
+    <EmbeddedResource Include="Resources\Reader\*.css" />
+    <EmbeddedResource Include="Resources\Reader\*.js" />
   </ItemGroup>
 
 

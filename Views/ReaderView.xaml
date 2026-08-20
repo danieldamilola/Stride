@@ -1,0 +1,19 @@
+<UserControl x:Class="StrideBrowser.Views.ReaderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             Visibility="Collapsed">
+    <!--
+      Dedicated reader surface. Hosts its own WebView2 per active tab (lazy, created on first EnterReaderAsync).
+      That WebView2 is created with IsScriptEnabled = false and no WebMessage channel.
+      Visibility is toggled by code-behind or a binding to ReaderViewModel.IsInReader.
+      NavigationStarting and NewWindowRequested are handled host-side to redirect to the page WebView2
+      and to call ExitReaderAsync(tabId) inside a try/catch.
+    -->
+    <Grid Background="{DynamicResource BaseBrush}">
+        <!-- Reader WebView2 is added programmatically in ReaderView.xaml.cs to control creation options.
+             XAML holds the chrome only. -->
+        <Grid x:Name="ReaderHost" />
+        <TextBlock x:Name="ErrorText" Visibility="Collapsed" TextWrapping="Wrap" Margin="24" Foreground="{DynamicResource TextSecondary}" />
+    </Grid>
+</UserControl>

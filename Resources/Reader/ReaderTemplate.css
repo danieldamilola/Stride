@@ -1,0 +1,52 @@
+/* Reader display CSS. Inlined into ReaderTemplate.html <style> block at render time. No external link. */
+:root {
+  --reader-bg: #fafaf9;
+  --reader-fg: #1a1a1a;
+  --reader-muted: #6b7280;
+  --reader-border: #e5e7eb;
+  --reader-link: #7fb89a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --reader-bg: #121212;
+    --reader-fg: #e5e7eb;
+    --reader-muted: #9ca3af;
+    --reader-border: #2a2a2e;
+  }
+}
+[data-theme="dark"] {
+  --reader-bg: #121212;
+  --reader-fg: #e5e7eb;
+  --reader-muted: #9ca3af;
+}
+[data-theme="light"] {
+  --reader-bg: #fafaf9;
+  --reader-fg: #1a1a1a;
+}
+body {
+  margin: 0;
+  background: var(--reader-bg);
+  color: var(--reader-fg);
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.7;
+}
+.reader-article {
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+.reader-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 8px;
+}
+.reader-byline {
+  color: var(--reader-muted);
+  font-size: 0.9rem;
+  margin: 0 0 28px;
+}
+.reader-content p { margin: 0 0 1.1em; }
+.reader-content img { max-width: 100%; height: auto; border-radius: 6px; }
+.reader-content a { color: var(--reader-link); text-decoration: underline; }
+.reader-content blockquote { border-left: 3px solid var(--reader-border); margin: 1.2em 0; padding: 0.2em 1em; color: var(--reader-muted); }
+.reader-content pre { background: var(--reader-border); padding: 12px; border-radius: 6px; overflow: auto; }

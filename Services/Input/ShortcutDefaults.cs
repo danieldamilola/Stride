@@ -29,6 +29,7 @@ public static class ShortcutDefaults
         new("ZoomOut",           "View",       "Zoom out",             "Decrease page zoom",                "Ctrl+-"),
         new("ResetZoom",         "View",       "Reset zoom",           "Reset to default zoom",             "Ctrl+0"),
         new("ToggleFullscreen",  "View",       "Fullscreen",           "Toggle fullscreen mode",            "F11"),
+        new("ToggleReader",      "View",       "Reader view",          "Toggle distraction free reading view", "Ctrl+Shift+R"),
 
         // ── Tools ──
         new("FindInPage",        "Tools",      "Find in page",         "Search within the page",            "Ctrl+F"),
