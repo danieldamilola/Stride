@@ -71,6 +71,14 @@ public sealed class TabEngine : IDisposable
     /// <summary>Fires when WebView2 initialization fails.</summary>
     public event Action<Exception>? InitializationFailed;
 
+    /// <summary>Fires when a tab is closed. ReaderService uses this to drop its per-tab session.</summary>
+    public event Action<Guid>? TabClosed;
+
+    /// <summary>Fires when the active tab changes.</summary>
+    public event Action<BrowserTab?>? ActiveTabChanged;
+
+    public CoreWebView2Environment? WebViewEnvironment => _webViewFactory.Environment;
+
     private readonly Services.CustomDownloadManager _customDownloadManager;
     private readonly HashSet<string> _activeNativeDownloads = new();
 
@@ -182,6 +190,7 @@ public sealed class TabEngine : IDisposable
 
         Tabs.Remove(tab);
         DisposeWebView(tab);
+        TabClosed?.Invoke(tab.Id);
 
         if (tab == ActiveTab && Tabs.Count > 0)
             SwitchTo(Tabs[Math.Min(index, Tabs.Count - 1)]);
@@ -230,6 +239,7 @@ public sealed class TabEngine : IDisposable
         tab.IsActive = true;
         ActiveTab = tab;
         TabStateChanged?.Invoke(tab);
+        ActiveTabChanged?.Invoke(tab);
     }
 
     /// <summary>Activates a tab's WebView2 — creates one if needed, shows it, hides others.</summary>
@@ -432,6 +442,18 @@ public sealed class TabEngine : IDisposable
             _ = wv.CoreWebView2.ExecuteScriptAsync(script);
         }
     }
+
+    public Task<string> ExecuteScriptAsync(Guid tabId, string script)
+    {
+        if (_webViews.TryGetValue(tabId, out var wv) && wv.CoreWebView2 is not null)
+        {
+            return wv.CoreWebView2.ExecuteScriptAsync(script);
+        }
+
+        return Task.FromResult(string.Empty);
+    }
+
+    public string? GetTabUrl(Guid tabId) => Tabs.FirstOrDefault(t => t.Id == tabId)?.Url;
 
     public void ApplyAppThemeToWebViews()
     {

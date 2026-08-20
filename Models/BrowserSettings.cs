@@ -114,6 +114,17 @@ public sealed partial class BrowserSettings : ObservableObject
     [ObservableProperty]
     private bool _hasCompletedOnboarding;
 
+    // ── Reader mode ──
+
+    [ObservableProperty]
+    private double _readerFontScale = 1.0;
+
+    [ObservableProperty]
+    private string _readerTheme = "system";
+
+    [ObservableProperty]
+    private double _readerContentWidth = 720;
+
     // ── YouTube Enhancer ──
 
     [ObservableProperty]
@@ -236,6 +247,10 @@ public sealed partial class BrowserSettings : ObservableObject
         FocusLocked = d.FocusLocked;
         FocusDomains = d.FocusDomains;
         CustomShortcuts = new Dictionary<string, string>(d.CustomShortcuts);
+        HasCompletedOnboarding = d.HasCompletedOnboarding;
+        ReaderFontScale = d.ReaderFontScale;
+        ReaderTheme = d.ReaderTheme;
+        ReaderContentWidth = d.ReaderContentWidth;
         YtEnhancerEnabled = d.YtEnhancerEnabled;
         YtDefaultQuality = d.YtDefaultQuality;
         YtDisableAutoplay = d.YtDisableAutoplay;

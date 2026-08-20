@@ -91,12 +91,23 @@ public static class Composition
 
         // ViewModel and Views
         services.AddSingleton<BrowserViewModel>();
+        services.AddSingleton<ViewModels.Reader.ReaderViewModel>(sp =>
+        {
+            var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
+            var engine = sp.GetRequiredService<TabEngine>();
+            return new ViewModels.Reader.ReaderViewModel(readerService, () => engine.ActiveTab?.Id);
+        });
         services.AddTransient<MainWindow>();
 
         var sp = services.BuildServiceProvider();
         
         // Eagerly resolve ThemeManager so it can apply the initial theme
         sp.GetRequiredService<ThemeManager>();
+
+        // Wire ReaderService cleanup on tab close
+        var tabEngine = sp.GetRequiredService<TabEngine>();
+        var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
+        tabEngine.TabClosed += readerService.RemoveSession;
         
         return sp;
     }

@@ -12,8 +12,10 @@ using StrideBrowser.Interop;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.Services.Input;
+using StrideBrowser.Services.Reader;
 using StrideBrowser.Services.UI;
 using StrideBrowser.ViewModels;
+using StrideBrowser.ViewModels.Reader;
 
 namespace StrideBrowser;
 
@@ -23,6 +25,7 @@ namespace StrideBrowser;
 public partial class MainWindow : Window
 {
     private readonly BrowserViewModel _vm;
+    private readonly ReaderViewModel _readerVm;
     private readonly TabEngine _engine;
     private readonly IOneTabStore _oneTabStore;
     private readonly ISettingsStore _settingsStore;
@@ -31,6 +34,8 @@ public partial class MainWindow : Window
     private readonly IDownloadStore _downloadStore;
     private readonly WebMessageRouter _router;
     private readonly ThemeManager _themeManager;
+    private readonly IReaderService _readerService;
+    private Microsoft.Web.WebView2.Wpf.WebView2? _readerWebView;
 
     private readonly CommandBarController _commandBar;
     private readonly TabStripController _tabStrip;
@@ -47,6 +52,7 @@ public partial class MainWindow : Window
 
     public MainWindow(
         BrowserViewModel vm,
+        ReaderViewModel readerVm,
         ISettingsStore settingsStore,
         IOneTabStore oneTabStore,
         ISessionStore sessionStore,
@@ -56,11 +62,13 @@ public partial class MainWindow : Window
         WebMessageRouter router,
         TCLensTransferService tcLensTransfer,
         ThemeManager themeManager,
-        UpdateService updateService)
+        UpdateService updateService,
+        IReaderService readerService)
     {
         InitializeComponent();
 
         _vm = vm;
+        _readerVm = readerVm;
         _settingsStore = settingsStore;
         _oneTabStore = oneTabStore;
         _sessionStore = sessionStore;
@@ -69,8 +77,20 @@ public partial class MainWindow : Window
         _engine = engine;
         _router = router;
         _themeManager = themeManager;
+        _readerService = readerService;
 
         _engine.AttachHost(WebViewHost);
+
+        // Reader mode wiring. Single shared VM that mirrors active tab, service owns per tab truth.
+        _readerVm.PropertyChanged += OnReaderViewModelPropertyChanged;
+        _engine.ActiveTabChanged += tab =>
+        {
+            _readerVm.OnActiveTabChanged(tab?.Id);
+            _ = _readerVm.RefreshAvailabilityAsync();
+            Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        };
+        _engine.TabClosed += tabId => Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        _readerService.SessionChanged += (s, tabId) => Dispatcher.InvokeAsync(UpdateReaderOverlay);
 
         _router.SettingChanged += OnSettingChanged;
         _router.AddressChanged += OnRouterAddressChanged;
@@ -191,7 +211,8 @@ public partial class MainWindow : Window
                 SyncTabsBinding = _tabStrip.SyncTabsBinding,
                 OpenOneTab = OpenOneTabPage,
                 OpenSettings = () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-                LaunchTCLens = _tcLensLauncher.LaunchTCLensAsync
+                LaunchTCLens = _tcLensLauncher.LaunchTCLensAsync,
+                ToggleReader = async () => { await _readerVm.ToggleAsync(); }
             });
     }
 
@@ -253,6 +274,7 @@ public partial class MainWindow : Window
                     _securityBadge.StopSecuritySpinner();
                     LoadingBar.Visibility = Visibility.Collapsed;
                     _securityBadge.UpdateSecurityIcon(tab.Url);
+                    _ = _readerVm.RefreshAvailabilityAsync();
                 }
             }
         };
@@ -732,6 +754,189 @@ public partial class MainWindow : Window
 
     private void ZoomIndicator_Click(object sender, MouseButtonEventArgs e) =>
         _engine.ResetZoom();
+
+    // ───────────────────── Reader Mode ─────────────────────
+
+    private void OnReaderViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ReaderViewModel.IsInReader) or nameof(ReaderViewModel.Current) or nameof(ReaderViewModel.Error) or nameof(ReaderViewModel.IsReaderAvailable))
+        {
+            Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        }
+    }
+
+    private async void ReaderButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await _readerVm.ToggleAsync();
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Reader toggle failed: {ex.Message}");
+        }
+    }
+
+    private async void UpdateReaderOverlay()
+    {
+        try
+        {
+            var isInReader = _readerVm.IsInReader;
+            var current = _readerVm.Current;
+
+            // Reader button visible when readable or already in reader
+            ReaderButton.Visibility = (_readerVm.IsReaderAvailable || isInReader) ? Visibility.Visible : Visibility.Collapsed;
+            ReaderButton.Opacity = isInReader ? 1.0 : 0.7;
+            ReaderButton.ToolTip = isInReader ? "Exit reader view (Ctrl+Shift+R)" : "Reader view (Ctrl+Shift+R)";
+
+            if (isInReader && current is not null)
+            {
+                var wv = await EnsureReaderWebViewAsync();
+                if (wv is null) return;
+
+                ReaderView.Visibility = Visibility.Visible;
+                WebViewHost.Visibility = Visibility.Collapsed;
+                ReaderView.HideError();
+
+                try
+                {
+                    wv.NavigateToString(current.Html);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"Reader NavigateToString failed: {ex.Message}");
+                    ReaderView.ShowError($"Reader failed: {ex.Message}");
+                }
+            }
+            else
+            {
+                ReaderView.Visibility = Visibility.Collapsed;
+                WebViewHost.Visibility = Visibility.Visible;
+
+                if (!string.IsNullOrEmpty(_readerVm.Error))
+                {
+                    ReaderView.ShowError(_readerVm.Error!);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"UpdateReaderOverlay failed: {ex}");
+        }
+    }
+
+    private async Task<Microsoft.Web.WebView2.Wpf.WebView2?> EnsureReaderWebViewAsync()
+    {
+        if (_readerWebView is not null && _readerWebView.CoreWebView2 is not null)
+            return _readerWebView;
+
+        var env = _engine.WebViewEnvironment;
+        if (env is null) return null;
+
+        if (_readerWebView is null)
+        {
+            _readerWebView = new Microsoft.Web.WebView2.Wpf.WebView2
+            {
+                DefaultBackgroundColor = System.Drawing.Color.Transparent
+            };
+            ReaderView.SetWebView(_readerWebView);
+        }
+
+        if (_readerWebView.CoreWebView2 is null)
+        {
+            try
+            {
+                await _readerWebView.EnsureCoreWebView2Async(env);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Reader WebView2 ensure failed: {ex.Message}");
+                return null;
+            }
+
+            var core = _readerWebView.CoreWebView2;
+            if (core is not null)
+            {
+                try
+                {
+                    core.Settings.IsScriptEnabled = false;
+                    core.Settings.AreDefaultScriptDialogsEnabled = false;
+                    core.Settings.IsStatusBarEnabled = false;
+                    core.Settings.AreDefaultContextMenusEnabled = true;
+                }
+                catch (Exception ex) { Trace.WriteLine($"Reader settings failed: {ex.Message}"); }
+
+                core.NavigationStarting += async (s, e) =>
+                {
+                    try
+                    {
+                        var uri = e.Uri;
+                        if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase))
+                            return;
+
+                        e.Cancel = true;
+
+                        var tabId = _engine.ActiveTab?.Id;
+                        if (tabId is null) return;
+
+                        await _readerService.HandleReaderLinkNavigationAsync(tabId.Value, uri, (id, u) =>
+                        {
+                            try
+                            {
+                                var tab = _engine.Tabs.FirstOrDefault(t => t.Id == id);
+                                if (tab is not null)
+                                    _engine.Navigate(tab, u);
+                            }
+                            catch (Exception ex)
+                            {
+                                Trace.WriteLine($"Reader link navigate failed: {ex.Message}");
+                            }
+
+                            return Task.CompletedTask;
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"Reader NavigationStarting handler failed: {ex.Message}");
+                    }
+                };
+
+                core.NewWindowRequested += async (s, e) =>
+                {
+                    try
+                    {
+                        var uri = e.Uri;
+                        e.Handled = true;
+
+                        var tabId = _engine.ActiveTab?.Id;
+                        if (tabId is null) return;
+
+                        await _readerService.HandleReaderLinkNavigationAsync(tabId.Value, uri, (id, u) =>
+                        {
+                            try
+                            {
+                                var tab = _engine.Tabs.FirstOrDefault(t => t.Id == id);
+                                if (tab is not null)
+                                    _engine.Navigate(tab, u);
+                            }
+                            catch (Exception ex)
+                            {
+                                Trace.WriteLine($"Reader NewWindowRequested navigate failed: {ex.Message}");
+                            }
+
+                            return Task.CompletedTask;
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"Reader NewWindowRequested handler failed: {ex.Message}");
+                    }
+                };
+            }
+        }
+
+        return _readerWebView;
+    }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e) =>
         _lifecycle.OnClosing(e);
