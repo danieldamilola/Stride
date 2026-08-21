@@ -1,4 +1,4 @@
-# T&C Lens — Content Script (Page Scraper)
+﻿# T&C Lens - Content Script (Page Scraper)
 
 ## Role
 
@@ -8,12 +8,12 @@ The content script (`content/scraper.js`) is responsible for **extracting readab
 
 ### On-Demand Injection
 
-Unlike most extensions that auto-inject content scripts on every page load (declared in `manifest.json`), T&C Lens **injects the scraper only when needed** — specifically, when the user clicks the toolbar icon and the options page requests analysis.
+Unlike most extensions that auto-inject content scripts on every page load (declared in `manifest.json`), T&C Lens **injects the scraper only when needed** - specifically, when the user clicks the toolbar icon and the options page requests analysis.
 
 **Why this matters:**
 
 - **Performance:** No script runs on pages the user isn't analyzing
-- **Privacy:** No code is injected silently — injection only happens after an explicit user action
+- **Privacy:** No code is injected silently - injection only happens after an explicit user action
 - **Compatibility:** Reduces chance of conflicts with page scripts
 - **Permissions:** Combined with `activeTab`, Chrome grants temporary access only to the relevant tab
 
@@ -27,7 +27,7 @@ The content script **never modifies the page DOM**. It only reads text content a
 
 ## Extraction Strategy
 
-Web pages have wildly different structures — some use semantic HTML, some are a mess of nested divs. The scraper uses a **smart fallback chain** to maximize text extraction quality:
+Web pages have wildly different structures - some use semantic HTML, some are a mess of nested divs. The scraper uses a **smart fallback chain** to maximize text extraction quality:
 
 ```
 Priority 1: <article> element
@@ -44,7 +44,7 @@ Priority 5: document.body.innerText (last resort)
 ## Code Implementation
 
 ```javascript
-// content/scraper.js — T&C Lens Page Text Extractor
+// content/scraper.js - T&C Lens Page Text Extractor
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "EXTRACT_PAGE_TEXT") {
@@ -99,7 +99,7 @@ function extractPageText() {
     return cleanText(combinedText);
   }
 
-  // Strategy 5: Last resort — entire body text
+  // Strategy 5: Last resort - entire body text
   return cleanText(document.body.innerText);
 }
 
@@ -127,7 +127,7 @@ Raw DOM text extraction produces messy output. The `cleanText()` function normal
 
 ### Very Long Pages
 
-Some T&C pages are extremely long (50,000+ characters). The extracted text may exceed the AI model's context window. The options page handles this by truncating the text before sending to the AI — the content script always extracts the full text, and trimming happens upstream.
+Some T&C pages are extremely long (50,000+ characters). The extracted text may exceed the AI model's context window. The options page handles this by truncating the text before sending to the AI - the content script always extracts the full text, and trimming happens upstream.
 
 **Why the scraper extracts everything:** We don't know the AI model's context limit at the scraper level. The options page knows the selected model and its limits, so it handles truncation. This keeps the scraper model-agnostic.
 
@@ -136,7 +136,7 @@ Some T&C pages are extremely long (50,000+ characters). The extracted text may e
 Some pages render content dynamically (React, Vue, Angular) and may not have text in the DOM at the time of extraction. If the scraper returns empty text:
 
 1. The options page shows: "Could not extract text from this page. The page may load content dynamically. Try scrolling the page first, then analyze again."
-2. Users can also manually copy-paste T&C text into a text input field (future enhancement — not in V1).
+2. Users can also manually copy-paste T&C text into a text input field (future enhancement - not in V1).
 
 ### JavaScript-Rendered Content
 
@@ -177,7 +177,7 @@ Some T&C pages embed content in iframes (e.g., third-party cookie consent notice
 }
 ```
 
-No additional parameters needed — the content script knows what to do.
+No additional parameters needed - the content script knows what to do.
 
 ### Outgoing Response (Success)
 
@@ -214,13 +214,13 @@ No additional parameters needed — the content script knows what to do.
 
 | Page                                     | Expected Behavior                                     |
 | ---------------------------------------- | ----------------------------------------------------- |
-| `https://policies.google.com/privacy`    | Long privacy policy — should extract substantial text |
-| `https://example.com`                    | Simple page — should extract minimal text             |
+| `https://policies.google.com/privacy`    | Long privacy policy - should extract substantial text |
+| `https://example.com`                    | Simple page - should extract minimal text             |
 | A SPA with dynamic rendering             | May extract incomplete text                           |
 | A page with `<article>` wrapping the T&C | Should use Strategy 1                                 |
 | A page with `<main>` wrapping the T&C    | Should use Strategy 2                                 |
 | A page with no semantic HTML             | Falls back to largest div or paragraphs               |
-| An empty page                            | Returns empty string — AI gatekeeper catches it       |
+| An empty page                            | Returns empty string - AI gatekeeper catches it       |
 
 ### Console Logging (Development Only)
 
@@ -238,3 +238,4 @@ function extractPageText() {
 ```
 
 This logging should be removed or disabled in production builds.
+

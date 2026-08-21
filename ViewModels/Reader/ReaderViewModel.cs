@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using StrideBrowser.Models.Reader;
 using StrideBrowser.Services.Reader;
 
@@ -7,7 +7,7 @@ namespace StrideBrowser.ViewModels.Reader;
 /// <summary>
 /// Single shared VM that mirrors the active tab session owned by IReaderService.
 /// Service owns truth keyed by tabId. VM re-derives bindable state on ActiveTabChanged or SessionChanged.
-/// No tabId on public commands — VM resolves ActiveTabId internally.
+/// No tabId on public commands - VM resolves ActiveTabId internally.
 /// </summary>
 public sealed partial class ReaderViewModel : ObservableObject
 {
@@ -116,15 +116,17 @@ public sealed partial class ReaderViewModel : ObservableObject
             await _readerService.EnterReaderAsync(tabId.Value);
             SyncFromService(tabId.Value);
         }
-        catch (NotImplementedException)
+        catch (NotImplementedException ex)
         {
-            Error = "Reader not yet implemented in this scaffold.";
-            throw;
+            Error = "Reader not yet implemented in this scaffold: " + ex.Message;
+            System.Diagnostics.Trace.WriteLine($"Reader enter failed scaffold: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Reader enter failed scaffold: {ex}");
         }
         catch (Exception ex)
         {
             Error = ex.Message;
-            System.Diagnostics.Trace.WriteLine($"Reader enter failed: {ex.Message}");
+            System.Diagnostics.Trace.WriteLine($"Reader enter failed: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Reader enter failed: {ex}");
         }
         finally
         {
@@ -174,3 +176,4 @@ public sealed partial class ReaderViewModel : ObservableObject
         }
     }
 }
+

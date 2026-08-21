@@ -1,4 +1,4 @@
-# T&C Lens — Architecture
+﻿# T&C Lens - Architecture
 
 ## System Overview
 
@@ -58,7 +58,7 @@ T&C Lens follows a **message-passing architecture** with three isolated executio
 
 ### Context 3: Options Page (`options/options.html` + `options/options.js`)
 
-**What it runs in:** A full HTML page in a new tab with the extension's origin. This is the main UI — the "brain" of the extension where all orchestration happens.
+**What it runs in:** A full HTML page in a new tab with the extension's origin. This is the main UI - the "brain" of the extension where all orchestration happens.
 
 **Responsibilities:**
 
@@ -69,7 +69,7 @@ T&C Lens follows a **message-passing architecture** with three isolated executio
 - Save analysis results to history
 - Provide settings UI for API key input, provider selection, and history management
 
-## Data Flow — Step by Step
+## Data Flow - Step by Step
 
 ### Step 1: User Activation
 
@@ -145,11 +145,11 @@ options.js receives raw AI response
 
 ## Error Handling Strategy
 
-Every step has explicit error handling. The extension never silently fails — each failure produces a clear, actionable message to the user.
+Every step has explicit error handling. The extension never silently fails - each failure produces a clear, actionable message to the user.
 
 | Step       | Possible Errors                      | User Message                                                                                                |
 | ---------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| Activation | None (always succeeds)               | —                                                                                                           |
+| Activation | None (always succeeds)               | -                                                                                                           |
 | Page Load  | Storage read failure                 | "Settings could not be loaded. Please refresh."                                                             |
 | Analyze    | Tab was closed                       | "The page you selected has been closed. Please go back to the T&C page and click the extension icon again." |
 | Analyze    | No API key set                       | "Please add your API key in Settings first."                                                                |
@@ -164,17 +164,18 @@ Every step has explicit error handling. The extension never silently fails — e
 
 ## Security Considerations
 
-1. **API Key Storage** — Stored in `chrome.storage.local`, which is accessible only to the extension itself. Not sent to any server except the user's chosen AI provider.
-2. **Content Security Policy** — The extension declares a strict CSP in `manifest.json` that restricts `connect-src` to only the AI provider API endpoints. No inline scripts, no `eval()`.
-3. **No DOM Injection** — The content script reads text but never modifies the page DOM. This prevents interference with the target page's behavior.
-4. **No Data Collection** — The extension does not phone home. There is no analytics, no telemetry, no usage tracking. All data stays local in the user's browser.
-5. **Minimal Permissions** — `activeTab` grants access only to the current tab when the user clicks the icon. `storage` is needed for settings. `scripting` is needed for on-demand content script injection. No broad host permissions.
+1. **API Key Storage** - Stored in `chrome.storage.local`, which is accessible only to the extension itself. Not sent to any server except the user's chosen AI provider.
+2. **Content Security Policy** - The extension declares a strict CSP in `manifest.json` that restricts `connect-src` to only the AI provider API endpoints. No inline scripts, no `eval()`.
+3. **No DOM Injection** - The content script reads text but never modifies the page DOM. This prevents interference with the target page's behavior.
+4. **No Data Collection** - The extension does not phone home. There is no analytics, no telemetry, no usage tracking. All data stays local in the user's browser.
+5. **Minimal Permissions** - `activeTab` grants access only to the current tab when the user clicks the icon. `storage` is needed for settings. `scripting` is needed for on-demand content script injection. No broad host permissions.
 
 ## Future Architecture Considerations (Not in V1)
 
 These are noted for potential future development but are **not part of the initial build**:
 
-- **Proxy Backend** — A server-side proxy to hold an API key for users who don't want to manage their own. Would require auth, rate limiting, and potentially payments.
-- **Multi-language Support** — Analyzing T&C pages in languages other than English. Would require prompt adjustments and model selection.
-- **Comparison Feature** — Compare T&C text across versions to detect changed clauses. Would require storing historical page text.
-- **Export/Share** — Allow users to export analysis as PDF or share a link. Would require generating documents or a backend.
+- **Proxy Backend** - A server-side proxy to hold an API key for users who don't want to manage their own. Would require auth, rate limiting, and potentially payments.
+- **Multi-language Support** - Analyzing T&C pages in languages other than English. Would require prompt adjustments and model selection.
+- **Comparison Feature** - Compare T&C text across versions to detect changed clauses. Would require storing historical page text.
+- **Export/Share** - Allow users to export analysis as PDF or share a link. Would require generating documents or a backend.
+

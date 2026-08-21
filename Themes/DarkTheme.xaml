@@ -1,6 +1,6 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!--  COLORS — Stride Identity (Dark)                           -->
+    <!--  COLORS - Stride Identity (Dark)                           -->
     <Color x:Key="BaseColor">#111113</Color>
     <Color x:Key="SidebarColor">#151517</Color>
     <Color x:Key="SurfaceColor">#1A1A1E</Color>
@@ -29,3 +29,4 @@
     <SolidColorBrush x:Key="TextMuted"         Color="{StaticResource TextMutedColor}"/>
     <SolidColorBrush x:Key="DangerBrush"       Color="{StaticResource DangerColor}"/>
 </ResourceDictionary>
+

@@ -16,7 +16,7 @@ namespace StrideBrowser.Tests;
 /// real HTTP + real Ed25519 verification) against a local appcast and a throwaway key.
 /// Proves: (1) the appcast check works with NO .signature sidecar (OnlyVerifySoftwareDownloads),
 /// (2) a tampered installer is rejected before anything runs, (3) a correctly signed installer
-/// reaches the install step. The dummy installer is a WinExe that exits immediately — no real
+/// reaches the install step. The dummy installer is a WinExe that exits immediately - no real
 /// install ever happens.
 /// </summary>
 public sealed class UpdateServiceE2ETests : IDisposable
@@ -212,7 +212,7 @@ public sealed class UpdateServiceE2ETests : IDisposable
     }
 
     /// <summary>
-    /// Compiles (once, cached) a tiny WinExe that exits immediately — the "installer" that the
+    /// Compiles (once, cached) a tiny WinExe that exits immediately - the "installer" that the
     /// pipeline may legally run. WinExe = no console window flash.
     /// </summary>
     private static byte[] EnsureDummyInstaller()

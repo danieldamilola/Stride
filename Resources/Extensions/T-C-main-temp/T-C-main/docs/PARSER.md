@@ -1,4 +1,4 @@
-# T&C Lens — Response Parser Design
+﻿# T&C Lens - Response Parser Design
 
 ## Role
 
@@ -8,12 +8,12 @@ The parser (`lib/parser.js`) takes the raw string response from the AI and conve
 
 AI models are not perfectly predictable. Even with a well-crafted prompt, the response format can vary:
 
-1. **Clean JSON** — Model returns pure JSON (ideal case)
-2. **Markdown-wrapped JSON** — Model wraps the JSON in `json ... ` code blocks
-3. **Text + JSON** — Model adds explanatory text before or after the JSON
-4. **Malformed JSON** — Model produces slightly invalid JSON (trailing commas, unquoted keys)
-5. **Missing fields** — Model omits required fields like `risk_score` or `findings`
-6. **Wrong types** — Model returns `risk_score` as a string instead of a number
+1. **Clean JSON** - Model returns pure JSON (ideal case)
+2. **Markdown-wrapped JSON** - Model wraps the JSON in `json ... ` code blocks
+3. **Text + JSON** - Model adds explanatory text before or after the JSON
+4. **Malformed JSON** - Model produces slightly invalid JSON (trailing commas, unquoted keys)
+5. **Missing fields** - Model omits required fields like `risk_score` or `findings`
+6. **Wrong types** - Model returns `risk_score` as a string instead of a number
 
 The parser handles all of these gracefully.
 
@@ -247,3 +247,4 @@ parse(
 );
 // → Should clamp to 100
 ````
+

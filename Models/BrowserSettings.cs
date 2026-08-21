@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace StrideBrowser.Models;
@@ -44,7 +44,7 @@ public sealed partial class BrowserSettings : ObservableObject
 
     /// <summary>
     /// Enables Microsoft Defender SmartScreen (phishing/malware protection). When on,
-    /// navigated URLs are checked with Microsoft — a privacy trade-off the user controls.
+    /// navigated URLs are checked with Microsoft - a privacy trade-off the user controls.
     /// Read at WebView2 environment creation, so changes require a restart to apply.
     /// </summary>
     [ObservableProperty]
@@ -113,6 +113,17 @@ public sealed partial class BrowserSettings : ObservableObject
 
     [ObservableProperty]
     private bool _hasCompletedOnboarding;
+
+    // ── Reader mode ──
+
+    [ObservableProperty]
+    private double _readerFontScale = 1.0;
+
+    [ObservableProperty]
+    private string _readerTheme = "system";
+
+    [ObservableProperty]
+    private double _readerContentWidth = 720;
 
     // ── YouTube Enhancer ──
 
@@ -236,6 +247,10 @@ public sealed partial class BrowserSettings : ObservableObject
         FocusLocked = d.FocusLocked;
         FocusDomains = d.FocusDomains;
         CustomShortcuts = new Dictionary<string, string>(d.CustomShortcuts);
+        HasCompletedOnboarding = d.HasCompletedOnboarding;
+        ReaderFontScale = d.ReaderFontScale;
+        ReaderTheme = d.ReaderTheme;
+        ReaderContentWidth = d.ReaderContentWidth;
         YtEnhancerEnabled = d.YtEnhancerEnabled;
         YtDefaultQuality = d.YtDefaultQuality;
         YtDisableAutoplay = d.YtDisableAutoplay;
@@ -267,3 +282,4 @@ public sealed partial class BrowserSettings : ObservableObject
     }
 
 }
+

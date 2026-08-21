@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
@@ -118,7 +118,7 @@ public sealed class NavigationPolicyEngine
         var uriForCustom = e.Uri!;
         dispatcher.InvokeAsync(() =>
         {
-            // SECURITY: confirm before handing off to an external app — unprompted
+            // SECURITY: confirm before handing off to an external app - unprompted
             // protocol-handler invocation is a known RCE vector for some installed apps.
             var displayUrl = uriForCustom.Length > 100 ? uriForCustom.Substring(0, 97) + "..." : uriForCustom;
             var dialog = new BaseBrowserDialogWindow
@@ -183,3 +183,4 @@ public sealed class NavigationPolicyEngine
         return true;
     }
 }
+

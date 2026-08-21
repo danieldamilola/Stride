@@ -1,4 +1,4 @@
-# T&C Lens — AI Prompt Design
+﻿# T&C Lens - AI Prompt Design
 
 ## Overview
 
@@ -6,7 +6,7 @@ The AI prompt is the **core intelligence** of T&C Lens. It serves two critical f
 
 ## Prompt Architecture
 
-The prompt uses a **system/user message split** — a standard pattern across all major AI providers:
+The prompt uses a **system/user message split** - a standard pattern across all major AI providers:
 
 - **System message:** Contains the role definition, output format rules, analysis instructions, and gatekeeper logic
 - **User message:** Contains the extracted page text
@@ -16,7 +16,7 @@ The prompt uses a **system/user message split** — a standard pattern across al
 ```
 You are T&C Lens, an expert legal document analyzer. Your job is to read Terms of Service, Privacy Policies, and other legal agreements, then break them down into clear, actionable insights for everyday users.
 
-## CRITICAL FIRST STEP — GATEKEEPER CHECK
+## CRITICAL FIRST STEP - GATEKEEPER CHECK
 
 Before analyzing, check if the text is actually a legal agreement document.
 
@@ -96,11 +96,11 @@ LOW importance: Standard boilerplate that's generally expected and unremarkable.
 ## RULES
 
 1. Respond in JSON only. No markdown, no code blocks, no explanations outside the JSON.
-2. Be specific — reference actual clauses and quote relevant text.
+2. Be specific - reference actual clauses and quote relevant text.
 3. Use plain, non-legal language that any user can understand.
 4. Include 3-10 findings total, prioritizing the most important.
 5. If a finding is very important, put it first (findings are ordered by importance).
-6. Don't hallucinate clauses — only reference what's actually in the text.
+6. Don't hallucinate clauses - only reference what's actually in the text.
 7. If the text is very short or incomplete, note that in the summary.
 8. Always include a quote when possible to back up each finding.
 ```
@@ -157,9 +157,9 @@ In practice, most T&C pages are 10,000-50,000 characters, so truncation is rarel
 
 The AI may return the JSON in different ways depending on the provider:
 
-1. **Clean JSON** — `{"is_terms": true, ...}` (ideal case)
-2. **JSON wrapped in markdown** — `json\n{...}\n` (common with some models)
-3. **JSON with leading/trailing text** — "Here's the analysis:\n{...}" (possible with less controllable models)
+1. **Clean JSON** - `{"is_terms": true, ...}` (ideal case)
+2. **JSON wrapped in markdown** - `json\n{...}\n` (common with some models)
+3. **JSON with leading/trailing text** - "Here's the analysis:\n{...}" (possible with less controllable models)
 
 The parser (`lib/parser.js`) handles all three cases:
 
@@ -247,18 +247,19 @@ function extractJSON(rawResponse) {
 
 ## Prompt Iteration Strategy
 
-The prompt is designed to be **provider-agnostic** — it works with OpenAI, Anthropic, and Google models without modification. However, some models may respond differently:
+The prompt is designed to be **provider-agnostic** - it works with OpenAI, Anthropic, and Google models without modification. However, some models may respond differently:
 
-- **GPT-4o-mini** — Tends to follow JSON format reliably. May occasionally add explanatory text before the JSON.
-- **Claude 3.5 Sonnet** — Excellent at following instructions. Very reliable JSON output.
-- **Gemini 1.5 Flash** — Fast and cheap. May sometimes wrap JSON in markdown code blocks.
-- **Gemini 1.5 Pro** — Most expensive but most thorough analysis.
+- **GPT-4o-mini** - Tends to follow JSON format reliably. May occasionally add explanatory text before the JSON.
+- **Claude 3.5 Sonnet** - Excellent at following instructions. Very reliable JSON output.
+- **Gemini 1.5 Flash** - Fast and cheap. May sometimes wrap JSON in markdown code blocks.
+- **Gemini 1.5 Pro** - Most expensive but most thorough analysis.
 
 The parser is designed to handle variations in output format, so the prompt doesn't need per-provider customization.
 
 ## Future Prompt Enhancements (Not in V1)
 
-- **Jurisdiction awareness** — Ask the user their country and adjust analysis for relevant laws (GDPR, CCPA, etc.)
-- **Comparison mode** — Compare two versions of T&C to detect changes
-- **Clause-level detail** — Break down every individual clause instead of summarizing into findings
-- **Plain-language rewrite** — Offer a "rewrite in simple terms" option for the entire document
+- **Jurisdiction awareness** - Ask the user their country and adjust analysis for relevant laws (GDPR, CCPA, etc.)
+- **Comparison mode** - Compare two versions of T&C to detect changes
+- **Clause-level detail** - Break down every individual clause instead of summarizing into findings
+- **Plain-language rewrite** - Offer a "rewrite in simple terms" option for the entire document
+

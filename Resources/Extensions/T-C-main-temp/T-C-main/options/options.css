@@ -1,4 +1,4 @@
-/* ─── Self-hosted Fonts ──────────────────────────────────────── */
+﻿/* ─── Self-hosted Fonts ──────────────────────────────────────── */
 @font-face {
   font-family: "Inter";
   font-style: normal;
@@ -365,7 +365,7 @@ select:focus {
   border-bottom-color: var(--fg);
 }
 
-/* Override focus-visible for inputs — they already show focus via border */
+/* Override focus-visible for inputs - they already show focus via border */
 input:focus-visible,
 select:focus-visible {
   outline: none;
@@ -822,3 +822,4 @@ select option {
     margin: 0 20px;
   }
 }
+

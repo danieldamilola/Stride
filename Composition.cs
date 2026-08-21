@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using StrideBrowser.Engine;
 using StrideBrowser.Engine.Handlers;
 using StrideBrowser.Models;
@@ -8,7 +8,7 @@ using StrideBrowser.ViewModels;
 namespace StrideBrowser;
 
 /// <summary>
-/// Composition root — registers all services into the DI container.
+/// Composition root - registers all services into the DI container.
 /// Called once at startup from App.xaml.cs.
 /// </summary>
 public static class Composition
@@ -28,7 +28,7 @@ public static class Composition
         services.AddSingleton<ISettingsStore>(settingsStore);
         services.AddSingleton(settings);
 
-        // Services — registered by interface and concrete type
+        // Services - registered by interface and concrete type
         services.AddSingleton<NavigationService>();
         services.AddSingleton<FaviconLoader>();
         services.AddSingleton<HistoryStore>();
@@ -91,13 +91,27 @@ public static class Composition
 
         // ViewModel and Views
         services.AddSingleton<BrowserViewModel>();
+        services.AddSingleton<ViewModels.Reader.ReaderViewModel>(sp =>
+        {
+            var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
+            var engine = sp.GetRequiredService<TabEngine>();
+            return new ViewModels.Reader.ReaderViewModel(readerService, () => engine.ActiveTab?.Id);
+        });
         services.AddTransient<MainWindow>();
 
         var sp = services.BuildServiceProvider();
         
         // Eagerly resolve ThemeManager so it can apply the initial theme
         sp.GetRequiredService<ThemeManager>();
+
+        // Wire ReaderService cleanup on tab close and single-WebView reader guard
+        var tabEngine = sp.GetRequiredService<TabEngine>();
+        var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
+        tabEngine.TabClosed += readerService.RemoveSession;
+        tabEngine.IsReaderActive = tabId => readerService.GetSession(tabId)?.IsInReader == true;
+        tabEngine.ExitReaderAsync = tabId => readerService.ExitReaderAsync(tabId);
         
         return sp;
     }
 }
+

@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using StrideBrowser.Interop;
@@ -71,6 +71,7 @@ public sealed class WindowChromeHelper
             var preference = NativeMethods.DWMWCP_ROUND;
             NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
         }
-        catch { /* Pre-Windows 11 — graceful fallback to square corners */ }
+        catch { /* Pre-Windows 11 - graceful fallback to square corners */ }
     }
 }
+

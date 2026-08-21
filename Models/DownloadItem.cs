@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace StrideBrowser.Models;
@@ -92,7 +92,7 @@ public sealed class DownloadItem : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Progress as 0–100, or -1 if total size is unknown.</summary>
+    /// <summary>Progress as 0-100, or -1 if total size is unknown.</summary>
     public int ProgressPercent =>
         TotalBytes > 0 ? (int)(ReceivedBytes * 100 / TotalBytes) : -1;
 
@@ -110,3 +110,4 @@ public enum DownloadState
     Cancelled,
     Failed
 }
+

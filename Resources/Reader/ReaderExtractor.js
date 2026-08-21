@@ -1,12 +1,15 @@
-// ReaderExtractor.js - scaffold stub.
-// Real implementation clones the document, strips nav, aside, script, style, hidden nodes,
-// ad selectors, and returns ArticleResult JSON via WebMessageRouter or ExecuteScriptAsync.
-// This stub exists so the embedded resource pipeline and template rendering can be wired
-// without shipping real heuristics before step 2.
+// ReaderExtractor.js - wrapper around Mozilla Readability.js.
+// Readability.js must be loaded before this file. The C# loader concatenates both.
 
 (function () {
   function isReadable() {
-    // Placeholder heuristic: treat pages with at least 3 paragraphs and 500 chars as readable
+    try {
+      if (typeof Readability !== 'undefined') {
+        var testDoc = document.cloneNode(true);
+        var testArticle = new Readability(testDoc).parse();
+        return !!testArticle && (testArticle.content || '').length > 500;
+      }
+    } catch (e) {}
     var paras = document.querySelectorAll('p');
     var len = 0;
     for (var i = 0; i < paras.length; i++) len += (paras[i].textContent || '').length;
@@ -16,24 +19,39 @@
   function extract() {
     var title = document.title || '';
     var byline = '';
+    var siteName = location.hostname || '';
+    try {
+      if (typeof Readability !== 'undefined') {
+        var docClone = document.cloneNode(true);
+        var reader = new Readability(docClone);
+        var article = reader.parse();
+        if (article) {
+          return JSON.stringify({
+            title: article.title || title,
+            byline: article.byline || byline,
+            excerpt: article.excerpt || '',
+            contentHtml: article.content || '',
+            siteName: article.siteName || siteName,
+            length: article.length || (article.content || '').length,
+            isReadable: true
+          });
+        }
+      }
+    } catch (e) {}
     var meta = document.querySelector('meta[name="author"]');
     if (meta) byline = meta.getAttribute('content') || '';
-    var article = document.querySelector('article');
-    var root = article ? article.cloneNode(true) : document.body.cloneNode(true);
-    // Stub: return outerHTML. Real version will strip and sanitize here.
-    var html = root.innerHTML || '';
+    var html = document.body ? document.body.innerHTML : '';
     return JSON.stringify({
       title: title,
       byline: byline,
       excerpt: '',
       contentHtml: html,
-      siteName: location.hostname,
+      siteName: siteName,
       length: html.length,
       isReadable: isReadable()
     });
   }
 
-  // Expose for ExecuteScriptAsync callers and for WebMessageRouter if later wired
   window.__strideReaderExtract = extract;
   window.__strideReaderIsReadable = isReadable;
 })();

@@ -39,6 +39,9 @@ public interface IReaderService
     /// <summary>Remove session when tab closes. Called from TabEngine.TabClosed.</summary>
     void RemoveSession(Guid tabId);
 
+    /// <summary>Host-side link interception. Navigates the page WebView2 and exits reader with try/catch.</summary>
+    Task HandleReaderLinkNavigationAsync(Guid tabId, string uri, Func<Guid, string, Task> navigatePage);
+
     /// <summary>Raised whenever any tab session changes. Payload is the affected tabId.</summary>
     event EventHandler<Guid> SessionChanged;
 }
