@@ -26,7 +26,7 @@ public sealed class LinkPreviewPolicy : ILinkPreviewPolicy
         if (uri.Scheme is not "http" and not "https") return false;
         if (string.IsNullOrWhiteSpace(uri.Host)) return false;
 
-        // Reject fragment only navigation on same page without path change
+        // Reject same-document navigation (including fragment differences)
         if (!string.IsNullOrWhiteSpace(currentTabUrl))
         {
             if (Uri.TryCreate(currentTabUrl.Trim(), UriKind.Absolute, out var current))
@@ -35,17 +35,10 @@ public sealed class LinkPreviewPolicy : ILinkPreviewPolicy
                     uri, current,
                     UriComponents.SchemeAndServer | UriComponents.PathAndQuery,
                     UriFormat.Unescaped, StringComparison.OrdinalIgnoreCase) == 0;
-                if (sameWithoutFragment && !string.IsNullOrEmpty(uri.Fragment) && uri.Fragment != current.Fragment)
+                if (sameWithoutFragment)
                 {
-                    // Same document, only fragment changed - no need to preview
                     return false;
                 }
-
-                // Exact same URL - no preview
-                if (string.Equals(trimmed, currentTabUrl.Trim(), StringComparison.OrdinalIgnoreCase))
-                    return false;
-                if (string.Equals(uri.AbsoluteUri, current.AbsoluteUri, StringComparison.OrdinalIgnoreCase))
-                    return false;
             }
         }
 

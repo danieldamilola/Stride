@@ -61,6 +61,14 @@ public sealed class LinkPreviewPolicyTests
     }
 
     [Fact]
+    public void IsPreviewableUrl_RejectsSameDocumentWhenCurrentHasFragmentAndTargetDoesNot()
+    {
+        var current = "https://example.com/page#section";
+        var target = "https://example.com/page";
+        Assert.False(_policy.IsPreviewableUrl(target, current));
+    }
+
+    [Fact]
     public void IsPreviewableUrl_AllowsDifferentPathWithFragment()
     {
         var current = "https://example.com/page?a=1";

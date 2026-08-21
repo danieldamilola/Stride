@@ -182,4 +182,38 @@ public sealed class LinkPreviewServiceTests
         svc.UpdatePreviewSize(new Size(100, 100));
         Assert.Equal(before, svc.Current.Size);
     }
+
+    [Fact]
+    public void UpdatePreviewSize_RejectsNaN()
+    {
+        var svc = CreateService();
+        svc.RequestPeek(Guid.NewGuid(), "https://example.com", new Rect(10, 10, 100, 20), LinkPreviewTrigger.AltPress, "https://current.com");
+        var before = svc.Current.Size;
+        var fired = 0;
+        svc.StateChanged += _ => fired++;
+        svc.UpdatePreviewSize(new Size(double.NaN, 400));
+        svc.UpdatePreviewSize(new Size(500, double.NaN));
+        Assert.Equal(before, svc.Current.Size);
+        Assert.Equal(0, fired);
+    }
+
+    [Fact]
+    public void UpdatePreviewSize_AcceptsValidSizeAndFiresStateChanged()
+    {
+        var svc = CreateService();
+        svc.RequestPeek(Guid.NewGuid(), "https://example.com", new Rect(10, 10, 100, 20), LinkPreviewTrigger.AltPress, "https://current.com");
+        var fired = 0;
+        LinkPreviewState? lastState = null;
+        svc.StateChanged += state =>
+        {
+            fired++;
+            lastState = state;
+        };
+        var validSize = new Size(500, 400);
+        svc.UpdatePreviewSize(validSize);
+        Assert.Equal(1, fired);
+        Assert.NotNull(lastState);
+        Assert.Equal(validSize, lastState!.Size);
+        Assert.Equal(validSize, svc.Current.Size);
+    }
 }

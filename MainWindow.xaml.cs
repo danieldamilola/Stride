@@ -836,6 +836,13 @@ public partial class MainWindow : Window
             {
                 if (_linkPreviewVm.IsVisible)
                 {
+                    if (!_vm.Settings.UseFloatingCommandBar)
+                    {
+                        var activeWebView = ActiveStandardWebView;
+                        if (activeWebView != null)
+                            activeWebView.Visibility = Visibility.Collapsed;
+                    }
+
                     LinkPreviewDim.Visibility = Visibility.Visible;
                     var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(120))
                     {
@@ -855,6 +862,12 @@ public partial class MainWindow : Window
                         {
                             LinkPreviewDim.Visibility = Visibility.Collapsed;
                             LinkPreviewDim.BeginAnimation(UIElement.OpacityProperty, null);
+                            if (!_vm.Settings.UseFloatingCommandBar && _engine.ActiveTab != null)
+                            {
+                                var activeWebView = ActiveStandardWebView;
+                                if (activeWebView != null)
+                                    activeWebView.Visibility = Visibility.Visible;
+                            }
                         }
                     };
                     LinkPreviewDim.BeginAnimation(UIElement.OpacityProperty, fadeOut);

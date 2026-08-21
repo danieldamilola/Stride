@@ -136,13 +136,29 @@ public sealed class WebViewIpcBridge
 
             if (msg.StartsWith("LINK_PREVIEW_PEEK:"))
             {
+                if (!_settings.LinkPreviewEnabled) return;
+
                 var json = msg.Substring("LINK_PREVIEW_PEEK:".Length);
                 try
                 {
                     using var doc = System.Text.Json.JsonDocument.Parse(json);
                     var root = doc.RootElement;
                     var url = root.GetProperty("url").GetString() ?? string.Empty;
-                    var rectArr = root.GetProperty("rect");
+                    if (!root.TryGetProperty("rect", out var rectArr) ||
+                        rectArr.ValueKind != System.Text.Json.JsonValueKind.Array ||
+                        rectArr.GetArrayLength() < 4)
+                    {
+                        return;
+                    }
+
+                    if (rectArr[0].ValueKind != System.Text.Json.JsonValueKind.Number ||
+                        rectArr[1].ValueKind != System.Text.Json.JsonValueKind.Number ||
+                        rectArr[2].ValueKind != System.Text.Json.JsonValueKind.Number ||
+                        rectArr[3].ValueKind != System.Text.Json.JsonValueKind.Number)
+                    {
+                        return;
+                    }
+
                     var left = rectArr[0].GetDouble();
                     var top = rectArr[1].GetDouble();
                     var width = rectArr[2].GetDouble();

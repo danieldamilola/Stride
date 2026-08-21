@@ -59,4 +59,26 @@ public sealed class LinkPreviewDownloadSuppressorTests
 
         Assert.False(suppressor.ShouldSuppress(""));
     }
+
+    [Fact]
+    public void ShouldSuppress_RemovesEntryImmediatelyOnSuppression()
+    {
+        var suppressor = new LinkPreviewDownloadSuppressor();
+        var url = "https://example.com/file.zip";
+        suppressor.Add(url);
+
+        Assert.True(suppressor.ShouldSuppress(url));
+        Assert.False(suppressor.ShouldSuppress(url));
+    }
+
+    [Fact]
+    public void ShouldSuppress_RemovesFragmentStrippedEntryImmediatelyOnSuppression()
+    {
+        var suppressor = new LinkPreviewDownloadSuppressor();
+        var baseUrl = "https://example.com/document.pdf";
+        suppressor.Add(baseUrl);
+
+        Assert.True(suppressor.ShouldSuppress("https://example.com/document.pdf#page=2"));
+        Assert.False(suppressor.ShouldSuppress("https://example.com/document.pdf#page=2"));
+    }
 }

@@ -1,4 +1,5 @@
 (function() {
+    try { if (window.top !== window.self) return; } catch (e) { return; }
     if (window.__strideLinkPreviewInstalled) return;
     window.__strideLinkPreviewInstalled = true;
 
@@ -78,7 +79,7 @@
     }, true);
 
     document.addEventListener("keydown", function(e) {
-        if ((e.key === "Enter" || e.key === " ") && (e.altKey || altHeld)) {
+        if (e.key === "Enter" && (e.altKey || altHeld)) {
             var focused = document.activeElement ? getAnchor(document.activeElement) : null;
             if (focused && isValidForPreview(focused.href)) {
                 e.preventDefault();

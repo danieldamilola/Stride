@@ -925,15 +925,18 @@ public sealed class TabEngine : IDisposable
     // ──── Link Preview - on demand, sleep only, never hibernate ────
 
     private Guid? _previewOriginTabId;
+    private int _previewGeneration;
 
     /// <summary>Suspends the origin tab during peek. On demand. Low memory, TrySuspend, mark sleeping, keep WebView alive.</summary>
     public async Task SuspendForPreviewAsync(Guid tabId)
     {
-        _previewOriginTabId = tabId;
         if (!_webViews.TryGetValue(tabId, out var wv)) return;
         if (wv.CoreWebView2 is null) return;
         var tab = Tabs.FirstOrDefault(t => t.Id == tabId);
         if (tab is null) return;
+
+        var generation = ++_previewGeneration;
+        _previewOriginTabId = tabId;
 
         try
         {
@@ -942,30 +945,60 @@ public sealed class TabEngine : IDisposable
         }
         catch { }
 
+        if (generation != _previewGeneration || _previewOriginTabId != tabId)
+        {
+            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch { }
+            return;
+        }
+
         if (!_settings.TabSleepEnabled) return;
+        bool suspended = false;
         try
         {
             wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
             var ok = await wv.CoreWebView2.TrySuspendAsync();
-            if (ok) tab.IsSleeping = true;
+            if (ok)
+            {
+                suspended = true;
+                tab.IsSleeping = true;
+            }
         }
         catch (Exception ex) { Trace.WriteLine($"SuspendForPreview failed for {tabId}: {ex.Message}"); }
+
+        if (generation != _previewGeneration || _previewOriginTabId != tabId)
+        {
+            if (suspended)
+            {
+                try { wv.CoreWebView2.Resume(); } catch { }
+                tab.IsSleeping = false;
+            }
+            try { wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal; } catch { }
+            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch { }
+        }
     }
 
     /// <summary>Resumes the origin tab after peek is dismissed. Keeps it hibernated false.</summary>
     public void ResumeFromPreview(Guid tabId)
     {
+        _previewGeneration++;
         if (_previewOriginTabId == tabId) _previewOriginTabId = null;
         if (!_webViews.TryGetValue(tabId, out var wv)) return;
         if (wv.CoreWebView2 is null) return;
         var tab = Tabs.FirstOrDefault(t => t.Id == tabId);
+
         try
         {
             wv.CoreWebView2.Resume();
-            wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
-            if (tab is not null) tab.IsSleeping = false;
         }
-        catch (Exception ex) { Trace.WriteLine($"ResumeFromPreview failed for {tabId}: {ex.Message}"); }
+        catch (Exception ex) { Trace.WriteLine($"Resume failed for {tabId}: {ex.Message}"); }
+
+        try
+        {
+            wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+        }
+        catch (Exception ex) { Trace.WriteLine($"Set memory level failed for {tabId}: {ex.Message}"); }
+
+        if (tab is not null) tab.IsSleeping = false;
 
         try
         {

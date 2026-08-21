@@ -26,14 +26,26 @@ public class LinkPreviewDownloadSuppressor : ILinkPreviewDownloadSuppressor
         var key = url.Trim();
         if (_pending.TryGetValue(key, out var expiry))
         {
-            if (DateTime.UtcNow <= expiry) return true;
+            if (DateTime.UtcNow <= expiry)
+            {
+                _pending.TryRemove(key, out _);
+                return true;
+            }
             _pending.TryRemove(key, out _);
         }
         // also check without fragment
         if (Uri.TryCreate(key, UriKind.Absolute, out var uri))
         {
             var withoutFragment = uri.GetLeftPart(UriPartial.Path);
-            if (_pending.TryGetValue(withoutFragment, out expiry) && DateTime.UtcNow <= expiry) return true;
+            if (_pending.TryGetValue(withoutFragment, out expiry))
+            {
+                if (DateTime.UtcNow <= expiry)
+                {
+                    _pending.TryRemove(withoutFragment, out _);
+                    return true;
+                }
+                _pending.TryRemove(withoutFragment, out _);
+            }
         }
         return false;
     }
