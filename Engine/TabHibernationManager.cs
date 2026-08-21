@@ -108,8 +108,8 @@ public sealed class TabHibernationManager
             tab.IsSleeping = false;
     }
 
-    /// <summary>Calls TrySuspendAsync and marks the tab sleeping only when suspend returns true.</summary>
-    private static async Task TrySuspendSafeAsync(dynamic core, Guid tabId, BrowserTab? tab)
+    /// <summary>Calls TrySuspendAsync and marks the tab sleeping only when suspend returns true and sleep is still enabled.</summary>
+    private async Task TrySuspendSafeAsync(dynamic core, Guid tabId, BrowserTab? tab)
     {
         bool success = false;
         try
@@ -129,7 +129,7 @@ public sealed class TabHibernationManager
             Trace.WriteLine($"TrySuspendAsync failed for tab {tabId}: {ex.Message}");
         }
 
-        if (success && tab != null && !tab.IsActive && !tab.IsHibernated)
+        if (success && tab != null && !tab.IsActive && !tab.IsHibernated && _settings.TabSleepEnabled)
             tab.IsSleeping = true;
     }
 
