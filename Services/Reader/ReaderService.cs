@@ -50,9 +50,13 @@ public sealed class ReaderService : IReaderService
 
     public event EventHandler<Guid>? SessionChanged;
 
-    public Task<bool> CanEnterReaderAsync(Guid tabId)
+    public async Task<bool> CanEnterReaderAsync(Guid tabId)
     {
-        return _extractor.CanExtractAsync(tabId);
+        var task = _extractor.CanExtractAsync(tabId);
+        var delay = Task.Delay(3000);
+        var completed = await Task.WhenAny(task, delay);
+        if (completed == delay) return false;
+        return await task;
     }
 
     public async Task<ReaderContent> EnterReaderAsync(Guid tabId)
@@ -69,7 +73,12 @@ public sealed class ReaderService : IReaderService
             return existing.Current;
         }
 
-        var article = await _extractor.ExtractAsync(tabId);
+        var extractTask = _extractor.ExtractAsync(tabId);
+        var timeoutTask = Task.Delay(4000);
+        var completed = await Task.WhenAny(extractTask, timeoutTask);
+        if (completed == timeoutTask)
+            throw new TimeoutException("Reader extraction timed out. The page may have been hibernated or is not responding.");
+        var article = await extractTask;
         var baseUrl = url;
         var sanitized = _sanitizer.Sanitize(article.ContentHtml ?? string.Empty, baseUrl);
 
