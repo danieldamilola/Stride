@@ -1,5 +1,6 @@
 using StrideBrowser.Models;
 using StrideBrowser.Services;
+using StrideBrowser.Services.LinkPreview;
 
 namespace StrideBrowser.Engine;
 
@@ -23,4 +24,5 @@ public sealed record EngineDependencies
     public required TabHibernationManager HibernationManager { get; init; }
     public required NavigationPolicyEngine NavigationPolicyEngine { get; init; }
     public required ThemeManager ThemeManager { get; init; }
+    public required ILinkPreviewDownloadSuppressor DownloadSuppressor { get; init; }
 }

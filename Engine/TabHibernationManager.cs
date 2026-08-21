@@ -26,6 +26,7 @@ public sealed class TabHibernationManager
     private Func<IReadOnlyCollection<BrowserTab>>? _getTabs;
     private Func<IReadOnlyDictionary<Guid, dynamic>>? _getWebViews;
     private Action<Guid>? _teardownWebView;
+    private Func<Guid, bool>? _isPreviewOrigin;
     private int _maxLiveWebViews = 10;
     private int _suspensionGeneration;
 
@@ -52,6 +53,8 @@ public sealed class TabHibernationManager
         _timer.Start();
     }
 
+    public void SetPreviewOriginCheck(Func<Guid, bool> isPreviewOrigin) => _isPreviewOrigin = isPreviewOrigin;
+
     /// <summary>Detaches the manager and stops the timer.</summary>
     public void Detach()
     {
@@ -60,6 +63,7 @@ public sealed class TabHibernationManager
         _getTabs = null;
         _getWebViews = null;
         _teardownWebView = null;
+        _isPreviewOrigin = null;
     }
 
     /// <summary>Suspends background tabs to save CPU by setting low memory target and calling TrySuspendAsync. Only tabs where suspend succeeds are marked sleeping.</summary>
@@ -215,6 +219,7 @@ public sealed class TabHibernationManager
     private bool IsTabSafeToHibernate(BrowserTab tab, IReadOnlyDictionary<Guid, dynamic> webViews)
     {
         if (tab.IsActive || tab.IsHibernated) return false;
+        if (_isPreviewOrigin != null && _isPreviewOrigin(tab.Id)) return false;
         if (tab.IsPinned) return false;
         if (InternalUrls.IsInternal(tab.Url)) return false;
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using StrideBrowser.Engine;
 using StrideBrowser.Engine.Handlers;
 using StrideBrowser.Models;
@@ -56,6 +56,14 @@ public static class Composition
         services.AddSingleton<Services.Reader.IReaderTemplateRenderer, Services.Reader.ReaderTemplateRenderer>();
         services.AddSingleton<Services.Reader.IReaderService, Services.Reader.ReaderService>();
 
+        // Link preview - Alt plus click, on demand, sleep not hibernate
+        services.AddSingleton<Services.LinkPreview.ILinkPreviewPolicy, Services.LinkPreview.LinkPreviewPolicy>();
+        services.AddSingleton<Services.LinkPreview.ILinkPreviewDownloadSuppressor, Services.LinkPreview.LinkPreviewDownloadSuppressor>();
+        services.AddSingleton<Services.LinkPreview.LinkPreviewService>();
+        services.AddSingleton<Services.LinkPreview.ILinkPreviewService>(sp => sp.GetRequiredService<Services.LinkPreview.LinkPreviewService>());
+        services.AddSingleton<ViewModels.LinkPreview.LinkPreviewViewModel>();
+        services.AddSingleton<Services.UI.LinkPreviewWindowController>();
+
         // Engine dependencies record
         services.AddSingleton(sp => new EngineDependencies
         {
@@ -72,7 +80,8 @@ public static class Composition
             CustomDownloadManager = sp.GetRequiredService<CustomDownloadManager>(),
             HibernationManager = sp.GetRequiredService<TabHibernationManager>(),
             NavigationPolicyEngine = sp.GetRequiredService<NavigationPolicyEngine>(),
-            ThemeManager = sp.GetRequiredService<ThemeManager>()
+            ThemeManager = sp.GetRequiredService<ThemeManager>(),
+            DownloadSuppressor = sp.GetRequiredService<Services.LinkPreview.ILinkPreviewDownloadSuppressor>()
         });
         services.AddSingleton<TabEngine>();
         
@@ -110,6 +119,15 @@ public static class Composition
         tabEngine.TabClosed += readerService.RemoveSession;
         tabEngine.IsReaderActive = tabId => readerService.GetSession(tabId)?.IsInReader == true;
         tabEngine.ExitReaderAsync = tabId => readerService.ExitReaderAsync(tabId);
+
+        // Wire Link Preview - on demand, Alt plus click, sleep not hibernate
+        var linkPreviewService = sp.GetRequiredService<Services.LinkPreview.LinkPreviewService>();
+        tabEngine.LinkPreviewRequested += (tab, url, rect, trigger) =>
+        {
+            linkPreviewService.RequestPeek(tab.Id, url, rect, trigger, tab.Url);
+        };
+        linkPreviewService.OriginShouldSleep += tabId => { _ = tabEngine.SuspendForPreviewAsync(tabId); };
+        linkPreviewService.OriginShouldResume += tabId => tabEngine.ResumeFromPreview(tabId);
         
         return sp;
     }

@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
+using System.Windows;
 using StrideBrowser.Models;
+using StrideBrowser.Models.LinkPreview;
 using StrideBrowser.Services;
 
 namespace StrideBrowser.Engine;
@@ -23,6 +25,8 @@ public sealed class WebViewIpcBridge
     /// <summary>Fires for tab-affecting messages (theme color) so the engine can refresh state.</summary>
     public event Action<BrowserTab>? TabStateChanged;
 
+    public event Action<BrowserTab, string, Rect, LinkPreviewTrigger>? LinkPreviewRequested;
+
     private readonly Dispatcher _dispatcher;
     private readonly BrowserSettings _settings;
     private readonly IDownloadStore _downloadStore;
@@ -33,6 +37,7 @@ public sealed class WebViewIpcBridge
     private readonly Func<string, BrowserTab> _createTab;
     private readonly Func<BrowserTab, Task> _activateAsync;
     private readonly Action<BrowserTab> _closeTab;
+    private readonly Services.LinkPreview.ILinkPreviewDownloadSuppressor _downloadSuppressor;
 
     public WebViewIpcBridge(
         Dispatcher dispatcher,
@@ -44,7 +49,8 @@ public sealed class WebViewIpcBridge
         Func<Guid, dynamic?> getWebView,
         Func<string, BrowserTab> createTab,
         Func<BrowserTab, Task> activateAsync,
-        Action<BrowserTab> closeTab)
+        Action<BrowserTab> closeTab,
+        Services.LinkPreview.ILinkPreviewDownloadSuppressor downloadSuppressor)
     {
         _dispatcher = dispatcher;
         _settings = settings;
@@ -56,6 +62,7 @@ public sealed class WebViewIpcBridge
         _createTab = createTab;
         _activateAsync = activateAsync;
         _closeTab = closeTab;
+        _downloadSuppressor = downloadSuppressor;
     }
 
     public void Wire(dynamic wv, BrowserTab tab)
@@ -71,7 +78,7 @@ public sealed class WebViewIpcBridge
         };
         WireWebMessageReceived(core, tab);
 
-        Handlers.TabDownloadHandler.Wire(core, _dispatcher, _downloadStore, _activeNativeDownloads);
+        Handlers.TabDownloadHandler.Wire(core, _dispatcher, _downloadStore, _activeNativeDownloads, _downloadSuppressor);
 
         WireNewWindowRequested(core, tab);
 
@@ -124,6 +131,30 @@ public sealed class WebViewIpcBridge
                     tab.ThemeColor = colorStr;
                     TabStateChanged?.Invoke(tab);
                 });
+                return;
+            }
+
+            if (msg.StartsWith("LINK_PREVIEW_PEEK:"))
+            {
+                var json = msg.Substring("LINK_PREVIEW_PEEK:".Length);
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    var root = doc.RootElement;
+                    var url = root.GetProperty("url").GetString() ?? string.Empty;
+                    var rectArr = root.GetProperty("rect");
+                    var left = rectArr[0].GetDouble();
+                    var top = rectArr[1].GetDouble();
+                    var width = rectArr[2].GetDouble();
+                    var height = rectArr[3].GetDouble();
+                    var rect = new Rect(left, top, width, height);
+                    var trigger = LinkPreviewTrigger.AltPress;
+                    _dispatcher.InvokeAsync(() => LinkPreviewRequested?.Invoke(tab, url, rect, trigger));
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Trace.WriteLine($"LinkPreview parse failed: {ex.Message}");
+                }
                 return;
             }
 

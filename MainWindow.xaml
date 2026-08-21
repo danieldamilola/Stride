@@ -1,4 +1,4 @@
-﻿<Window x:Class="StrideBrowser.MainWindow"
+<Window x:Class="StrideBrowser.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:StrideBrowser.Controls"
@@ -571,6 +571,10 @@
                 </Grid>
             </Border>
         </DockPanel>
+
+        <!-- Link Preview dim backdrop -->
+        <Border x:Name="LinkPreviewDim" Visibility="Collapsed" Background="#B8000000" Panel.ZIndex="90"
+                MouseLeftButtonDown="LinkPreviewDim_Click"/>
 
         <Grid x:Name="CommandBarGrid" Visibility="Collapsed" Panel.ZIndex="100">
             <!-- Backdrop dim â€” 50% black to clearly show floating panel -->
