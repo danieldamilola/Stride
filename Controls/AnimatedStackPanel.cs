@@ -7,7 +7,7 @@ namespace StrideBrowser.Controls;
 
 /// <summary>
 /// A StackPanel that animates children to their new positions when layout changes
-/// (tab reorder, add, remove). Preserves the spatial cognitive model — position
+/// (tab reorder, add, remove). Preserves the spatial cognitive model - position
 /// is the identifier on an icon-only rail, so teleporting without feedback breaks
 /// the user's mental map.
 /// </summary>

@@ -61,7 +61,7 @@ internal static class Program
     /// Signs the bytes of the installer file itself and stamps that signature on every
     /// <c>enclosure</c> in the appcast. NetSparkle verifies the signature against the
     /// downloaded file bytes, so this is the only scheme that can actually validate a
-    /// download. (Signing the enclosure URL cannot — the two never match.)
+    /// download. (Signing the enclosure URL cannot - the two never match.)
     /// </summary>
     private static int Sign(string[] args)
     {

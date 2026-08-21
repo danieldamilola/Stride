@@ -19,7 +19,7 @@ public partial class App : Application
             return;
         }
 
-        // Register crash handlers once, as early as possible — before anything else can throw.
+        // Register crash handlers once, as early as possible - before anything else can throw.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
