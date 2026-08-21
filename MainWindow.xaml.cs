@@ -733,6 +733,64 @@ public partial class MainWindow : Window
     private void ZoomIndicator_Click(object sender, MouseButtonEventArgs e) =>
         _engine.ResetZoom();
 
+    // ───────────────────── Reader Fallback Overlay ─────────────────────
+    // Code-behind references for the fallback overlay and the standard WebView2.
+    // ReaderFallbackOverlay, ReaderFallbackTitle, ReaderFallbackByline, ReaderFallbackText,
+    // and ReaderFallbackError are generated from MainWindow.xaml x:Name.
+    // ActiveStandardWebView is the current tab's WebView2 when UseFloatingCommandBar is disabled (HwndHost).
+
+    private FrameworkElement? ActiveStandardWebView
+    {
+        get
+        {
+            if (_engine.ActiveTab == null) return null;
+            return _engine.GetWebViewElement(_engine.ActiveTab.Id);
+        }
+    }
+
+    private void ShowReaderFallback(string title, string byline, string text, string? error = null)
+    {
+        ReaderFallbackTitle.Text = title;
+        ReaderFallbackByline.Text = byline;
+        ReaderFallbackText.Text = text;
+        if (!string.IsNullOrEmpty(error))
+        {
+            ReaderFallbackError.Text = error;
+            ReaderFallbackError.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            ReaderFallbackError.Visibility = Visibility.Collapsed;
+        }
+
+        if (!_vm.Settings.UseFloatingCommandBar)
+        {
+            // Standard WebView2 is an HwndHost which ignores Visibility.Hidden and keeps rendering over the overlay.
+            // Collapse the active WebView before showing the fallback so the overlay is actually visible.
+            var activeWebView = ActiveStandardWebView;
+            if (activeWebView != null)
+                activeWebView.Visibility = Visibility.Collapsed;
+            ReaderFallbackOverlay.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            // Floating command bar uses WebView2CompositionControl which supports Hidden without airspace issues.
+            // Preserve existing behavior: just show the overlay on top.
+            ReaderFallbackOverlay.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void HideReaderFallback()
+    {
+        ReaderFallbackOverlay.Visibility = Visibility.Collapsed;
+        if (!_vm.Settings.UseFloatingCommandBar && _engine.ActiveTab != null)
+        {
+            var activeWebView = ActiveStandardWebView;
+            if (activeWebView != null)
+                activeWebView.Visibility = Visibility.Visible;
+        }
+    }
+
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e) =>
         _lifecycle.OnClosing(e);
 }

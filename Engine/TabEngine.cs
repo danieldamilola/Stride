@@ -71,6 +71,15 @@ public sealed class TabEngine : IDisposable
     /// <summary>Fires when WebView2 initialization fails.</summary>
     public event Action<Exception>? InitializationFailed;
 
+    /// <summary>Fires when a tab is closed. ReaderService uses this to drop its per-tab session.</summary>
+    public event Action<Guid>? TabClosed;
+
+    // Injected after construction via Composition to avoid a constructor cycle. Returns true when the tab is in reader.
+    public Func<Guid, bool>? IsReaderActive { get; set; }
+
+    // Set by Composition to allow TabEngine to exit reader on link navigation without depending on the service at ctor time.
+    public Func<Guid, Task>? ExitReaderAsync { get; set; }
+
     private readonly Services.CustomDownloadManager _customDownloadManager;
     private readonly HashSet<string> _activeNativeDownloads = new();
 
@@ -183,6 +192,7 @@ public sealed class TabEngine : IDisposable
 
         Tabs.Remove(tab);
         DisposeWebView(tab);
+        TabClosed?.Invoke(tab.Id);
 
         if (tab == ActiveTab && Tabs.Count > 0)
             SwitchTo(Tabs[Math.Min(index, Tabs.Count - 1)]);
@@ -866,6 +876,14 @@ public sealed class TabEngine : IDisposable
                 ? CoreWebView2MemoryUsageTargetLevel.Normal
                 : CoreWebView2MemoryUsageTargetLevel.Low;
         }
+    }
+
+    /// <summary>Gets the FrameworkElement for the given tab's WebView, if it exists.</summary>
+    public FrameworkElement? GetWebViewElement(Guid tabId)
+    {
+        if (_webViews.TryGetValue(tabId, out var wv))
+            return wv as FrameworkElement;
+        return null;
     }
 
     // ──── Disposal ────
