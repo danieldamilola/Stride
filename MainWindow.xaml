@@ -1,4 +1,4 @@
-<Window x:Class="StrideBrowser.MainWindow"
+﻿<Window x:Class="StrideBrowser.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:StrideBrowser.Controls"
@@ -58,11 +58,11 @@
         <DataTemplate x:Key="SuggestionItemTemplate">
             <TextBlock Text="{Binding}" FontFamily="Segoe UI Variable, Segoe UI" FontSize="13" Foreground="#C8C4BF" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
         </DataTemplate>
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  FAVICON PILL TAB — The Stride signature element       -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+        <!--  FAVICON PILL TAB â€” The Stride signature element       -->
         <!--  Active: amber pill with favicon + title               -->
         <!--  Inactive: favicon circle only, 70% opacity            -->
-        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <DataTemplate x:Key="TabItemTemplate">
             <Grid Height="28" Cursor="Hand" Background="Transparent"
                   MouseRightButtonUp="TabItem_RightClick" Tag="{Binding}"
@@ -73,7 +73,7 @@
                     <ColumnDefinition Width="Auto"/>  <!-- Close pill (active only) -->
                 </Grid.ColumnDefinitions>
                 <!-- Pin indicator removed in favor of pill background -->
-                <!-- Favicon — 20×20 area with 16×16 icon -->
+                <!-- Favicon â€” 20Ã-20 area with 16Ã-16 icon -->
                 <Grid Grid.Column="0" Width="20" Height="20" VerticalAlignment="Center">
                     <!-- Default Stride icon — hidden when site favicon loads, shares same dim as favicon -->
                     <Image Source="pack://application:,,,/icons/stride-browser-32x32.png"
@@ -181,7 +181,7 @@
                               StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                     </Button>
                 </Grid>
-                <!-- Title — visible only when tab is selected -->
+                <!-- Title â€” visible only when tab is selected -->
                 <TextBlock Grid.Column="1" Text="{Binding Title}"
                            Foreground="{DynamicResource TextPrimary}"
                            FontSize="12" FontFamily="{DynamicResource UIFont}"
@@ -266,11 +266,11 @@
         <!-- Main layout: toolbar on top, content fills rest -->
         <DockPanel>
 
-            <!-- ═══════════════════════════════════════════════════════ -->
-            <!--  TAB STRIP — 36px. Favicon pills + nav + controls.    -->
+            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+            <!--  TAB STRIP â€” 36px. Favicon pills + nav + controls.    -->
             <!--  This IS the toolbar. No separate address bar.        -->
             <!--  Stride signature: compact, warm, minimal.            -->
-            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
             <Border x:Name="Toolbar" DockPanel.Dock="Top" Height="40"
                     Background="{DynamicResource SidebarBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
@@ -284,7 +284,7 @@
                         <ColumnDefinition Width="Auto"/>    <!-- Window controls -->
                     </Grid.ColumnDefinitions>
 
-                    <!-- Navigation: ← → ↻ -->
+                    <!-- Navigation: â† â†’ â†» -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="0,0,4,0">
                         <Button Command="{Binding GoBackCommand}" Style="{DynamicResource IconBtn}"
@@ -440,7 +440,7 @@
                             </Button>
                         </StackPanel>
                         
-                        <!-- Horizontal tab strip — favicon pills -->
+                        <!-- Horizontal tab strip â€” favicon pills -->
                         <ListBox x:Name="TabList"
                                  Style="{DynamicResource FaviconTabListStyle}"
                                  SelectionChanged="TabList_SelectionChanged"
@@ -465,7 +465,7 @@
                     <!-- Action buttons: Downloads, Settings -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="0,0,4,0">
-                        <!-- ──── Downloads Button ──── -->
+                        <!-- â”€â”€â”€â”€ Downloads Button â”€â”€â”€â”€ -->
                         <Grid Width="26" Height="26" Margin="4,0" Cursor="Hand" ToolTip="Downloads (Ctrl+J)"
                               Visibility="{Binding Settings.ShowDownloadsIcon, Converter={StaticResource BoolToVis}}">
                             <Ellipse Width="24" Height="24" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" 
@@ -486,6 +486,10 @@
                                       Stretch="Uniform" StrokeStartLineCap="Round" StrokeLineJoin="Round" />
                             </Button>
                         </Grid>
+                        <Button x:Name="ReaderButton" Click="ReaderButton_Click" Style="{DynamicResource IconBtn}"
+                                Width="26" Height="26" ToolTip="Reader view (Ctrl+Shift+R)" Visibility="Collapsed" Margin="4,0">
+                            <TextBlock Text="Aa" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </Button>
                         <Grid Visibility="{Binding Settings.ShowSettingsIcon, Converter={StaticResource BoolToVis}}">
                             <Button Click="Settings_Click" Style="{DynamicResource IconBtn}"
                                     ToolTip="Settings" Width="26" Height="26" Margin="4,0" Cursor="Hand" FocusVisualStyle="{x:Null}">
@@ -500,7 +504,7 @@
                         </Grid>
                     </StackPanel>
 
-                    <!-- Window controls: — □ × -->
+                    <!-- Window controls: â€” â-¡ Ã- -->
                     <StackPanel Grid.Column="3" Orientation="Horizontal"
                                 VerticalAlignment="Stretch">
                         <Button Click="Minimize_Click" Style="{DynamicResource TitleBtn}"
@@ -529,14 +533,14 @@
                 </Grid>
             </Border>
 
-            <!-- ═══════════════════════════════════════════════════════ -->
-            <!--  CONTENT — Full width. No sidebar. Just web content.  -->
-            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+            <!--  CONTENT â€” Full width. No sidebar. Just web content.  -->
+            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
             <Border x:Name="ContentArea"
                     Background="{DynamicResource BaseBrush}"
                     ClipToBounds="True">
                 <Grid>
-                    <!-- Loading bar — 1.5px amber glow sweep, transparent track -->
+                    <!-- Loading bar â€” 1.5px amber glow sweep, transparent track -->
                     <Border x:Name="LoadingBar" Height="1.5" VerticalAlignment="Top"
                             Visibility="Collapsed" Panel.ZIndex="10"
                             Background="Transparent" ClipToBounds="True">
@@ -551,8 +555,7 @@
                             </Border.Background>
                         </Border>
                     </Border>
-                    <!-- Page snapshot removed, no longer needed for airspace hack -->
-                    <!-- WebView2 host -->
+                    <!-- WebView2 host. Reader mode reuses the tab's own WebView2 with IsScriptEnabled toggled, no second instance. -->
                     <Grid x:Name="WebViewHost" Background="{DynamicResource BaseBrush}"/>
                     <!-- Reader fallback overlay. Shows sanitized article as plain text without waiting for WebView navigation, so the UI never hangs. -->
                     <Border x:Name="ReaderFallbackOverlay" Visibility="Collapsed" Background="{DynamicResource BaseBrush}" Panel.ZIndex="4">
@@ -570,10 +573,10 @@
         </DockPanel>
 
         <Grid x:Name="CommandBarGrid" Visibility="Collapsed" Panel.ZIndex="100">
-            <!-- Backdrop dim — 50% black to clearly show floating panel -->
+            <!-- Backdrop dim â€” 50% black to clearly show floating panel -->
             <Border Background="#80000000"
                     MouseLeftButtonDown="CommandBarBackdrop_Click"/>
-            <!-- Centered command bar — clearly lighter than the dim backdrop -->
+            <!-- Centered command bar â€” clearly lighter than the dim backdrop -->
             <Border x:Name="CommandBarPanel"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Top"
@@ -701,6 +704,7 @@
         </Grid>
     </Grid>
 </Window>
+
 
 
 

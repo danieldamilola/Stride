@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using StrideBrowser.Interop;
@@ -74,3 +74,4 @@ public sealed class WindowChromeHelper
         catch { /* Pre-Windows 11 - graceful fallback to square corners */ }
     }
 }
+

@@ -1,4 +1,4 @@
-{
+﻿{
   "manifest_version": 3,
   "name": "T&C Lens",
   "version": "1.0.0",
@@ -29,6 +29,7 @@
       "16": "icons/icon16.png",
       "48": "icons/icon48.png"
     },
-    "default_title": "T&C Lens — Analyze this page"
+    "default_title": "T&C Lens - Analyze this page"
   }
 }
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file options.js
  * @description Dashboard orchestration for T&C Lens.
  *              Handles bootstrap, state, event wiring, view routing,
@@ -152,7 +152,7 @@ function populateProviderOptions() {
   for (const [id, p] of Object.entries(providers)) {
     const opt = document.createElement("option");
     opt.value = id;
-    opt.textContent = p.comingSoon ? `${p.name} — Coming Soon` : p.name;
+    opt.textContent = p.comingSoon ? `${p.name} - Coming Soon` : p.name;
     el.providerSelect.appendChild(opt);
   }
 }
@@ -443,3 +443,4 @@ function getModelLimit(settings) {
   // 8k tokens ≈ 32,000 characters, enough for the vast majority of T&Cs.
   return Math.min(8000, Math.floor(model.maxTokens * 0.25));
 }
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-theme="{{THEME}}">
 <head>
     <meta charset="UTF-8">
@@ -458,7 +458,7 @@
                     const groupId = `g-${dateLabel}-${domain}`.replace(/[^a-zA-Z0-9]/g, '_');
 
                     if (domainEntries.length === 1) {
-                        // Single entry — no group header, show directly
+                        // Single entry - no group header, show directly
                         const e = domainEntries[0];
                         const title = e.Title || e.Url;
                         html += `<div class="entry">
@@ -471,7 +471,7 @@
                             <span class="entry-time">${formatTime(e.VisitedAt)}</span>
                         </div>`;
                     } else {
-                        // Multiple entries — group by domain
+                        // Multiple entries - group by domain
                         html += `<div class="domain-group" id="${groupId}">
                             <div class="domain-header" onclick="toggleGroup('${groupId}')">
                                 <img src="https://icons.duckduckgo.com/ip3/${domain}.ico" width="16" height="16"
@@ -543,6 +543,7 @@
     </script>
 </body>
 </html>
+
 
 
 

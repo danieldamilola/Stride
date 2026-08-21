@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using StrideBrowser.Models;
@@ -7,7 +7,7 @@ namespace StrideBrowser.Services;
 
 public sealed class CustomDownloadManager
 {
-    // In-memory tracker for download items — the Downloads page UI reads from
+    // In-memory tracker for download items - the Downloads page UI reads from
     // _downloadStore (persisted JSON), but the handler and UI can use this
     // to keep state in sync (pause/resume/cancel) without touching the file system.
     private readonly ConcurrentDictionary<string, DownloadItem> _items = new();
@@ -54,7 +54,7 @@ public sealed class CustomDownloadManager
         }
     }
 
-    // Update received bytes and speed — called from WebView2 progress events or the handler
+    // Update received bytes and speed - called from WebView2 progress events or the handler
     public void UpdateProgress(string id, long receivedBytes, long totalBytes)
     {
         if (_items.TryGetValue(id, out var item))

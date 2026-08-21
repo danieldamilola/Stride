@@ -6,7 +6,7 @@ namespace StrideBrowser.Services;
 
 /// <summary>
 /// Registers Stride Browser as a default browser candidate in the Windows registry (HKCU).
-/// On Windows 10+, apps cannot programmatically set themselves as default — the user must
+/// On Windows 10+, apps cannot programmatically set themselves as default - the user must
 /// choose in Settings → Apps → Default Apps after registration.
 /// </summary>
 public static class DefaultBrowserRegistrar

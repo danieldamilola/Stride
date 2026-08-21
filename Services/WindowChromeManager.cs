@@ -56,7 +56,7 @@ public sealed class WindowChromeManager
             var preference = NativeMethods.DWMWCP_ROUND;
             NativeMethods.DwmSetWindowAttribute(_hwnd, NativeMethods.DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
         }
-        catch { /* Pre-Windows 11 — graceful fallback to square corners */ }
+        catch { /* Pre-Windows 11 - graceful fallback to square corners */ }
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)

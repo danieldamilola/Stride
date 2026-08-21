@@ -1,4 +1,4 @@
-# T&C Lens — Design System
+﻿# T&C Lens - Design System
 
 This document captures the complete design language used in T&C Lens.
 Use it as a foundation for future projects built on the same visual identity.
@@ -7,7 +7,7 @@ Use it as a foundation for future projects built on the same visual identity.
 
 ## Philosophy
 
-The design is **editorial and minimal**. Inspired by tools like Linear, Stripe, and Vercel's dashboard — it favours clarity over decoration. No gradients, no shadows, no rounded cards. Everything is either a line, a block, or a text label. The UI stays out of the way and lets the content breathe.
+The design is **editorial and minimal**. Inspired by tools like Linear, Stripe, and Vercel's dashboard - it favours clarity over decoration. No gradients, no shadows, no rounded cards. Everything is either a line, a block, or a text label. The UI stays out of the way and lets the content breathe.
 
 Key principles:
 - **2-colour palette only.** Near-black background, off-white foreground. Nothing else is coloured except one amber accent for warnings.
@@ -19,13 +19,13 @@ Key principles:
 
 ## Colour Tokens
 
-Defined in `:root` as CSS custom properties. Do not hardcode any value — always reference a token.
+Defined in `:root` as CSS custom properties. Do not hardcode any value - always reference a token.
 
 ```css
 :root {
-  --bg:      #0e0e0e;  /* Page background — near-black, not pure black */
+  --bg:      #0e0e0e;  /* Page background - near-black, not pure black */
   --surface: #161616;  /* Slightly elevated surface (cards, panels) */
-  --fg:      #efefef;  /* Primary foreground — off-white text and icons */
+  --fg:      #efefef;  /* Primary foreground - off-white text and icons */
   --muted:   #5a5a5a;  /* Secondary text, labels, placeholders */
   --dim:     #2a2a2a;  /* Disabled states, subtle borders on interactive elements */
   --line:    #1f1f1f;  /* Dividers, grid lines, section separators */
@@ -34,7 +34,7 @@ Defined in `:root` as CSS custom properties. Do not hardcode any value — alway
 
 The only exception to the 2-colour rule is the **truncation/warning accent**:
 ```css
-/* Used sparingly — only for genuine warnings */
+/* Used sparingly - only for genuine warnings */
 color: #f59e0b;
 background: rgba(245, 158, 11, 0.1);
 border-left: 2px solid #f59e0b;
@@ -69,10 +69,10 @@ border-left: 2px solid #f59e0b;
 
 ### Hierarchy Rules
 
-Use `letter-spacing` and `text-transform: uppercase` to create category labels — not a larger font size.
+Use `letter-spacing` and `text-transform: uppercase` to create category labels - not a larger font size.
 
 ```css
-/* Label / category style — used throughout */
+/* Label / category style - used throughout */
 font-size: var(--text-2xs);
 letter-spacing: 0.1em;
 text-transform: uppercase;
@@ -107,7 +107,7 @@ border-bottom: 1px solid var(--line);
 background: var(--bg);
 ```
 
-Nav links use an **active underline** pattern — no background highlight, just a `border-bottom` that appears on the active item.
+Nav links use an **active underline** pattern - no background highlight, just a `border-bottom` that appears on the active item.
 
 ---
 
@@ -128,7 +128,7 @@ text-transform: uppercase;
 transition: opacity 0.1s;
 ```
 
-Hover: `opacity: 0.82` — a subtle fade, not a colour change.
+Hover: `opacity: 0.82` - a subtle fade, not a colour change.
 Disabled: `opacity: 0.2`.
 
 ### Ghost Button `.btn-ghost`
@@ -164,7 +164,7 @@ transition: all 0.1s;
 
 ### Forms
 
-Inputs and selects use a **bottom-border only** style — no box, no background:
+Inputs and selects use a **bottom-border only** style - no box, no background:
 
 ```css
 background: transparent;
@@ -212,7 +212,7 @@ transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 
 ### Findings List
 
-Each finding is separated by a `1px` bottom border — no cards, no shadows. The finding title uses `--text-md` and `font-weight: 500`. The importance tag (`high`, `medium`, `low`) is rendered as an uppercase label; **colour is its only differentiator**:
+Each finding is separated by a `1px` bottom border - no cards, no shadows. The finding title uses `--text-md` and `font-weight: 500`. The importance tag (`high`, `medium`, `low`) is rendered as an uppercase label; **colour is its only differentiator**:
 
 ```css
 .importance-tag--high   { color: var(--fg); }
@@ -226,7 +226,7 @@ Quoted text uses the monospace font with a `2px` left border in `var(--dim)`. Th
 
 ### Loading Overlay
 
-A full-screen overlay with a spinning circle loader — no logo, no progress bar, just a small spinner and an uppercase status label:
+A full-screen overlay with a spinning circle loader - no logo, no progress bar, just a small spinner and an uppercase status label:
 
 ```css
 .loading-spinner {
@@ -243,7 +243,7 @@ A full-screen overlay with a spinning circle loader — no logo, no progress bar
 
 ## Transitions & Animation
 
-All interactive transitions are **fast and functional** — never decorative:
+All interactive transitions are **fast and functional** - never decorative:
 
 | Purpose | Value |
 |---|---|
@@ -257,7 +257,7 @@ No bounce, no elastic, no scale transforms.
 
 ## Spacing
 
-Spacing is applied manually — no utility classes. Common values used throughout:
+Spacing is applied manually - no utility classes. Common values used throughout:
 
 | Use | Value |
 |---|---|
@@ -280,7 +280,7 @@ To keep future projects on-brand, avoid these:
 - ❌ Rounded corners on containers, buttons, or inputs (only small utility buttons get `border-radius: 4px`)
 - ❌ Multiple accent colours (the amber `#f59e0b` is the **only** allowed exception)
 - ❌ Animations longer than `0.6s` or with bouncy easings
-- ❌ Dense padding — always give content room to breathe
+- ❌ Dense padding - always give content room to breathe
 
 ---
 
@@ -291,4 +291,5 @@ This is the **foundation**. Future iterations of this design language can explor
 - A proper motion system for view transitions (e.g. slide-in from right for sub-pages)
 - Responsive / mobile layout (currently desktop-first at 800px max)
 - A richer type scale for larger screens (display-size headings)
-- A dark/light mode toggle (the token system is already set up for this — just add a `[data-theme="light"]` override)
+- A dark/light mode toggle (the token system is already set up for this - just add a `[data-theme="light"]` override)
+

@@ -1,4 +1,4 @@
-# Stride Design Document
+﻿# Stride Design Document
 
 > The design system and design philosophy behind the Stride browser: brand intent, tokens, typography, iconography, component specs, motion, and the rules for writing UI code that stays Stride.
 
@@ -118,11 +118,11 @@ When the user customizes the accent, the app rebuilds `Accent`, `AccentWash`, an
 
 | Token | Value | Used for |
 | --- | --- | --- |
-| Micro | 2–4px | Icon padding, pill gaps, hairlines |
+| Micro | 2-4px | Icon padding, pill gaps, hairlines |
 | Tight | 8px | Button padding, card gutters, icon gaps |
-| Base | 12–16px | Row padding, dialog padding, list gutters |
-| Loose | 20–24px | Page gutters, dialog outer margins. 40px in the Settings column and Downloads page |
-| Section | 28–40px | Between sections and cards, page headers |
+| Base | 12-16px | Row padding, dialog padding, list gutters |
+| Loose | 20-24px | Page gutters, dialog outer margins. 40px in the Settings column and Downloads page |
+| Section | 28-40px | Between sections and cards, page headers |
 
 **Radii:** 3px scrollbar thumb and inactive tab close, 4px buttons and chips, 6px inputs, history entries, and sidebar nav, 8px tabs, cards, dialogs, popups, command bar, context menus, and download rows, 10px settings cards, 16px new-tab search field and shortcut tiles, 12px History confirm dialog. Dialog buttons and window controls are square.
 

@@ -1,8 +1,8 @@
-# T&C Lens — Contributor Guidelines
+﻿# T&C Lens - Contributor Guidelines
 
 ## Code Standards
 
-This project is built with **vanilla JavaScript** (ES modules) — no frameworks, no build step, no transpilers. Every contributor must follow the standards below to keep the codebase clean, readable, and maintainable.
+This project is built with **vanilla JavaScript** (ES modules) - no frameworks, no build step, no transpilers. Every contributor must follow the standards below to keep the codebase clean, readable, and maintainable.
 
 ---
 
@@ -19,18 +19,18 @@ This project is built with **vanilla JavaScript** (ES modules) — no frameworks
 
 ```
 tc-lens/
-├── manifest.json              # Extension config — only extension metadata
-├── background.js               # Service worker — event listeners and message relay
+├── manifest.json              # Extension config - only extension metadata
+├── background.js               # Service worker - event listeners and message relay
 ├── content/
-│   └── scraper.js              # Content script — DOM text extraction only
+│   └── scraper.js              # Content script - DOM text extraction only
 ├── options/
-│   ├── options.html            # Page structure — semantic HTML only
-│   ├── options.css             # All styles — organized by component/view
-│   └── options.js              # Orchestration — UI logic, event binding, rendering
+│   ├── options.html            # Page structure - semantic HTML only
+│   ├── options.css             # All styles - organized by component/view
+│   └── options.js              # Orchestration - UI logic, event binding, rendering
 ├── lib/
-│   ├── ai-client.js            # AI API wrapper — one file per concern
-│   ├── storage.js              # Storage abstraction — chrome.storage wrapper
-│   └── parser.js               # Response parsing — pure functions
+│   ├── ai-client.js            # AI API wrapper - one file per concern
+│   ├── storage.js              # Storage abstraction - chrome.storage wrapper
+│   └── parser.js               # Response parsing - pure functions
 └── icons/                      # Extension icons
 ```
 
@@ -72,7 +72,7 @@ const ERROR_CODES = {
   RATE_LIMITED: 'RATE_LIMITED',
 };
 
-// Boolean variables — start with is/has/should/can
+// Boolean variables - start with is/has/should/can
 const isTerms = true;
 const hasApiKey = !!settings.apiKey;
 const shouldRetry = attempts < MAX_RETRIES;
@@ -124,10 +124,10 @@ const x = document.getElementById("score"); // Score of what?
 Every function should do **one thing**. If a function's name contains "and," it's doing too much.
 
 ```javascript
-// BAD — does two things
+// BAD - does two things
 function validateAndSaveSettings(form) {}
 
-// GOOD — split into two
+// GOOD - split into two
 function validateSettings(form) {}
 function saveSettings(settings) {}
 ```
@@ -222,7 +222,7 @@ function processResponse(response) {
 try {
   await riskyOperation();
 } catch (e) {
-  // silent failure — nobody knows what happened
+  // silent failure - nobody knows what happened
 }
 
 // GOOD
@@ -234,7 +234,7 @@ try {
   } else if (error.code === "RATE_LIMITED") {
     showUserMessage("Rate limit reached. Wait a moment.");
   } else {
-    // Unexpected error — log for debugging, show generic message to user
+    // Unexpected error - log for debugging, show generic message to user
     console.error("[T&C Lens] Unexpected error:", error);
     showUserMessage("Something went wrong. Please try again.");
   }
@@ -296,22 +296,22 @@ export async function analyze(text, settings) {}
 Use inline comments to explain **why**, not **what**:
 
 ```javascript
-// BAD — describes what the code does (obvious from reading it)
+// BAD - describes what the code does (obvious from reading it)
 // Add 1 to the counter
 counter++;
 
-// BAD — restates the code in English
+// BAD - restates the code in English
 // Check if API key exists
 if (settings.apiKey) { }
 
-// GOOD — explains a non-obvious decision
+// GOOD - explains a non-obvious decision
 // Truncate from the beginning because T&C pages put definitions first
 // and the important clauses (liability, arbitration) come later
 if (text.length > maxChars) {
   text = text.substring(text.length - maxChars);
 }
 
-// GOOD — explains context that isn't in the code
+// GOOD - explains context that isn't in the code
 // Anthropic requires this header for browser-side requests.
 // Without it, the request is rejected with a CORS error.
 // See: https://docs.anthropic.com/en/api/cors
@@ -339,7 +339,7 @@ headers: {
    Analysis Results View
    ======================================== */
 
-/* Risk score header — large number with color coding */
+/* Risk score header - large number with color coding */
 .risk-score-header {
 }
 
@@ -359,7 +359,7 @@ headers: {
 
 ## 6. HTML Standards
 
-- **Semantic HTML always.** Use `<section>`, `<nav>`, `<main>`, `<header>`, `<footer>`, `<article>` — never a `<div>` soup.
+- **Semantic HTML always.** Use `<section>`, `<nav>`, `<main>`, `<header>`, `<footer>`, `<article>` - never a `<div>` soup.
 - **Accessibility basics:** Every interactive element must be a real `<button>` or `<a>`, not a `<div>` with an onclick. Images get `alt` text. Color is never the only indicator (always pair color with text or icons).
 - **No inline styles or scripts.** All CSS in `.css` files, all JS in `.js` files.
 - **View toggling** uses CSS classes (`hidden`), not `display:none` set via JavaScript.
@@ -411,7 +411,7 @@ chore: update manifest version to 1.0.1
 
 Before submitting a PR, ensure:
 
-1. **It works.** Test the change manually — load the extension, verify the feature/fix.
+1. **It works.** Test the change manually - load the extension, verify the feature/fix.
 2. **No regressions.** Existing functionality still works. Run through the relevant tests from TESTING.md.
 3. **No debug code.** No `console.log()`, no commented-out code, no `// TODO: remove this`.
 4. **Documented.** New functions have JSDoc. New UI elements have ARIA labels. New CSS is commented by section.
@@ -427,7 +427,7 @@ Brief description of the change.
 
 ## Why
 
-Context — what problem does this solve? Reference an issue if applicable.
+Context - what problem does this solve? Reference an issue if applicable.
 
 ## How
 
@@ -457,7 +457,7 @@ When reviewing someone else's code:
 - [ ] Are all interactive elements accessible (real buttons, ARIA labels)?
 - [ ] Is the CSS organized with section comments?
 - [ ] Does the commit message follow conventional commit format?
-- [ ] Is the change scoped — no unrelated modifications?
+- [ ] Is the change scoped - no unrelated modifications?
 
 ---
 
@@ -479,4 +479,5 @@ These are non-negotiable for T&C Lens specifically:
 
 ---
 
-**These guidelines exist so anyone — whether it's you, a classmate, or a stranger on the internet — can open any file in this project and immediately understand what it does, why it does it that way, and how to change it safely.**
+**These guidelines exist so anyone - whether it's you, a classmate, or a stranger on the internet - can open any file in this project and immediately understand what it does, why it does it that way, and how to change it safely.**
+

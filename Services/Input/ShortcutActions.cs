@@ -25,4 +25,5 @@ public sealed record ShortcutActions
     public required Func<Task> OpenOneTab { get; init; }
     public required Func<Task> OpenSettings { get; init; }
     public required Func<Task> LaunchTCLens { get; init; }
+    public required Func<Task> ToggleReader { get; init; }
 }

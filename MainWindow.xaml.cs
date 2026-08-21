@@ -12,8 +12,10 @@ using StrideBrowser.Interop;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.Services.Input;
+using StrideBrowser.Services.Reader;
 using StrideBrowser.Services.UI;
 using StrideBrowser.ViewModels;
+using StrideBrowser.ViewModels.Reader;
 
 namespace StrideBrowser;
 
@@ -23,6 +25,7 @@ namespace StrideBrowser;
 public partial class MainWindow : Window
 {
     private readonly BrowserViewModel _vm;
+    private readonly ReaderViewModel _readerVm;
     private readonly TabEngine _engine;
     private readonly IOneTabStore _oneTabStore;
     private readonly ISettingsStore _settingsStore;
@@ -31,6 +34,7 @@ public partial class MainWindow : Window
     private readonly IDownloadStore _downloadStore;
     private readonly WebMessageRouter _router;
     private readonly ThemeManager _themeManager;
+    private readonly IReaderService _readerService;
 
     private readonly CommandBarController _commandBar;
     private readonly TabStripController _tabStrip;
@@ -47,6 +51,7 @@ public partial class MainWindow : Window
 
     public MainWindow(
         BrowserViewModel vm,
+        ReaderViewModel readerVm,
         ISettingsStore settingsStore,
         IOneTabStore oneTabStore,
         ISessionStore sessionStore,
@@ -56,11 +61,13 @@ public partial class MainWindow : Window
         WebMessageRouter router,
         TCLensTransferService tcLensTransfer,
         ThemeManager themeManager,
-        UpdateService updateService)
+        UpdateService updateService,
+        IReaderService readerService)
     {
         InitializeComponent();
 
         _vm = vm;
+        _readerVm = readerVm;
         _settingsStore = settingsStore;
         _oneTabStore = oneTabStore;
         _sessionStore = sessionStore;
@@ -69,8 +76,20 @@ public partial class MainWindow : Window
         _engine = engine;
         _router = router;
         _themeManager = themeManager;
+        _readerService = readerService;
 
         _engine.AttachHost(WebViewHost);
+
+        // Reader mode wiring. Single shared VM that mirrors active tab, service owns per tab truth.
+        _readerVm.PropertyChanged += OnReaderViewModelPropertyChanged;
+        _engine.ActiveTabChanged += tab =>
+        {
+            _readerVm.OnActiveTabChanged(tab?.Id);
+            _ = _readerVm.RefreshAvailabilityAsync();
+            Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        };
+        _engine.TabClosed += tabId => Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        _readerService.SessionChanged += (s, tabId) => Dispatcher.InvokeAsync(UpdateReaderOverlay);
 
         _router.SettingChanged += OnSettingChanged;
         _router.AddressChanged += OnRouterAddressChanged;
@@ -191,7 +210,8 @@ public partial class MainWindow : Window
                 SyncTabsBinding = _tabStrip.SyncTabsBinding,
                 OpenOneTab = OpenOneTabPage,
                 OpenSettings = () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-                LaunchTCLens = _tcLensLauncher.LaunchTCLensAsync
+                LaunchTCLens = _tcLensLauncher.LaunchTCLensAsync,
+                ToggleReader = async () => { await _readerVm.ToggleAsync(); }
             });
     }
 
@@ -253,6 +273,7 @@ public partial class MainWindow : Window
                     _securityBadge.StopSecuritySpinner();
                     LoadingBar.Visibility = Visibility.Collapsed;
                     _securityBadge.UpdateSecurityIcon(tab.Url);
+                    _ = _readerVm.RefreshAvailabilityAsync();
                 }
             }
         };
@@ -788,6 +809,128 @@ public partial class MainWindow : Window
             var activeWebView = ActiveStandardWebView;
             if (activeWebView != null)
                 activeWebView.Visibility = Visibility.Visible;
+        }
+    }
+
+    // ───────────────────── Reader Mode ─────────────────────
+
+    private void OnReaderViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ReaderViewModel.IsInReader) or nameof(ReaderViewModel.Current) or nameof(ReaderViewModel.Error) or nameof(ReaderViewModel.IsReaderAvailable))
+        {
+            Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        }
+    }
+
+    private async void ReaderButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await _readerVm.ToggleAsync();
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Reader toggle failed: {ex}");
+        }
+    }
+
+    private async void UpdateReaderOverlay()
+    {
+        try
+        {
+            var isInReader = _readerVm.IsInReader;
+            var current = _readerVm.Current;
+            var error = _readerVm.Error;
+
+            ReaderButton.Visibility = (_readerVm.IsReaderAvailable || isInReader) ? Visibility.Visible : Visibility.Collapsed;
+            ReaderButton.Opacity = isInReader ? 1.0 : 0.7;
+            ReaderButton.ToolTip = isInReader ? "Exit reader view (Ctrl+Shift+R)" : "Reader view (Ctrl+Shift+R)";
+
+            if (!string.IsNullOrEmpty(error))
+            {
+                Trace.WriteLine($"Reader error surfaced: {error}");
+                Title = $"Reader error: {error}";
+                return;
+            }
+
+            var tabId = _engine.ActiveTab?.Id;
+            if (tabId is null) return;
+            var core = _engine.GetCoreForTab(tabId.Value);
+
+            if (isInReader && current is not null)
+            {
+                if (core is null)
+                {
+                    Trace.WriteLine("Reader enter: CoreWebView2 is null for active tab");
+                    return;
+                }
+
+                try
+                {
+                    _engine.IsProgrammaticReaderNavigation = true;
+                    try { core.Settings.IsScriptEnabled = false; } catch (Exception ex) { Trace.WriteLine($"Reader disable script failed: {ex.Message}"); }
+                    core.NavigateToString(current.Html);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"Reader NavigateToString failed: {ex}");
+                }
+                finally
+                {
+                    Dispatcher.InvokeAsync(() => _engine.IsProgrammaticReaderNavigation = false, System.Windows.Threading.DispatcherPriority.Background);
+                }
+            }
+            else if (!isInReader)
+            {
+                // Exit path. If we were in reader, the session still holds OriginalUrl. Navigate back and re-enable script.
+                var session = _readerService.GetSession(tabId.Value);
+                if (session is not null && !string.IsNullOrEmpty(session.OriginalUrl) && core is not null)
+                {
+                    var currentSource = core.Source ?? string.Empty;
+                    var isReaderDocument = currentSource.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || currentSource == string.Empty;
+                    if (isReaderDocument || currentSource != session.OriginalUrl)
+                    {
+                        // Only navigate back if we are still showing the reader document or have diverged
+                        // Check if we previously were in reader by seeing if core's last navigation was reader HTML
+                        // For now, if not in reader and session has OriginalUrl, ensure script is enabled and navigate if needed.
+                        // The service's Exit already cleared IsInReader, so we re-enable script here.
+                        try { core.Settings.IsScriptEnabled = true; } catch (Exception ex) { Trace.WriteLine($"Reader re-enable script failed: {ex.Message}"); }
+
+                        // Only navigate if the tab's Url is still the reader's OriginalUrl and core Source is about:blank
+                        // To avoid double navigation on tab switch, check if tab.Url is still OriginalUrl and core.Source is about:blank
+                        if (currentSource.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || currentSource == "about:srcdoc")
+                        {
+                            try
+                            {
+                                _engine.IsProgrammaticReaderNavigation = true;
+                                var tab = _engine.Tabs.FirstOrDefault(t => t.Id == tabId.Value);
+                                if (tab is not null)
+                                {
+                                    tab.Url = session.OriginalUrl!;
+                                    _engine.Navigate(tab, session.OriginalUrl!);
+                                }
+                            }
+                            finally
+                            {
+                                Dispatcher.InvokeAsync(() => _engine.IsProgrammaticReaderNavigation = false, System.Windows.Threading.DispatcherPriority.Background);
+                            }
+                        }
+                        else
+                        {
+                            // Already navigated via implicit exit, just ensure script is on
+                            try { core.Settings.IsScriptEnabled = true; } catch { }
+                        }
+                    }
+                }
+                else if (core is not null)
+                {
+                    try { core.Settings.IsScriptEnabled = true; } catch { }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"UpdateReaderOverlay failed: {ex}");
         }
     }
 

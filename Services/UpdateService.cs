@@ -11,7 +11,7 @@ namespace StrideBrowser.Services;
 /// <summary>
 /// Drives the NetSparkle update pipeline end-to-end: appcast check, verified download, install.
 /// The installer binary is Ed25519-verified against the appcast's edSignature before anything
-/// executes — no raw HttpClient in this path. Failure visibility: every failure path logs to
+/// executes - no raw HttpClient in this path. Failure visibility: every failure path logs to
 /// the Trace listener (file-wired in App startup) and raises <see cref="UpdateFailed"/>.
 /// </summary>
 public sealed class UpdateService

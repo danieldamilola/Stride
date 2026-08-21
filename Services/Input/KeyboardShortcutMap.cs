@@ -82,6 +82,7 @@ public sealed class KeyboardShortcutMap
         _actions["Downloads"] = async () => { await actions.OpenDownloads(); return true; };
         _actions["OpenOneTab"] = async () => { await actions.OpenOneTab(); return true; };
         _actions["OpenSettings"] = async () => { await actions.OpenSettings(); return true; };
+        _actions["ToggleReader"] = async () => { await actions.ToggleReader(); return true; };
 
         // Build default bindings
         RebuildBindings(null);

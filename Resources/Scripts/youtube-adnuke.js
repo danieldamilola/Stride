@@ -1,5 +1,5 @@
-// Stride Browser — YouTube Ad Nuker
-// Runs at document_start on youtube.com. Kills ads instantly — no skip, no wait.
+﻿// Stride Browser - YouTube Ad Nuker
+// Runs at document_start on youtube.com. Kills ads instantly - no skip, no wait.
 // Multi-layer approach: DOM removal, video skip, player API override.
 (function() {
     'use strict';
@@ -68,7 +68,7 @@
         'ytd-enforcement-message-view-model { display:none!important }'
     ].join('\n');
 
-    // Inject CSS — deferred to when DOM is ready
+    // Inject CSS - deferred to when DOM is ready
     function injectAdCss() {
         if (document.getElementById('__stride_ad_nuke')) return;
         var target = document.head || document.documentElement;
@@ -92,7 +92,7 @@
         var video = player.querySelector('video');
         if (!video) return;
 
-        // Instantly skip to end — this triggers the ad completion and loads the real video
+        // Instantly skip to end - this triggers the ad completion and loads the real video
         if (video.duration && isFinite(video.duration)) {
             video.currentTime = video.duration;
         }
@@ -145,7 +145,7 @@
                         setTimeout(nukeVideoAd, 200);
                         setTimeout(nukeVideoAd, 500);
                     } else {
-                        // Ad ended — unmute
+                        // Ad ended - unmute
                         var v = player.querySelector('video');
                         if (v && v.muted && v._strideMuted !== true) {
                             v.muted = false;
@@ -200,7 +200,7 @@
         video._strideAdInterceptor = true;
     }
 
-    // ── Main observer — wait for ytd-app then watch for player/ads ──
+    // ── Main observer - wait for ytd-app then watch for player/ads ──
 
     function startAdNuker() {
         injectAdCss();
@@ -219,12 +219,12 @@
                     var node = nodes[n];
                     if (node.nodeType !== 1) continue;
                     var tag = node.tagName;
-                    // Player appeared — attach watcher
+                    // Player appeared - attach watcher
                     if (tag === 'DIV' && (node.classList.contains('html5-video-player') || node.id === 'movie_player')) {
                         watchPlayer();
                         interceptVideo();
                     }
-                    // Ad elements appeared — remove them
+                    // Ad elements appeared - remove them
                     if (tag === 'YTD-AD-SLOT-RENDERER' ||
                         tag === 'YTD-PROMOTED-SPARKLES-WEB-RENDERER' ||
                         tag === 'YTD-PROMOTED-VIDEO-RENDERER' ||
@@ -263,3 +263,4 @@
         startAdNuker();
     }
 })();
+

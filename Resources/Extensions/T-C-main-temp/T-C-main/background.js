@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file background.js
  * @description MV3 service worker: tab deduplication, context menu,
  *              message relay, scraper injection, badge, storage migration.
@@ -119,7 +119,7 @@ async function setBadge(tabId, score) {
     return { success: false, error: "Missing tabId." };
 
   const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
-  // Neutral monochrome palette to match the UI — only two badge colours
+  // Neutral monochrome palette to match the UI - only two badge colours
   const color = safeScore >= 70 ? "#e5e5e5" : "#555555";
 
   try {
@@ -149,3 +149,4 @@ async function migrateStorage() {
     schemaVersion: CURRENT_SCHEMA_VERSION,
   });
 }
+

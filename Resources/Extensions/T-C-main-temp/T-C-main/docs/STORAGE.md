@@ -1,4 +1,4 @@
-# T&C Lens — Storage Design
+﻿# T&C Lens - Storage Design
 
 ## Role
 
@@ -18,11 +18,11 @@ Chrome extensions have several storage options:
 
 For T&C Lens, `chrome.storage.local` is the right choice because:
 
-1. **Data persistence needed** — API key, provider, and analysis history should survive browser restarts
-2. **Extension-scoped** — Data is only accessible to this extension
-3. **Async API** — Non-blocking reads/writes (unlike `localStorage`)
-4. **Simple key-value** — Our data structure is flat enough that we don't need IndexedDB's complexity
-5. **10MB is plenty** — Even with hundreds of analysis results, we won't approach the limit
+1. **Data persistence needed** - API key, provider, and analysis history should survive browser restarts
+2. **Extension-scoped** - Data is only accessible to this extension
+3. **Async API** - Non-blocking reads/writes (unlike `localStorage`)
+4. **Simple key-value** - Our data structure is flat enough that we don't need IndexedDB's complexity
+5. **10MB is plenty** - Even with hundreds of analysis results, we won't approach the limit
 
 We do NOT use `chrome.storage.sync` because analysis history is device-specific and would eat through the 100KB sync quota quickly.
 
@@ -56,7 +56,7 @@ const DEFAULT_SETTINGS = {
 {
   id: 'a1b2c3d4',                // Unique ID (timestamp-based)
   url: 'https://example.com/terms',
-  title: 'Terms of Service — Example Corp',
+  title: 'Terms of Service - Example Corp',
   domain: 'example.com',
   analyzedAt: 1718123456789,      // Unix timestamp (ms)
   risk_score: 67,                 // 0-100
@@ -84,7 +84,7 @@ const DEFAULT_SETTINGS = {
 
 **Stored under key:** `targetTabId`
 
-This is written by `background.js` and read by `options.js`. It's ephemeral — only meaningful within the current user session.
+This is written by `background.js` and read by `options.js`. It's ephemeral - only meaningful within the current user session.
 
 ## Storage Module API
 
@@ -234,7 +234,7 @@ The API key is stored in plain text in `chrome.storage.local`. This is the stand
 
 - `chrome.storage.local` is only accessible to the extension that wrote the data
 - Other extensions and web pages cannot read it
-- The data is stored in the user's Chrome profile directory (encrypted on disk if the user's OS supports it — Chrome uses the OS keychain on macOS and DPAPI on Windows)
+- The data is stored in the user's Chrome profile directory (encrypted on disk if the user's OS supports it - Chrome uses the OS keychain on macOS and DPAPI on Windows)
 
 **What we do NOT do:**
 
@@ -250,8 +250,8 @@ Analysis history is stored locally and never sent anywhere. It includes the URL 
 
 `chrome.storage.onChanged` can be used to react to changes across contexts. For T&C Lens, this is useful for:
 
-1. **Real-time settings sync** — If the user changes the API key in one tab, another options tab open simultaneously could detect the change
-2. **History updates** — If the extension has multiple views open, they can refresh when new analyses are saved
+1. **Real-time settings sync** - If the user changes the API key in one tab, another options tab open simultaneously could detect the change
+2. **History updates** - If the extension has multiple views open, they can refresh when new analyses are saved
 
 ```javascript
 // Example: Listen for settings changes
@@ -271,7 +271,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 ```
 
-For V1, this is optional — the extension only has one options tab open at a time. But the pattern is documented for future enhancement.
+For V1, this is optional - the extension only has one options tab open at a time. But the pattern is documented for future enhancement.
 
 ## Schema Versioning
 
@@ -298,3 +298,4 @@ async function migrateStorage() {
 This is called once on extension install or update via the `chrome.runtime.onInstalled` listener in `background.js`.
 
 For V1, we start at version 1 with the current schema. The migration framework is included from the start to make future upgrades painless.
+

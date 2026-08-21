@@ -44,7 +44,7 @@ public sealed class TabEngine : IDisposable
     private bool _disposed;
 
     // Per-session random token embedded in every internal page. IPC messages that
-    // don't include this token are rejected — this replaces the origin-based check
+    // don't include this token are rejected - this replaces the origin-based check
     // which broke when internal pages ran on about:blank.
     private readonly string _ipcToken = Guid.NewGuid().ToString("N");
 
@@ -73,6 +73,15 @@ public sealed class TabEngine : IDisposable
 
     /// <summary>Fires when a tab is closed. ReaderService uses this to drop its per-tab session.</summary>
     public event Action<Guid>? TabClosed;
+
+    /// <summary>Fires when the active tab changes.</summary>
+    public event Action<BrowserTab?>? ActiveTabChanged;
+
+    public CoreWebView2Environment? WebViewEnvironment => _webViewFactory.Environment;
+
+    // Reader mode single-WebView guard. MainWindow sets this true around its own NavigateToString and Navigate calls
+    // so the NavigationStarting handler does not treat them as an implicit exit.
+    public bool IsProgrammaticReaderNavigation { get; set; }
 
     // Injected after construction via Composition to avoid a constructor cycle. Returns true when the tab is in reader.
     public Func<Guid, bool>? IsReaderActive { get; set; }
@@ -158,7 +167,7 @@ public sealed class TabEngine : IDisposable
     {
         var resolvedUrl = url ?? InternalUrls.NewTab;
 
-        // Block duplicate tabs — switch to existing tab if URL matches.
+        // Block duplicate tabs - switch to existing tab if URL matches.
         // Restore and duplicate paths pass blockDuplicates: false so they always
         // create a fresh tab even when the URL is already open.
         if (blockDuplicates && _settings.BlockDuplicateTabs && !InternalUrls.IsInternal(resolvedUrl))
@@ -241,9 +250,10 @@ public sealed class TabEngine : IDisposable
         tab.IsActive = true;
         ActiveTab = tab;
         TabStateChanged?.Invoke(tab);
+        ActiveTabChanged?.Invoke(tab);
     }
 
-    /// <summary>Activates a tab's WebView2 — creates one if needed, shows it, hides others.</summary>
+    /// <summary>Activates a tab's WebView2 - creates one if needed, shows it, hides others.</summary>
     public async Task ActivateAsync(BrowserTab tab)
     {
         if (_webViewFactory.Environment is null) return;
@@ -270,7 +280,7 @@ public sealed class TabEngine : IDisposable
             return;
         }
 
-        // WebView needs creation — serialize to prevent overwhelming the runtime
+        // WebView needs creation - serialize to prevent overwhelming the runtime
         try
         {
             await _activationGate.WaitAsync(cts.Token);
@@ -445,6 +455,25 @@ public sealed class TabEngine : IDisposable
         }
     }
 
+    public CoreWebView2? GetCoreForTab(Guid tabId)
+    {
+        if (_webViews.TryGetValue(tabId, out var wv))
+            return wv.CoreWebView2;
+        return null;
+    }
+
+    public Task<string> ExecuteScriptAsync(Guid tabId, string script)
+    {
+        if (_webViews.TryGetValue(tabId, out var wv) && wv.CoreWebView2 is not null)
+        {
+            return wv.CoreWebView2.ExecuteScriptAsync(script);
+        }
+
+        return Task.FromResult(string.Empty);
+    }
+
+    public string? GetTabUrl(Guid tabId) => Tabs.FirstOrDefault(t => t.Id == tabId)?.Url;
+
     public void ApplyAppThemeToWebViews()
     {
         // PreferredColorScheme is a profile-level setting, so setting it on one active WebView updates it for all
@@ -499,7 +528,7 @@ public sealed class TabEngine : IDisposable
         WireContextMenuEvents(wv, tab);
         HandleProcessFailure(wv, tab);
 
-        // Network-level ad blocking — block known ad URLs before they load
+        // Network-level ad blocking - block known ad URLs before they load
         // Note: We now rely entirely on the native uBlock Origin extension (ExtensionManager)
         // rather than the rudimentary AdBlockFilter, as it provides far superior blocking without breaking sites.
 
@@ -607,6 +636,15 @@ public sealed class TabEngine : IDisposable
         core.NavigationStarting += (_, e) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
+
+            // Reader mode single-WebView implicit exit. If the tab is in reader and this navigation
+            // was not our own Enter or Exit NavigateToString, treat it as a link click inside reader.
+            if (IsReaderActive?.Invoke(tab.Id) == true && !IsProgrammaticReaderNavigation)
+            {
+                try { core.Settings.IsScriptEnabled = true; } catch (Exception ex) { Trace.WriteLine($"Reader implicit exit script enable failed: {ex.Message}"); }
+                if (ExitReaderAsync != null) _ = ExitReaderAsync(tab.Id);
+                // Do not cancel, let the navigation proceed as a normal page load.
+            }
 
             ApplyNavigationBackground(wv, e.Uri);
 

@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -139,3 +139,4 @@ public class AnimatedStackPanel : Panel
         }
     }
 }
+
