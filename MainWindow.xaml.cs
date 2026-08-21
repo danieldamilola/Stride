@@ -605,7 +605,7 @@ public partial class MainWindow : Window
                 var banner = document.createElement('div');
                 banner.id = 'stride-restart-banner';
                 banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#e0e0e0;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 22px;font-size:14px;font-family:inherit;display:flex;align-items:center;gap:14px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
-                banner.innerHTML = '<span style=""font-size:18px"">🌙</span><span><strong>{msg}</strong> — Restart Stride to apply</span><button onclick=""this.parentElement.remove()"" style=""background:rgba(255,255,255,0.1);border:none;color:#e0e0e0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;margin-left:8px;"">Dismiss</button>';
+                banner.innerHTML = '<span style=""font-size:18px"">🌙</span><span><strong>{msg}</strong> - Restart Stride to apply</span><button onclick=""this.parentElement.remove()"" style=""background:rgba(255,255,255,0.1);border:none;color:#e0e0e0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;margin-left:8px;"">Dismiss</button>';
                 document.body.appendChild(banner);
                 setTimeout(() => {{ if(banner.parentNode) banner.remove(); }}, 6000);
             }})();";

@@ -44,7 +44,7 @@ public sealed class TabEngine : IDisposable
     private bool _disposed;
 
     // Per-session random token embedded in every internal page. IPC messages that
-    // don't include this token are rejected — this replaces the origin-based check
+    // don't include this token are rejected - this replaces the origin-based check
     // which broke when internal pages ran on about:blank.
     private readonly string _ipcToken = Guid.NewGuid().ToString("N");
 
@@ -166,7 +166,7 @@ public sealed class TabEngine : IDisposable
     {
         var resolvedUrl = url ?? InternalUrls.NewTab;
 
-        // Block duplicate tabs — switch to existing tab if URL matches.
+        // Block duplicate tabs - switch to existing tab if URL matches.
         // Restore and duplicate paths pass blockDuplicates: false so they always
         // create a fresh tab even when the URL is already open.
         if (blockDuplicates && _settings.BlockDuplicateTabs && !InternalUrls.IsInternal(resolvedUrl))
@@ -252,7 +252,7 @@ public sealed class TabEngine : IDisposable
         ActiveTabChanged?.Invoke(tab);
     }
 
-    /// <summary>Activates a tab's WebView2 — creates one if needed, shows it, hides others.</summary>
+    /// <summary>Activates a tab's WebView2 - creates one if needed, shows it, hides others.</summary>
     public async Task ActivateAsync(BrowserTab tab)
     {
         if (_webViewFactory.Environment is null) return;
@@ -278,7 +278,7 @@ public sealed class TabEngine : IDisposable
             return;
         }
 
-        // WebView needs creation — serialize to prevent overwhelming the runtime
+        // WebView needs creation - serialize to prevent overwhelming the runtime
         try
         {
             await _activationGate.WaitAsync(cts.Token);
@@ -525,7 +525,7 @@ public sealed class TabEngine : IDisposable
         WireContextMenuEvents(wv, tab);
         HandleProcessFailure(wv, tab);
 
-        // Network-level ad blocking — block known ad URLs before they load
+        // Network-level ad blocking - block known ad URLs before they load
         // Note: We now rely entirely on the native uBlock Origin extension (ExtensionManager)
         // rather than the rudimentary AdBlockFilter, as it provides far superior blocking without breaking sites.
 

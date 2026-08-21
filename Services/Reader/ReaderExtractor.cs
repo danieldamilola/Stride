@@ -21,10 +21,8 @@ public sealed class ReaderExtractor : IReaderExtractor
 
     public async Task<bool> CanExtractAsync(Guid tabId)
     {
-        var extractorJs = ResourceLoader.TryLoad("Resources.Reader.ReaderExtractor.js");
-        if (extractorJs is null) return false;
-
-        var script = extractorJs + "\nwindow.__strideReaderIsReadable();";
+        var script = LoadReaderScript() + "\nwindow.__strideReaderIsReadable();";
+        if (string.IsNullOrWhiteSpace(script)) return false;
         var raw = await ExecuteWithTimeoutAsync(tabId, script, 2500);
         if (string.IsNullOrWhiteSpace(raw)) return false;
 
@@ -58,10 +56,8 @@ public sealed class ReaderExtractor : IReaderExtractor
 
     public async Task<ArticleResult> ExtractAsync(Guid tabId)
     {
-        var extractorJs = ResourceLoader.TryLoad("Resources.Reader.ReaderExtractor.js");
-        if (extractorJs is null) throw new InvalidOperationException("ReaderExtractor.js not found");
-
-        var script = extractorJs + "\nwindow.__strideReaderExtract();";
+        var script = LoadReaderScript() + "\nwindow.__strideReaderExtract();";
+        if (string.IsNullOrWhiteSpace(script)) throw new InvalidOperationException("ReaderExtractor.js not found");
         var raw = await ExecuteWithTimeoutAsync(tabId, script, 4000);
         if (string.IsNullOrWhiteSpace(raw)) throw new InvalidOperationException("Extractor returned empty");
 
@@ -97,6 +93,15 @@ public sealed class ReaderExtractor : IReaderExtractor
             System.Diagnostics.Trace.WriteLine($"ReaderExtractor deserialize failed: {ex.Message} rawInner={inner}");
             throw;
         }
+    }
+
+    private static string LoadReaderScript()
+    {
+        var readability = ResourceLoader.TryLoad("Resources.Reader.Readability.js") ?? string.Empty;
+        var wrapper = ResourceLoader.TryLoad("Resources.Reader.ReaderExtractor.js") ?? string.Empty;
+        if (!string.IsNullOrEmpty(readability))
+            return readability + "\n" + wrapper;
+        return wrapper;
     }
 
     private async Task<string> ExecuteWithTimeoutAsync(Guid tabId, string script, int timeoutMs)
