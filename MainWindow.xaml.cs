@@ -16,6 +16,7 @@ using StrideBrowser.Services.Reader;
 using StrideBrowser.Services.UI;
 using StrideBrowser.ViewModels;
 using StrideBrowser.ViewModels.Reader;
+using StrideBrowser.ViewModels.LinkPreview;
 
 namespace StrideBrowser;
 
@@ -43,6 +44,8 @@ public partial class MainWindow : Window
     private readonly ToolbarTintAdapter _toolbarTint;
     private readonly SecurityBadgeHelper _securityBadge;
     private readonly LoadingAnimationController _loadingAnim;
+    private readonly LinkPreviewWindowController _linkPreviewController;
+    private readonly LinkPreviewViewModel _linkPreviewVm;
 
     private KeyboardShortcutMap? _shortcuts;
     private WindowChromeManager? _chromeManager;
@@ -52,6 +55,8 @@ public partial class MainWindow : Window
     public MainWindow(
         BrowserViewModel vm,
         ReaderViewModel readerVm,
+        LinkPreviewViewModel linkPreviewVm,
+        LinkPreviewWindowController linkPreviewController,
         ISettingsStore settingsStore,
         IOneTabStore oneTabStore,
         ISessionStore sessionStore,
@@ -68,6 +73,8 @@ public partial class MainWindow : Window
 
         _vm = vm;
         _readerVm = readerVm;
+        _linkPreviewVm = linkPreviewVm;
+        _linkPreviewController = linkPreviewController;
         _settingsStore = settingsStore;
         _oneTabStore = oneTabStore;
         _sessionStore = sessionStore;
@@ -79,6 +86,8 @@ public partial class MainWindow : Window
         _readerService = readerService;
 
         _engine.AttachHost(WebViewHost);
+        _linkPreviewController.Attach(this);
+        _linkPreviewVm.PropertyChanged += OnLinkPreviewViewModelPropertyChanged;
 
         // Reader mode wiring. Single shared VM that mirrors active tab, service owns per tab truth.
         _readerVm.PropertyChanged += OnReaderViewModelPropertyChanged;
@@ -664,6 +673,13 @@ public partial class MainWindow : Window
     {
         try
         {
+            if (_linkPreviewVm.IsVisible && (e.Key == Key.Escape || e.Key == Key.System && e.SystemKey == Key.Escape))
+            {
+                _linkPreviewVm.Dismiss();
+                e.Handled = true;
+                return;
+            }
+
             if (_shortcuts is not null)
             {
                 var modifiers = Keyboard.Modifiers;
@@ -810,6 +826,60 @@ public partial class MainWindow : Window
             if (activeWebView != null)
                 activeWebView.Visibility = Visibility.Visible;
         }
+    }
+
+    private void OnLinkPreviewViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(LinkPreviewViewModel.IsVisible))
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                if (_linkPreviewVm.IsVisible)
+                {
+                    if (!_vm.Settings.UseFloatingCommandBar)
+                    {
+                        var activeWebView = ActiveStandardWebView;
+                        if (activeWebView != null)
+                            activeWebView.Visibility = Visibility.Collapsed;
+                    }
+
+                    LinkPreviewDim.Visibility = Visibility.Visible;
+                    var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(120))
+                    {
+                        EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+                    };
+                    LinkPreviewDim.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+                }
+                else
+                {
+                    var fadeOut = new System.Windows.Media.Animation.DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(100))
+                    {
+                        EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+                    };
+                    fadeOut.Completed += (_, _) =>
+                    {
+                        if (!_linkPreviewVm.IsVisible)
+                        {
+                            LinkPreviewDim.Visibility = Visibility.Collapsed;
+                            LinkPreviewDim.BeginAnimation(UIElement.OpacityProperty, null);
+                            if (!_vm.Settings.UseFloatingCommandBar && _engine.ActiveTab != null)
+                            {
+                                var activeWebView = ActiveStandardWebView;
+                                if (activeWebView != null)
+                                    activeWebView.Visibility = Visibility.Visible;
+                            }
+                        }
+                    };
+                    LinkPreviewDim.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+                }
+            });
+        }
+    }
+
+    private void LinkPreviewDim_Click(object sender, MouseButtonEventArgs e)
+    {
+        _linkPreviewVm.Dismiss();
+        e.Handled = true;
     }
 
     // ───────────────────── Reader Mode ─────────────────────

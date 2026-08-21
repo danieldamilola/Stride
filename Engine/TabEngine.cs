@@ -77,6 +77,9 @@ public sealed class TabEngine : IDisposable
     /// <summary>Fires when the active tab changes.</summary>
     public event Action<BrowserTab?>? ActiveTabChanged;
 
+    /// <summary>Fires when Alt plus click requests a link preview. On demand, no background timer.</summary>
+    public event Action<BrowserTab, string, System.Windows.Rect, StrideBrowser.Models.LinkPreview.LinkPreviewTrigger>? LinkPreviewRequested;
+
     public CoreWebView2Environment? WebViewEnvironment => _webViewFactory.Environment;
 
     // Reader mode single-WebView guard. MainWindow sets this true around its own NavigateToString and Navigate calls
@@ -122,10 +125,12 @@ public sealed class TabEngine : IDisposable
             getWebView: id => _webViews.TryGetValue(id, out var wv) ? wv : null,
             createTab: url => CreateTab(url),
             activateAsync: ActivateAsync,
-            closeTab: CloseTab);
+            closeTab: CloseTab,
+            downloadSuppressor: deps.DownloadSuppressor);
         _ipcBridge.WebMessageReceived += msg => WebMessageReceived?.Invoke(msg);
         _ipcBridge.FullScreenChanged += fs => FullScreenChanged?.Invoke(fs);
         _ipcBridge.TabStateChanged += tab => TabStateChanged?.Invoke(tab);
+        _ipcBridge.LinkPreviewRequested += (tab, url, rect, trigger) => LinkPreviewRequested?.Invoke(tab, url, rect, trigger);
 
         _hibernationManager.Attach(
             getTabs: () => Tabs,
@@ -133,6 +138,7 @@ public sealed class TabEngine : IDisposable
             teardownWebView: id => TeardownWebView(id),
             maxLiveWebViews: 10
         );
+        _hibernationManager.SetPreviewOriginCheck(id => _previewOriginTabId == id);
 
         foreach (var item in _downloadStore.Items)
         {
@@ -157,7 +163,7 @@ public sealed class TabEngine : IDisposable
 /// <summary>Must be called once at startup to create the WebView2 environment.</summary>
     public async Task InitializeAsync()
     {
-        _webViewFactory.InitializeAsync();
+        await _webViewFactory.InitializeAsync();
         _webViewFactory.BrowserProcessExited += () => _dispatcher.Invoke(HandleBrowserProcessDeath);
     }
 
@@ -915,6 +921,94 @@ public sealed class TabEngine : IDisposable
                 : CoreWebView2MemoryUsageTargetLevel.Low;
         }
     }
+
+    // ──── Link Preview - on demand, sleep only, never hibernate ────
+
+    private Guid? _previewOriginTabId;
+    private int _previewGeneration;
+
+    /// <summary>Suspends the origin tab during peek. On demand. Low memory, TrySuspend, mark sleeping, keep WebView alive.</summary>
+    public async Task SuspendForPreviewAsync(Guid tabId)
+    {
+        if (!_webViews.TryGetValue(tabId, out var wv)) return;
+        if (wv.CoreWebView2 is null) return;
+        var tab = Tabs.FirstOrDefault(t => t.Id == tabId);
+        if (tab is null) return;
+
+        var generation = ++_previewGeneration;
+        _previewOriginTabId = tabId;
+
+        try
+        {
+            await wv.CoreWebView2.ExecuteScriptAsync(
+                "(function(){ var s = document.getElementById('__strideDimStyle'); if (!s) { s = document.createElement('style'); s.id = '__strideDimStyle'; s.innerHTML = 'html { filter: brightness(0.25) !important; transition: filter 0.15s ease !important; }'; (document.head || document.documentElement).appendChild(s); } })();");
+        }
+        catch { }
+
+        if (generation != _previewGeneration || _previewOriginTabId != tabId)
+        {
+            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch { }
+            return;
+        }
+
+        if (!_settings.TabSleepEnabled) return;
+        bool suspended = false;
+        try
+        {
+            wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
+            var ok = await wv.CoreWebView2.TrySuspendAsync();
+            if (ok)
+            {
+                suspended = true;
+                tab.IsSleeping = true;
+            }
+        }
+        catch (Exception ex) { Trace.WriteLine($"SuspendForPreview failed for {tabId}: {ex.Message}"); }
+
+        if (generation != _previewGeneration || _previewOriginTabId != tabId)
+        {
+            if (suspended)
+            {
+                try { wv.CoreWebView2.Resume(); } catch { }
+                tab.IsSleeping = false;
+            }
+            try { wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal; } catch { }
+            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch { }
+        }
+    }
+
+    /// <summary>Resumes the origin tab after peek is dismissed. Keeps it hibernated false.</summary>
+    public void ResumeFromPreview(Guid tabId)
+    {
+        _previewGeneration++;
+        if (_previewOriginTabId == tabId) _previewOriginTabId = null;
+        if (!_webViews.TryGetValue(tabId, out var wv)) return;
+        if (wv.CoreWebView2 is null) return;
+        var tab = Tabs.FirstOrDefault(t => t.Id == tabId);
+
+        try
+        {
+            wv.CoreWebView2.Resume();
+        }
+        catch (Exception ex) { Trace.WriteLine($"Resume failed for {tabId}: {ex.Message}"); }
+
+        try
+        {
+            wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+        }
+        catch (Exception ex) { Trace.WriteLine($"Set memory level failed for {tabId}: {ex.Message}"); }
+
+        if (tab is not null) tab.IsSleeping = false;
+
+        try
+        {
+            _ = wv.CoreWebView2.ExecuteScriptAsync(
+                "(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();");
+        }
+        catch { }
+    }
+
+    internal bool IsPreviewOrigin(Guid tabId) => _previewOriginTabId == tabId;
 
     /// <summary>Gets the FrameworkElement for the given tab's WebView, if it exists.</summary>
     public FrameworkElement? GetWebViewElement(Guid tabId)

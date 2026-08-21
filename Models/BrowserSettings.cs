@@ -63,6 +63,12 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _tabSleepEnabled = true;
 
     [ObservableProperty]
+    private bool _allowPinnedTabsToSleep;
+
+    [ObservableProperty]
+    private bool _allowPinnedTabsToHibernate;
+
+    [ObservableProperty]
     private double _tabSleepOpacity = 0.55;
 
     [ObservableProperty]
@@ -225,6 +231,17 @@ public sealed partial class BrowserSettings : ObservableObject
     [ObservableProperty]
     private bool _unhookDisableAnnotations = true;
 
+    // ── Link Preview ──
+
+    [ObservableProperty]
+    private bool _linkPreviewEnabled = true;
+
+    [ObservableProperty]
+    private string _linkPreviewHotkey = "Alt";
+
+    [ObservableProperty]
+    private bool _linkPreviewAllowPress = true;
+
     /// <summary>Resets all settings to their default values.</summary>
     public void ResetToDefaults()
     {
@@ -245,6 +262,8 @@ public sealed partial class BrowserSettings : ObservableObject
         BlockDuplicateTabs = d.BlockDuplicateTabs;
         TabHibernationEnabled = d.TabHibernationEnabled;
         TabSleepEnabled = d.TabSleepEnabled;
+        AllowPinnedTabsToSleep = d.AllowPinnedTabsToSleep;
+        AllowPinnedTabsToHibernate = d.AllowPinnedTabsToHibernate;
         TabSleepOpacity = d.TabSleepOpacity;
         TabHibernationOpacity = d.TabHibernationOpacity;
         TabSleepDimEnabled = d.TabSleepDimEnabled;
@@ -296,6 +315,9 @@ public sealed partial class BrowserSettings : ObservableObject
         UnhookHideSubscriptions = d.UnhookHideSubscriptions;
         UnhookDisableAutoplay = d.UnhookDisableAutoplay;
         UnhookDisableAnnotations = d.UnhookDisableAnnotations;
+        LinkPreviewEnabled = d.LinkPreviewEnabled;
+        LinkPreviewHotkey = d.LinkPreviewHotkey;
+        LinkPreviewAllowPress = d.LinkPreviewAllowPress;
     }
 
 }

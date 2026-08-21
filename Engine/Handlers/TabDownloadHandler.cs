@@ -14,7 +14,8 @@ public static class TabDownloadHandler
         CoreWebView2 core, 
         Dispatcher dispatcher, 
         IDownloadStore downloadStore,
-        HashSet<string> activeNativeDownloads)
+        HashSet<string> activeNativeDownloads,
+        Services.LinkPreview.ILinkPreviewDownloadSuppressor downloadSuppressor)
     {
         core.IsDefaultDownloadDialogOpenChanged += (_, _) =>
         {
@@ -23,6 +24,13 @@ public static class TabDownloadHandler
 
         core.DownloadStarting += async (_, e) =>
         {
+            var url = e.DownloadOperation.Uri;
+            if (!string.IsNullOrWhiteSpace(url) && downloadSuppressor.ShouldSuppress(url))
+            {
+                e.Cancel = true;
+                e.Handled = true;
+                return;
+            }
             e.Handled = true;
             var op = e.DownloadOperation;
 
