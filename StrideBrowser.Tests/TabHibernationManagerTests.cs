@@ -108,7 +108,7 @@ public sealed class FakeCoreWebView
     public bool IsDocumentPlayingAudio { get; set; }
     public CoreWebView2MemoryUsageTargetLevel MemoryUsageTargetLevel { get; set; }
     public int SuspendCount { get; private set; }
-    public Task TrySuspendAsync() { SuspendCount++; return Task.CompletedTask; }
+    public Task<bool> TrySuspendAsync() { SuspendCount++; return Task.FromResult(true); }
 }
 
 public sealed class FakeWebView

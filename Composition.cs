@@ -103,13 +103,6 @@ public static class Composition
         
         // Eagerly resolve ThemeManager so it can apply the initial theme
         sp.GetRequiredService<ThemeManager>();
-
-        // Wire ReaderService cleanup on tab close and single-WebView reader guard
-        var tabEngine = sp.GetRequiredService<TabEngine>();
-        var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
-        tabEngine.TabClosed += readerService.RemoveSession;
-        tabEngine.IsReaderActive = tabId => readerService.GetSession(tabId)?.IsInReader == true;
-        tabEngine.ExitReaderAsync = tabId => readerService.ExitReaderAsync(tabId);
         
         return sp;
     }

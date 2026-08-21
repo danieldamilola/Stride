@@ -27,6 +27,7 @@ public sealed class TabHibernationManager
     private Func<IReadOnlyDictionary<Guid, dynamic>>? _getWebViews;
     private Action<Guid>? _teardownWebView;
     private int _maxLiveWebViews = 10;
+    private int _suspensionGeneration;
 
     /// <summary>Initializes a new instance of the TabHibernationManager.</summary>
     public TabHibernationManager(IDownloadStore downloadStore, BrowserSettings settings)
@@ -54,6 +55,7 @@ public sealed class TabHibernationManager
     /// <summary>Detaches the manager and stops the timer.</summary>
     public void Detach()
     {
+        _suspensionGeneration++;
         _timer.Stop();
         _getTabs = null;
         _getWebViews = null;
@@ -69,6 +71,7 @@ public sealed class TabHibernationManager
         // Clear sleeping flag for the active tab on resume.
         activeTab.IsSleeping = false;
 
+        var generation = _suspensionGeneration;
         var tabsById = _getTabs().ToDictionary(t => t.Id);
         foreach (var (id, wv) in _getWebViews())
         {
@@ -94,22 +97,23 @@ public sealed class TabHibernationManager
             }
 
             if (tabsById.TryGetValue(id, out var tab) && !tab.IsHibernated && !tab.IsActive)
-                _ = TrySuspendSafeAsync(core, id, tab);
+                _ = TrySuspendSafeAsync(core, id, tab, generation);
             else
-                _ = TrySuspendSafeAsync(core, id, null);
+                _ = TrySuspendSafeAsync(core, id, null, generation);
         }
     }
 
     /// <summary>Clears the sleeping flag on all tabs.</summary>
     public void ClearSleepingState()
     {
+        _suspensionGeneration++;
         if (_getTabs is null) return;
         foreach (var tab in _getTabs())
             tab.IsSleeping = false;
     }
 
     /// <summary>Calls TrySuspendAsync and marks the tab sleeping only when suspend returns true and sleep is still enabled.</summary>
-    private async Task TrySuspendSafeAsync(dynamic core, Guid tabId, BrowserTab? tab)
+    private async Task TrySuspendSafeAsync(dynamic core, Guid tabId, BrowserTab? tab, int generation)
     {
         bool success = false;
         try
@@ -129,7 +133,7 @@ public sealed class TabHibernationManager
             Trace.WriteLine($"TrySuspendAsync failed for tab {tabId}: {ex.Message}");
         }
 
-        if (success && tab != null && !tab.IsActive && !tab.IsHibernated && _settings.TabSleepEnabled)
+        if (success && tab != null && !tab.IsActive && !tab.IsHibernated && _settings.TabSleepEnabled && generation == _suspensionGeneration)
             tab.IsSleeping = true;
     }
 
