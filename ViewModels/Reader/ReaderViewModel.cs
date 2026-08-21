@@ -13,6 +13,7 @@ public sealed partial class ReaderViewModel : ObservableObject
 {
     private readonly IReaderService _readerService;
     private readonly Func<Guid?> _getActiveTabId;
+    private int _operationVersion;
 
     [ObservableProperty]
     private bool _isReaderAvailable;
@@ -60,8 +61,8 @@ public sealed partial class ReaderViewModel : ObservableObject
             return;
         }
 
+        IsReaderAvailable = false;
         SyncFromService(tabId.Value);
-        // Availability is updated on next CanEnterReaderAsync call. Keep current IsReaderAvailable until then.
     }
 
     private void SyncFromService(Guid tabId)
@@ -81,17 +82,24 @@ public sealed partial class ReaderViewModel : ObservableObject
             return false;
         }
 
+        var version = ++_operationVersion;
+        var capturedTabId = tabId.Value;
+        bool result;
         try
         {
-            IsReaderAvailable = await _readerService.CanEnterReaderAsync(tabId.Value);
-            return IsReaderAvailable;
+            result = await _readerService.CanEnterReaderAsync(capturedTabId);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Trace.WriteLine($"Reader availability check failed: {ex.Message}");
+            if (_getActiveTabId() != capturedTabId || version != _operationVersion) return false;
             IsReaderAvailable = false;
             return false;
         }
+
+        if (_getActiveTabId() != capturedTabId || version != _operationVersion) return result;
+        IsReaderAvailable = result;
+        return IsReaderAvailable;
     }
 
     public async Task ToggleAsync()
@@ -107,30 +115,35 @@ public sealed partial class ReaderViewModel : ObservableObject
         var tabId = _getActiveTabId();
         if (tabId is null) return;
 
+        var version = ++_operationVersion;
+        var capturedTabId = tabId.Value;
         IsLoading = true;
         Error = null;
         try
         {
             // Service continuation writes only into per-tab session keyed by tabId.
             // VM re-derives via SessionChanged, not via direct assignment from awaiting task.
-            await _readerService.EnterReaderAsync(tabId.Value);
-            SyncFromService(tabId.Value);
+            await _readerService.EnterReaderAsync(capturedTabId);
+            if (_getActiveTabId() != capturedTabId || version != _operationVersion) return;
+            SyncFromService(capturedTabId);
         }
         catch (NotImplementedException ex)
         {
+            if (_getActiveTabId() != capturedTabId || version != _operationVersion) return;
             Error = "Reader not yet implemented in this scaffold: " + ex.Message;
             System.Diagnostics.Trace.WriteLine($"Reader enter failed scaffold: {ex}");
             System.Diagnostics.Debug.WriteLine($"Reader enter failed scaffold: {ex}");
         }
         catch (Exception ex)
         {
+            if (_getActiveTabId() != capturedTabId || version != _operationVersion) return;
             Error = ex.Message;
             System.Diagnostics.Trace.WriteLine($"Reader enter failed: {ex}");
             System.Diagnostics.Debug.WriteLine($"Reader enter failed: {ex}");
         }
         finally
         {
-            IsLoading = false;
+            if (version == _operationVersion) IsLoading = false;
         }
     }
 
@@ -139,10 +152,13 @@ public sealed partial class ReaderViewModel : ObservableObject
         var tabId = _getActiveTabId();
         if (tabId is null) return;
 
+        var version = ++_operationVersion;
+        var capturedTabId = tabId.Value;
         try
         {
-            await _readerService.ExitReaderAsync(tabId.Value);
-            SyncFromService(tabId.Value);
+            await _readerService.ExitReaderAsync(capturedTabId);
+            if (_getActiveTabId() != capturedTabId || version != _operationVersion) return;
+            SyncFromService(capturedTabId);
         }
         catch (NotImplementedException)
         {
@@ -150,6 +166,7 @@ public sealed partial class ReaderViewModel : ObservableObject
         }
         catch (Exception ex)
         {
+            if (_getActiveTabId() != capturedTabId || version != _operationVersion) return;
             System.Diagnostics.Trace.WriteLine($"Reader exit failed: {ex.Message}");
         }
     }
@@ -159,20 +176,24 @@ public sealed partial class ReaderViewModel : ObservableObject
         var tabId = _getActiveTabId();
         if (tabId is null) return;
 
+        var version = ++_operationVersion;
+        var capturedTabId = tabId.Value;
         IsLoading = true;
         try
         {
-            await _readerService.RefreshAsync(tabId.Value);
-            SyncFromService(tabId.Value);
+            await _readerService.RefreshAsync(capturedTabId);
+            if (_getActiveTabId() != capturedTabId || version != _operationVersion) return;
+            SyncFromService(capturedTabId);
         }
         catch (Exception ex)
         {
+            if (_getActiveTabId() != capturedTabId || version != _operationVersion) return;
             System.Diagnostics.Trace.WriteLine($"Reader refresh failed: {ex.Message}");
             Error = ex.Message;
         }
         finally
         {
-            IsLoading = false;
+            if (version == _operationVersion) IsLoading = false;
         }
     }
 }

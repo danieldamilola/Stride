@@ -41,11 +41,10 @@ public sealed class ReaderTemplateRenderer : IReaderTemplateRenderer
             ["ContentWidth"] = options.ContentWidth.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
         };
 
-        var html = template;
-        foreach (var (key, value) in replacements)
-            html = html.Replace($"{{{{{key}}}}}", value);
-
-        return html;
+        return System.Text.RegularExpressions.Regex.Replace(
+            template,
+            @"\{\{(\w+)\}\}",
+            m => replacements.TryGetValue(m.Groups[1].Value, out var v) ? v : m.Value);
     }
 
     private static string LoadTemplate()
@@ -55,8 +54,10 @@ public sealed class ReaderTemplateRenderer : IReaderTemplateRenderer
         // Fallback for tests that run without embedded resources built
         var path = Path.Combine(AppContext.BaseDirectory, "Resources", "Reader", "ReaderTemplate.html");
         if (File.Exists(path)) return File.ReadAllText(path, Encoding.UTF8);
+#if DEBUG
         var alt = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Reader", "ReaderTemplate.html");
         if (File.Exists(alt)) return File.ReadAllText(alt, Encoding.UTF8);
+#endif
         throw new FileNotFoundException("ReaderTemplate.html not found as embedded resource or file");
     }
 
@@ -66,8 +67,10 @@ public sealed class ReaderTemplateRenderer : IReaderTemplateRenderer
         if (css is not null) return css;
         var path = Path.Combine(AppContext.BaseDirectory, "Resources", "Reader", "ReaderTemplate.css");
         if (File.Exists(path)) return File.ReadAllText(path, Encoding.UTF8);
+#if DEBUG
         var alt = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Reader", "ReaderTemplate.css");
         if (File.Exists(alt)) return File.ReadAllText(alt, Encoding.UTF8);
+#endif
         return string.Empty;
     }
 

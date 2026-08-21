@@ -79,6 +79,13 @@ public sealed class ReaderService : IReaderService
         if (completed == timeoutTask)
             throw new TimeoutException("Reader extraction timed out. The page may have been hibernated or is not responding.");
         var article = await extractTask;
+        // Revalidate that the tab hasn't navigated or been closed during extraction
+        var currentUrl = _engine.GetTabUrl(tabId);
+        if (currentUrl != url)
+        {
+            System.Diagnostics.Trace.WriteLine($"Reader extraction aborted for tab {tabId}: navigated from '{url}' to '{currentUrl}'");
+            return new ReaderContent(article.Title ?? "Reader", string.Empty, url, DateTime.UtcNow);
+        }
         var baseUrl = url;
         var sanitized = _sanitizer.Sanitize(article.ContentHtml ?? string.Empty, baseUrl);
 
