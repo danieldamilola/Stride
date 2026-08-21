@@ -74,6 +74,7 @@ public sealed class TabEngine : IDisposable
     private readonly Services.CustomDownloadManager _customDownloadManager;
     private readonly HashSet<string> _activeNativeDownloads = new();
 
+    /// <summary>Initializes a new instance of the TabEngine.</summary>
     public TabEngine(EngineDependencies deps)
     {
         _extensionManager = deps.ExtensionManager;
@@ -457,6 +458,7 @@ public sealed class TabEngine : IDisposable
 
     // ──── WebView2 Creation ────
 
+    /// <summary>Creates a WebView2 control for a tab and wires its events.</summary>
     private async Task CreateWebViewForTab(BrowserTab tab)
     {
         var isInternal = tab.Url?.StartsWith("internal://") ?? true;
@@ -739,6 +741,7 @@ public sealed class TabEngine : IDisposable
 
 
 
+    /// <summary>Wires process failure handling for a tab WebView and marks crashed tabs hibernated.</summary>
     private void HandleProcessFailure(dynamic wv, BrowserTab tab)
     {
         CoreWebView2 core = wv.CoreWebView2;
@@ -768,6 +771,7 @@ public sealed class TabEngine : IDisposable
         };
     }
 
+    /// <summary>Handles browser process crash by hibernating all tabs and clearing sleeping state.</summary>
     private void HandleBrowserProcessDeath()
     {
         if (_webViews.Count == 0) return;
@@ -775,6 +779,7 @@ public sealed class TabEngine : IDisposable
         foreach (var t in Tabs)
         {
             t.IsHibernated = true;
+            t.IsSleeping = false;
             t.IsLoading = false;
         }
         foreach (var (_, wv) in _webViews)

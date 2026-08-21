@@ -44,7 +44,7 @@ public sealed partial class BrowserSettings : ObservableObject
 
     /// <summary>
     /// Enables Microsoft Defender SmartScreen (phishing/malware protection). When on,
-    /// navigated URLs are checked with Microsoft — a privacy trade-off the user controls.
+    /// navigated URLs are checked with Microsoft - a privacy trade-off the user controls.
     /// Read at WebView2 environment creation, so changes require a restart to apply.
     /// </summary>
     [ObservableProperty]
@@ -214,6 +214,7 @@ public sealed partial class BrowserSettings : ObservableObject
     [ObservableProperty]
     private bool _unhookDisableAnnotations = true;
 
+    /// <summary>Resets all settings to their default values.</summary>
     public void ResetToDefaults()
     {
         var d = new BrowserSettings();

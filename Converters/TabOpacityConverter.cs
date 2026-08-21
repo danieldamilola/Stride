@@ -10,6 +10,7 @@ namespace StrideBrowser.Converters;
 /// </summary>
 public sealed class TabOpacityConverter : IMultiValueConverter
 {
+    /// <summary>Converts tab active, hibernated, sleeping, opacity settings and hover state to a favicon opacity value.</summary>
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
         if (values.Length < 6) return 1.0;
@@ -36,6 +37,7 @@ public sealed class TabOpacityConverter : IMultiValueConverter
         return 1.0;
     }
 
+    /// <summary>ConvertBack is not supported for this converter.</summary>
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }

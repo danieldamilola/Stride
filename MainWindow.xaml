@@ -75,9 +75,9 @@
                 <!-- Pin indicator removed in favor of pill background -->
                 <!-- Favicon — 20×20 area with 16×16 icon -->
                 <Grid Grid.Column="0" Width="20" Height="20" VerticalAlignment="Center">
-                    <!-- Default Stride icon — greyed out, hidden when site favicon loads -->
+                    <!-- Default Stride icon — hidden when site favicon loads, shares same dim as favicon -->
                     <Image Source="pack://application:,,,/icons/stride-browser-32x32.png"
-                           Width="14" Height="14" Opacity="0.3"
+                           Width="14" Height="14"
                            RenderOptions.BitmapScalingMode="HighQuality"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center" x:Name="DefaultIcon">
@@ -91,6 +91,18 @@
                                 </Style.Triggers>
                             </Style>
                         </Image.Style>
+                        <Image.Opacity>
+                            <MultiBinding Converter="{StaticResource TabOpacityConverter}">
+                                <Binding Path="IsActive"/>
+                                <Binding Path="IsHibernated"/>
+                                <Binding Path="IsSleeping"/>
+                                <Binding Path="DataContext.Settings.TabSleepOpacity" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                <Binding Path="DataContext.Settings.TabHibernationOpacity" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                <Binding Path="IsMouseOver" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                                <Binding Path="DataContext.Settings.TabSleepDimEnabled" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                <Binding Path="DataContext.Settings.TabHibernationDimEnabled" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                            </MultiBinding>
+                        </Image.Opacity>
                     </Image>
                     <!-- Actual favicon -->
                     <Image Source="{Binding Favicon}"

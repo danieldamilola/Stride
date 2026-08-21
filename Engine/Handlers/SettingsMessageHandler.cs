@@ -19,6 +19,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
 
     public event Action<string, string>? SettingChanged;
 
+    /// <summary>Initializes a new instance of the SettingsMessageHandler.</summary>
     public SettingsMessageHandler(TabEngine engine, BrowserSettings settings, ISettingsStore settingsStore, UpdateService updateService, TabHibernationManager hibernationManager)
     {
         _engine = engine;
@@ -28,6 +29,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         _hibernationManager = hibernationManager;
     }
 
+    /// <summary>Returns the message routes handled by this handler.</summary>
     public IEnumerable<MessageRoute> GetRoutes()
     {
         yield return MessageRoute.Prefix(WebMessagePrefix.Setting, HandleSetting);
@@ -44,6 +46,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         });
     }
 
+    /// <summary>Resets all settings to defaults and reloads the settings page.</summary>
     private Task HandleResetSettings()
     {
         var keepOnboarding = _settings.HasCompletedOnboarding;
@@ -58,6 +61,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         return Task.CompletedTask;
     }
 
+    /// <summary>Opens the user backgrounds folder in the file explorer.</summary>
     private Task HandleOpenBackgroundsFolder()
     {
         var userBgFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
@@ -68,6 +72,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         return Task.CompletedTask;
     }
 
+    /// <summary>Handles a setting change message from the settings page.</summary>
     private async Task HandleSetting(string payload)
     {
         var parts = payload.Split(':', 2);

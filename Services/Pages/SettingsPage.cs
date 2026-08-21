@@ -8,6 +8,7 @@ namespace StrideBrowser.Services.Pages;
 /// <summary>Generates the settings page HTML.</summary>
 public sealed class SettingsPage
 {
+    /// <summary>Renders the settings HTML with current values and IPC token.</summary>
     public string Render(BrowserSettings settings, string ipcToken)
     {
         static string SelStr(string current, string value) =>
@@ -121,6 +122,7 @@ public sealed class SettingsPage
             });
     }
 
+    /// <summary>Builds the keyboard shortcuts HTML section.</summary>
     private static string BuildShortcutsHtml(Dictionary<string, string> customShortcuts)
     {
         var sb = new StringBuilder();
@@ -172,12 +174,14 @@ public sealed class SettingsPage
         return sb.ToString();
     }
 
+    /// <summary>Formats a shortcut combo for display.</summary>
     private static string FormatComboDisplay(string combo)
     {
         // "Ctrl+Shift+T" → "Ctrl + Shift + T"
         return combo.Replace("+", " + ");
     }
 
+    /// <summary>Converts a hex color to an RGB string.</summary>
     private static string HexToRgb(string hex)
     {
         hex = hex.TrimStart('#');
