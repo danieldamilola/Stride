@@ -4,7 +4,7 @@
   --reader-fg: #1a1a1a;
   --reader-muted: #6b7280;
   --reader-border: #e5e7eb;
-  --reader-link: #7fb89a;
+  --reader-link: #2e6f4e;
 }
 @media (prefers-color-scheme: dark) {
   :root {
