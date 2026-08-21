@@ -252,6 +252,7 @@ public sealed class TabEngine : IDisposable
             if (_webViews.TryGetValue(tab.Id, out var existing) && existing.CoreWebView2 is not null)
                 existing.CoreWebView2.Resume();
 
+            tab.IsSleeping = false;
             ShowOnlyActiveWebView(tab);
             tab.LastActiveTime = DateTime.UtcNow;
             _hibernationManager.SuspendBackgroundTabs(tab);
@@ -496,6 +497,7 @@ public sealed class TabEngine : IDisposable
 
         _webViews[tab.Id] = wv;
         tab.IsHibernated = false;
+        tab.IsSleeping = false;
 
         _webViewFactory.NavigateInitialUrl(wv, tab);
     }
@@ -756,6 +758,7 @@ public sealed class TabEngine : IDisposable
 
                     TeardownWebView(tab.Id);
                     tab.IsHibernated = true;
+                    tab.IsSleeping = false;
                     tab.IsLoading = false;
                     if (!tab.Title.StartsWith("[Crashed] ", StringComparison.Ordinal))
                         tab.Title = $"[Crashed] {tab.Title}";

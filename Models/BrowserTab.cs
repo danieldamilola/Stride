@@ -37,6 +37,13 @@ public sealed partial class BrowserTab : ObservableObject
     [ObservableProperty]
     private bool _isHibernated;
 
+    /// <summary>
+    /// Whether this tab has been suspended via TabSleep to save CPU.
+    /// Distinct from hibernation which tears down the WebView.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isSleeping;
+
     /// <summary>True while navigation is in progress.</summary>
     [ObservableProperty]
     private bool _isLoading;

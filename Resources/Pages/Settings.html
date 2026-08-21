@@ -371,6 +371,19 @@
           sw.classList.toggle("active", sw.dataset.color === hex);
         });
       }
+      function updateOpacity(key, el, labelId) {
+        var pct = Math.round(parseFloat(el.value) * 100);
+        document.getElementById(labelId).textContent = pct + '%';
+        window.chrome.webview.postMessage(__T + "setting:" + key + ":" + el.value);
+      }
+      function toggleDim(key, el, sliderId) {
+        window.chrome.webview.postMessage(__T + "setting:" + key + ":" + el.checked);
+        var slider = document.getElementById(sliderId);
+        var label = document.getElementById(sliderId + 'Val');
+        if (slider) slider.disabled = !el.checked;
+        if (label) label.style.opacity = el.checked ? '1' : '0.4';
+        if (slider) slider.style.opacity = el.checked ? '1' : '0.4';
+      }
       // ── Shortcut recording ──
       var activeRecorder = null;
 
@@ -598,6 +611,24 @@
           activateTab(savedTab);
         } else if (navItems.length > 0) {
           activateTab(navItems[0].dataset.target);
+        }
+
+        // Init dim sliders disabled state
+        var sleepDimChk = document.querySelector('input[onchange*="tabSleepDim"]');
+        var hibDimChk = document.querySelector('input[onchange*="tabHibernationDim"]');
+        var sleepSlider = document.getElementById('sleepSlider');
+        var hibSlider = document.getElementById('hibSlider');
+        if (sleepDimChk && sleepSlider) {
+          sleepSlider.disabled = !sleepDimChk.checked;
+          sleepSlider.style.opacity = sleepDimChk.checked ? '1' : '0.4';
+          var lbl = document.getElementById('sleepSliderVal');
+          if (lbl) lbl.style.opacity = sleepDimChk.checked ? '1' : '0.4';
+        }
+        if (hibDimChk && hibSlider) {
+          hibSlider.disabled = !hibDimChk.checked;
+          hibSlider.style.opacity = hibDimChk.checked ? '1' : '0.4';
+          var lbl2 = document.getElementById('hibSliderVal');
+          if (lbl2) lbl2.style.opacity = hibDimChk.checked ? '1' : '0.4';
         }
       });
     </script>
@@ -1016,6 +1047,47 @@
                 </div>
                 <div class="setting-control">
                   <input type="checkbox" class="toggle" {{CHK_TAB_SLEEP}} onchange="s('tabSleep', this)" />
+                </div>
+              </div>
+            </div>
+            <div class="section-header" style="margin-top:20px;">Tab appearance</div>
+            <div class="card">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Dim sleeping tabs</div>
+                  <div class="setting-desc">Fade icons for suspended background tabs</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_TAB_SLEEP_DIM}} onchange="toggleDim('tabSleepDim', this, 'sleepSlider')" />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Sleeping tab opacity</div>
+                  <div class="setting-desc">Dim level for suspended background tabs</div>
+                </div>
+                <div class="setting-control" style="display:flex;align-items:center;gap:10px">
+                  <input id="sleepSlider" type="range" min="0.1" max="1" step="0.05" value="{{TAB_SLEEP_OPACITY}}" oninput="updateOpacity('tabSleepOpacity', this, 'sleepSliderVal')" style="width:120px;accent-color:var(--accent)" />
+                  <span id="sleepSliderVal" style="font-size:12px;color:var(--text-muted);min-width:32px">{{TAB_SLEEP_OPACITY_PCT}}%</span>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Dim hibernated tabs</div>
+                  <div class="setting-desc">Fade icons for unloaded tabs</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_TAB_HIBERNATION_DIM}} onchange="toggleDim('tabHibernationDim', this, 'hibSlider')" />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Hibernated tab opacity</div>
+                  <div class="setting-desc">Dim level for unloaded tabs</div>
+                </div>
+                <div class="setting-control" style="display:flex;align-items:center;gap:10px">
+                  <input id="hibSlider" type="range" min="0.1" max="1" step="0.05" value="{{TAB_HIBERNATION_OPACITY}}" oninput="updateOpacity('tabHibernationOpacity', this, 'hibSliderVal')" style="width:120px;accent-color:var(--accent)" />
+                  <span id="hibSliderVal" style="font-size:12px;color:var(--text-muted);min-width:32px">{{TAB_HIBERNATION_OPACITY_PCT}}%</span>
                 </div>
               </div>
             </div>

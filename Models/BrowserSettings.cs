@@ -63,6 +63,18 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _tabSleepEnabled = true;
 
     [ObservableProperty]
+    private double _tabSleepOpacity = 0.55;
+
+    [ObservableProperty]
+    private double _tabHibernationOpacity = 0.15;
+
+    [ObservableProperty]
+    private bool _tabSleepDimEnabled = true;
+
+    [ObservableProperty]
+    private bool _tabHibernationDimEnabled = true;
+
+    [ObservableProperty]
     private bool _autoCheckForUpdates = true;
 
     [ObservableProperty]
@@ -221,6 +233,10 @@ public sealed partial class BrowserSettings : ObservableObject
         BlockDuplicateTabs = d.BlockDuplicateTabs;
         TabHibernationEnabled = d.TabHibernationEnabled;
         TabSleepEnabled = d.TabSleepEnabled;
+        TabSleepOpacity = d.TabSleepOpacity;
+        TabHibernationOpacity = d.TabHibernationOpacity;
+        TabSleepDimEnabled = d.TabSleepDimEnabled;
+        TabHibernationDimEnabled = d.TabHibernationDimEnabled;
         AutoCheckForUpdates = d.AutoCheckForUpdates;
         UseFloatingCommandBar = d.UseFloatingCommandBar;
         IsSidebarPinned = d.IsSidebarPinned;

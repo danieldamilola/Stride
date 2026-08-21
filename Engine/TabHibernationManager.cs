@@ -60,7 +60,12 @@ public sealed class TabHibernationManager
     public void SuspendBackgroundTabs(BrowserTab activeTab)
     {
         if (!_settings.TabSleepEnabled) return;
-        if (_getWebViews is null) return;
+        if (_getWebViews is null || _getTabs is null) return;
+
+        // Clear sleeping flag for the active tab on resume.
+        activeTab.IsSleeping = false;
+
+        var tabsById = _getTabs().ToDictionary(t => t.Id);
         foreach (var (id, wv) in _getWebViews())
         {
             if (id == activeTab.Id) continue;
@@ -84,8 +89,18 @@ public sealed class TabHibernationManager
                 continue;
             }
 
+            if (tabsById.TryGetValue(id, out var tab) && !tab.IsHibernated)
+                tab.IsSleeping = true;
+
             _ = TrySuspendSafeAsync(core, id);
         }
+    }
+
+    public void ClearSleepingState()
+    {
+        if (_getTabs is null) return;
+        foreach (var tab in _getTabs())
+            tab.IsSleeping = false;
     }
 
     private static async Task TrySuspendSafeAsync(dynamic core, Guid tabId)
@@ -148,6 +163,7 @@ public sealed class TabHibernationManager
         
         _teardownWebView(tab.Id);
         tab.IsHibernated = true;
+        tab.IsSleeping = false;
     }
 
     private void HibernateInactiveTabs()

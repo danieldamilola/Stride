@@ -15,15 +15,17 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
     private readonly BrowserSettings _settings;
     private readonly ISettingsStore _settingsStore;
     private readonly UpdateService _updateService;
+    private readonly TabHibernationManager _hibernationManager;
 
     public event Action<string, string>? SettingChanged;
 
-    public SettingsMessageHandler(TabEngine engine, BrowserSettings settings, ISettingsStore settingsStore, UpdateService updateService)
+    public SettingsMessageHandler(TabEngine engine, BrowserSettings settings, ISettingsStore settingsStore, UpdateService updateService, TabHibernationManager hibernationManager)
     {
         _engine = engine;
         _settings = settings;
         _settingsStore = settingsStore;
         _updateService = updateService;
+        _hibernationManager = hibernationManager;
     }
 
     public IEnumerable<MessageRoute> GetRoutes()
@@ -104,6 +106,9 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         _settingsStore.Save(_settings);
         SettingChanged?.Invoke(key, value);
 
+        if (key == "tabSleep" && value == "false")
+            _hibernationManager.ClearSleepingState();
+
         // Live-reload: re-inject unhook script into YouTube tabs when settings change
         if (key.StartsWith("unhook", StringComparison.Ordinal))
             await _engine.ReInjectUnhookAsync();
@@ -127,6 +132,10 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         ["blockDupes"] = (s, v) => s.BlockDuplicateTabs = v == "true",
         ["tabHibernation"] = (s, v) => s.TabHibernationEnabled = v == "true",
         ["tabSleep"] = (s, v) => s.TabSleepEnabled = v == "true",
+        ["tabSleepOpacity"] = (s, v) => { if (double.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out var o)) s.TabSleepOpacity = Math.Clamp(o, 0.1, 1.0); },
+        ["tabHibernationOpacity"] = (s, v) => { if (double.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out var o)) s.TabHibernationOpacity = Math.Clamp(o, 0.1, 1.0); },
+        ["tabSleepDim"] = (s, v) => s.TabSleepDimEnabled = v == "true",
+        ["tabHibernationDim"] = (s, v) => s.TabHibernationDimEnabled = v == "true",
         ["sidebarPosition"] = (s, v) => s.IsSidebarOnRight = v == "right",
         ["addressBarOnLeft"] = (s, v) => s.AddressBarOnLeft = v == "true",
         ["showTabNames"] = (s, v) => s.ShowTabNames = v == "true",
