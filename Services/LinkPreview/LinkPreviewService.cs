@@ -122,7 +122,8 @@ public sealed class LinkPreviewService : ILinkPreviewService
 
     public void UpdatePreviewSize(Size size)
     {
-        if (double.IsNaN(size.Width) || double.IsNaN(size.Height)) return;
+        if (double.IsNaN(size.Width) || double.IsNaN(size.Height) ||
+            double.IsInfinity(size.Width) || double.IsInfinity(size.Height)) return;
         if (size.Width < 360 || size.Height < 240) return;
         _current = _current with { Size = size };
         StateChanged?.Invoke(_current);

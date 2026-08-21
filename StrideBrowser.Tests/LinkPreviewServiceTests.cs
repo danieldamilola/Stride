@@ -198,6 +198,20 @@ public sealed class LinkPreviewServiceTests
     }
 
     [Fact]
+    public void UpdatePreviewSize_RejectsInfinity()
+    {
+        var svc = CreateService();
+        svc.RequestPeek(Guid.NewGuid(), "https://example.com", new Rect(10, 10, 100, 20), LinkPreviewTrigger.AltPress, "https://current.com");
+        var before = svc.Current.Size;
+        var fired = 0;
+        svc.StateChanged += _ => fired++;
+        svc.UpdatePreviewSize(new Size(double.PositiveInfinity, 400));
+        svc.UpdatePreviewSize(new Size(500, double.PositiveInfinity));
+        Assert.Equal(before, svc.Current.Size);
+        Assert.Equal(0, fired);
+    }
+
+    [Fact]
     public void UpdatePreviewSize_AcceptsValidSizeAndFiresStateChanged()
     {
         var svc = CreateService();
