@@ -1,4 +1,4 @@
-# T&C Lens AI — Architecture Plan
+﻿# T&C Lens AI - Architecture Plan
 
 Credit-based. No subscriptions. No plans. Buy credits, use credits.
 
@@ -24,8 +24,8 @@ That's the entire product.
 | Value | $5 | 75 | $0.07 |
 | Bulk | $10 | 200 | $0.05 |
 
-> Your cost per analysis (DeepSeek V4 Flash — $0.14/M input, $0.28/M output): **~$0.002**. Margin: **95%+**.
-> 1M token context window — handles even the longest legal documents without truncation.
+> Your cost per analysis (DeepSeek V4 Flash - $0.14/M input, $0.28/M output): **~$0.002**. Margin: **95%+**.
+> 1M token context window - handles even the longest legal documents without truncation.
 > Users get **1 free credit** on signup. No free tier beyond that.
 
 ### Your Profit (after Stripe fees + DeepSeek cost)
@@ -62,7 +62,7 @@ Extension                          Backend (Vercel)
 
 ---
 
-## Database — 2 tables
+## Database - 2 tables
 
 ```sql
 -- User profiles (extends Supabase Auth)
@@ -86,7 +86,7 @@ CREATE TABLE public.payments (
 
 ---
 
-## API — 6 endpoints
+## API - 6 endpoints
 
 | Method | Path | Auth? | What it does |
 |--------|------|-------|-------------|
@@ -101,7 +101,7 @@ CREATE TABLE public.payments (
 
 ---
 
-## Backend Files — 10 total
+## Backend Files - 10 total
 
 ```
 server/
@@ -133,12 +133,12 @@ server/
 
 ---
 
-## Extension Changes — 9 files
+## Extension Changes - 9 files
 
 | File | Action | What |
 |------|--------|------|
 | `lib/providers.js` | MODIFY | Remove `comingSoon`, add `tc-lens-api.vercel.app` config |
-| `lib/ai-client.js` | MODIFY | Add `analyzeWithTCLens()` — sends JWT + text to backend |
+| `lib/ai-client.js` | MODIFY | Add `analyzeWithTCLens()` - sends JWT + text to backend |
 | `lib/storage.js` | MODIFY | Add `tclensToken`, `tclensEmail`, `tclensCredits` |
 | `options/auth.js` | NEW | Login, signup, logout functions (~80 lines) |
 | `options/options.html` | MODIFY | Replace coming-soon banner → login form + account card |
@@ -184,7 +184,7 @@ server/
 │  You're out of credits.             │
 │  Buy more to continue analyzing.    │
 │                                     │
-│  [BUY 25 CREDITS — $2]             │
+│  [BUY 25 CREDITS - $2]             │
 └─────────────────────────────────────┘
 ```
 
@@ -214,3 +214,4 @@ server/
 | 6 | Extension analyze flow (tclens handler) | 1 hour |
 | 7 | Deploy to Vercel + test | 1 hour |
 | **Total** | | **~9.5 hours** |
+

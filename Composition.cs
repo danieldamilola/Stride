@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using StrideBrowser.Engine;
 using StrideBrowser.Engine.Handlers;
 using StrideBrowser.Models;
@@ -8,7 +8,7 @@ using StrideBrowser.ViewModels;
 namespace StrideBrowser;
 
 /// <summary>
-/// Composition root — registers all services into the DI container.
+/// Composition root - registers all services into the DI container.
 /// Called once at startup from App.xaml.cs.
 /// </summary>
 public static class Composition
@@ -28,7 +28,7 @@ public static class Composition
         services.AddSingleton<ISettingsStore>(settingsStore);
         services.AddSingleton(settings);
 
-        // Services — registered by interface and concrete type
+        // Services - registered by interface and concrete type
         services.AddSingleton<NavigationService>();
         services.AddSingleton<FaviconLoader>();
         services.AddSingleton<HistoryStore>();
@@ -114,3 +114,4 @@ public static class Composition
         return sp;
     }
 }
+

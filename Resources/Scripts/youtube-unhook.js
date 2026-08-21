@@ -1,4 +1,4 @@
-// Stride Browser — YouTube Unhook
+﻿// Stride Browser - YouTube Unhook
 // CSS class-toggle pattern inspired by unhookng (github.com/TheArchons/unhookng).
 // Reads window.__STRIDE_UNHOOK config injected by C#.
 // Toggles classes on <html> to gate pre-written CSS rules.
@@ -16,7 +16,7 @@
     console.log('[STRIDE UNHOOK] Script running. Config:', JSON.stringify(cfg));
     console.log('[STRIDE UNHOOK] document.documentElement:', document.documentElement?.tagName);
 
-    // ── Static CSS — all rules pre-written, gated by html.stride-unhook-* classes ──
+    // ── Static CSS - all rules pre-written, gated by html.stride-unhook-* classes ──
     var CSS = [
         // ─ Home Feed ─
         'html.stride-unhook-homeFeed ytd-browse[page-subtype="home"] ytd-rich-grid-renderer { display:none!important }',
@@ -146,7 +146,7 @@
     function injectStyleSheet() {
         if (document.getElementById('__stride_unhook')) return;
         var target = document.head || document.documentElement;
-        if (!target) return; // safety — will retry via DOMContentLoaded
+        if (!target) return; // safety - will retry via DOMContentLoaded
         var style = document.createElement('style');
         style.id = '__stride_unhook';
         style.textContent = CSS;
@@ -189,7 +189,7 @@
 
     // ── JS-only actions (can't be done with CSS) ─────────────────────
     function runJsActions() {
-        // "More from YouTube" section — text-based match
+        // "More from YouTube" section - text-based match
         if (cfg.moreYT) {
             var sections = document.querySelectorAll('ytd-guide-section-renderer');
             for (var i = 0; i < sections.length; i++) {
@@ -293,3 +293,4 @@
         boot();
     }
 })();
+

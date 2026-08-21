@@ -1,4 +1,4 @@
-# T&C Lens — Design System
+﻿# T&C Lens - Design System
 
 This document captures the complete design language used in T&C Lens across both the **Browser Extension** and the **Web App (Landing Page & Dashboard)**. Use it as a foundation for all future features and components.
 
@@ -6,7 +6,7 @@ This document captures the complete design language used in T&C Lens across both
 
 ## Philosophy
 
-The design is **editorial, highly technical, and minimal**. Inspired by tools like Linear, Stripe, and Vercel — it favours clarity over decoration. No gradients, no soft drop-shadows, no rounded cards. Everything is either a razor-thin line, a solid block, or a monospace text label. The UI stays out of the way and lets the content breathe.
+The design is **editorial, highly technical, and minimal**. Inspired by tools like Linear, Stripe, and Vercel - it favours clarity over decoration. No gradients, no soft drop-shadows, no rounded cards. Everything is either a razor-thin line, a solid block, or a monospace text label. The UI stays out of the way and lets the content breathe.
 
 Key principles:
 - **Strict 2-colour foundation.** Near-black background (`#0e0e0e`), off-white foreground (`#eff2f1`). Nothing else is coloured except a single amber accent (`#d99b36`) for warnings or highlights.
@@ -18,11 +18,11 @@ Key principles:
 
 ## Colour Tokens
 
-Defined in `:root` as CSS custom properties. Do not hardcode any value — always reference a token.
+Defined in `:root` as CSS custom properties. Do not hardcode any value - always reference a token.
 
 ```css
 :root {
-  --bg:          #0e0e0e;  /* Page background — near-black */
+  --bg:          #0e0e0e;  /* Page background - near-black */
   --surface:     #161616;  /* Elevated surface 1 (panels, inputs) */
   --surface-2:   #171b1d;  /* Elevated surface 2 (hover states, heavy cards) */
   
@@ -59,10 +59,10 @@ Defined in `:root` as CSS custom properties. Do not hardcode any value — alway
 
 ### Hierarchy Rules
 
-Use `letter-spacing` and `text-transform: uppercase` to create category labels — not a larger font size.
+Use `letter-spacing` and `text-transform: uppercase` to create category labels - not a larger font size.
 
 ```css
-/* Label / category style — used heavily in the dashboard and nav */
+/* Label / category style - used heavily in the dashboard and nav */
 font-family: var(--mono);
 font-size: var(--text-xs);
 letter-spacing: 0.1em;
@@ -137,7 +137,7 @@ transition: opacity 0.1s;
 border: none;
 cursor: pointer;
 ```
-**Hover:** `opacity: 0.8` — a subtle fade, not a colour change.
+**Hover:** `opacity: 0.8` - a subtle fade, not a colour change.
 
 ### Ghost Link `.ghost-link`
 
@@ -169,7 +169,7 @@ The billing history page (`/dashboard/billing`) uses a simple flex-column list s
 
 ## Transitions & Animation
 
-All interactive transitions are **fast and functional** — never decorative:
+All interactive transitions are **fast and functional** - never decorative:
 
 | Purpose | Value |
 |---|---|
@@ -189,5 +189,6 @@ To keep future projects on-brand, avoid these:
 - ❌ `box-shadow` for elevation or depth
 - ❌ Rounded corners (`border-radius: 0` everywhere)
 - ❌ Multiple accent colours (stick to the core 2-colour palette + amber)
-- ❌ Dense padding — always give content room to breathe
+- ❌ Dense padding - always give content room to breathe
 - ❌ "Friendly" UI elements (keep it technical, raw, and editorial)
+

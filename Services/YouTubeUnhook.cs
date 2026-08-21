@@ -5,7 +5,7 @@ using StrideBrowser.Models;
 namespace StrideBrowser.Services;
 
 /// <summary>
-/// YouTube Unhook — hides distracting YouTube UI elements.
+/// YouTube Unhook - hides distracting YouTube UI elements.
 /// Injects a config object then the standalone unhook script.
 /// </summary>
 public sealed class YouTubeUnhook

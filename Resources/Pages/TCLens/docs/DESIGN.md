@@ -1,4 +1,4 @@
-# Design System: T&C Lens
+﻿# Design System: T&C Lens
 
 ## 1. Visual Theme & Atmosphere
 
@@ -6,21 +6,21 @@ T&C Lens now uses a forensic studio tone: cool slate surfaces, restrained asymme
 
 ## 2. Color Palette & Roles
 
-- **Ledger Canvas** (`#EEF2F4`) — Primary workspace background.
-- **Case Surface** (`#F8FAFB`) — Main panel surfaces and section fills.
-- **Paper White** (`#FFFFFF`) — Elevated cards and active containers.
-- **Charcoal Ink** (`#161A1F`) — Primary text and high-priority controls.
-- **Docket Gray** (`#64707D`) — Secondary copy, metadata, helper text.
-- **Rule Line** (`#CBD5DF`) — Structural borders and separators.
-- **Verdict Teal** (`#2B6C63`) — Single accent for active states, CTAs, focus, and key status chips.
+- **Ledger Canvas** (`#EEF2F4`) - Primary workspace background.
+- **Case Surface** (`#F8FAFB`) - Main panel surfaces and section fills.
+- **Paper White** (`#FFFFFF`) - Elevated cards and active containers.
+- **Charcoal Ink** (`#161A1F`) - Primary text and high-priority controls.
+- **Docket Gray** (`#64707D`) - Secondary copy, metadata, helper text.
+- **Rule Line** (`#CBD5DF`) - Structural borders and separators.
+- **Verdict Teal** (`#2B6C63`) - Single accent for active states, CTAs, focus, and key status chips.
 
 Dark theme maps to the same semantic roles with darker surfaces (`#11161C`, `#171E26`, `#1D2630`) and lighter ink (`#E6ECF2`) while preserving the same single accent.
 
 ## 3. Typography Rules
 
-- **Display:** Outfit / Satoshi / Geist fallback — tight tracking, medium-large scale, high clarity.
-- **Body:** Outfit / Satoshi / Geist fallback — readable paragraph rhythm, max 65ch.
-- **Mono:** JetBrains Mono / Geist Mono fallback — metadata, labels, scores, URLs, and timestamps.
+- **Display:** Outfit / Satoshi / Geist fallback - tight tracking, medium-large scale, high clarity.
+- **Body:** Outfit / Satoshi / Geist fallback - readable paragraph rhythm, max 65ch.
+- **Mono:** JetBrains Mono / Geist Mono fallback - metadata, labels, scores, URLs, and timestamps.
 - **Banned:** Inter, generic serif faces, pure black, neon/purple glows, oversized decorative gradients.
 
 ## 4. Component Stylings
@@ -52,3 +52,4 @@ Primary motion language is controlled sweep and subtle entry reveals. Use transf
 - No AI filler copy ("Elevate", "Seamless", "Unleash", "Next-Gen").
 - No overlapping content layers.
 - No custom mouse cursors.
+

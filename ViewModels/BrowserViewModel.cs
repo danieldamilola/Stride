@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +11,7 @@ namespace StrideBrowser.ViewModels;
 
 /// <summary>
 /// Thin coordinator between the UI and the engine/services.
-/// Contains NO business logic — only UI state and command routing.
+/// Contains NO business logic - only UI state and command routing.
 /// </summary>
 public sealed partial class BrowserViewModel : ObservableObject
 {
@@ -33,7 +33,7 @@ public sealed partial class BrowserViewModel : ObservableObject
     [ObservableProperty]
     private bool _showSuggestions;
 
-    /// <summary>True while the active tab is navigating — drives the address bar loading cues.</summary>
+    /// <summary>True while the active tab is navigating - drives the address bar loading cues.</summary>
     [ObservableProperty]
     private bool _isLoading;
 
@@ -216,3 +216,4 @@ public sealed partial class BrowserViewModel : ObservableObject
     [RelayCommand]
     private void Refresh() => _engine.Reload();
 }
+

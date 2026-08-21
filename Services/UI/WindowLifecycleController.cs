@@ -205,7 +205,7 @@ public sealed class WindowLifecycleController
                         await profile.ClearBrowsingDataAsync().WaitAsync(cts.Token);
                     }
                 }
-                catch { /* Timeout or disposal — best-effort cleanup */ }
+                catch { /* Timeout or disposal - best-effort cleanup */ }
             }
 
             _settingsStore.Save(_vm.Settings);

@@ -1,4 +1,4 @@
-# T&C Lens — Project Timeline
+﻿# T&C Lens - Project Timeline
 
 ## Overview
 
@@ -48,9 +48,9 @@ This timeline assumes a **solo developer** working on this as a school project, 
 
 | Task                                          | Duration  | Deliverable                                   |
 | --------------------------------------------- | --------- | --------------------------------------------- |
-| Write `lib/ai-client.js` — OpenAI provider    | 1.5 hours | OpenAI API implementation with error handling |
-| Write `lib/ai-client.js` — Anthropic provider | 1 hour    | Anthropic API implementation                  |
-| Write `lib/ai-client.js` — Gemini provider    | 1 hour    | Gemini API implementation                     |
+| Write `lib/ai-client.js` - OpenAI provider    | 1.5 hours | OpenAI API implementation with error handling |
+| Write `lib/ai-client.js` - Anthropic provider | 1 hour    | Anthropic API implementation                  |
+| Write `lib/ai-client.js` - Gemini provider    | 1 hour    | Gemini API implementation                     |
 | Write the system prompt                       | 1 hour    | Full prompt from AI_PROMPT.md                 |
 | **Test:** Send test prompt to each provider   | 1.5 hours | Verify all 3 providers return valid JSON      |
 
@@ -181,3 +181,4 @@ If the school requires a **report or documentation**, the `_docs/` folder alread
 5. **Testing:** Results from the testing plan
 6. **Challenges:** Document real problems faced and how they were solved
 7. **Future work:** The payment/backend system idea, multi-language support, etc.
+

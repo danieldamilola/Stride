@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 <img src="icons/icon128.png" width="80" alt="T&C Lens logo" />
 
@@ -15,30 +15,30 @@
 
 ---
 
-T&C Lens is a browser extension that reads the fine print so you don't have to. Point it at any Terms of Service, Privacy Policy, or legal agreement — it extracts the text, sends it to your AI provider of choice, and returns a plain-English summary with a risk score and finding-by-finding breakdown.
+T&C Lens is a browser extension that reads the fine print so you don't have to. Point it at any Terms of Service, Privacy Policy, or legal agreement - it extracts the text, sends it to your AI provider of choice, and returns a plain-English summary with a risk score and finding-by-finding breakdown.
 
 Bring your own API key. No account required. No data leaves your browser except the text sent to your chosen AI.
 
-<!-- Screenshots go here — replace with actual screenshots when available -->
+<!-- Screenshots go here - replace with actual screenshots when available -->
 <!-- <div align="center">
   <img src="docs/screenshots/dashboard.png" width="720" alt="T&C Lens dashboard" />
 </div> -->
 
 ## Highlights
 
-**Bring Your Own Key** — Works with 9 providers: Gemini, OpenAI, Anthropic, Groq, DeepSeek, Mistral, xAI, OpenRouter, and Together AI. Use free tiers or your existing API keys.
+**Bring Your Own Key** - Works with 9 providers: Gemini, OpenAI, Anthropic, Groq, DeepSeek, Mistral, xAI, OpenRouter, and Together AI. Use free tiers or your existing API keys.
 
-**Smart Extraction** — Intelligent scraper targets legal content specifically, filtering out navigation, headers, footers, and cookie banners.
+**Smart Extraction** - Intelligent scraper targets legal content specifically, filtering out navigation, headers, footers, and cookie banners.
 
-**Privacy-First** — No telemetry, no analytics, no data collection. Your API key stays in local storage. The only external request is the one you trigger to your chosen AI.
+**Privacy-First** - No telemetry, no analytics, no data collection. Your API key stays in local storage. The only external request is the one you trigger to your chosen AI.
 
-**On-Demand Only** — Fully passive. Does nothing in the background. Runs only when you click.
+**On-Demand Only** - Fully passive. Does nothing in the background. Runs only when you click.
 
-**Risk Scoring** — Every analysis gets a 0–100 risk score with high/medium/low importance findings, direct quotes, and actionable explanations.
+**Risk Scoring** - Every analysis gets a 0-100 risk score with high/medium/low importance findings, direct quotes, and actionable explanations.
 
-**History & Export** — Past analyses saved locally. Export any result as a `.txt` file.
+**History & Export** - Past analyses saved locally. Export any result as a `.txt` file.
 
-**Minimal, Dark UI** — Designed to feel like a premium developer tool. No clutter. No colors. Just information.
+**Minimal, Dark UI** - Designed to feel like a premium developer tool. No clutter. No colors. Just information.
 
 ## Quick Start
 
@@ -75,7 +75,7 @@ git clone https://github.com/danieldamilola/T-C.git
 ## Usage
 
 1. Navigate to any Terms of Service, Privacy Policy, or legal agreement
-2. Click the T&C Lens icon — or right-click → **Analyze with T&C Lens**
+2. Click the T&C Lens icon - or right-click → **Analyze with T&C Lens**
 3. Review the risk score, summary, and finding-by-finding breakdown
 4. Export or revisit past analyses from **History**
 
@@ -88,10 +88,10 @@ git clone https://github.com/danieldamilola/T-C.git
 | **DeepSeek** | ✅ | DeepSeek Chat, DeepSeek Reasoner |
 | **OpenRouter** | ✅ | Gemini, DeepSeek, Llama 3.3 70B |
 | **Together AI** | ✅ | Llama 3.3 70B, DeepSeek V3, Qwen 2.5 72B |
-| **Mistral** | — | Mistral Large, Mistral Small |
-| **OpenAI** | — | GPT-4o, GPT-4o Mini |
-| **Anthropic** | — | Claude Sonnet 4, Claude 3 Haiku |
-| **xAI** | — | Grok 3, Grok 3 Mini |
+| **Mistral** | - | Mistral Large, Mistral Small |
+| **OpenAI** | - | GPT-4o, GPT-4o Mini |
+| **Anthropic** | - | Claude Sonnet 4, Claude 3 Haiku |
+| **xAI** | - | Grok 3, Grok 3 Mini |
 
 ## Architecture
 
@@ -117,7 +117,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full data flow, message-passing d
 
 ## Tech Stack
 
-- **Runtime**: Vanilla HTML, CSS, JavaScript — zero dependencies
+- **Runtime**: Vanilla HTML, CSS, JavaScript - zero dependencies
 - **Extension**: Chrome Manifest V3 with Firefox compatibility
 - **Fonts**: Self-hosted Inter + JetBrains Mono (no CDN)
 - **Tooling**: ESLint for linting
@@ -125,7 +125,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full data flow, message-passing d
 
 ## Roadmap
 
-- [ ] **T&C Lens AI** — Hosted provider option (no API key needed)
+- [ ] **T&C Lens AI** - Hosted provider option (no API key needed)
 - [ ] Chrome Web Store listing
 - [ ] Firefox Add-ons listing
 - [ ] Screenshot & demo GIF for README
@@ -134,7 +134,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full data flow, message-passing d
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR — it covers code standards, the 300-line file limit, naming conventions, and the architectural rules.
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR - it covers code standards, the 300-line file limit, naming conventions, and the architectural rules.
 
 ```bash
 # Clone and install dev dependencies
@@ -157,3 +157,4 @@ npm run lint
 **[Report a bug](https://github.com/danieldamilola/T-C/issues)** · **[Request a feature](https://github.com/danieldamilola/T-C/issues)** · **[Star this project](https://github.com/danieldamilola/T-C)**
 
 </div>
+

@@ -1,4 +1,4 @@
-## .NET
+﻿## .NET
 bin/
 obj/
 **/bin/
@@ -35,8 +35,9 @@ nul
 Output/
 publish/
 
-## Logs (written to %LocalAppData%\StrideBrowser at runtime — never repo-local)
+## Logs (written to %LocalAppData%\StrideBrowser at runtime - never repo-local)
 *.log
 crash.log
 trace.log
 ipc_log.txt
+

@@ -1,4 +1,4 @@
-# T&C Lens — Testing Plan
+﻿# T&C Lens - Testing Plan
 
 ## Overview
 
@@ -6,7 +6,7 @@ T&C Lens is a vanilla JavaScript Chrome extension with no build step or test fra
 
 ## Testing Layers
 
-### Layer 1: Unit Tests (Optional — for parser and storage)
+### Layer 1: Unit Tests (Optional - for parser and storage)
 
 These components are pure functions with no Chrome API dependencies and can be tested in isolation.
 
@@ -25,7 +25,7 @@ These components are pure functions with no Chrome API dependencies and can be t
 | Missing quote field   | Finding without quote               | Sets quote to ""                   |
 | Invalid JSON          | "Not JSON at all"                   | Throws PARSE_ERROR                 |
 
-**Running parser tests:** Create a `test-parser.html` file that loads `parser.js` and runs assertions, displaying results in the browser. No test framework needed — a simple script that logs pass/fail for each case.
+**Running parser tests:** Create a `test-parser.html` file that loads `parser.js` and runs assertions, displaying results in the browser. No test framework needed - a simple script that logs pass/fail for each case.
 
 ### Layer 2: Integration Tests (Manual)
 
@@ -55,7 +55,7 @@ These test the extension's components working together. Performed by loading the
 9. Switch to Settings view again
 10. **Verify:** API key is masked, provider and model are correct
 
-#### Test 3: Full Analysis — Happy Path
+#### Test 3: Full Analysis - Happy Path
 
 1. Navigate to `https://policies.google.com/privacy` in one tab
 2. Click the T&C Lens toolbar icon
@@ -72,7 +72,7 @@ These test the extension's components working together. Performed by loading the
 13. **Verify:** Clicking "Back" returns to dashboard
 14. **Verify:** Toolbar badge shows the risk score number
 
-#### Test 4: Gatekeeper — Non-T&C Page
+#### Test 4: Gatekeeper - Non-T&C Page
 
 1. Navigate to `https://example.com` (a simple non-T&C page)
 2. Click the T&C Lens icon
@@ -135,7 +135,7 @@ While T&C Lens targets Chrome, Manifest V3 is supported by other Chromium-based 
 | Google Chrome  | **Must pass** | Primary target                                           |
 | Microsoft Edge | Recommended   | Uses same extension APIs                                 |
 | Brave          | Recommended   | May have stricter privacy defaults                       |
-| Firefox        | Low priority  | Firefox uses Manifest V2/V3 hybrid — may need adaptation |
+| Firefox        | Low priority  | Firefox uses Manifest V2/V3 hybrid - may need adaptation |
 
 ### Layer 4: Performance Testing
 
@@ -154,11 +154,11 @@ While T&C Lens targets Chrome, Manifest V3 is supported by other Chromium-based 
 
 | Check                                            | Verification Method                                                                   |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| API key not visible in network tab of target tab | Analyze a page → check Network tab on original tab — no API calls should appear there |
+| API key not visible in network tab of target tab | Analyze a page → check Network tab on original tab - no API calls should appear there |
 | API key encrypted on disk                        | Check Chrome profile → Local Extension Settings → verify data is not plain text       |
 | No external requests except AI API               | Analyze with DevTools Network tab open → verify only AI API endpoint is called        |
 | Content script doesn't modify DOM                | Inspect the target page after analysis → no elements added/modified                   |
-| Extension doesn't run on pages unless activated  | Check background service worker status before clicking icon — should be idle          |
+| Extension doesn't run on pages unless activated  | Check background service worker status before clicking icon - should be idle          |
 
 ## Pre-Release Checklist
 
@@ -177,3 +177,4 @@ Before publishing or submitting:
 - [ ] File structure matches the README listing
 - [ ] All files referenced in manifest.json exist
 - [ ] Storage migration code runs without errors on fresh install
+

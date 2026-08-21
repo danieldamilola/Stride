@@ -9,7 +9,7 @@ using Microsoft.Web.WebView2.Core;
 namespace StrideBrowser.Engine;
 
 /// <summary>
-/// Network-level ad blocking — cancels known ad-serving requests before they load.
+/// Network-level ad blocking - cancels known ad-serving requests before they load.
 /// Downloads and caches a comprehensive blocklist (e.g. Peter Lowe's) for robust blocking.
 /// </summary>
 public static class AdBlockFilter

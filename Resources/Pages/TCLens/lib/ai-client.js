@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file ai-client.js
  * @description Provider-agnostic AI API wrapper for T&C Lens.
  * @module lib/ai-client
@@ -138,7 +138,7 @@ export async function listAvailableModels(provider, apiKey) {
 /**
  * Prepare page text for the selected model context window.
  *
- * Keeps the beginning of the document — where definitions, scope, and the
+ * Keeps the beginning of the document - where definitions, scope, and the
  * most important clauses typically appear in legal agreements.
  *
  * @param {string} rawText - Raw extracted page text.
@@ -151,7 +151,7 @@ export function prepareTextForAI(rawText, maxTokens = 8000) {
   const wasTruncated = text.length > maxChars;
 
   const prepared = wasTruncated
-    ? `${text.slice(0, maxChars)}\n\n[Note: Document was truncated — ${Math.round(text.length / 1000)}k characters total, showing first ${Math.round(maxChars / 1000)}k.]`
+    ? `${text.slice(0, maxChars)}\n\n[Note: Document was truncated - ${Math.round(text.length / 1000)}k characters total, showing first ${Math.round(maxChars / 1000)}k.]`
     : text;
 
   return { text: prepared, wasTruncated };
@@ -457,3 +457,4 @@ async function getErrorDetails(response) {
 }
 
 export { TCLError };
+

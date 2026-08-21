@@ -1,4 +1,4 @@
-# T&C Lens — Deployment & Publishing
+﻿# T&C Lens - Deployment & Publishing
 
 ## Overview
 
@@ -41,11 +41,11 @@ This guide covers preparing T&C Lens for distribution via the Chrome Web Store a
 
 ### Screenshots to Capture
 
-1. **Dashboard view** — Showing the target page URL, status, and analyze button
-2. **Analysis results** — Showing the risk score, summary, and categorized findings
-3. **Settings page** — Showing the API key input, provider selection, and model picker
-4. **Gatekeeper rejection** — Showing the "not a T&C page" message
-5. **Badge display** — Showing the colored badge on the toolbar icon
+1. **Dashboard view** - Showing the target page URL, status, and analyze button
+2. **Analysis results** - Showing the risk score, summary, and categorized findings
+3. **Settings page** - Showing the API key input, provider selection, and model picker
+4. **Gatekeeper rejection** - Showing the "not a T&C page" message
+5. **Badge display** - Showing the colored badge on the toolbar icon
 
 Take screenshots at 1280x800 PNG for the best quality. Use a clean browser theme (default Chrome theme) without other extensions visible in the toolbar.
 
@@ -61,14 +61,14 @@ Take screenshots at 1280x800 PNG for the best quality. Use a clean browser theme
 ### Step 2: Create Listing
 
 1. Click "New Item" on the dashboard
-2. Upload the extension `.zip` file (NOT the source folder — zip it first)
+2. Upload the extension `.zip` file (NOT the source folder - zip it first)
 3. Fill in the listing details:
    - **Name:** T&C Lens
    - **Summary:** AI-powered Terms & Conditions analyzer. Categorize legal agreements by importance.
    - **Description:** Detailed description covering features, how it works, supported providers, and privacy approach
    - **Category:** Productivity
    - **Language:** English
-   - **Privacy:** Be transparent — "This extension does not collect any user data. All data is stored locally in the browser."
+   - **Privacy:** Be transparent - "This extension does not collect any user data. All data is stored locally in the browser."
 
 ### Step 3: Privacy Practices Declaration
 
@@ -78,8 +78,8 @@ Chrome Web Store requires a privacy practices disclosure. For T&C Lens:
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Does this extension collect user data?                 | **No**                                                                                                                               |
 | Does this extension use cookies?                       | **No**                                                                                                                               |
-| Does this extension use Google APIs?                   | **Yes** — Only if the user selects Gemini as their provider. The extension does not use Google APIs on its own.                      |
-| Does this extension handle personal or sensitive data? | **No** — The extension only sends page text to the user's chosen AI provider. It does not process, store, or transmit personal data. |
+| Does this extension use Google APIs?                   | **Yes** - Only if the user selects Gemini as their provider. The extension does not use Google APIs on its own.                      |
+| Does this extension handle personal or sensitive data? | **No** - The extension only sends page text to the user's chosen AI provider. It does not process, store, or transmit personal data. |
 | Does this extension use third-party analytics?         | **No**                                                                                                                               |
 
 ### Step 4: Upload & Submit
@@ -213,10 +213,11 @@ When pushing updates:
 3. If side-loaded, users need to re-download and re-load the unpacked extension
 4. Run storage migration code if the data model changed
 
-### Analytics (Future — Not in V1)
+### Analytics (Future - Not in V1)
 
 If you want to understand how the extension is being used (after adding a backend):
 
 - Track: number of analyses per day, most common providers, average page length
 - Don't track: which URLs users analyze (privacy concern), API keys, personal data
 - Use a privacy-respecting analytics approach (e.g., Plausible, Umami)
+

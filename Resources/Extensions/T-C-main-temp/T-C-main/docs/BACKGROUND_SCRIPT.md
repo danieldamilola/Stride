@@ -1,4 +1,4 @@
-# T&C Lens — Background Service Worker
+﻿# T&C Lens - Background Service Worker
 
 ## Role
 
@@ -40,7 +40,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 **Why store the tab ID:** The options page opens in a new tab and has no way to know which tab the user came from. By storing it in `chrome.storage.local`, the options page can retrieve it on load and use it to communicate with the correct content script.
 
-**Edge case — multiple rapid clicks:** If the user clicks the icon multiple times quickly, multiple options tabs could open, all pointing to the same `targetTabId`. This is acceptable behavior — each tab will function independently. If this becomes a problem, we can add a check: before opening a new tab, see if an options tab already exists and focus it instead.
+**Edge case - multiple rapid clicks:** If the user clicks the icon multiple times quickly, multiple options tabs could open, all pointing to the same `targetTabId`. This is acceptable behavior - each tab will function independently. If this becomes a problem, we can add a check: before opening a new tab, see if an options tab already exists and focus it instead.
 
 ### 2. Message Handler (Main Relay)
 
@@ -138,11 +138,11 @@ async function setBadge(tabId, score) {
     // Determine badge color based on score
     let color;
     if (score >= 70) {
-      color = "#DC2626"; // Red — high risk
+      color = "#DC2626"; // Red - high risk
     } else if (score >= 40) {
-      color = "#F59E0B"; // Amber — medium risk
+      color = "#F59E0B"; // Amber - medium risk
     } else {
-      color = "#10B981"; // Green — low risk
+      color = "#10B981"; // Green - low risk
     }
 
     await chrome.action.setBadgeText({
@@ -157,7 +157,7 @@ async function setBadge(tabId, score) {
 
     return { success: true };
   } catch (error) {
-    // Badge update failure is non-critical — don't block the user
+    // Badge update failure is non-critical - don't block the user
     console.warn("Badge update failed:", error.message);
     return { error: error.message };
   }
@@ -168,9 +168,9 @@ async function setBadge(tabId, score) {
 
 | Score Range | Badge Color     | Meaning                                 |
 | ----------- | --------------- | --------------------------------------- |
-| 0-39        | Green (#10B981) | Low risk — T&C page is mostly benign    |
-| 40-69       | Amber (#F59E0B) | Medium risk — some concerning clauses   |
-| 70-100      | Red (#DC2626)   | High risk — significant red flags found |
+| 0-39        | Green (#10B981) | Low risk - T&C page is mostly benign    |
+| 40-69       | Amber (#F59E0B) | Medium risk - some concerning clauses   |
+| 70-100      | Red (#DC2626)   | High risk - significant red flags found |
 
 **Why badge updates go through the background:** The `chrome.action.setBadgeText` and `setBadgeBackgroundColor` APIs can be called from the options page directly (it's an extension page with access to `chrome.action`). However, routing through the background keeps the badge logic centralized and consistent. If we later need to add tab-specific badge logic, it's already in the right place.
 
@@ -179,7 +179,7 @@ async function setBadge(tabId, score) {
 ## Complete Code Structure
 
 ```javascript
-// background.js — T&C Lens Service Worker
+// background.js - T&C Lens Service Worker
 
 // Handle toolbar icon clicks
 chrome.action.onClicked.addListener(async (tab) => {
@@ -276,3 +276,4 @@ Manual testing steps:
 8. Go back to the options tab and click "Analyze"
 9. **Verify:** DevTools Console in the original tab shows the content script logging text extraction
 10. After analysis completes, **verify:** the toolbar icon shows a badge with the score and appropriate color
+

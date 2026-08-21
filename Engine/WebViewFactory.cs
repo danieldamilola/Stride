@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -75,7 +75,7 @@ public sealed class WebViewFactory
     /// - SmartScreen is ON by default. Disabling it via setting appends the disable flag.
     ///   Note: this flag is read at environment creation, so toggling requires a restart.
     /// - ForceDarkMode uses Chromium's native WebContentsForceDark engine.
-    ///   Also read at environment creation — toggling requires a restart.
+    ///   Also read at environment creation - toggling requires a restart.
     /// </summary>
     public static string BuildBrowserArguments(bool smartScreenEnabled, bool forceDarkMode = false)
     {
@@ -173,7 +173,7 @@ public sealed class WebViewFactory
     public void NavigateInitialUrl(dynamic wv, BrowserTab tab)
     {
         // Settings/OneTab/History/Downloads/Onboarding are navigated by the NavigateTo*
-        // calls after activation — skip here to avoid a double load.
+        // calls after activation - skip here to avoid a double load.
         var callerManagedUrls = new System.Collections.Generic.HashSet<string>
         {
             InternalUrls.Settings, InternalUrls.OneTab, InternalUrls.History, InternalUrls.Downloads, InternalUrls.Onboarding, "internal://pending-native"

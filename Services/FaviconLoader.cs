@@ -88,7 +88,7 @@ public sealed class FaviconLoader
     /// Called when WebView2 fires FaviconChanged. Uses GetFaviconAsync()
     /// to get the real favicon directly from the browser engine, then
     /// saves it to disk and updates the in-memory cache.
-    /// This is the Chrome/Firefox approach — engine-provided, not 3rd party.
+    /// This is the Chrome/Firefox approach - engine-provided, not 3rd party.
     /// </summary>
     public async Task<BitmapImage?> HandleFaviconChangedAsync(CoreWebView2 core, string url)
     {

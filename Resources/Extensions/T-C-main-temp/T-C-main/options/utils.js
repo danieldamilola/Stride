@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file utils.js
  * @description Shared utility functions for T&C Lens options page.
  * @module options/utils
@@ -23,7 +23,7 @@ export function escapeHTML(value) {
 
 /**
  * Parse HTML string and set as element content.
- * Uses DOMParser to avoid innerHTML — callers must still escape
+ * Uses DOMParser to avoid innerHTML - callers must still escape
  * user-controlled content with escapeHTML() before building the
  * HTML string.
  *
@@ -73,7 +73,7 @@ export function hideMessage(element) {
 /**
  * Get the risk level label for a numeric score.
  *
- * @param {number} score - Risk score (0–100).
+ * @param {number} score - Risk score (0-100).
  * @returns {string} "high", "medium", or "low".
  */
 export function getRiskLevel(score) {
@@ -92,7 +92,7 @@ export function getUserMessage(error) {
   const messages = {
     NO_API_KEY: "Add your API key in Settings first.",
     INVALID_PROVIDER: "Invalid AI provider selected.",
-    INVALID_KEY: "API key rejected — check Settings.",
+    INVALID_KEY: "API key rejected - check Settings.",
     RATE_LIMITED: "Rate limit reached. Wait a moment and try again.",
     NETWORK_ERROR: "Could not reach the AI service. Check your connection.",
     TIMEOUT: "The AI took too long to respond. Try again.",
@@ -183,3 +183,4 @@ export function showConfirmModal(message) {
     cancelBtn.addEventListener("click", onCancel);
   });
 }
+

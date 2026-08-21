@@ -1,4 +1,4 @@
-# T&C Lens — AI Client Design
+﻿# T&C Lens - AI Client Design
 
 ## Role
 
@@ -6,10 +6,10 @@ The AI client (`lib/ai-client.js`) is a **provider-agnostic API wrapper** that h
 
 ## Design Principles
 
-- **Single interface, multiple providers** — The main `analyze()` function accepts provider, API key, model, and text. It routes to the correct API implementation internally.
-- **No external dependencies** — Uses the browser's native `fetch()` API. No Axios, no SDK.
-- **Error normalization** — All provider-specific errors are caught and converted to a standard error format that the options page can display to the user.
-- **Token-aware** — Knows each model's context limits and helps the caller avoid exceeding them.
+- **Single interface, multiple providers** - The main `analyze()` function accepts provider, API key, model, and text. It routes to the correct API implementation internally.
+- **No external dependencies** - Uses the browser's native `fetch()` API. No Axios, no SDK.
+- **Error normalization** - All provider-specific errors are caught and converted to a standard error format that the options page can display to the user.
+- **Token-aware** - Knows each model's context limits and helps the caller avoid exceeding them.
 
 ## Provider Configurations
 
@@ -246,7 +246,7 @@ function handleAnthropicResponse(response) {
 }
 ```
 
-**Note on Anthropic CORS:** Anthropic requires the `anthropic-dangerous-direct-browser-access` header when making requests from a browser (non-server) context. This is intentional — they want developers to use their SDK server-side in production. For our use case (user's own API key, direct browser request), this header is acceptable.
+**Note on Anthropic CORS:** Anthropic requires the `anthropic-dangerous-direct-browser-access` header when making requests from a browser (non-server) context. This is intentional - they want developers to use their SDK server-side in production. For our use case (user's own API key, direct browser request), this header is acceptable.
 
 ## Google Gemini Implementation
 
@@ -373,3 +373,4 @@ function estimateCost(text, provider, model) {
 ```
 
 This estimate is shown on the dashboard before the user clicks "Analyze" so they know roughly how much the analysis will cost them.
+

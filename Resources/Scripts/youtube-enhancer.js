@@ -1,4 +1,4 @@
-// Stride Browser - YouTube Enhancer
+﻿// Stride Browser - YouTube Enhancer
 // Injected on youtube.com to set quality, speed, autoplay, and loop preferences.
 // Only runs on youtube.com. Inspired by MisterTube-V3 (github.com/NextEra-Development/MisterTube-V3).
 // Handles ads, live streams, shorts, quality re-forcing, and speed persistence.
@@ -76,7 +76,7 @@
 
     function applyQuality() {
         if (QUALITY === 'auto') return;
-        if (isLiveStream()) return; // Live streams use adaptive — don't force
+        if (isLiveStream()) return; // Live streams use adaptive - don't force
 
         var player = getPlayer();
         if (!player || !player.setPlaybackQualityRange) return;
@@ -306,3 +306,4 @@
         observeVideoSrc();
     }
 })();
+

@@ -1,8 +1,8 @@
-# T&C Lens — Options Page (Full-Page Dashboard)
+﻿# T&C Lens - Options Page (Full-Page Dashboard)
 
 ## Role
 
-The options page (`options/options.html` + `options/options.js`) is the **main user interface** of T&C Lens. It opens in a new tab when the user clicks the toolbar icon, and it serves as the control center for the entire extension. All orchestration — triggering content extraction, calling the AI, rendering results, and managing settings — happens here.
+The options page (`options/options.html` + `options/options.js`) is the **main user interface** of T&C Lens. It opens in a new tab when the user clicks the toolbar icon, and it serves as the control center for the entire extension. All orchestration - triggering content extraction, calling the AI, rendering results, and managing settings - happens here.
 
 ## Navigation Structure
 
@@ -28,10 +28,10 @@ The landing view shown when the options page first opens.
 
 **Contents:**
 
-- **Target page confirmation** — Shows the URL and title of the tab the user was viewing when they clicked the icon. This confirms "I'm analyzing the right page."
-- **Status check** — Shows whether the API key is configured and which provider is selected. If no key is set, show a prominent call-to-action: "Set up your API key to get started."
-- **Analyze button** — Large, prominent "Analyze This Page" button. Disabled if no API key is set.
-- **Quick stats** — If there's a previous analysis for this URL, show a summary: "Last analyzed: 2 days ago — Risk Score: 45/100 (Medium)"
+- **Target page confirmation** - Shows the URL and title of the tab the user was viewing when they clicked the icon. This confirms "I'm analyzing the right page."
+- **Status check** - Shows whether the API key is configured and which provider is selected. If no key is set, show a prominent call-to-action: "Set up your API key to get started."
+- **Analyze button** - Large, prominent "Analyze This Page" button. Disabled if no API key is set.
+- **Quick stats** - If there's a previous analysis for this URL, show a summary: "Last analyzed: 2 days ago - Risk Score: 45/100 (Medium)"
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -40,7 +40,7 @@ The landing view shown when the options page first opens.
 │  ┌────────────────────────────────────────────┐  │
 │  │  🎯 Analyzing:                              │  │
 │  │  https://example.com/terms-and-conditions    │  │
-│  │  "Example Corp — Terms of Service"           │  │
+│  │  "Example Corp - Terms of Service"           │  │
 │  └────────────────────────────────────────────┘  │
 │                                                  │
 │  ┌────────────────────────────────────────────┐  │
@@ -62,14 +62,14 @@ Shown after the AI completes its analysis. This is the core value-delivery view.
 
 **Contents:**
 
-- **Risk score header** — Large number (0-100) with color coding (green/amber/red) and a brief label ("Low Risk", "Medium Risk", "High Risk")
-- **Summary paragraph** — A 2-3 sentence plain-language summary of the T&C document
-- **Findings list** — Categorized cards/sections for High, Medium, and Low importance items. Each finding has:
+- **Risk score header** - Large number (0-100) with color coding (green/amber/red) and a brief label ("Low Risk", "Medium Risk", "High Risk")
+- **Summary paragraph** - A 2-3 sentence plain-language summary of the T&C document
+- **Findings list** - Categorized cards/sections for High, Medium, and Low importance items. Each finding has:
   - Title (e.g., "Data Collection Practices")
   - Description (the AI's explanation)
   - Relevant clause quote (if available)
   - Importance badge (High/Medium/Low)
-- **Re-analyze button** — Run the analysis again
+- **Re-analyze button** - Run the analysis again
 - **Back to dashboard** link
 
 ```
@@ -124,13 +124,13 @@ Where the user configures the extension.
 
 **Contents:**
 
-- **API Provider selection** — Dropdown: OpenAI / Anthropic / Google Gemini
-- **API Key input** — Password-style input field (masked by default) with a show/hide toggle
-- **Model selection** — Dropdown populated based on the selected provider (e.g., for OpenAI: GPT-4o, GPT-4o-mini)
-- **Save button** — Persists settings to `chrome.storage.local`
-- **Status indicator** — Shows "Saved" or "Error saving"
-- **Analysis history** — List of past analyses with URL, date, and score. Click to view past results. Option to clear history.
-- **About section** — Version, GitHub link, license info
+- **API Provider selection** - Dropdown: OpenAI / Anthropic / Google Gemini
+- **API Key input** - Password-style input field (masked by default) with a show/hide toggle
+- **Model selection** - Dropdown populated based on the selected provider (e.g., for OpenAI: GPT-4o, GPT-4o-mini)
+- **Save button** - Persists settings to `chrome.storage.local`
+- **Status indicator** - Shows "Saved" or "Error saving"
+- **Analysis history** - List of past analyses with URL, date, and score. Click to view past results. Option to clear history.
+- **About section** - Version, GitHub link, license info
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -272,8 +272,8 @@ The UI should handle every failure gracefully with clear, actionable messages:
 
 The analysis involves two network-dependent steps. The UI shows distinct loading messages:
 
-1. **"Extracting page content..."** — While injecting the content script and receiving text
-2. **"Analyzing Terms & Conditions..."** — While waiting for the AI to process and respond
+1. **"Extracting page content..."** - While injecting the content script and receiving text
+2. **"Analyzing Terms & Conditions..."** - While waiting for the AI to process and respond
 
 A subtle loading animation (spinner or pulse) accompanies the text. The analyze button is disabled during loading.
 
@@ -281,8 +281,8 @@ A subtle loading animation (spinner or pulse) accompanies the text. The analyze 
 
 The options page uses a clean, modern design:
 
-- **CSS Variables** for consistent theming — easy to add dark mode later
-- **Responsive layout** — works well in various tab widths (most users don't resize their tabs, but it shouldn't break)
+- **CSS Variables** for consistent theming - easy to add dark mode later
+- **Responsive layout** - works well in various tab widths (most users don't resize their tabs, but it shouldn't break)
 - **Color scheme:**
   - Background: White (#FFFFFF)
   - Text: Dark gray (#1F2937)
@@ -291,7 +291,7 @@ The options page uses a clean, modern design:
   - Medium risk: Amber (#F59E0B)
   - Low risk: Green (#10B981)
 - **Typography:** System font stack for fast loading (`-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`)
-- **No external dependencies** — Pure CSS, no frameworks. Keeps the extension lightweight and fast.
+- **No external dependencies** - Pure CSS, no frameworks. Keeps the extension lightweight and fast.
 
 ## File Structure
 
@@ -366,3 +366,4 @@ options/
   </body>
 </html>
 ```
+

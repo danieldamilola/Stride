@@ -1,4 +1,4 @@
-# How T&C Lens Works
+﻿# How T&C Lens Works
 
 A plain-English guide to how T&C Lens reads and breaks down legal documents for you.
 
@@ -20,7 +20,7 @@ When you're on a page with legal text (like a Terms of Service or Privacy Policy
 
 ### 2. The extension reads the page
 
-T&C Lens looks at the page you're on and tries to find the legal content. It's smart about this — it skips things like:
+T&C Lens looks at the page you're on and tries to find the legal content. It's smart about this - it skips things like:
 
 - Navigation bars and menus
 - Cookie pop-ups
@@ -31,13 +31,13 @@ It only grabs the actual legal text. Think of it like highlighting the important
 
 ### 3. The text gets sent to an AI
 
-The legal text gets sent to an AI model (like Google Gemini, DeepSeek, or OpenAI — whichever one you chose in Settings). The AI has been given specific instructions to act like a legal document expert.
+The legal text gets sent to an AI model (like Google Gemini, DeepSeek, or OpenAI - whichever one you chose in Settings). The AI has been given specific instructions to act like a legal document expert.
 
 The AI reads the entire document and produces:
 
-- **A risk score** (0–100) — how concerning is this document overall?
-- **A summary** — 2–3 sentences explaining what the document says in normal language
-- **Findings** — specific things you should know about, each rated as high, medium, or low importance
+- **A risk score** (0-100) - how concerning is this document overall?
+- **A summary** - 2-3 sentences explaining what the document says in normal language
+- **Findings** - specific things you should know about, each rated as high, medium, or low importance
 
 ### 4. You see the results
 
@@ -58,7 +58,7 @@ Every analysis is automatically saved to your history. You can go back and look 
 
 A finding is one specific thing the AI noticed in the document. For example:
 
-> **Broad Data Harvesting** — MEDIUM
+> **Broad Data Harvesting** - MEDIUM
 >
 > Google collects a wide range of user data, including search history, location information, and activity on third-party sites and apps.
 >
@@ -66,10 +66,10 @@ A finding is one specific thing the AI noticed in the document. For example:
 
 Each finding has:
 
-- **A title** — what the issue is about
-- **An importance level** — high, medium, or low
-- **An explanation** — what it means in simple terms
-- **A direct quote** — the exact words from the document that prove it
+- **A title** - what the issue is about
+- **An importance level** - high, medium, or low
+- **An explanation** - what it means in simple terms
+- **A direct quote** - the exact words from the document that prove it
 
 ---
 
@@ -81,7 +81,7 @@ T&C Lens does **not** have its own built-in AI. You have two options:
 
 You get an API key from an AI provider (like Google, OpenAI, or DeepSeek) and paste it into Settings. The extension sends the legal text directly to that provider and gets the analysis back.
 
-Many providers offer **free tiers** — for example, Google Gemini and Groq let you make hundreds of requests per day at no cost.
+Many providers offer **free tiers** - for example, Google Gemini and Groq let you make hundreds of requests per day at no cost.
 
 ### Option B: T&C Lens AI (coming soon)
 
@@ -99,14 +99,14 @@ This is important, so here's exactly what happens with your data:
 - Your settings
 
 **What gets sent out:**
-- The text of the legal document — sent **only** to whichever AI provider you chose
+- The text of the legal document - sent **only** to whichever AI provider you chose
 - Nothing else. No analytics, no tracking, no telemetry
 
 **What we never do:**
 - We never see your API key
 - We never store your browsing history
 - We never send data to our own servers (unless you use T&C Lens AI)
-- We never run in the background — the extension does nothing until you click it
+- We never run in the background - the extension does nothing until you click it
 
 ---
 
@@ -116,9 +116,9 @@ The AI reads the full document and assigns a score from 0 to 100:
 
 | Score | Label | What it means |
 |-------|-------|---------------|
-| 0–30 | Low Risk | Standard terms, nothing unusual |
-| 31–60 | Medium Risk | Some concerning clauses, worth reading |
-| 61–100 | High Risk | Significant issues — data collection, liability waivers, etc. |
+| 0-30 | Low Risk | Standard terms, nothing unusual |
+| 31-60 | Medium Risk | Some concerning clauses, worth reading |
+| 61-100 | High Risk | Significant issues - data collection, liability waivers, etc. |
 
 The score is based on things like:
 - How much personal data is collected
@@ -133,13 +133,13 @@ The score is based on things like:
 
 When you click analyze, the extension needs to extract the legal text from the page. It uses four strategies, in order:
 
-1. **Look for the main content area** — Most websites wrap their content in a `<main>` or `<article>` tag. If the extension finds one with enough text, it uses that.
+1. **Look for the main content area** - Most websites wrap their content in a `<main>` or `<article>` tag. If the extension finds one with enough text, it uses that.
 
-2. **Look for legal-specific sections** — Some pages have sections specifically marked as terms or policies (through their CSS classes or IDs). The extension checks for those.
+2. **Look for legal-specific sections** - Some pages have sections specifically marked as terms or policies (through their CSS classes or IDs). The extension checks for those.
 
-3. **Count paragraphs** — If the first two methods don't work, the extension looks for the area of the page with the most paragraph text. Legal documents tend to be the densest part of any page.
+3. **Count paragraphs** - If the first two methods don't work, the extension looks for the area of the page with the most paragraph text. Legal documents tend to be the densest part of any page.
 
-4. **Use everything** — As a last resort, it takes all the text on the page (minus navigation, headers, footers, and junk).
+4. **Use everything** - As a last resort, it takes all the text on the page (minus navigation, headers, footers, and junk).
 
 In all cases, it removes noisy elements like cookie banners, navigation menus, and sidebars before extracting the text.
 
@@ -183,3 +183,4 @@ The extension will send as much text as the AI model can handle. Most models sup
 
 **Can I see what was sent to the AI?**
 The extension sends two things: a system instruction (telling the AI how to analyze legal documents) and the text it extracted from the page. Nothing else.
+
