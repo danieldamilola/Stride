@@ -93,7 +93,7 @@ public sealed class TabEngine : IDisposable
     public Func<Guid, Task>? ExitReaderAsync { get; set; }
 
     private readonly Services.CustomDownloadManager _customDownloadManager;
-    private readonly HashSet<string> _activeNativeDownloads = new();
+    private readonly Dictionary<string, Microsoft.Web.WebView2.Core.CoreWebView2DownloadOperation> _activeNativeDownloads = new();
 
     /// <summary>Initializes a new instance of the TabEngine.</summary>
     public TabEngine(EngineDependencies deps)

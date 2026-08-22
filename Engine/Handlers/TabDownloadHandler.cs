@@ -14,7 +14,7 @@ public static class TabDownloadHandler
         CoreWebView2 core, 
         Dispatcher dispatcher, 
         IDownloadStore downloadStore,
-        HashSet<string> activeNativeDownloads,
+        Dictionary<string, CoreWebView2DownloadOperation> activeNativeDownloads,
         Services.LinkPreview.ILinkPreviewDownloadSuppressor downloadSuppressor)
     {
         core.IsDefaultDownloadDialogOpenChanged += (_, _) =>
@@ -35,11 +35,11 @@ public static class TabDownloadHandler
             var op = e.DownloadOperation;
 
             var item = CreateDownloadItem(op);
-            activeNativeDownloads.Add(item.Id);
+            activeNativeDownloads[item.Id] = op;
             dispatcher.Invoke(() => downloadStore.Add(item));
 
             WireProgressEvents(op, item, dispatcher);
-            WireStateEvents(op, item, dispatcher);
+            WireStateEvents(op, item, dispatcher, activeNativeDownloads);
             WireUICommands(op, item);
         };
     }
@@ -70,7 +70,7 @@ public static class TabDownloadHandler
         };
     }
 
-    private static void WireStateEvents(CoreWebView2DownloadOperation op, DownloadItem item, Dispatcher dispatcher)
+    private static void WireStateEvents(CoreWebView2DownloadOperation op, DownloadItem item, Dispatcher dispatcher, Dictionary<string, CoreWebView2DownloadOperation> activeNativeDownloads)
     {
         op.StateChanged += (s, args) =>
         {
@@ -88,9 +88,14 @@ public static class TabDownloadHandler
                             CoreWebView2DownloadInterruptReason.UserCanceled => DownloadState.Cancelled,
                             _ => DownloadState.Failed
                         };
+                        if (item.State == DownloadState.Failed || item.State == DownloadState.Cancelled)
+                        {
+                            activeNativeDownloads.Remove(item.Id);
+                        }
                         break;
                     case CoreWebView2DownloadState.Completed:
                         item.State = DownloadState.Completed;
+                        activeNativeDownloads.Remove(item.Id);
                         break;
                 }
             });
