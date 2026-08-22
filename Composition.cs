@@ -110,7 +110,8 @@ public static class Composition
             var engine = sp.GetRequiredService<TabEngine>();
             var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
             var readerViewModel = sp.GetRequiredService<ViewModels.Reader.ReaderViewModel>();
-            return new BrowserViewModel(settings, navigation, downloadStore, engine, readerService, readerViewModel);
+            var updateService = sp.GetRequiredService<UpdateService>();
+            return new BrowserViewModel(settings, navigation, downloadStore, engine, readerService, readerViewModel, updateService);
         });
         services.AddSingleton<ViewModels.Reader.ReaderViewModel>(sp =>
         {

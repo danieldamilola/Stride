@@ -1,4 +1,4 @@
-﻿using System.Net.Http;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,8 +46,30 @@ public sealed partial class BrowserViewModel : ObservableObject
     [ObservableProperty]
     private double _activeDownloadsProgress;
 
+    private UpdateState _updateState = UpdateState.None;
+
+    public UpdateState UpdateState
+    {
+        get => _updateState;
+        set
+        {
+            if (SetProperty(ref _updateState, value))
+            {
+                OnPropertyChanged(nameof(ShowUpdateIcon));
+                OnPropertyChanged(nameof(ShowUpdateRedDot));
+                OnPropertyChanged(nameof(ShowUpdateProgress));
+                OnPropertyChanged(nameof(ShowUpdateCheckmark));
+            }
+        }
+    }
+
+    public bool ShowUpdateIcon => UpdateState != UpdateState.None;
+    public bool ShowUpdateRedDot => UpdateState == UpdateState.UpdateAvailable;
+    public bool ShowUpdateProgress => UpdateState == UpdateState.Downloading;
+    public bool ShowUpdateCheckmark => UpdateState == UpdateState.ReadyToInstall;
+
     [ObservableProperty]
-    private bool _isUpdateAvailable;
+    private double _updateProgress = 0.0;
 
     [ObservableProperty]
     private string _updateVersion = string.Empty;
@@ -55,14 +77,42 @@ public sealed partial class BrowserViewModel : ObservableObject
     private readonly Engine.TabEngine _engine;
     private readonly IReaderService _readerService;
     private readonly ReaderViewModel _readerViewModel;
+    private readonly UpdateService _updateService;
 
-    public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore, Engine.TabEngine engine, IReaderService readerService, ReaderViewModel readerViewModel)
+    public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore, Engine.TabEngine engine, IReaderService readerService, ReaderViewModel readerViewModel, UpdateService updateService)
     {
         Settings = settings;
         _navigation = navigation;
         _engine = engine;
         _readerService = readerService;
-        _readerViewModel = readerViewModel; 
+        _readerViewModel = readerViewModel;
+        _updateService = updateService;
+
+        _updateService.UpdateAvailable += (s, e) =>
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                UpdateState = UpdateState.UpdateAvailable;
+                UpdateVersion = _updateService.LatestVersion ?? "";
+            });
+        };
+
+        _updateService.DownloadProgressChanged += (s, progress) =>
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                UpdateState = UpdateState.Downloading;
+                UpdateProgress = progress;
+            });
+        };
+
+        _updateService.DownloadCompleted += (s, e) =>
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                UpdateState = UpdateState.ReadyToInstall;
+            });
+        };
 
         downloadStore.Items.CollectionChanged += (s, e) =>
         {
@@ -225,5 +275,24 @@ public sealed partial class BrowserViewModel : ObservableObject
 
     [RelayCommand]
     private async Task ToggleReader() => await _readerViewModel.ToggleAsync();
+
+    [RelayCommand]
+    private void HandleUpdateClick()
+    {
+        if (UpdateState == UpdateState.UpdateAvailable)
+        {
+            UpdateState = UpdateState.Downloading;
+            UpdateProgress = 0.0;
+            
+            _ = Task.Run(async () => await _updateService.DownloadUpdateAsync());
+        }
+        else if (UpdateState == UpdateState.ReadyToInstall)
+        {
+            string flagFile = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "post_update.flag");
+            System.IO.File.WriteAllText(flagFile, "true");
+            
+            _updateService.InstallUpdate();
+        }
+    }
 }
 

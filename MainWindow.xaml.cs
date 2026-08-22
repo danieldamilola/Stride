@@ -62,9 +62,10 @@ public partial class MainWindow : Window
 
         _router = services.GetRequiredService<WebMessageRouter>();
         _router.SettingChanged += OnSettingChanged;
-        Services.ThemeManager.ThemeChanged += () =>
+        var themeManager = services.GetRequiredService<ThemeManager>();
+        themeManager.ThemeChanged += () =>
         {
-            var themeStr = Services.ThemeManager.GetThemeString();
+            var themeStr = themeManager.GetThemeString();
             var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
             foreach (var tab in _engine.Tabs)
             {
@@ -130,8 +131,6 @@ public partial class MainWindow : Window
 
             SingleInstanceManager.InstanceMessageReceived += OnInstanceMessageReceived;
 
-            _ = CheckForUpdatesInBackgroundAsync();
-
             if (!DefaultBrowserRegistrar.IsRegistered())
                 DefaultBrowserRegistrar.Register();
 
@@ -167,31 +166,34 @@ public partial class MainWindow : Window
     {
         return new KeyboardShortcutMap(
             _engine,
-            focusAddressBar: () => { FocusAddressBar(); return Task.CompletedTask; },
-            saveAllTabs: () => { SaveAllTabs_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-            cycleTab: async reverse => await CycleTabAsync(reverse),
-            toggleFullscreen: () => { ToggleFullscreen(); return Task.CompletedTask; },
-            isFullscreen: () => _isFullscreen,
-            updateZoomIndicator: () => { UpdateZoomIndicator(); return Task.CompletedTask; },
-            openHistory: OpenHistoryTab,
-            openDownloads: OpenDownloadsTab,
-            switchToTabIndex: SwitchToTabByIndex,
-            copyUrl: CopyUrlToClipboard,
-            sendAllToOneTab: () => _engine.SendAllToOneTab(),
-            saveOneTabGroup: entries =>
+            new ShortcutActions
             {
-                var group = new OneTabGroup
+                FocusAddressBar = () => { FocusAddressBar(); return Task.CompletedTask; },
+                SaveAllTabs = () => { SaveAllTabs_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
+                CycleTab = async reverse => await CycleTabAsync(reverse),
+                ToggleFullscreen = () => { ToggleFullscreen(); return Task.CompletedTask; },
+                IsFullscreen = () => _isFullscreen,
+                OpenHistory = () => { OpenHistoryTab(); return Task.CompletedTask; },
+                OpenDownloads = () => { OpenDownloadsTab(); return Task.CompletedTask; },
+                SwitchToTabIndex = SwitchToTabByIndex,
+                CopyUrl = CopyUrlToClipboard,
+                SendAllToOneTab = () => _engine.SendAllToOneTab(),
+                SaveOneTabGroup = entries =>
                 {
-                    Name = $"Saved {DateTime.Now:MMM d, h:mm tt}",
-                    Tabs = entries.Select(t =>
-                        new OneTabEntry(t.url, t.title, null, DateTime.UtcNow)).ToList()
-                };
-                _oneTabStore.AddGroup(group);
-            },
-            syncTabsBinding: SyncTabsBinding,
-            openOneTab: OpenOneTabPage,
-            openSettings: () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-            launchTCLens: LaunchTCLensAsync);
+                    var group = new OneTabGroup
+                    {
+                        Name = $"Saved {DateTime.Now:MMM d, h:mm tt}",
+                        Tabs = entries.Select(t =>
+                            new OneTabEntry(t.url, t.title, null, DateTime.UtcNow)).ToList()
+                    };
+                    _oneTabStore.AddGroup(group);
+                },
+                SyncTabsBinding = SyncTabsBinding,
+                OpenOneTab = () => { OpenOneTabPage(); return Task.CompletedTask; },
+                OpenSettings = () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
+                LaunchTCLens = LaunchTCLensAsync,
+                ToggleReader = () => Task.CompletedTask
+            });
     }
 
     private async Task LaunchTCLensAsync()
@@ -257,6 +259,15 @@ public partial class MainWindow : Window
         if (!restored)
         {
             var tab = _engine.CreateTab();
+            _engine.SwitchTo(tab);
+            await _engine.ActivateAsync(tab);
+        }
+
+        string flagFile = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "post_update.flag");
+        if (System.IO.File.Exists(flagFile))
+        {
+            try { System.IO.File.Delete(flagFile); } catch {}
+            var tab = _engine.CreateTab(InternalUrls.ReleaseNotes);
             _engine.SwitchTo(tab);
             await _engine.ActivateAsync(tab);
         }
@@ -348,6 +359,11 @@ public partial class MainWindow : Window
         _engine.TabCreated += tab =>
         {
         };
+    }
+
+    private void LinkPreviewDim_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        LinkPreviewDim.Visibility = Visibility.Collapsed;
     }
 
     private void SyncTabsBinding()
@@ -1085,7 +1101,8 @@ public partial class MainWindow : Window
 
         if (key == "appTheme")
         {
-            var themeStr = Services.ThemeManager.GetThemeString();
+            var tm = ((App)Application.Current).Services.GetRequiredService<ThemeManager>();
+            var themeStr = tm.GetThemeString();
             var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
             foreach (var tab in _engine.Tabs)
             {
@@ -1210,34 +1227,9 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task CheckForUpdatesInBackgroundAsync()
+    private Task CheckForUpdatesInBackgroundAsync()
     {
-        try
-        {
-            using var client = new System.Net.Http.HttpClient();
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("StrideBrowser");
-            var response = await client.GetAsync("https://api.github.com/repos/danieldamilola/Stride/releases/latest");
-            if (!response.IsSuccessStatusCode) return;
-
-            var json = await response.Content.ReadAsStringAsync();
-            var doc = System.Text.Json.JsonDocument.Parse(json);
-            if (doc.RootElement.TryGetProperty("tag_name", out var tagProp))
-            {
-                var latest = tagProp.GetString()?.TrimStart('v');
-                var current = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";
-                
-                if (!string.IsNullOrEmpty(latest) && 
-                    Version.TryParse(latest, out var latestVersion) && 
-                    Version.TryParse(current, out var currentVersion))
-                {
-                    if (latestVersion > currentVersion)
-                    {
-                        Dispatcher.Invoke(() => UpdateBadge.Visibility = Visibility.Visible);
-                    }
-                }
-            }
-        }
-        catch { /* Silently fail on network/parsing issues */ }
+        return Task.CompletedTask;
     }
 
     // ───────────────────── Title Bar ─────────────────────

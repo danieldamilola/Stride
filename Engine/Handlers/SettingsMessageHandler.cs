@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -34,15 +34,20 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
     {
         yield return MessageRoute.Prefix(WebMessagePrefix.Setting, HandleSetting);
         yield return MessageRoute.Exact(WebMessagePrefix.ResetSettings, HandleResetSettings);
-        yield return MessageRoute.Prefix("install-update:", async (_) => { await _updateService.DownloadAndInstallUpdateAsync(); });
+        yield return MessageRoute.Prefix("install-update:", async (_) => 
+        { 
+            bool downloaded = await _updateService.DownloadUpdateAsync();
+            if (downloaded)
+            {
+                _updateService.InstallUpdate();
+            }
+        });
         yield return MessageRoute.Exact(WebMessagePrefix.OpenBackgroundsFolder, HandleOpenBackgroundsFolder);
         yield return MessageRoute.Exact("check-for-update", async () =>
         {
-            var item = await _updateService.CheckForUpdateCustomAsync();
-            var status = item is null ? "false" : "true";
-            var version = item?.Version ?? "";
-            var url = item?.DownloadLink ?? "";
-            _engine.PostMessageToActiveTab($"update-check-result:{status}:{version}:{url}");
+            await _updateService.CheckForUpdatesQuietlyAsync();
+            bool hasUpdate = !string.IsNullOrEmpty(_updateService.LatestVersion);
+            _engine.PostMessageToActiveTab($"update-check-result:{hasUpdate.ToString().ToLowerInvariant()}::{_updateService.LatestVersion ?? ""}");
         });
     }
 
@@ -149,6 +154,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         ["showRefreshButton"] = (s, v) => s.ShowRefreshButton = v == "true",
         ["showDownloadsIcon"] = (s, v) => s.ShowDownloadsIcon = v == "true",
         ["showSettingsIcon"] = (s, v) => s.ShowSettingsIcon = v == "true",
+        ["showReaderIcon"] = (s, v) => s.ShowReaderIcon = v == "true",
         ["accentColor"] = (s, v) => { if (v.StartsWith('#') && (v.Length == 7 || v.Length == 4)) s.AccentColor = v; },
         ["focusDomains"] = (s, v) => s.FocusDomains = System.Web.HttpUtility.UrlDecode(v),
         ["focusLocked"] = (s, v) => s.FocusLocked = v == "true",

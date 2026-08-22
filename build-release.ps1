@@ -14,12 +14,21 @@ if (-not $version) {
 }
 Write-Host "Building release for Version: $version" -ForegroundColor Green
 
-# 3. Publish the app
-Write-Host "Publishing project..." -ForegroundColor Cyan
-dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o .\publish
+# 3. Publish the app and updater
+Write-Host "Publishing Stride.Updater..." -ForegroundColor Cyan
+dotnet publish Stride.Updater\Stride.Updater.csproj -c Release -r win-x64 --self-contained false -o .\publish
 
-# 4. Pack with Inno Setup
-Write-Host "Packaging with Inno Setup..." -ForegroundColor Cyan
+Write-Host "Publishing Stride..." -ForegroundColor Cyan
+dotnet publish Stride.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o .\publish
+
+# 4. Create ZIP for Auto-Updates
+$zipPath = ".\Releases\Stride-win-x64.zip"
+if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+Write-Host "Creating ZIP archive for auto-updates at $zipPath..." -ForegroundColor Cyan
+Compress-Archive -Path ".\publish\*" -DestinationPath $zipPath -Force
+
+# 5. Pack with Inno Setup for First-Time Installs
+Write-Host "Packaging with Inno Setup for new users..." -ForegroundColor Cyan
 & "$env:USERPROFILE\AppData\Local\Programs\Inno Setup 6\ISCC.exe" "installer.iss"
 
 Write-Host "Done! Release created in .\Releases" -ForegroundColor Green
