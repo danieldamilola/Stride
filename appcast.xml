@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
     <title>Stride Updates</title>
@@ -6,7 +6,7 @@
       <title>Version 1.2.0</title>
       <sparkle:releaseNotesLink>https://raw.githubusercontent.com/danieldamilola/Stride/main/ReleaseNotes.md</sparkle:releaseNotesLink>
       <pubDate>Fri, 22 Aug 2025 12:00:00 +0000</pubDate>
-      <enclosure url="https://github.com/danieldamilola/Stride/releases/download/v1.2.0/Stride-win-Setup.exe" sparkle:version="1.2.0" sparkle:os="windows" length="0" type="application/octet-stream" sparkle:edSignature="4kQIdpxw8iDc79PmWfokMt7cMRpL4Efro1WidQv718Pe4FxKcllRhm+cI0u8eGo+sOUeaTKyZ7sZbeY6/+XEBg==" />
+      <enclosure url="http://127.0.0.1:8000/Stride-win-Setup.exe" sparkle:version="1.2.0" sparkle:os="windows" length="0" type="application/octet-stream" sparkle:edSignature="4kQIdpxw8iDc79PmWfokMt7cMRpL4Efro1WidQv718Pe4FxKcllRhm+cI0u8eGo+sOUeaTKyZ7sZbeY6/+XEBg==" />
     </item>
   </channel>
 </rss>
