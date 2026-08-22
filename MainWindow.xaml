@@ -486,10 +486,12 @@
                                       Stretch="Uniform" StrokeStartLineCap="Round" StrokeLineJoin="Round" />
                             </Button>
                         </Grid>
-                        <Button x:Name="ReaderButton" Click="ReaderButton_Click" Style="{DynamicResource IconBtn}"
-                                Width="26" Height="26" ToolTip="Reader view (Ctrl+Shift+R)" Visibility="Collapsed" Margin="4,0">
-                            <TextBlock Text="Aa" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" HorizontalAlignment="Center" />
-                        </Button>
+                        <Grid Visibility="{Binding Settings.ShowReaderIcon, Converter={StaticResource BoolToVis}}">
+                            <Button x:Name="ReaderButton" Command="{Binding ToggleReaderCommand}" Style="{DynamicResource IconBtn}"
+                                    Width="26" Height="26" ToolTip="Reader view (Ctrl+Shift+R)" Margin="4,0">
+                                <TextBlock Text="Aa" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            </Button>
+                        </Grid>
                         <Grid Visibility="{Binding Settings.ShowSettingsIcon, Converter={StaticResource BoolToVis}}">
                             <Button Click="Settings_Click" Style="{DynamicResource IconBtn}"
                                     ToolTip="Settings" Width="26" Height="26" Margin="4,0" Cursor="Hand" FocusVisualStyle="{x:Null}">

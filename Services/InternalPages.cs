@@ -15,6 +15,7 @@ public sealed class InternalPages
     private readonly HistoryPage _history = new();
     private readonly DownloadPage _downloads = new();
     private readonly OnboardingPage _onboarding = new();
+    private readonly ReleaseNotesPage _releaseNotes = new();
     private readonly ErrorPage _error = new();
     private readonly ThemeManager _themeManager;
 
@@ -51,6 +52,10 @@ public sealed class InternalPages
     /// <summary>Returns the onboarding page HTML.</summary>
     public string OnboardingPage(BrowserSettings settings, string accentColor, string accentRgb, string ipcToken) =>
         ApplyTheme(_onboarding.Render(settings, accentColor, accentRgb, ipcToken));
+
+    /// <summary>Returns the release notes page HTML.</summary>
+    public string ReleaseNotesPage(string currentVersion, IReadOnlyList<Engine.ReleaseNotesProvider.ReleaseVersion> releases, string accentColor, string accentRgb, string ipcToken) =>
+        ApplyTheme(_releaseNotes.Render(currentVersion, releases, accentColor, accentRgb, ipcToken));
 
     /// <summary>Returns the error page HTML.</summary>
     public string ErrorPage(string url, string errorMessage, string accentColor, string accentRgb) =>

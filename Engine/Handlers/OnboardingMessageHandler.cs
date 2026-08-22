@@ -24,6 +24,8 @@ public class OnboardingMessageHandler : IWebMessageHandler
         yield return MessageRoute.Exact("onboarding-done", HandleDone);
         yield return MessageRoute.Exact("onboarding-ready", HandleReady);
         yield return MessageRoute.Exact("onboarding-reset", HandleReset);
+        yield return MessageRoute.Exact(WebMessagePrefix.WhatsNewContinue, HandleWhatsNewContinue);
+        yield return MessageRoute.Exact(WebMessagePrefix.WhatsNewDismiss, HandleWhatsNewDismiss);
     }
 
     private Task HandleReady()
@@ -85,6 +87,35 @@ public class OnboardingMessageHandler : IWebMessageHandler
     {
         _settings.HasCompletedOnboarding = false;
         _settingsStore.Save(_settings);
+        return Task.CompletedTask;
+    }
+
+    private Task HandleWhatsNewContinue()
+    {
+        var active = _engine.ActiveTab;
+        if (active != null && active.Url == InternalUrls.ReleaseNotes)
+        {
+            if (_engine.Tabs.Count == 1)
+            {
+                _engine.Navigate(active, InternalUrls.NewTab);
+                return Task.CompletedTask;
+            }
+
+            _engine.CloseTab(active);
+            var next = _engine.Tabs[0];
+            _engine.SwitchTo(next);
+            _ = _engine.ActivateAsync(next);
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task HandleWhatsNewDismiss()
+    {
+        var active = _engine.ActiveTab;
+        if (active != null)
+        {
+            _engine.Navigate(active, InternalUrls.Settings);
+        }
         return Task.CompletedTask;
     }
 }

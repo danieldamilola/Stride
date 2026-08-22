@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace StrideBrowser.Models;
@@ -28,7 +28,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private string _accentColor = "#7fb89a";
 
     [ObservableProperty]
-    private int _defaultZoom = 100;
+    private int _defaultZoom = 90;
 
     [ObservableProperty]
     private bool _restoreSessionOnStartup = true;
@@ -37,7 +37,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _hardwareAccelerationEnabled = true;
 
     [ObservableProperty]
-    private bool _forceDarkMode = true;
+    private bool _forceDarkMode;
 
     [ObservableProperty]
     private bool _forceHttps = true;
@@ -72,7 +72,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private double _tabSleepOpacity = 0.55;
 
     [ObservableProperty]
-    private double _tabHibernationOpacity = 0.15;
+    private double _tabHibernationOpacity = 0.5;
 
     [ObservableProperty]
     private bool _tabSleepDimEnabled = true;
@@ -94,6 +94,9 @@ public sealed partial class BrowserSettings : ObservableObject
 
     [ObservableProperty]
     private bool _showDownloadsIcon = true;
+
+    [ObservableProperty]
+    private bool _showReaderIcon = true;
 
     [ObservableProperty]
     private bool _showBackArrow = true;
@@ -130,7 +133,10 @@ public sealed partial class BrowserSettings : ObservableObject
     private Dictionary<string, string> _customShortcuts = new();
 
     [ObservableProperty]
-    private bool _hasCompletedOnboarding;
+    private bool _hasCompletedOnboarding = false;
+
+    [ObservableProperty]
+    private string _lastSeenReleaseNotesVersion = "";
 
     // ── Reader mode ──
 
@@ -273,6 +279,7 @@ public sealed partial class BrowserSettings : ObservableObject
         IsSidebarPinned = d.IsSidebarPinned;
         ShowSettingsIcon = d.ShowSettingsIcon;
         ShowDownloadsIcon = d.ShowDownloadsIcon;
+        ShowReaderIcon = d.ShowReaderIcon;
         ShowBackArrow = d.ShowBackArrow;
         ShowForwardArrow = d.ShowForwardArrow;
         ShowRefreshButton = d.ShowRefreshButton;
@@ -284,6 +291,7 @@ public sealed partial class BrowserSettings : ObservableObject
         FocusDomains = d.FocusDomains;
         CustomShortcuts = new Dictionary<string, string>(d.CustomShortcuts);
         HasCompletedOnboarding = d.HasCompletedOnboarding;
+        LastSeenReleaseNotesVersion = d.LastSeenReleaseNotesVersion;
         ReaderFontScale = d.ReaderFontScale;
         ReaderTheme = d.ReaderTheme;
         ReaderContentWidth = d.ReaderContentWidth;

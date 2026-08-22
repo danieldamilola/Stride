@@ -7,6 +7,9 @@ using CommunityToolkit.Mvvm.Input;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 
+using StrideBrowser.Services.Reader;
+using StrideBrowser.ViewModels.Reader;
+
 namespace StrideBrowser.ViewModels;
 
 /// <summary>
@@ -50,14 +53,18 @@ public sealed partial class BrowserViewModel : ObservableObject
     private string _updateVersion = string.Empty;
 
     private readonly Engine.TabEngine _engine;
+    private readonly IReaderService _readerService;
+    private readonly ReaderViewModel _readerViewModel;
 
-    public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore, Engine.TabEngine engine)
+    public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore, Engine.TabEngine engine, IReaderService readerService, ReaderViewModel readerViewModel)
     {
         Settings = settings;
         _navigation = navigation;
         _engine = engine;
-        
-        downloadStore.Items.CollectionChanged += (s, e) => 
+        _readerService = readerService;
+        _readerViewModel = readerViewModel; 
+
+        downloadStore.Items.CollectionChanged += (s, e) =>
         {
             if (e.NewItems != null)
             {
@@ -71,7 +78,7 @@ public sealed partial class BrowserViewModel : ObservableObject
             }
             UpdateDownloadProgress(downloadStore.Items);
         };
-        
+
         foreach (var item in downloadStore.Items)
             item.PropertyChanged += OnDownloadItemChanged;
             
@@ -215,5 +222,8 @@ public sealed partial class BrowserViewModel : ObservableObject
 
     [RelayCommand]
     private void Refresh() => _engine.Reload();
+
+    [RelayCommand]
+    private async Task ToggleReader() => await _readerViewModel.ToggleAsync();
 }
 

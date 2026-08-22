@@ -26,7 +26,9 @@ public sealed class NewTabPage
         {
             var userFiles = Directory.GetFiles(userBgFolder)
                                  .Where(f => f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || 
-                                             f.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                                             f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+                                             f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+                                             f.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
                                  .Select(f => "https://user.assets/" + Path.GetFileName(f))
                                  .ToArray();
             if (userFiles.Length > 0)
@@ -36,14 +38,30 @@ public sealed class NewTabPage
         // 2. Fallback to default backgrounds
         if (backgroundUrls.Length == 0)
         {
-            var defaultBgFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages", "Backgrounds");
-            if (Directory.Exists(defaultBgFolder))
+            var searchPaths = new[]
             {
-                backgroundUrls = Directory.GetFiles(defaultBgFolder)
-                                     .Where(f => f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || 
-                                                 f.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
-                                     .Select(f => "https://local.assets/Backgrounds/" + Path.GetFileName(f))
-                                     .ToArray();
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages", "Backgrounds"),
+                Path.Combine(AppContext.BaseDirectory, "Resources", "Pages", "Backgrounds"),
+                Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Pages", "Backgrounds")
+            };
+
+            foreach (var path in searchPaths)
+            {
+                if (Directory.Exists(path))
+                {
+                    var files = Directory.GetFiles(path)
+                                         .Where(f => f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || 
+                                                     f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+                                                     f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+                                                     f.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
+                                         .Select(f => "https://local.assets/Backgrounds/" + Path.GetFileName(f))
+                                         .ToArray();
+                    if (files.Length > 0)
+                    {
+                        backgroundUrls = files;
+                        break;
+                    }
+                }
             }
         }
         if (backgroundUrls.Length > 0 && string.IsNullOrEmpty(backgroundPath))

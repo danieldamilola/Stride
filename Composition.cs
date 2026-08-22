@@ -4,6 +4,7 @@ using StrideBrowser.Engine.Handlers;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.ViewModels;
+using System.Net.Http;
 
 namespace StrideBrowser;
 
@@ -24,6 +25,8 @@ public static class Composition
 
         // ThemeManager is now a singleton
         services.AddSingleton<ThemeManager>();
+        services.AddSingleton<HttpClient>();
+        services.AddSingleton<ISuggestionProvider, SuggestionProvider>();
 
         services.AddSingleton<ISettingsStore>(settingsStore);
         services.AddSingleton(settings);
@@ -99,7 +102,16 @@ public static class Composition
         services.AddSingleton<TCLensTransferService>();
 
         // ViewModel and Views
-        services.AddSingleton<BrowserViewModel>();
+        services.AddSingleton<BrowserViewModel>(sp =>
+        {
+            var settings = sp.GetRequiredService<BrowserSettings>();
+            var navigation = sp.GetRequiredService<NavigationService>();
+            var downloadStore = sp.GetRequiredService<IDownloadStore>();
+            var engine = sp.GetRequiredService<TabEngine>();
+            var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
+            var readerViewModel = sp.GetRequiredService<ViewModels.Reader.ReaderViewModel>();
+            return new BrowserViewModel(settings, navigation, downloadStore, engine, readerService, readerViewModel);
+        });
         services.AddSingleton<ViewModels.Reader.ReaderViewModel>(sp =>
         {
             var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();

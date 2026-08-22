@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Architecture review for Stride</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+</script>
+<style>
+.seam { stroke-dasharray: 4 4; }
+.leak { stroke: #dc2626; }
+.deep { background: linear-gradient(135deg, #0f172a, #1e293b); }
+</style>
+</head>
+<body class="bg-stone-50 text-slate-900 font-sans">
+<main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+<header class="space-y-4">
+<div class="flex items-baseline justify-between flex-wrap gap-3">
+<h1 class="text-3xl font-serif tracking-tight">Stride &mdash; feature architecture review</h1>
+<span class="text-sm text-slate-500">2026-08-22 &middot; branch feature/tab-dim &middot; 6 features</span>
+</div>
+<div class="flex flex-wrap gap-3 text-xs uppercase tracking-wider">
+<span class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1"><span class="h-3 w-3 rounded-sm border border-slate-900 bg-white"></span> module</span>
+<span class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1"><span class="h-3 w-8 border border-dashed border-slate-500"></span> seam</span>
+<span class="inline-flex items-center gap-2 rounded-full border border-red-300 bg-red-50 px-3 py-1 text-red-700"><span class="h-3 w-3 bg-red-600 rounded-full"></span> leakage</span>
+<span class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-white"><span class="h-3 w-3 rounded-sm bg-white"></span> deep module</span>
+</div>
+<p class="text-sm text-slate-600 max-w-3xl">Feature by feature. Each card shows where depth is real, where the interface is shallow, and where a seam would pay for itself. Diagrams carry the argument, prose stays sparse. Terms are from the codebase-design vocabulary throughout: module, interface, implementation, depth, seam, adapter, leverage, locality.</p>
+</header>
+
+<section id="candidates" class="space-y-10">
+
+<!-- 1 Tab lifecycle -->
+<article id="tab-lifecycle" class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+<div class="px-6 pt-6 flex flex-wrap items-start justify-between gap-3">
+<h2 class="text-xl font-serif">1. Collapse the tab lifecycle state machine</h2>
+<div class="flex flex-wrap gap-2">
+<span class="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold tracking-wider uppercase text-white">Strong</span>
+<span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs uppercase tracking-wider">in-process</span>
+</div>
+</div>
+<p class="px-6 pt-2 font-mono text-xs text-slate-500">Engine/TabEngine.cs:87 &middot; 471-479 &middot; 931-1008 &middot; Engine/TabHibernationManager.cs:70-243 &middot; MainWindow.xaml.cs:940-998 &middot; 1009 lines code-behind</p>
+<div class="grid md:grid-cols-2 gap-4 px-6 pt-5">
+<div class="rounded-lg border border-slate-200 bg-white p-4">
+<p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Before</p>
+<pre class="mermaid">flowchart TB
+  A[TabEngine<br/>~1000 lines] --> B{IsSleeping?}
+  A --> C{IsHibernated?}
+  A --> D[(global flag<br/>IsProgrammaticReaderNavigation)]
+  A -.-> E[TabHibernationManager<br/>HibernateTab]
+  A -.-> F[SuspendForPreview<br/>generation counter]
+  B -. leak .-> G[MainWindow<br/>IsScriptEnabled toggle]
+  C -. leak .-> H[Reader + Preview<br/>compete on same tab]
+  classDef leak stroke:#dc2626,stroke-width:2px,stroke-dasharray:4 4;
+  class G,H leak
+</pre>
+<p class="text-xs text-slate-500 mt-2">Three bools and a global flag. Suspend, hibernate, dim, reader, and preview each poke the same tab through different modules. Two navigations race on wake with only a Background-priority reset to separate them.</p>
+</div>
+<div class="rounded-lg border border-slate-900 bg-slate-900 p-4">
+<p class="text-xs uppercase tracking-wider text-slate-400 mb-2">After</p>
+<pre class="mermaid">flowchart TB
+  X[TabLifecycle module<br/>ONE state machine<br/>Decide - action - effect] --> Y[Adapter: WebView2<br/>suspend / resume / NavigateToString]
+  X --> Z[Adapter: Hibernator<br/>IsSafeToHibernate]
+  X --> W[Adapter: Renderer<br/>dim style + script toggle]
+  style X fill:#0f172a,stroke:#e2e8f0,color:#f8fafc
+</pre>
+<p class="text-xs text-slate-300 mt-2">One module owns the table. The interface is a single Decide call. Adapters carry the WebView2 details. Reader-aware hibernation and per-tab flags become inevitable.</p>
+</div>
+</div>
+<div class="px-6 py-5 space-y-3 text-sm">
+<p><span class="font-semibold">Problem.</span> Lifecycle state is not a state machine. It is IsSleeping, IsHibernated, and IsProgrammaticReaderNavigation scattered across TabEngine, TabHibernationManager, and MainWindow, with generation-counter races guarding preview suspend.</p>
+<p><span class="font-semibold">Solution.</span> Deepen one module behind TabLifecycle.Decide. The module holds the transition table. Callers send intent, adapters execute suspend, resume, dim, and hibernate.</p>
+<ul class="list-disc pl-5 text-xs leading-5 text-slate-700">
+<li>locality: wake races and reader-blind hibernation collapse into one table</li>
+<li>leverage: one interface tested; five call sites simplified</li>
+<li>tests hit one seam instead of live WebView2</li>
+<li>delete global flag; per-tab flag follows</li>
+</ul>
+</div>
+</article>
+
+<!-- 2 Reader mode -->
+<article id="reader" class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+<div class="px-6 pt-6 flex flex-wrap items-start justify-between gap-3">
+<h2 class="text-xl font-serif">2. Put reader truth behind one seam</h2>
+<div class="flex flex-wrap gap-2">
+<span class="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold tracking-wider uppercase text-white">Strong</span>
+<span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs uppercase tracking-wider">ports &amp; adapters</span>
+</div>
+</div>
+<p class="px-6 pt-2 font-mono text-xs text-slate-500">Services/Reader/ReaderService.cs:20 &middot; ReaderExtractor.cs:15 &middot; ViewModels/Reader/ReaderViewModel.cs:33 &middot; MainWindow.xaml.cs:788-998 &middot; TabEngine.cs:87 sealed</p>
+<div class="grid md:grid-cols-2 gap-4 px-6 pt-5">
+<div class="rounded-lg border border-slate-200 bg-white p-4">
+<p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Before</p>
+<div class="space-y-2 text-xs">
+<div class="rounded border border-slate-300 p-2">ReaderService &mdash; sessions dict, sealed TabEngine param</div>
+<div class="rounded border border-slate-300 p-2">MainWindow code-behind &mdash; IsScriptEnabled toggled at 4 sites, flag set/reset, about:blank sniffing</div>
+<div class="rounded border border-red-300 bg-red-50 p-2 text-red-700">TabHibernationManager &mdash; writes about:blank over tab.Url during reader, never checks IsReaderActive</div>
+<div class="rounded border border-dashed border-slate-400 p-2 text-slate-500">ShowReaderFallback overlay &mdash; dead XAML + dead methods</div>
+</div>
+<p class="text-xs text-slate-500 mt-2">Depth on the data path, shallow at the lifecycle edge. Eight skipped tests trace to the same sealed TabEngine dependency. Two hardcoded wall-clock timeouts, 3000 ms in CanEnterReaderAsync and 4000 ms in EnterReaderAsync, make extraction outcomes non-deterministic under test.</p>
+</div>
+<div class="rounded-lg border border-slate-900 bg-slate-900 p-4">
+<p class="text-xs uppercase tracking-wider text-slate-400 mb-2">After</p>
+<pre class="mermaid">flowchart LR
+  P[ReaderService<br/>sessions + cache<br/>ITabReaderEnv seam] --> Q[Adapter: Extractor<br/>pure JS protocol]
+  P --> R[Adapter: Renderer<br/>sanitize + template]
+  P --> S[Adapter: Host view<br/>NavigateToString + script toggle]
+  style P fill:#0f172a,stroke:#e2e8f0,color:#f8fafc
+</pre>
+<p class="text-xs text-slate-300 mt-2">Service holds truth via a narrow ITabReaderEnv plus IReaderExtractor. View is an adapter. Hibernation consults reader state through the same seam. Fallback overlay deleted.</p>
+</div>
+</div>
+<div class="px-6 py-5 space-y-3 text-sm">
+<p><span class="font-semibold">Problem.</span> Three owners share reader lifecycle, and correctness rides on a global bool IsProgrammaticReaderNavigation the interface never mentions. Hibernation is reader-blind and suspend hangs extraction.</p>
+<p><span class="font-semibold">Solution.</span> Replace sealed TabEngine with ITabReaderEnv, move NavigateToString and IsScriptEnabled behind a DisplayAdapter, make IsReaderActive part of IsSafeToHibernate, inject TimeProvider for timeout tests.</p>
+<ul class="list-disc pl-5 text-xs leading-5 text-slate-700">
+<li>ReaderSanitizer as model: deep pure module, fully leveraged tests</li>
+<li>locality: sanitize, render, cache now live together</li>
+<li>8 skipped tests become plain fakes</li>
+</ul>
+</div>
+</article>
+
+<!-- 3 Link preview -->
+<article id="link-preview" class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+<div class="px-6 pt-6 flex flex-wrap items-start justify-between gap-3">
+<h2 class="text-xl font-serif">3. Carry trigger semantics through the IPC seam</h2>
+<div class="flex flex-wrap gap-2">
+<span class="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold tracking-wider uppercase text-white">Strong</span>
+<span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs uppercase tracking-wider">local-substitutable</span>
+</div>
+</div>
+<p class="px-6 pt-2 font-mono text-xs text-slate-500">Resources/Scripts/link-preview.js:10-79 &middot; Engine/WebViewIpcBridge.cs:137-172 &middot; Services/LinkPreview/LinkPreviewService.cs:49-101 &middot; TabEngine.cs:931-1008 &middot; dangling commits a0b15c9</p>
+<div class="grid md:grid-cols-2 gap-4 px-6 pt-5">
+<div class="rounded-lg border border-slate-200 bg-white p-4">
+<p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Before</p>
+<pre class="mermaid">flowchart LR
+  S[link-preview.js<br/>altHeld + rect + trigger] --> B[Bridge<br/>LINK_PREVIEW_PEEK:<br/>discards trigger]
+  B --> P[Policy<br/>deep on URL, blind on modifier]
+  P --> V[Service<br/>hardcodes Point 0,0<br/>AnchorRect dead]
+  V --> T[TabEngine<br/>dim + suspend<br/>generation guard untested]
+  S -. leak .-> P
+  B -. leak .-> V
+  classDef leak stroke:#dc2626,stroke-width:2px,stroke-dasharray:4 4;
+  class S,P,B,V leak
+</pre>
+<p class="text-xs text-slate-500 mt-2">Four validation sites already drifted. Bridge hardcodes AltPress, policy enum has one member, service wall-clock dedups with Thread.Sleep in tests. Suspend logic is the hardest code and has zero tests. Feature lives in dangling commits.</p>
+</div>
+<div class="rounded-lg border border-slate-900 bg-slate-900 p-4">
+<p class="text-xs uppercase tracking-wider text-slate-400 mb-2">After</p>
+<pre class="mermaid">flowchart LR
+  S2[link-preview.js<br/>physical Alt via code] --> B2[Bridge<br/>faithful parse, no policy]
+  B2 --> P2[Policy<br/>IsPreviewableUrl + ShouldPeek<br/>trigger is testable input]
+  P2 --> V2[Service<br/>TimeProvider seam<br/>Position derived or deleted]
+  V2 --> T2[Lifecycle adapter<br/>generation guard tested]
+  style P2 fill:#0f172a,stroke:#e2e8f0,color:#f8fafc
+</pre>
+<p class="text-xs text-slate-300 mt-2">One enablement gate in the service. Bridge forwards, policy decides. Anchor geometry either drives placement or is removed. Clocks become substitutable.</p>
+</div>
+</div>
+<div class="px-6 py-5 space-y-3 text-sm">
+<p><span class="font-semibold">Problem.</span> The pipeline flattens its richest input at the only seam the test harness cannot reach, so physical-modifier rules have no home in testable code and the deepest code is untested.</p>
+<p><span class="font-semibold">Solution.</span> Preserve LinkPreviewTrigger end to end, unify Enabled gating in the service, delete AnchorRect or use it, abstract time, and complete the service interface so sleep events no longer sit off it.</p>
+<ul class="list-disc pl-5 text-xs leading-5 text-slate-700">
+<li>locality: URL and trigger rules together in one pure module</li>
+<li>leverage: policy tests cover new modifiers for free</li>
+<li>suspend generation logic becomes testable</li>
+</ul>
+</div>
+</article>
+
+<!-- 4 Web messaging + pages -->
+<article id="messaging" class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+<div class="px-6 pt-6 flex flex-wrap items-start justify-between gap-3">
+<h2 class="text-xl font-serif">4. Make the web message contract enforce itself</h2>
+<div class="flex flex-wrap gap-2">
+<span class="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold tracking-wider uppercase text-white">Strong</span>
+<span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs uppercase tracking-wider">local-substitutable</span>
+</div>
+</div>
+<p class="px-6 pt-2 font-mono text-xs text-slate-500">Services/WebMessageRouter.cs:44-67 &middot; Models/WebMessagePrefix.cs:34 consts &middot; Engine/Handlers/* &middot; Services/Pages/NewTabPage.cs:19 &middot; Resources/Pages/NewTab.html:553</p>
+<div class="grid md:grid-cols-2 gap-4 px-6 pt-5">
+<div class="rounded-lg border border-slate-200 bg-white p-4">
+<p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Before</p>
+<pre class="mermaid">flowchart TB
+  A[Templates<br/>__T + 'setting:' + k + ':' + v<br/>untokened update-check-result:] --> B([Router<br/>shallow dispatch])
+  C[Models/WebMessagePrefix<br/>34 consts] -. drift .-> B
+  D[SettingsMessageHandler<br/>57 setting keys] -. drift .-> A
+  E[NewTabPage<br/>JSON.parse '{{SHORTCUTS}}'] -. leak .-> F[page holds IPC token]
+  B --> G[8 handlers<br/>ad-hoc Split(':') + JsonDocument]
+  classDef leak stroke:#dc2626,stroke-width:2px,stroke-dasharray:4 4;
+  class E,F leak
+</pre>
+<p class="text-xs text-slate-500 mt-2">Six drifts already, one behavior-changing, one live injection through a single-quoted JSON.parse inside a page that holds the token. Host to page frames three different ways.</p>
+</div>
+<div class="rounded-lg border border-slate-900 bg-slate-900 p-4">
+<p class="text-xs uppercase tracking-wider text-slate-400 mb-2">After</p>
+<pre class="mermaid">flowchart TB
+  X([Contract registry<br/>one source of prefixes<br/>+ channel names]) --> Y([Router<br/>same dispatch])
+  X --> Z[Parity test<br/>scans templates, asserts coverage]
+  V[TemplateRenderer<br/>RenderJsonPage<br/>tok + json block] --> W[Pages<br/>JSON.parse from script type=json]
+  style X fill:#0f172a,stroke:#e2e8f0,color:#f8fafc
+</pre>
+<p class="text-xs text-slate-300 mt-2">One registry generates both C# consts and JS sentinels. A single test binds templates to handlers. Every payload rides the escaped JSON block. No string is written twice.</p>
+</div>
+</div>
+<div class="px-6 py-5 space-y-3 text-sm">
+<p><span class="font-semibold">Problem.</span> Contract locality is zero. Both sides of the IPC are strings, so drift is invisible until it breaks behavior, and the page that skips the safe JSON path holds your token.</p>
+<p><span class="font-semibold">Solution.</span> Route NewTab shortcuts through RenderJsonPage, unify host to page framing on tokened channel names, publish one prefix registry, add the parity test, delete HexToRgb and payload duplication.</p>
+<ul class="list-disc pl-5 text-xs leading-5 text-slate-700">
+<li>locality: contract bugs become build failures, not traces</li>
+<li>leverage: one test covers all handlers and pages</li>
+<li>interface shrinks: templating has one invocation shape</li>
+</ul>
+</div>
+</article>
+
+<!-- 5 Persistence stores -->
+<article id="stores" class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+<div class="px-6 pt-6 flex flex-wrap items-start justify-between gap-3">
+<h2 class="text-xl font-serif">5. Give the stores a file-system seam</h2>
+<div class="flex flex-wrap gap-2">
+<span class="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold tracking-wider uppercase text-white">Strong</span>
+<span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs uppercase tracking-wider">ports &amp; adapters</span>
+</div>
+</div>
+<p class="px-6 pt-2 font-mono text-xs text-slate-500">Services/SessionStore.cs:13 &middot; HistoryStore.cs:12-14 &middot; DownloadStore.cs:8-12 &middot; SettingsStore.cs:14 &middot; OneTabStore.cs:14 &middot; Helpers/AtomicFileWriter.cs:17-19 &middot; Helpers/AppPaths.cs:11-32</p>
+<div class="grid md:grid-cols-2 gap-4 px-6 pt-5">
+<div class="rounded-lg border border-slate-200 bg-white p-4">
+<p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Before</p>
+<div class="grid grid-cols-5 gap-2 text-xs">
+<div class="rounded border border-slate-300 p-2 text-center">Session<br/>deep<br/>no tests</div>
+<div class="rounded border border-slate-300 p-2 text-center">History<br/>deep<br/>no tests</div>
+<div class="rounded border border-red-300 bg-red-50 p-2 text-center">Download<br/>shallow<br/>ObservableCollection leak</div>
+<div class="rounded border border-slate-300 p-2 text-center">OneTab<br/>deep<br/>no tests</div>
+<div class="rounded border border-slate-300 p-2 text-center">Settings<br/>deep<br/>no tests</div>
+</div>
+<p class="text-xs text-slate-500 mt-2">All five funnel writes through AtomicFileWriter yet each hand-rolls reads and options, HistoryStore writes PascalCase while others write camelCase, AppPaths is a central catalog whose consumers copy values into their own static readonly fields, DownloadStore persists on PropertyChanged with no lock.</p>
+</div>
+<div class="rounded-lg border border-slate-900 bg-slate-900 p-4">
+<p class="text-xs uppercase tracking-wider text-slate-400 mb-2">After</p>
+<pre class="mermaid">flowchart TB
+  I[Store interface<br/>Load / Save pure records] --> S[(Adapter: AtomicFileSystem<br/>read + write + temp+rename)]
+  I --> M[(Disk)]
+  style I fill:#0f172a,stroke:#e2e8f0,color:#f8fafc
+</pre>
+<p class="text-xs text-slate-300 mt-2">One helper owns the JSON options and the read path. Stores take a path or file-system seam in the constructor. AppPaths becomes a factory, not a constant pool. DownloadStore stops exposing WPF collection types.</p>
+</div>
+</div>
+<div class="px-6 py-5 space-y-3 text-sm">
+<p><span class="font-semibold">Problem.</span> The five stores are deep individually but their path seam points at the developer's real %LocalAppData% at type-load time, so none can be unit tested and serialization contracts diverge silently.</p>
+<p><span class="font-semibold">Solution.</span> Inject the file-system seam, collapse options and directory creation into the atomic file module, fix HistoryStore casing, remove the leaked ObservableCollection from the DownloadStore interface.</p>
+<ul class="list-disc pl-5 text-xs leading-5 text-slate-700">
+<li>leverage: one seam makes five modules testable</li>
+<li>locality: JSON contracts owned in one module</li>
+<li>delete redundant Directory.CreateDirectory at five sites</li>
+</ul>
+</div>
+</article>
+
+<!-- 6 Navigation + policy + input + adblock + updates -->
+<article id="nav-input" class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+<div class="px-6 pt-6 flex flex-wrap items-start justify-between gap-3">
+<h2 class="text-xl font-serif">6. Reconcile navigation, shortcuts, and filtering</h2>
+<div class="flex flex-wrap gap-2">
+<span class="rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold tracking-wider uppercase text-white">Worth exploring</span>
+<span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs uppercase tracking-wider">in-process</span>
+</div>
+</div>
+<p class="px-6 pt-2 font-mono text-xs text-slate-500">Engine/NavigationPolicyEngine.cs:14-186 &middot; Services/NavigationService.cs:27 &middot; Services/Input/KeyboardShortcutMap.cs:110-136 &middot; MainWindow.xaml.cs:688-720 &middot; Engine/AdBlockFilter.cs:17-109 &middot; Services/FocusDomainMatcher.cs</p>
+<div class="grid md:grid-cols-2 gap-4 px-6 pt-5">
+<div class="rounded-lg border border-slate-200 bg-white p-4">
+<p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Before</p>
+<pre class="mermaid">flowchart TB
+  A[NavigationService<br/>Resolve text-&gt;URL<br/>deep, tested] -. bypass .-> B[NavigationPolicyEngine<br/>pure half + entangled adapter<br/>dynamic wv + Dispatcher + modal dialog]
+  C[KeyboardShortcutMap<br/>half-pure] -. hardcoded .-> D[MainWindow PreviewKeyDown<br/>Alt+T + Ctrl 1..9]
+  E[AdBlockFilter<br/>static blob] -. duplicate .-> F[FocusDomainMatcher<br/>pure + tested]
+  G[UpdateService<br/>NetSparkle AppCastItem leaks]
+  classDef leak stroke:#dc2626,stroke-width:2px,stroke-dasharray:4 4;
+  class B,D,E,F leak
+</pre>
+<p class="text-xs text-slate-500 mt-2">NavigationService is deep and fully tested yet command-line and web-message open paths bypass it. The policy engine is two modules sharing a name. AdBlockFilter reimplements the matcher it could import, while staying static and untestable. The shortcut map never detects conflicts.</p>
+</div>
+<div class="rounded-lg border border-slate-900 bg-slate-900 p-4">
+<p class="text-xs uppercase tracking-wider text-slate-400 mb-2">After</p>
+<pre class="mermaid">flowchart TB
+  A2[NavigationService<br/>all entry points resolve here] --> B2[Policy engine<br/>pure predicates - adapters at edge]
+  C2[Shortcut registry<br/>conflict detection + TryExecute single match]
+  E2[Filtering module<br/>one matcher + one loader<br/>network adapter at boundary]
+  style B2 fill:#0f172a,stroke:#e2e8f0,color:#f8fafc
+  style C2 fill:#0f172a,stroke:#e2e8f0,color:#f8fafc
+  style E2 fill:#0f172a,stroke:#e2e8f0,color:#f8fafc
+</pre>
+<p class="text-xs text-slate-300 mt-2">One path normalizes every URL. One map owns every binding. One matcher feeds both filters through loaders that are the only place IO lives.</p>
+</div>
+</div>
+<div class="px-6 py-5 space-y-3 text-sm">
+<p><span class="font-semibold">Problem.</span> Navigation, shortcuts, and filtering each contain a clean pure core surrounded by adapters that bypass it, so the tested half does not protect the live path.</p>
+<p><span class="font-semibold">Solution.</span> Route every navigation entry through NavigationService, split EvaluateAndHandle into pure decision plus thin WebView2 adapter, centralize key handling with conflict detection, and collapse AdBlockFilter onto FocusDomainMatcher behind a loader seam.</p>
+<ul class="list-disc pl-5 text-xs leading-5 text-slate-700">
+<li>locality: URL normalization in one module</li>
+<li>leverage: matcher reused instead of reimplemented</li>
+<li>leakage stops: static global disappears</li>
+</ul>
+</div>
+</article>
+
+</section>
+
+<section id="top-recommendation" class="rounded-2xl border-2 border-emerald-600 bg-white shadow-sm overflow-hidden">
+<div class="px-6 pt-6">
+<p class="text-xs uppercase tracking-wider text-emerald-700">Top recommendation</p>
+<h2 class="text-2xl font-serif pt-1"><a href="#messaging" class="underline decoration-emerald-600 underline-offset-4">4. Make the web message contract enforce itself</a>, then <a href="#stores" class="underline decoration-emerald-600 underline-offset-4">5. Give the stores a file-system seam</a></h2>
+</div>
+<div class="px-6 py-5 text-sm leading-6 text-slate-700 space-y-3">
+<p>The contract fix is first because it is the cheapest Deepening that buys the most safety. One parity test that scans every .html resource for <span class="font-mono text-xs bg-slate-100 px-1 rounded">__T + '&lt;prefix&gt;'</span> and asserts a registered MessageRoute covers it catches six existing drifts, closes a live single-quoted <span class="font-mono text-xs">JSON.parse</span> injection in a page that holds the IPC token, and makes every future message addition fail the build instead of failing silently with a Trace line. No interface changes, no migration, one new test file.</p>
+<p>Right after it, the stores seam. Constructor-injecting the file-system target turns five untestable modules into five tested ones with the same interface surface. That is the highest leverage-per-line change in the review: one seam, five modules, every persistence path gains coverage, and the PascalCase versus camelCase divergence becomes a pinned expectation instead of a latent migration bug. Together they are a single PR shape: enforce the outer boundary, then make the persistence boundary substitutable.</p>
+<p>If you want the highest-risk correctness fix first instead, swap in <a href="#tab-lifecycle" class="underline">1</a> and <a href="#reader" class="underline">2</a> as the next sweep. Reader-blind hibernation writing about:blank over tab.Url and the non-deterministic timeout race are real data-loss bugs, they just need more surgery than the two wins above.</p>
+</div>
+<div class="px-6 pb-6 flex flex-wrap gap-2 text-xs uppercase tracking-wider">
+<span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1">Tests hit one interface</span>
+<span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1">Contract bugs become build failures</span>
+<span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1">Five modules testable at once</span>
+<span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1">Token-safe by construction</span>
+</div>
+</section>
+
+<footer class="text-xs text-slate-500 text-center pb-4">Generated 2026-08-22 from feature/tab-dim working tree (hot history) and dangling feature/link-preview at a0b15c9. No ADRs or CONTEXT.md found; nothing to contradict.</footer>
+
+</main>
+</body>
+</html>
