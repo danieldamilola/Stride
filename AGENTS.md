@@ -28,4 +28,6 @@ Prove a change works against the real artifact, not by reading the code. Run the
 
 ## Release
 
-Releasing follows the release-management skill in `.agents/skills/release-management/`. Read it before touching versioning, the installer, or release notes.
+Releasing follows the release-management skill in `.agents/skills/release-management/`. Read it before touching versioning, the installer, or release notes. 
+Note: We have switched to a custom micro-updater. When publishing or building a new installer, you must generate both the `.zip` update package and the native `.exe` installer.
+Additionally, you must update `ReleaseNotes.md` immediately after every feature, fix, or change is made, so we always have an up-to-date log of what goes into the next release.

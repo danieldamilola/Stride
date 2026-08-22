@@ -50,6 +50,7 @@
 * **Release Notes Auto-Open**: Stride now correctly opens the `stride://release-notes` page automatically after an update is installed, so you always know what's new.
 
 **Bug Fixes**
+* **New Tab Shortcuts**: Fixed a bug where adding a shortcut with special characters (like single quotes or backslashes) or importing bookmarks would completely break the New Tab page. Shortcuts are now securely passed to the frontend using Base64 encoding.
 * **Toolbar Icon Toggles**: Fixed a bug where toggling the "Show Reader Icon" setting off would not actually hide the icon from the toolbar. The setting is now correctly wired to instantly update the UI.
 
 **Under the Hood**

@@ -264,9 +264,24 @@ public partial class MainWindow : Window
         }
 
         string flagFile = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "post_update.flag");
+        bool isPostUpdate = false;
+        
         if (System.IO.File.Exists(flagFile))
         {
             try { System.IO.File.Delete(flagFile); } catch {}
+            isPostUpdate = true;
+        }
+        
+        var currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.2.1";
+        if (_vm.Settings.LastSeenReleaseNotesVersion != currentVersion)
+        {
+            isPostUpdate = true;
+            _vm.Settings.LastSeenReleaseNotesVersion = currentVersion;
+            _settingsStore.Save(_vm.Settings);
+        }
+
+        if (isPostUpdate)
+        {
             var tab = _engine.CreateTab(InternalUrls.ReleaseNotes);
             _engine.SwitchTo(tab);
             await _engine.ActivateAsync(tab);
