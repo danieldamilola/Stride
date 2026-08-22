@@ -551,16 +551,21 @@
     <script>
         const __T = '{{IPC_TOKEN}}:';
         let shortcuts = [];
-        try {
-            const b64 = '{{SHORTCUTS}}';
-            if (b64 && b64 !== '{{SHORT'+'CUTS}}') {
+        function updateShortcutsFromB64(b64) {
+            try {
+                if (!b64 || b64 === '{{SHORT'+'CUTS}}') return;
                 const binStr = atob(b64);
                 const bytes = new Uint8Array(binStr.length);
                 for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
                 const text = new TextDecoder().decode(bytes);
                 shortcuts = JSON.parse(text);
-            }
-        } catch(e) { console.error("Failed to load shortcuts:", e); }
+                renderShortcuts();
+            } catch(e) { console.error("Failed to load shortcuts:", e); }
+        }
+
+        try {
+            updateShortcutsFromB64('{{SHORTCUTS}}');
+        } catch(e) {}
 
         function getDomain(url) {
             try { return new URL(url).hostname; } catch { return url; }

@@ -848,8 +848,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private void UpdateUrlLabel(BrowserTab tab)
+    private void UpdateUrlLabel(BrowserTab? tab)
     {
+        if (tab == null) return;
+        
         if (!StandardAddressBar.IsKeyboardFocusWithin)
         {
             StandardAddressBar.Text = tab.Url;
@@ -1142,10 +1144,14 @@ public partial class MainWindow : Window
         // Live-refresh new tab pages when shortcuts are added/removed
         if (key == "shortcuts")
         {
+            var shortcutsJson = System.Text.Json.JsonSerializer.Serialize(_vm.Settings.NewTabShortcuts);
+            var b64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(shortcutsJson));
+            var js = $"if (typeof updateShortcutsFromB64 === 'function') updateShortcutsFromB64('{b64}');";
+            
             foreach (var tab in _engine.Tabs)
             {
                 if (tab.Url == InternalUrls.NewTab)
-                    _engine.Navigate(tab, InternalUrls.NewTab);
+                    _engine.ExecuteScript(tab.Id, js);
             }
         }
     }
