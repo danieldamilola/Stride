@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,9 +41,12 @@ public partial class App : Application
         // Check for updates silently if enabled
         var settingsStore = _serviceProvider.GetRequiredService<ISettingsStore>();
         var settings = settingsStore.Load();
+        
+        var updateService = _serviceProvider.GetRequiredService<UpdateService>();
+        updateService.AppExitRequested += () => Dispatcher.Invoke(() => Shutdown());
+        
         if (settings.AutoCheckForUpdates)
         {
-            var updateService = _serviceProvider.GetRequiredService<UpdateService>();
             // Fire and forget the async silent check
             _ = updateService.CheckForUpdatesQuietlyAsync();
         }
