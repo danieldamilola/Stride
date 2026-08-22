@@ -1,3 +1,41 @@
+<style>
+  body {
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+    background-color: #ffffff;
+    color: #333333;
+    line-height: 1.6;
+    padding: 10px 20px;
+  }
+  h1 {
+    font-size: 22px;
+    color: #111111;
+    border-bottom: 1px solid #eaeaea;
+    padding-bottom: 8px;
+    margin-top: 0;
+  }
+  h2, h3, h4 {
+    font-size: 18px;
+    color: #444444;
+    margin-top: 20px;
+  }
+  code {
+    background-color: #f4f4f4;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: Consolas, monospace;
+    font-size: 0.9em;
+  }
+  ul {
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 8px;
+  }
+  strong {
+    font-weight: 600;
+    color: #222222;
+  }
+</style>
 # Release Note: Reader Mode & Link Preview
 
 **Features**
