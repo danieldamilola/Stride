@@ -94,7 +94,6 @@ public partial class MainWindow : Window
         _engine.ActiveTabChanged += tab =>
         {
             _readerVm.OnActiveTabChanged(tab?.Id);
-            _ = _readerVm.RefreshAvailabilityAsync();
             Dispatcher.InvokeAsync(UpdateReaderOverlay);
         };
         _engine.TabClosed += tabId => Dispatcher.InvokeAsync(UpdateReaderOverlay);
@@ -282,7 +281,6 @@ public partial class MainWindow : Window
                     _securityBadge.StopSecuritySpinner();
                     LoadingBar.Visibility = Visibility.Collapsed;
                     _securityBadge.UpdateSecurityIcon(tab.Url);
-                    _ = _readerVm.RefreshAvailabilityAsync();
                 }
             }
         };
@@ -912,7 +910,6 @@ public partial class MainWindow : Window
             var current = _readerVm.Current;
             var error = _readerVm.Error;
 
-            ReaderButton.Visibility = (_readerVm.IsReaderAvailable || isInReader) ? Visibility.Visible : Visibility.Collapsed;
             ReaderButton.Opacity = isInReader ? 1.0 : 0.7;
             ReaderButton.ToolTip = isInReader ? "Exit reader view (Ctrl+Shift+R)" : "Reader view (Ctrl+Shift+R)";
 

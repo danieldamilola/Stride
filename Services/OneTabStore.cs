@@ -127,6 +127,31 @@ public sealed class OneTabStore : IOneTabStore
         }
     }
 
+    public OneTabGroup? SaveAll(IEnumerable<BrowserTab> tabs)
+    {
+        var saveable = tabs
+            .Where(t => !string.IsNullOrEmpty(t.Url)
+                     && !InternalUrls.IsInternal(t.Url)
+                     && !t.Url.StartsWith("about:", StringComparison.OrdinalIgnoreCase)
+                     && !t.Url.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            .Select(t => new OneTabEntry(t.Url, string.IsNullOrEmpty(t.Title) ? t.Url : t.Title, null, DateTime.UtcNow))
+            .ToList();
+
+        if (saveable.Count == 0) return null;
+
+        var now = DateTime.UtcNow;
+        var group = new OneTabGroup
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = now.ToLocalTime().ToString("MMM d, h:mm tt"),
+            SavedAt = now,
+            Tabs = saveable
+        };
+
+        AddGroup(group);
+        return group;
+    }
+
     // ── Internal helpers (caller must hold _lock) ────────────────────
 
     private List<OneTabGroup> LoadUnsafe()

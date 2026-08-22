@@ -634,10 +634,10 @@
     </script>
   <style>
 :root, :root[data-theme="dark"] {
-    --bg-base: #121212;
-    --bg-dark: #0C0C0C;
-    --bg-surface: #1A1A1A;
-    --bg-hover: #242424;
+    --bg-base: #0e0d0b;
+    --bg-dark: #0e0d0b;
+    --bg-surface: #141310;
+    --bg-hover: #1f1d19;
     --border: #333333;
     --text-main: #E0E0E0;
     --text-bright: #D4D4D4;
@@ -646,10 +646,10 @@
     --white: #FFFFFF;
 }
 :root[data-theme="light"] {
-    --bg-base: #F5F5F3;
-    --bg-dark: #EFEFEE;
-    --bg-surface: #FFFFFF;
-    --bg-hover: #E6E6E5;
+    --bg-base: #f8f8fa;
+    --bg-dark: #f8f8fa;
+    --bg-surface: #ffffff;
+    --bg-hover: #f4f4f6;
     --border: #D4D4D2;
     --text-main: #111113;
     --text-bright: #000000;
@@ -659,10 +659,10 @@
 }
 @media (prefers-color-scheme: light) {
     :root[data-theme="system"] {
-        --bg-base: #F5F5F3;
-        --bg-dark: #EFEFEE;
-        --bg-surface: #FFFFFF;
-        --bg-hover: #E6E6E5;
+        --bg-base: #f8f8fa;
+        --bg-dark: #f8f8fa;
+        --bg-surface: #ffffff;
+        --bg-hover: #f4f4f6;
         --border: #D4D4D2;
         --text-main: #111113;
         --text-bright: #000000;
@@ -970,6 +970,14 @@
                 </div>
                 <div class="setting-control">
                   <input type="checkbox" class="toggle" {{CHK_SETTINGSICON}} onchange="s('showSettingsIcon', this)" />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Show Reader Icon</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_READERICON}} onchange="s('showReaderIcon', this)" />
                 </div>
               </div>
             </div>
