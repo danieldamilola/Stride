@@ -268,7 +268,7 @@ public partial class MainWindow : Window
         
         if (System.IO.File.Exists(flagFile))
         {
-            try { System.IO.File.Delete(flagFile); } catch {}
+            try { System.IO.File.Delete(flagFile); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
             isPostUpdate = true;
         }
         

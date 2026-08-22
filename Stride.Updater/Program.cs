@@ -30,12 +30,12 @@ public static class Program
             foreach (var p in strideProcesses)
             {
                 if (p.Id == ourProcessId) continue;
-                try { if (p.MainModule?.FileName.StartsWith(targetDir, StringComparison.OrdinalIgnoreCase) == true) isAnyRunning = true; } catch { }
+                try { if (p.MainModule?.FileName.StartsWith(targetDir, StringComparison.OrdinalIgnoreCase) == true) isAnyRunning = true; } catch (System.Exception ex) { System.Console.WriteLine(ex); }
             }
             
             foreach (var p in edgeProcesses)
             {
-                try { if (p.MainModule?.FileName.StartsWith(targetDir, StringComparison.OrdinalIgnoreCase) == true) isAnyRunning = true; } catch { }
+                try { if (p.MainModule?.FileName.StartsWith(targetDir, StringComparison.OrdinalIgnoreCase) == true) isAnyRunning = true; } catch (System.Exception ex) { System.Console.WriteLine(ex); }
             }
 
             if (!isAnyRunning)
@@ -45,7 +45,7 @@ public static class Program
         }
 
         // Failsafe kill
-        try { foreach (var p in Process.GetProcessesByName("Stride")) { if (p.Id != Process.GetCurrentProcess().Id) p.Kill(); } } catch { }
+        try { foreach (var p in Process.GetProcessesByName("Stride")) { if (p.Id != Process.GetCurrentProcess().Id) p.Kill(); } } catch (System.Exception ex) { System.Console.WriteLine(ex); }
 
         try
         {

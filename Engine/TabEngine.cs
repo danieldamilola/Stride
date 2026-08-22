@@ -1018,11 +1018,11 @@ public sealed class TabEngine : IDisposable
             await wv.CoreWebView2.ExecuteScriptAsync(
                 "(function(){ var s = document.getElementById('__strideDimStyle'); if (!s) { s = document.createElement('style'); s.id = '__strideDimStyle'; s.innerHTML = 'html { filter: brightness(0.25) !important; transition: filter 0.15s ease !important; }'; (document.head || document.documentElement).appendChild(s); } })();");
         }
-        catch { }
+        catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
 
         if (generation != _previewGeneration || _previewOriginTabId != tabId)
         {
-            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch { }
+            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
             return;
         }
 
@@ -1044,11 +1044,11 @@ public sealed class TabEngine : IDisposable
         {
             if (suspended)
             {
-                try { wv.CoreWebView2.Resume(); } catch { }
+                try { wv.CoreWebView2.Resume(); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
                 tab.IsSleeping = false;
             }
-            try { wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal; } catch { }
-            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch { }
+            try { wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal; } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
         }
     }
 
@@ -1080,7 +1080,7 @@ public sealed class TabEngine : IDisposable
             _ = wv.CoreWebView2.ExecuteScriptAsync(
                 "(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();");
         }
-        catch { }
+        catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     internal bool IsPreviewOrigin(Guid tabId) => _previewOriginTabId == tabId;
