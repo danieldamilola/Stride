@@ -407,9 +407,9 @@
 
                 index++;
 
-                for (const [domain, domainEntries] of Object.entries(byDomain)) {
+                for (const [domainIndex, [domain, domainEntries]] of Object.entries(byDomain).entries()) {
                     const label = getDomainLabel(domain);
-                    const groupId = `g-${index}-${domain}`.replace(/[^a-zA-Z0-9]/g, '_');
+                    const groupId = `g-${index}-${domainIndex}`;
 
                     if (domainEntries.length === 1) {
                         const e = domainEntries[0];
