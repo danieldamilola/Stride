@@ -550,7 +550,17 @@
 
     <script>
         const __T = '{{IPC_TOKEN}}:';
-        const shortcuts = JSON.parse('{{SHORTCUTS}}' || '[]');
+        let shortcuts = [];
+        try {
+            const b64 = '{{SHORTCUTS}}';
+            if (b64 && b64 !== '{{SHORT'+'CUTS}}') {
+                const binStr = atob(b64);
+                const bytes = new Uint8Array(binStr.length);
+                for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+                const text = new TextDecoder().decode(bytes);
+                shortcuts = JSON.parse(text);
+            }
+        } catch(e) { console.error("Failed to load shortcuts:", e); }
 
         function getDomain(url) {
             try { return new URL(url).hostname; } catch { return url; }
