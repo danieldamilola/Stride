@@ -176,7 +176,7 @@ public sealed class WebViewFactory
         // calls after activation - skip here to avoid a double load.
         var callerManagedUrls = new System.Collections.Generic.HashSet<string>
         {
-            InternalUrls.Settings, InternalUrls.OneTab, InternalUrls.History, InternalUrls.Downloads, InternalUrls.Onboarding, "internal://pending-native"
+            InternalUrls.Settings, InternalUrls.OneTab, InternalUrls.History, InternalUrls.Downloads, InternalUrls.Onboarding, InternalUrls.ReleaseNotes, "internal://pending-native"
         };
         if (callerManagedUrls.Contains(tab.Url))
             return;

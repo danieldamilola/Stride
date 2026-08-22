@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace StrideBrowser.Models;
@@ -28,7 +28,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private string _accentColor = "#7fb89a";
 
     [ObservableProperty]
-    private int _defaultZoom = 100;
+    private int _defaultZoom = 90;
 
     [ObservableProperty]
     private bool _restoreSessionOnStartup = true;
@@ -37,7 +37,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _hardwareAccelerationEnabled = true;
 
     [ObservableProperty]
-    private bool _forceDarkMode = true;
+    private bool _forceDarkMode;
 
     [ObservableProperty]
     private bool _forceHttps = true;
@@ -72,7 +72,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private double _tabSleepOpacity = 0.55;
 
     [ObservableProperty]
-    private double _tabHibernationOpacity = 0.15;
+    private double _tabHibernationOpacity = 0.5;
 
     [ObservableProperty]
     private bool _tabSleepDimEnabled = true;
@@ -130,7 +130,10 @@ public sealed partial class BrowserSettings : ObservableObject
     private Dictionary<string, string> _customShortcuts = new();
 
     [ObservableProperty]
-    private bool _hasCompletedOnboarding;
+    private bool _hasCompletedOnboarding = true;
+
+    [ObservableProperty]
+    private string _lastSeenReleaseNotesVersion = "";
 
     // ── Reader mode ──
 

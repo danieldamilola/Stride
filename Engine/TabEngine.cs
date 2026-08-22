@@ -187,7 +187,20 @@ public sealed class TabEngine : IDisposable
             }
         }
 
-        var tab = new BrowserTab { Url = resolvedUrl, Title = "New Tab" };
+        var title = resolvedUrl switch
+        {
+            InternalUrls.NewTab => "New Tab",
+            InternalUrls.Settings => "Settings",
+            InternalUrls.OneTab => "OneTab",
+            InternalUrls.History => "History",
+            InternalUrls.Downloads => "Downloads",
+            InternalUrls.Onboarding => "Welcome to Stride",
+            InternalUrls.ReleaseNotes => "What's New in Stride",
+            InternalUrls.Focus => "Focus Locked",
+            _ => "New Tab"
+        };
+
+        var tab = new BrowserTab { Url = resolvedUrl, Title = title };
         Tabs.Add(tab);
         SwitchTo(tab);
         TabCreated?.Invoke(tab);
@@ -326,8 +339,57 @@ public sealed class TabEngine : IDisposable
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
 
+        tab.Url = url;
+
+        if (url == InternalUrls.NewTab || string.IsNullOrEmpty(url))
+        {
+            NavigateToNewTab(tab);
+            return;
+        }
+        if (url == InternalUrls.Settings)
+        {
+            NavigateToSettings(tab, _settings);
+            return;
+        }
+        if (url == InternalUrls.OneTab)
+        {
+            NavigateToOneTab(tab, _oneTabStore.Load());
+            return;
+        }
+        if (url == InternalUrls.History)
+        {
+            NavigateToHistory(tab, _historyStore.Load());
+            return;
+        }
+        if (url == InternalUrls.Downloads)
+        {
+            NavigateToDownloads(tab);
+            return;
+        }
+        if (url == InternalUrls.Onboarding)
+        {
+            NavigateToOnboarding(tab);
+            return;
+        }
+        if (url == InternalUrls.ReleaseNotes)
+        {
+            NavigateToReleaseNotes(tab, System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.2.0");
+            return;
+        }
+        if (url == InternalUrls.Focus)
+        {
+            NavigateToFocus(tab);
+            return;
+        }
+
         try { wv.CoreWebView2.Navigate(url); }
         catch (ArgumentException) { /* Invalid URL */ }
+    }
+
+    public void NavigateToNewTab(BrowserTab tab)
+    {
+        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
+        try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom)); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToSettings(BrowserTab tab, BrowserSettings settings)
@@ -358,6 +420,19 @@ public sealed class TabEngine : IDisposable
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
         try { wv.CoreWebView2.NavigateToString(_pages.OnboardingPage(_settings, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken)); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+    }
+
+    public void NavigateToReleaseNotes(BrowserTab tab, string version)
+    {
+        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
+        try
+        {
+            var accentRgb = InternalPages.HexToRgb(_settings.AccentColor);
+            var releases = ReleaseNotesProvider.GetAllReleases();
+            var html = _pages.ReleaseNotesPage(version, releases, _settings.AccentColor, accentRgb, _ipcToken);
+            wv.CoreWebView2.NavigateToString(html);
+        }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToFocus(BrowserTab tab)

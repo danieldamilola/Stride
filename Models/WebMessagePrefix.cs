@@ -35,4 +35,6 @@ public static class WebMessagePrefix
     public const string CheckForUpdate = "check-for-update";
     public const string InstallUpdate = "install-update";
     public const string ResetSettings = "reset-settings";
+    public const string WhatsNewContinue = "whatsnew-continue";
+    public const string WhatsNewDismiss = "whatsnew-dismiss";
 }

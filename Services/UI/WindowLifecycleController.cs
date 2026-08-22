@@ -128,8 +128,24 @@ public sealed class WindowLifecycleController
             await _engine.ActivateAsync(tab);
             _engine.NavigateToOnboarding(tab);
             _vm.Settings.HasCompletedOnboarding = true;
+            _vm.Settings.LastSeenReleaseNotesVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.1.3";
             _settingsStore.Save(_vm.Settings);
             if (!restored) return;
+        }
+        else
+        {
+            var currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.1.3";
+            if (!string.IsNullOrEmpty(currentVersion) && _vm.Settings.LastSeenReleaseNotesVersion != currentVersion)
+            {
+                var tab = _engine.CreateTab(InternalUrls.ReleaseNotes);
+                tab.Title = "What's New in Stride";
+                _engine.SwitchTo(tab);
+                await _engine.ActivateAsync(tab);
+                _engine.NavigateToReleaseNotes(tab, currentVersion);
+                _vm.Settings.LastSeenReleaseNotesVersion = currentVersion;
+                _settingsStore.Save(_vm.Settings);
+                if (!restored) return;
+            }
         }
 
         if (!restored)
