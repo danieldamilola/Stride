@@ -337,7 +337,12 @@
             const iconEl = el.querySelector('.icon');
             if (iconEl.dataset.ext !== ext) {
                 iconEl.dataset.ext = ext;
-                iconEl.innerHTML = `<img src="https://img.icons8.com/color/48/${ext.toLowerCase()}.png" onerror="this.onerror=null; this.parentNode.textContent='${ext}'">`;
+                const icon = document.createElement('img');
+                icon.src = `https://img.icons8.com/color/48/${encodeURIComponent(ext.toLowerCase())}.png`;
+                icon.addEventListener('error', () => {
+                    iconEl.textContent = ext;
+                }, { once: true });
+                iconEl.replaceChildren(icon);
             }
             el.querySelector('.name').textContent = dl.fileName;
             el.querySelector('.name').title = dl.fileName;

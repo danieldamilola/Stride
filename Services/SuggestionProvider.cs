@@ -10,11 +10,12 @@ namespace StrideBrowser.Services;
 /// </summary>
 public sealed class SuggestionProvider : ISuggestionProvider
 {
-    private static readonly HttpClient Http = new();
+    private readonly HttpClient _http;
     private readonly BrowserSettings _settings;
 
-    public SuggestionProvider(BrowserSettings settings)
+    public SuggestionProvider(HttpClient http, BrowserSettings settings)
     {
+        _http = http;
         _settings = settings;
     }
 
@@ -42,7 +43,7 @@ public sealed class SuggestionProvider : ISuggestionProvider
         try
         {
             var url = "https://duckduckgo.com/ac/?q=" + Uri.EscapeDataString(query);
-            var response = await Http.GetStringAsync(url, ct);
+            var response = await _http.GetStringAsync(url, ct);
 
             using var doc = JsonDocument.Parse(response);
             foreach (var element in doc.RootElement.EnumerateArray())

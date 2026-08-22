@@ -133,7 +133,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private Dictionary<string, string> _customShortcuts = new();
 
     [ObservableProperty]
-    private bool _hasCompletedOnboarding = true;
+    private bool _hasCompletedOnboarding = false;
 
     [ObservableProperty]
     private string _lastSeenReleaseNotesVersion = "";
@@ -291,6 +291,7 @@ public sealed partial class BrowserSettings : ObservableObject
         FocusDomains = d.FocusDomains;
         CustomShortcuts = new Dictionary<string, string>(d.CustomShortcuts);
         HasCompletedOnboarding = d.HasCompletedOnboarding;
+        LastSeenReleaseNotesVersion = d.LastSeenReleaseNotesVersion;
         ReaderFontScale = d.ReaderFontScale;
         ReaderTheme = d.ReaderTheme;
         ReaderContentWidth = d.ReaderContentWidth;

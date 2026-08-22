@@ -890,18 +890,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void ReaderButton_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            await _readerVm.ToggleAsync();
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"Reader toggle failed: {ex}");
-        }
-    }
-
     private async void UpdateReaderOverlay()
     {
         try

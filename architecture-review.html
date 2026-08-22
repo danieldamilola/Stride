@@ -101,7 +101,7 @@ mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose"
 <div class="rounded border border-red-300 bg-red-50 p-2 text-red-700">TabHibernationManager &mdash; writes about:blank over tab.Url during reader, never checks IsReaderActive</div>
 <div class="rounded border border-dashed border-slate-400 p-2 text-slate-500">ShowReaderFallback overlay &mdash; dead XAML + dead methods</div>
 </div>
-<p class="text-xs text-slate-500 mt-2">Depth on the data path, shallow at the lifecycle edge. Eight skipped tests trace to the same sealed TabEngine dependency. Two 4000 ms timeouts started microseconds apart race non-deterministically.</p>
+<p class="text-xs text-slate-500 mt-2">Depth on the data path, shallow at the lifecycle edge. Eight skipped tests trace to the same sealed TabEngine dependency. Two hardcoded wall-clock timeouts, 3000 ms in CanEnterReaderAsync and 4000 ms in EnterReaderAsync, make extraction outcomes non-deterministic under test.</p>
 </div>
 <div class="rounded-lg border border-slate-900 bg-slate-900 p-4">
 <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">After</p>
@@ -111,12 +111,12 @@ mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose"
   P --> S[Adapter: Host view<br/>NavigateToString + script toggle]
   style P fill:#0f172a,stroke:#e2e8f0,color:#f8fafc
 </pre>
-<p class="text-xs text-slate-300 mt-2">Service holds truth via a narrow ITapReaderEnv plus IReaderExtractor. View is an adapter. Hibernation consults reader state through the same seam. Fallback overlay deleted.</p>
+<p class="text-xs text-slate-300 mt-2">Service holds truth via a narrow ITabReaderEnv plus IReaderExtractor. View is an adapter. Hibernation consults reader state through the same seam. Fallback overlay deleted.</p>
 </div>
 </div>
 <div class="px-6 py-5 space-y-3 text-sm">
 <p><span class="font-semibold">Problem.</span> Three owners share reader lifecycle, and correctness rides on a global bool IsProgrammaticReaderNavigation the interface never mentions. Hibernation is reader-blind and suspend hangs extraction.</p>
-<p><span class="font-semibold">Solution.</span> Replace sealed TabEngine with ITapReaderEnv, move NavigateToString and IsScriptEnabled behind a DisplayAdapter, make IsReaderActive part of IsSafeToHibernate, inject TimeProvider for timeout tests.</p>
+<p><span class="font-semibold">Solution.</span> Replace sealed TabEngine with ITabReaderEnv, move NavigateToString and IsScriptEnabled behind a DisplayAdapter, make IsReaderActive part of IsSafeToHibernate, inject TimeProvider for timeout tests.</p>
 <ul class="list-disc pl-5 text-xs leading-5 text-slate-700">
 <li>ReaderSanitizer as model: deep pure module, fully leveraged tests</li>
 <li>locality: sanitize, render, cache now live together</li>
@@ -319,7 +319,7 @@ mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose"
 <div class="px-6 py-5 text-sm leading-6 text-slate-700 space-y-3">
 <p>The contract fix is first because it is the cheapest Deepening that buys the most safety. One parity test that scans every .html resource for <span class="font-mono text-xs bg-slate-100 px-1 rounded">__T + '&lt;prefix&gt;'</span> and asserts a registered MessageRoute covers it catches six existing drifts, closes a live single-quoted <span class="font-mono text-xs">JSON.parse</span> injection in a page that holds the IPC token, and makes every future message addition fail the build instead of failing silently with a Trace line. No interface changes, no migration, one new test file.</p>
 <p>Right after it, the stores seam. Constructor-injecting the file-system target turns five untestable modules into five tested ones with the same interface surface. That is the highest leverage-per-line change in the review: one seam, five modules, every persistence path gains coverage, and the PascalCase versus camelCase divergence becomes a pinned expectation instead of a latent migration bug. Together they are a single PR shape: enforce the outer boundary, then make the persistence boundary substitutable.</p>
-<p>If you want the highest-risk correctness fix first instead, swap in <a href="#tab-lifecycle" class="underline">1</a> and <a href="#reader" class="underline">2</a> as the next sweep. Reader-blind hibernation writing about:blank over tab.Url and the non-deterministic 4000 ms timeout race are real data-loss bugs, they just need more surgery than the two wins above.</p>
+<p>If you want the highest-risk correctness fix first instead, swap in <a href="#tab-lifecycle" class="underline">1</a> and <a href="#reader" class="underline">2</a> as the next sweep. Reader-blind hibernation writing about:blank over tab.Url and the non-deterministic timeout race are real data-loss bugs, they just need more surgery than the two wins above.</p>
 </div>
 <div class="px-6 pb-6 flex flex-wrap gap-2 text-xs uppercase tracking-wider">
 <span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1">Tests hit one interface</span>

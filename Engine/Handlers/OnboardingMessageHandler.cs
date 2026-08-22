@@ -95,18 +95,16 @@ public class OnboardingMessageHandler : IWebMessageHandler
         var active = _engine.ActiveTab;
         if (active != null && active.Url == InternalUrls.ReleaseNotes)
         {
+            if (_engine.Tabs.Count == 1)
+            {
+                _engine.Navigate(active, InternalUrls.NewTab);
+                return Task.CompletedTask;
+            }
+
             _engine.CloseTab(active);
-            if (_engine.Tabs.Count == 0)
-            {
-                var tab = _engine.CreateTab();
-                _ = _engine.ActivateAsync(tab);
-            }
-            else
-            {
-                var next = _engine.Tabs[0];
-                _engine.SwitchTo(next);
-                _ = _engine.ActivateAsync(next);
-            }
+            var next = _engine.Tabs[0];
+            _engine.SwitchTo(next);
+            _ = _engine.ActivateAsync(next);
         }
         return Task.CompletedTask;
     }
@@ -116,7 +114,7 @@ public class OnboardingMessageHandler : IWebMessageHandler
         var active = _engine.ActiveTab;
         if (active != null)
         {
-            _engine.NavigateToSettings(active, _settings);
+            _engine.Navigate(active, InternalUrls.Settings);
         }
         return Task.CompletedTask;
     }

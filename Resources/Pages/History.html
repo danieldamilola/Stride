@@ -387,8 +387,9 @@
 
             let html = '';
 
+            let index = 0;
             for (const [dateLabel, dateEntries] of Object.entries(byDate)) {
-                const dateSectionId = `date-${dateLabel}`.replace(/[^a-zA-Z0-9]/g, '_');
+                const dateSectionId = `date-${index}`;
 
                 const byDomain = {};
                 dateEntries.forEach(e => {
@@ -404,9 +405,11 @@
                     </div>
                     <div class="date-body">`;
 
+                index++;
+
                 for (const [domain, domainEntries] of Object.entries(byDomain)) {
                     const label = getDomainLabel(domain);
-                    const groupId = `g-${dateLabel}-${domain}`.replace(/[^a-zA-Z0-9]/g, '_');
+                    const groupId = `g-${index}-${domain}`.replace(/[^a-zA-Z0-9]/g, '_');
 
                     if (domainEntries.length === 1) {
                         const e = domainEntries[0];
