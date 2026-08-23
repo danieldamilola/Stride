@@ -1,6 +1,6 @@
 [Setup]
 AppName=Stride
-AppVersion=1.2.2
+AppVersion=1.2.1
 UninstallDisplayName=Stride
 AppId=Stride
 DefaultDirName={localappdata}\Stride
@@ -46,4 +46,5 @@ begin
     end;
   end;
 end;
+
 
