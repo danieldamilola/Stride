@@ -14,6 +14,8 @@ using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.Services.Input;
 using StrideBrowser.ViewModels;
+using StrideBrowser.ViewModels.Reader;
+using StrideBrowser.Services.Reader;
 
 namespace StrideBrowser;
 
@@ -31,6 +33,9 @@ public partial class MainWindow : Window
     private readonly IHistoryStore _historyStore;
     private readonly IDownloadStore _downloadStore;
     private readonly WebMessageRouter _router;
+    private readonly ReaderViewModel _readerVm;
+    private readonly IReaderService _readerService;
+    private readonly ViewModels.LinkPreview.LinkPreviewViewModel _linkPreviewVm;
     private KeyboardShortcutMap? _shortcuts;
 
     /// <summary>Prevents re-entrant tab selection changes when we programmatically update the ListBox selection.</summary>
@@ -59,6 +64,23 @@ public partial class MainWindow : Window
 
         _engine = services.GetRequiredService<TabEngine>();
         _engine.AttachHost(WebViewHost);
+
+        var linkPreviewController = services.GetRequiredService<Services.UI.LinkPreviewWindowController>();
+        linkPreviewController.Attach(this);
+        _readerVm = services.GetRequiredService<ReaderViewModel>();
+        _readerService = services.GetRequiredService<IReaderService>();
+        _linkPreviewVm = services.GetRequiredService<ViewModels.LinkPreview.LinkPreviewViewModel>();
+        
+        _linkPreviewVm.PropertyChanged += OnLinkPreviewViewModelPropertyChanged;
+        _readerVm.PropertyChanged += OnReaderViewModelPropertyChanged;
+        
+        _engine.ActiveTabChanged += tab =>
+        {
+            Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        };
+        _engine.TabClosed += tabId => Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        _readerService.SessionChanged += (s, tabId) => Dispatcher.InvokeAsync(UpdateReaderOverlay);
+
 
         _router = services.GetRequiredService<WebMessageRouter>();
         _router.SettingChanged += OnSettingChanged;
@@ -344,6 +366,137 @@ public partial class MainWindow : Window
         };
     }
 
+    
+    private void OnLinkPreviewViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ViewModels.LinkPreview.LinkPreviewViewModel.IsVisible))
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                if (_linkPreviewVm.IsVisible)
+                {
+                    LinkPreviewDim.Visibility = Visibility.Visible;
+                    var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(120))
+                    {
+                        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                    };
+                    LinkPreviewDim.BeginAnimation(OpacityProperty, fadeIn);
+                }
+                else
+                {
+                    var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(100))
+                    {
+                        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                    };
+                    fadeOut.Completed += (_, _) =>
+                    {
+                        if (!_linkPreviewVm.IsVisible)
+                        {
+                            LinkPreviewDim.Visibility = Visibility.Collapsed;
+                            LinkPreviewDim.BeginAnimation(OpacityProperty, null);
+                        }
+                    };
+                    LinkPreviewDim.BeginAnimation(OpacityProperty, fadeOut);
+                }
+            });
+        }
+    }
+
+    private void OnReaderViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ReaderViewModel.Current) ||
+            e.PropertyName == nameof(ReaderViewModel.Error) ||
+            e.PropertyName == nameof(ReaderViewModel.IsInReader))
+        {
+            Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        }
+    }
+
+    private void UpdateReaderOverlay()
+    {
+        try
+        {
+            var isInReader = _readerVm.IsInReader;
+            var current = _readerVm.Current;
+            var error = _readerVm.Error;
+
+            ReaderButton.Opacity = isInReader ? 1.0 : 0.7;
+            ReaderButton.ToolTip = isInReader ? "Exit reader view (Ctrl+Shift+R)" : "Reader view (Ctrl+Shift+R)";
+
+            if (!string.IsNullOrEmpty(error))
+            {
+                Trace.WriteLine("Reader error surfaced: " + error);
+                Title = "Reader error: " + error;
+                return;
+            }
+
+            var tabId = _engine.ActiveTab?.Id;
+            if (tabId is null) return;
+            var core = _engine.GetCoreForTab(tabId.Value);
+
+            if (isInReader && current is not null)
+            {
+                if (core is null) return;
+                try
+                {
+                    _engine.IsProgrammaticReaderNavigation = true;
+                    try { core.Settings.IsScriptEnabled = false; } catch (Exception ex) { Trace.WriteLine("Reader disable script failed: " + ex.Message); }
+                    core.NavigateToString(current.Html);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine("Reader NavigateToString failed: " + ex);
+                }
+                finally
+                {
+                    Dispatcher.InvokeAsync(() => _engine.IsProgrammaticReaderNavigation = false, System.Windows.Threading.DispatcherPriority.Background);
+                }
+            }
+            else if (!isInReader)
+            {
+                var session = _readerService.GetSession(tabId.Value);
+                if (session is not null && !string.IsNullOrEmpty(session.OriginalUrl) && core is not null)
+                {
+                    var currentSource = core.Source ?? string.Empty;
+                    var isReaderDocument = currentSource.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || currentSource == string.Empty;
+                    if (isReaderDocument || currentSource != session.OriginalUrl)
+                    {
+                        try { core.Settings.IsScriptEnabled = true; } catch (Exception ex) { Trace.WriteLine("Reader re-enable script failed: " + ex.Message); }
+
+                        if (currentSource.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || currentSource == "about:srcdoc")
+                        {
+                            try
+                            {
+                                _engine.IsProgrammaticReaderNavigation = true;
+                                var tab = _engine.Tabs.FirstOrDefault(t => t.Id == tabId.Value);
+                                if (tab is not null)
+                                {
+                                    tab.Url = session.OriginalUrl;
+                                    _engine.Navigate(tab, session.OriginalUrl);
+                                }
+                            }
+                            finally
+                            {
+                                Dispatcher.InvokeAsync(() => _engine.IsProgrammaticReaderNavigation = false, System.Windows.Threading.DispatcherPriority.Background);
+                            }
+                        }
+                        else
+                        {
+                            try { core.Settings.IsScriptEnabled = true; } catch { }
+                        }
+                    }
+                }
+                else if (core is not null)
+                {
+                    try { core.Settings.IsScriptEnabled = true; } catch { }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine("UpdateReaderOverlay failed: " + ex);
+        }
+    }
     private void LinkPreviewDim_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         LinkPreviewDim.Visibility = Visibility.Collapsed;
@@ -1486,4 +1639,6 @@ public partial class MainWindow : Window
         _loadingStoryboard = null;
     }
 }
+
+
 
