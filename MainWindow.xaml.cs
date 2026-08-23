@@ -142,16 +142,40 @@ public partial class MainWindow : Window
         }
     }
 
+    private bool TryGetUrlFromArg(string arg, out string url)
+    {
+        if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            arg.StartsWith("file://", StringComparison.OrdinalIgnoreCase) ||
+            arg.StartsWith("stride://", StringComparison.OrdinalIgnoreCase))
+        {
+            url = arg;
+            return true;
+        }
+        
+        try
+        {
+            if (System.IO.File.Exists(arg))
+            {
+                url = new Uri(arg).AbsoluteUri;
+                return true;
+            }
+        }
+        catch { }
+
+        url = string.Empty;
+        return false;
+    }
+
     private void OnInstanceMessageReceived(string[] args)
     {
         Dispatcher.InvokeAsync(async () =>
         {
             foreach (var arg in args)
             {
-                if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                    arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                if (TryGetUrlFromArg(arg, out var parsedUrl))
                 {
-                    var tab = _engine.CreateTab(arg);
+                    var tab = _engine.CreateTab(parsedUrl);
                     _engine.SwitchTo(tab);
                     await _engine.ActivateAsync(tab);
                     break;
@@ -160,6 +184,21 @@ public partial class MainWindow : Window
 
             _chromeManager?.BringToFront();
         });
+    }
+
+    private async Task HandleCommandLineUrls()
+    {
+        var args = Environment.GetCommandLineArgs();
+        foreach (var arg in args.Skip(1))
+        {
+            if (TryGetUrlFromArg(arg, out var parsedUrl))
+            {
+                var tab = _engine.CreateTab(parsedUrl);
+                _engine.SwitchTo(tab);
+                await _engine.ActivateAsync(tab);
+                break;
+            }
+        }
     }
 
     private KeyboardShortcutMap BuildShortcutMap()
