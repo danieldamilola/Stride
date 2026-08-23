@@ -37,7 +37,7 @@ public partial class LinkPreviewWindow : Window
     public void SetZoom(double zoom)
     {
         _zoom = Math.Clamp(zoom, 0.25, 5.0);
-        try { if (_webView?.CoreWebView2 != null) _webView.ZoomFactor = _zoom; } catch { }
+        try { if (_webView?.CoreWebView2 != null) _webView.ZoomFactor = _zoom; } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void UpdateHeader(string url, string title)
@@ -91,7 +91,7 @@ public partial class LinkPreviewWindow : Window
             {
                 await _webView.EnsureCoreWebView2Async(_environment);
 
-                try { _webView.ZoomFactor = _zoom; } catch { }
+                try { _webView.ZoomFactor = _zoom; } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
 
                 // Lock down preview WebView
                 _webView.CoreWebView2.NewWindowRequested += new EventHandler<CoreWebView2NewWindowRequestedEventArgs>((_, e) => { e.Handled = true; });
@@ -108,23 +108,23 @@ public partial class LinkPreviewWindow : Window
 
                 _webView.CoreWebView2.DocumentTitleChanged += new EventHandler<object>((_, _) =>
                 {
-                    try { UpdateHeader(_currentUrl, _webView.CoreWebView2.DocumentTitle); } catch { }
+                    try { UpdateHeader(_currentUrl, _webView.CoreWebView2.DocumentTitle); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
                 });
                 _webView.CoreWebView2.NavigationStarting += new EventHandler<CoreWebView2NavigationStartingEventArgs>((_, _) =>
                 {
-                    try { _webView.ZoomFactor = _zoom; } catch { }
+                    try { _webView.ZoomFactor = _zoom; } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
                 });
                 _webView.CoreWebView2.NavigationCompleted += new EventHandler<CoreWebView2NavigationCompletedEventArgs>((_, e) =>
                 {
                     if (e.IsSuccess)
                     {
-                        try { _webView.ZoomFactor = _zoom; } catch { }
+                        try { _webView.ZoomFactor = _zoom; } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
                         PreviewLoaded?.Invoke(_currentUrl);
-                        try { UpdateHeader(_currentUrl, _webView.CoreWebView2.DocumentTitle); } catch { }
+                        try { UpdateHeader(_currentUrl, _webView.CoreWebView2.DocumentTitle); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
                     }
                     else
                     {
-                        try { UpdateHeader(_currentUrl, $"Failed to load: {e.WebErrorStatus}"); } catch { }
+                        try { UpdateHeader(_currentUrl, $"Failed to load: {e.WebErrorStatus}"); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
                     }
                 });
                 _isInitialized = true;
@@ -141,7 +141,7 @@ public partial class LinkPreviewWindow : Window
             }
         }
 
-        try { _webView.ZoomFactor = _zoom; } catch { }
+        try { _webView.ZoomFactor = _zoom; } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
         try
         {
             if (_webView.CoreWebView2 is not null)
@@ -156,8 +156,8 @@ public partial class LinkPreviewWindow : Window
 
     public void CleanupWebView()
     {
-        try { _webView?.CoreWebView2?.Stop(); } catch { }
-        try { _webView?.CoreWebView2?.Navigate("about:blank"); } catch { }
+        try { _webView?.CoreWebView2?.Stop(); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { _webView?.CoreWebView2?.Navigate("about:blank"); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
         _currentUrl = string.Empty;
     }
 

@@ -17,6 +17,7 @@ public sealed class NewTabPage
     public string Render(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "")
     {
         var shortcutsJson = JsonSerializer.Serialize(shortcuts);
+        var shortcutsB64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(shortcutsJson));
         
         string[] backgroundUrls = Array.Empty<string>();
         
@@ -77,7 +78,7 @@ public sealed class NewTabPage
             new Dictionary<string, string>
             {
                 ["BACKGROUND"] = backgroundPath,
-                ["SHORTCUTS"] = shortcutsJson,
+                ["SHORTCUTS"] = shortcutsB64,
                 ["ACCENT"] = accentColor,
                 ["ACCENT_RGB"] = accentRgb,
                 ["IPC_TOKEN"] = ipcToken,

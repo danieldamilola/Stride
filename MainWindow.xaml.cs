@@ -14,6 +14,8 @@ using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.Services.Input;
 using StrideBrowser.ViewModels;
+using StrideBrowser.ViewModels.Reader;
+using StrideBrowser.Services.Reader;
 
 namespace StrideBrowser;
 
@@ -31,6 +33,9 @@ public partial class MainWindow : Window
     private readonly IHistoryStore _historyStore;
     private readonly IDownloadStore _downloadStore;
     private readonly WebMessageRouter _router;
+    private readonly ReaderViewModel _readerVm;
+    private readonly IReaderService _readerService;
+    private readonly ViewModels.LinkPreview.LinkPreviewViewModel _linkPreviewVm;
     private KeyboardShortcutMap? _shortcuts;
 
     /// <summary>Prevents re-entrant tab selection changes when we programmatically update the ListBox selection.</summary>
@@ -60,11 +65,29 @@ public partial class MainWindow : Window
         _engine = services.GetRequiredService<TabEngine>();
         _engine.AttachHost(WebViewHost);
 
+        var linkPreviewController = services.GetRequiredService<Services.UI.LinkPreviewWindowController>();
+        linkPreviewController.Attach(this);
+        _readerVm = services.GetRequiredService<ReaderViewModel>();
+        _readerService = services.GetRequiredService<IReaderService>();
+        _linkPreviewVm = services.GetRequiredService<ViewModels.LinkPreview.LinkPreviewViewModel>();
+        
+        _linkPreviewVm.PropertyChanged += OnLinkPreviewViewModelPropertyChanged;
+        _readerVm.PropertyChanged += OnReaderViewModelPropertyChanged;
+        
+        _engine.ActiveTabChanged += tab =>
+        {
+            Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        };
+        _engine.TabClosed += tabId => Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        _readerService.SessionChanged += (s, tabId) => Dispatcher.InvokeAsync(UpdateReaderOverlay);
+
+
         _router = services.GetRequiredService<WebMessageRouter>();
         _router.SettingChanged += OnSettingChanged;
-        Services.ThemeManager.ThemeChanged += () =>
+        var themeManager = services.GetRequiredService<ThemeManager>();
+        themeManager.ThemeChanged += () =>
         {
-            var themeStr = Services.ThemeManager.GetThemeString();
+            var themeStr = themeManager.GetThemeString();
             var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
             foreach (var tab in _engine.Tabs)
             {
@@ -130,8 +153,6 @@ public partial class MainWindow : Window
 
             SingleInstanceManager.InstanceMessageReceived += OnInstanceMessageReceived;
 
-            _ = CheckForUpdatesInBackgroundAsync();
-
             if (!DefaultBrowserRegistrar.IsRegistered())
                 DefaultBrowserRegistrar.Register();
 
@@ -147,51 +168,55 @@ public partial class MainWindow : Window
     {
         Dispatcher.InvokeAsync(async () =>
         {
-            foreach (var arg in args)
-            {
-                if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                    arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                {
-                    var tab = _engine.CreateTab(arg);
-                    _engine.SwitchTo(tab);
-                    await _engine.ActivateAsync(tab);
-                    break;
-                }
-            }
-
+            var coordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
+            await coordinator.HandleCommandLineArgsAsync(args);
             _chromeManager?.BringToFront();
         });
+    }
+
+    private async Task HandleCommandLineUrls()
+    {
+        var args = Environment.GetCommandLineArgs();
+        var coordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
+        await coordinator.HandleCommandLineArgsAsync(args.Skip(1).ToArray());
     }
 
     private KeyboardShortcutMap BuildShortcutMap()
     {
         return new KeyboardShortcutMap(
             _engine,
-            focusAddressBar: () => { FocusAddressBar(); return Task.CompletedTask; },
-            saveAllTabs: () => { SaveAllTabs_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-            cycleTab: async reverse => await CycleTabAsync(reverse),
-            toggleFullscreen: () => { ToggleFullscreen(); return Task.CompletedTask; },
-            isFullscreen: () => _isFullscreen,
-            updateZoomIndicator: () => { UpdateZoomIndicator(); return Task.CompletedTask; },
-            openHistory: OpenHistoryTab,
-            openDownloads: OpenDownloadsTab,
-            switchToTabIndex: SwitchToTabByIndex,
-            copyUrl: CopyUrlToClipboard,
-            sendAllToOneTab: () => _engine.SendAllToOneTab(),
-            saveOneTabGroup: entries =>
+            new ShortcutActions
             {
-                var group = new OneTabGroup
+                FocusAddressBar = () => { FocusAddressBar(); return Task.CompletedTask; },
+                SaveAllTabs = () => { SaveAllTabs_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
+                CycleTab = async reverse => await CycleTabAsync(reverse),
+                ToggleFullscreen = () => { ToggleFullscreen(); return Task.CompletedTask; },
+                IsFullscreen = () => _isFullscreen,
+                OpenHistory = () => { OpenHistoryTab(); return Task.CompletedTask; },
+                OpenDownloads = () => { OpenDownloadsTab(); return Task.CompletedTask; },
+                SwitchToTabIndex = SwitchToTabByIndex,
+                CopyUrl = CopyUrlToClipboard,
+                SendAllToOneTab = () => _engine.SendAllToOneTab(),
+                SaveOneTabGroup = entries =>
                 {
-                    Name = $"Saved {DateTime.Now:MMM d, h:mm tt}",
-                    Tabs = entries.Select(t =>
-                        new OneTabEntry(t.url, t.title, null, DateTime.UtcNow)).ToList()
-                };
-                _oneTabStore.AddGroup(group);
-            },
-            syncTabsBinding: SyncTabsBinding,
-            openOneTab: OpenOneTabPage,
-            openSettings: () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-            launchTCLens: LaunchTCLensAsync);
+                    var group = new OneTabGroup
+                    {
+                        Name = $"Saved {DateTime.Now:MMM d, h:mm tt}",
+                        Tabs = entries.Select(t =>
+                            new OneTabEntry(t.url, t.title, null, DateTime.UtcNow)).ToList()
+                    };
+                    _oneTabStore.AddGroup(group);
+                },
+                SyncTabsBinding = SyncTabsBinding,
+                OpenOneTab = () => { OpenOneTabPage(); return Task.CompletedTask; },
+                OpenSettings = () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
+                LaunchTCLens = LaunchTCLensAsync,
+                ToggleReader = async () =>
+                {
+                    if (_engine.ActiveTab is { } tab && _engine.ToggleReaderAsync is { } toggle)
+                        await toggle(tab.Id);
+                }
+            });
     }
 
     private async Task LaunchTCLensAsync()
@@ -260,26 +285,17 @@ public partial class MainWindow : Window
             _engine.SwitchTo(tab);
             await _engine.ActivateAsync(tab);
         }
+
+        var coordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
+        await coordinator.HandleReleaseNotesAsync();
     }
 
-    private async Task HandleCommandLineUrls()
-    {
-        var args = Environment.GetCommandLineArgs();
-        foreach (var arg in args.Skip(1))
-        {
-            if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            {
-                var tab = _engine.CreateTab(arg);
-                _engine.SwitchTo(tab);
-                await _engine.ActivateAsync(tab);
-                break;
-            }
-        }
-    }
+
 
     private void WireEngineEvents()
     {
+        _engine.LaunchTCLensAsync = LaunchTCLensAsync;
+
         _engine.FullScreenChanged += isFullScreen =>
         {
             if (isFullScreen)
@@ -348,6 +364,142 @@ public partial class MainWindow : Window
         _engine.TabCreated += tab =>
         {
         };
+    }
+
+    
+    private void OnLinkPreviewViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ViewModels.LinkPreview.LinkPreviewViewModel.IsVisible))
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                if (_linkPreviewVm.IsVisible)
+                {
+                    LinkPreviewDim.Visibility = Visibility.Visible;
+                    var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(120))
+                    {
+                        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                    };
+                    LinkPreviewDim.BeginAnimation(OpacityProperty, fadeIn);
+                }
+                else
+                {
+                    var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(100))
+                    {
+                        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                    };
+                    fadeOut.Completed += (_, _) =>
+                    {
+                        if (!_linkPreviewVm.IsVisible)
+                        {
+                            LinkPreviewDim.Visibility = Visibility.Collapsed;
+                            LinkPreviewDim.BeginAnimation(OpacityProperty, null);
+                        }
+                    };
+                    LinkPreviewDim.BeginAnimation(OpacityProperty, fadeOut);
+                }
+            });
+        }
+    }
+
+    private void OnReaderViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ReaderViewModel.Current) ||
+            e.PropertyName == nameof(ReaderViewModel.Error) ||
+            e.PropertyName == nameof(ReaderViewModel.IsInReader))
+        {
+            Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        }
+    }
+
+    private void UpdateReaderOverlay()
+    {
+        try
+        {
+            var isInReader = _readerVm.IsInReader;
+            var current = _readerVm.Current;
+            var error = _readerVm.Error;
+
+            ReaderButton.Opacity = isInReader ? 1.0 : 0.7;
+            ReaderButton.ToolTip = isInReader ? "Exit reader view (Ctrl+Shift+R)" : "Reader view (Ctrl+Shift+R)";
+
+            if (!string.IsNullOrEmpty(error))
+            {
+                Trace.WriteLine("Reader error surfaced: " + error);
+                Title = "Reader error: " + error;
+                return;
+            }
+
+            var tabId = _engine.ActiveTab?.Id;
+            if (tabId is null) return;
+            var core = _engine.GetCoreForTab(tabId.Value);
+
+            if (isInReader && current is not null)
+            {
+                if (core is null) return;
+                try
+                {
+                    _engine.IsProgrammaticReaderNavigation = true;
+                    try { core.Settings.IsScriptEnabled = false; } catch (Exception ex) { Trace.WriteLine("Reader disable script failed: " + ex.Message); }
+                    core.NavigateToString(current.Html);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine("Reader NavigateToString failed: " + ex);
+                }
+                finally
+                {
+                    Dispatcher.InvokeAsync(() => _engine.IsProgrammaticReaderNavigation = false, System.Windows.Threading.DispatcherPriority.Background);
+                }
+            }
+            else if (!isInReader)
+            {
+                var session = _readerService.GetSession(tabId.Value);
+                if (session is not null && !string.IsNullOrEmpty(session.OriginalUrl) && core is not null)
+                {
+                    var currentSource = core.Source ?? string.Empty;
+                    var isReaderDocument = currentSource.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || currentSource == string.Empty;
+                    if (isReaderDocument || currentSource != session.OriginalUrl)
+                    {
+                        try { core.Settings.IsScriptEnabled = true; } catch (Exception ex) { Trace.WriteLine("Reader re-enable script failed: " + ex.Message); }
+
+                        if (currentSource.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || currentSource == "about:srcdoc")
+                        {
+                            try
+                            {
+                                _engine.IsProgrammaticReaderNavigation = true;
+                                var tab = _engine.Tabs.FirstOrDefault(t => t.Id == tabId.Value);
+                                if (tab is not null)
+                                {
+                                    tab.Url = session.OriginalUrl;
+                                    _engine.Navigate(tab, session.OriginalUrl);
+                                }
+                            }
+                            finally
+                            {
+                                Dispatcher.InvokeAsync(() => _engine.IsProgrammaticReaderNavigation = false, System.Windows.Threading.DispatcherPriority.Background);
+                            }
+                        }
+                        else
+                        {
+                            try { core.Settings.IsScriptEnabled = true; } catch { }
+                        }
+                    }
+                }
+                else if (core is not null)
+                {
+                    try { core.Settings.IsScriptEnabled = true; } catch { }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine("UpdateReaderOverlay failed: " + ex);
+        }
+    }
+    private void LinkPreviewDim_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        LinkPreviewDim.Visibility = Visibility.Collapsed;
     }
 
     private void SyncTabsBinding()
@@ -817,8 +969,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private void UpdateUrlLabel(BrowserTab tab)
+    private void UpdateUrlLabel(BrowserTab? tab)
     {
+        if (tab == null) return;
+        
         if (!StandardAddressBar.IsKeyboardFocusWithin)
         {
             StandardAddressBar.Text = tab.Url;
@@ -1085,7 +1239,8 @@ public partial class MainWindow : Window
 
         if (key == "appTheme")
         {
-            var themeStr = Services.ThemeManager.GetThemeString();
+            var tm = ((App)Application.Current).Services.GetRequiredService<ThemeManager>();
+            var themeStr = tm.GetThemeString();
             var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
             foreach (var tab in _engine.Tabs)
             {
@@ -1110,10 +1265,14 @@ public partial class MainWindow : Window
         // Live-refresh new tab pages when shortcuts are added/removed
         if (key == "shortcuts")
         {
+            var shortcutsJson = System.Text.Json.JsonSerializer.Serialize(_vm.Settings.NewTabShortcuts);
+            var b64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(shortcutsJson));
+            var js = $"if (typeof updateShortcutsFromB64 === 'function') updateShortcutsFromB64('{b64}');";
+            
             foreach (var tab in _engine.Tabs)
             {
                 if (tab.Url == InternalUrls.NewTab)
-                    _engine.Navigate(tab, InternalUrls.NewTab);
+                    _engine.ExecuteScript(tab.Id, js);
             }
         }
     }
@@ -1210,34 +1369,9 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task CheckForUpdatesInBackgroundAsync()
+    private Task CheckForUpdatesInBackgroundAsync()
     {
-        try
-        {
-            using var client = new System.Net.Http.HttpClient();
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("StrideBrowser");
-            var response = await client.GetAsync("https://api.github.com/repos/danieldamilola/Stride/releases/latest");
-            if (!response.IsSuccessStatusCode) return;
-
-            var json = await response.Content.ReadAsStringAsync();
-            var doc = System.Text.Json.JsonDocument.Parse(json);
-            if (doc.RootElement.TryGetProperty("tag_name", out var tagProp))
-            {
-                var latest = tagProp.GetString()?.TrimStart('v');
-                var current = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";
-                
-                if (!string.IsNullOrEmpty(latest) && 
-                    Version.TryParse(latest, out var latestVersion) && 
-                    Version.TryParse(current, out var currentVersion))
-                {
-                    if (latestVersion > currentVersion)
-                    {
-                        Dispatcher.Invoke(() => UpdateBadge.Visibility = Visibility.Visible);
-                    }
-                }
-            }
-        }
-        catch { /* Silently fail on network/parsing issues */ }
+        return Task.CompletedTask;
     }
 
     // ───────────────────── Title Bar ─────────────────────
@@ -1505,4 +1639,6 @@ public partial class MainWindow : Window
         _loadingStoryboard = null;
     }
 }
+
+
 

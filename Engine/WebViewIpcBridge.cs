@@ -30,7 +30,7 @@ public sealed class WebViewIpcBridge
     private readonly Dispatcher _dispatcher;
     private readonly BrowserSettings _settings;
     private readonly IDownloadStore _downloadStore;
-    private readonly HashSet<string> _activeNativeDownloads;
+    private readonly Dictionary<string, Microsoft.Web.WebView2.Core.CoreWebView2DownloadOperation> _activeNativeDownloads;
     private readonly string _ipcToken;
     private readonly Func<Guid, bool> _isTabAlive;
     private readonly Func<Guid, dynamic?> _getWebView;
@@ -44,7 +44,7 @@ public sealed class WebViewIpcBridge
         BrowserSettings settings,
         IDownloadStore downloadStore,
         string ipcToken,
-        HashSet<string> activeNativeDownloads,
+        Dictionary<string, Microsoft.Web.WebView2.Core.CoreWebView2DownloadOperation> activeNativeDownloads,
         Func<Guid, bool> isTabAlive,
         Func<Guid, dynamic?> getWebView,
         Func<string, BrowserTab> createTab,

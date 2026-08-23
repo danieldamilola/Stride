@@ -41,7 +41,7 @@ public sealed class ReaderExtractor : IReaderExtractor
                 if (trimmed == "false") return false;
             }
         }
-        catch { }
+        catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
 
         // Fallback: try parse as JSON bool directly
         try

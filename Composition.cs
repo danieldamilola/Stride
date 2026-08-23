@@ -34,6 +34,7 @@ public static class Composition
         // Services - registered by interface and concrete type
         services.AddSingleton<NavigationService>();
         services.AddSingleton<FaviconLoader>();
+        services.AddSingleton<HttpClient>();
         services.AddSingleton<HistoryStore>();
         services.AddSingleton<IHistoryStore>(sp => sp.GetRequiredService<HistoryStore>());
         services.AddSingleton<OneTabStore>();
@@ -52,6 +53,8 @@ public static class Composition
         services.AddSingleton<UpdateService>();
         services.AddSingleton<TabHibernationManager>();
         services.AddSingleton<NavigationPolicyEngine>();
+        services.AddSingleton<Services.CommandLine.ICommandLineUrlParser, Services.CommandLine.CommandLineUrlParser>();
+        services.AddSingleton<Services.Startup.StartupCoordinator>();
 
         // Reader mode - scaffold: interfaces registered, real bodies in step 2
         services.AddSingleton<Services.Reader.IReaderSanitizer, Services.Reader.ReaderSanitizer>();
@@ -110,7 +113,8 @@ public static class Composition
             var engine = sp.GetRequiredService<TabEngine>();
             var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
             var readerViewModel = sp.GetRequiredService<ViewModels.Reader.ReaderViewModel>();
-            return new BrowserViewModel(settings, navigation, downloadStore, engine, readerService, readerViewModel);
+            var updateService = sp.GetRequiredService<UpdateService>();
+            return new BrowserViewModel(settings, navigation, downloadStore, engine, readerService, readerViewModel, updateService);
         });
         services.AddSingleton<ViewModels.Reader.ReaderViewModel>(sp =>
         {
@@ -129,8 +133,16 @@ public static class Composition
         var tabEngine = sp.GetRequiredService<TabEngine>();
         var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
         tabEngine.TabClosed += readerService.RemoveSession;
+        
+        var readerViewModel = sp.GetRequiredService<ViewModels.Reader.ReaderViewModel>();
+        tabEngine.IsReaderAvailable = tabId => readerViewModel.IsReaderAvailable && tabEngine.ActiveTab?.Id == tabId;
         tabEngine.IsReaderActive = tabId => readerService.GetSession(tabId)?.IsInReader == true;
         tabEngine.ExitReaderAsync = tabId => readerService.ExitReaderAsync(tabId);
+        tabEngine.ToggleReaderAsync = async tabId =>
+        {
+            if (tabEngine.ActiveTab?.Id == tabId)
+                await readerViewModel.ToggleAsync();
+        };
 
         // Wire Link Preview - on demand, Alt plus click, sleep not hibernate
         var linkPreviewService = sp.GetRequiredService<Services.LinkPreview.LinkPreviewService>();

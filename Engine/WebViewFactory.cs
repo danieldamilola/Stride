@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -136,6 +136,8 @@ public sealed class WebViewFactory
         core.Settings.IsGeneralAutofillEnabled = false;
         core.Settings.IsPasswordAutosaveEnabled = false;
         core.Settings.AreDefaultScriptDialogsEnabled = false;
+        // Align reputation checking with the user's SmartScreen preference
+        try { core.Settings.IsReputationCheckingRequired = _settings.SmartScreenEnabled; } catch (Exception ex) { Trace.WriteLine(ex); }
 
         try { core.Settings.IsSwipeNavigationEnabled = true; } catch (Exception ex) { Trace.WriteLine(ex); }
     }
