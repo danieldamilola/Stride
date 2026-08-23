@@ -1,4 +1,4 @@
-# Release Note: Unreleased
+# Release Note: v1.2.2 UI Updates & Fixes
 
 **Features**
 * **Dynamic Context Menu**: Rebuilt the right-click menu from scratch to be context-aware, inspired by Zen Browser. The top row always shows navigation buttons (Back, Forward, Reload). Below that, the menu adapts to what you clicked: plain pages get Find in Page and Select All; editable fields get Undo, Redo, Cut, Copy, Paste; links get "Open in new tab" and "Copy link"; images get "Save image" and "Copy image URL". Plus, Reader View dynamically appears if available, and the T&C Lens extension is available right from the menu. Keyboard shortcuts are now visible for all supported actions. Pure builder logic is now strictly unit-tested.
@@ -34,4 +34,5 @@
 * Removed all NetSparkle dependencies from the project.
 * `UpdateService` now uses `HttpClient` to natively hit the GitHub REST API and download the `.zip` archive.
 * Reconfigured the build pipeline (`build-release.ps1`) to output both a `.zip` archive for the micro-updater and a `.exe` installer for new users.
+
 
