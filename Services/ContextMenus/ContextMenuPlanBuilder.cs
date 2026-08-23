@@ -61,10 +61,6 @@ public static class ContextMenuPlanBuilder
 
         if (isPlainPage)
         {
-            items.Add(Cmd("back", "Back", "Alt+Left", ctx.CanGoBack));
-            items.Add(Cmd("forward", "Forward", "Alt+Right", ctx.CanGoForward));
-            items.Add(Cmd("reload", "Reload", "F5"));
-            items.Add(Sep());
             items.Add(Cmd("find-in-page", "Find in page", "Ctrl+F"));
             items.Add(Cmd("select-all", "Select all"));
             items.Add(Sep());

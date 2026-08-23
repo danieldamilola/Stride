@@ -669,6 +669,32 @@ public sealed class TabEngine : IDisposable
                 {
                     var cm = new ContextMenu { PlacementTarget = _webViewHost };
 
+                    if (plan.NavigationRow != null)
+                    {
+                        var navPanel = new System.Windows.Controls.Primitives.UniformGrid
+                        {
+                            Rows = 1,
+                            Columns = 3,
+                            Margin = new Thickness(4)
+                        };
+
+                        var backBtn = new Button { Style = (Style)Application.Current.Resources["ContextMenuNavButton"], Content = "\uE72B", IsEnabled = plan.NavigationRow.CanGoBack };
+                        backBtn.Click += (s, e) => { cm.IsOpen = false; GoBack(); };
+                        navPanel.Children.Add(backBtn);
+
+                        var fwdBtn = new Button { Style = (Style)Application.Current.Resources["ContextMenuNavButton"], Content = "\uE72A", IsEnabled = plan.NavigationRow.CanGoForward };
+                        fwdBtn.Click += (s, e) => { cm.IsOpen = false; GoForward(); };
+                        navPanel.Children.Add(fwdBtn);
+
+                        var refBtn = new Button { Style = (Style)Application.Current.Resources["ContextMenuNavButton"], Content = "\uE72C" };
+                        refBtn.Click += (s, e) => { cm.IsOpen = false; Reload(); };
+                        navPanel.Children.Add(refBtn);
+
+                        var navItem = new MenuItem { Header = navPanel };
+                        cm.Items.Add(navItem);
+                        cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
+                    }
+
                     foreach (var item in plan.Items)
                     {
                         switch (item)

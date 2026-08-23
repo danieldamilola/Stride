@@ -36,10 +36,10 @@ public class ContextMenuPlanBuilderTests
         Assert.False(plan.NavigationRow!.CanGoBack);
         Assert.False(plan.NavigationRow.CanGoForward);
 
-        // Navigation text items
-        Assert.True(HasCommand(plan, "back"));
-        Assert.True(HasCommand(plan, "forward"));
-        Assert.True(HasCommand(plan, "reload"));
+        
+        
+        
+        
 
         // Page tools
         Assert.True(HasCommand(plan, "find-in-page"));
@@ -64,10 +64,10 @@ public class ContextMenuPlanBuilderTests
         var ctx = PageContext() with { CanGoBack = true, CanGoForward = true };
         var plan = ContextMenuPlanBuilder.Build(ctx, "");
 
-        var back = plan.Items.OfType<ContextMenuItemSpec.Command>().First(c => c.Id == "back");
-        var fwd = plan.Items.OfType<ContextMenuItemSpec.Command>().First(c => c.Id == "forward");
-        Assert.True(back.IsEnabled);
-        Assert.True(fwd.IsEnabled);
+        
+        
+        Assert.True(plan.NavigationRow!.CanGoBack);
+        Assert.True(plan.NavigationRow!.CanGoForward);
     }
 
     [Fact]
@@ -75,10 +75,10 @@ public class ContextMenuPlanBuilderTests
     {
         var plan = ContextMenuPlanBuilder.Build(PageContext(), "");
 
-        var back = plan.Items.OfType<ContextMenuItemSpec.Command>().First(c => c.Id == "back");
-        var fwd = plan.Items.OfType<ContextMenuItemSpec.Command>().First(c => c.Id == "forward");
-        Assert.False(back.IsEnabled);
-        Assert.False(fwd.IsEnabled);
+        
+        
+        Assert.False(plan.NavigationRow!.CanGoBack);
+        Assert.False(plan.NavigationRow!.CanGoForward);
     }
 
     // ── Reader Context ──
@@ -107,9 +107,9 @@ public class ContextMenuPlanBuilderTests
     {
         var plan = ContextMenuPlanBuilder.Build(PageContext(), "");
 
-        Assert.Equal("Alt+Left", Gesture(plan, "back"));
-        Assert.Equal("Alt+Right", Gesture(plan, "forward"));
-        Assert.Equal("F5", Gesture(plan, "reload"));
+        
+        
+        
         Assert.Equal("Ctrl+F", Gesture(plan, "find-in-page"));
         Assert.Equal("Alt+T", Gesture(plan, "launch-tc-lens"));
         Assert.Equal("Ctrl+P", Gesture(plan, "print"));

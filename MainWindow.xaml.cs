@@ -142,46 +142,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private bool TryGetUrlFromArg(string arg, out string url)
-    {
-        if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-            arg.StartsWith("file://", StringComparison.OrdinalIgnoreCase) ||
-            arg.StartsWith("stride://", StringComparison.OrdinalIgnoreCase))
-        {
-            url = arg;
-            return true;
-        }
-        
-        try
-        {
-            if (System.IO.File.Exists(arg))
-            {
-                url = new Uri(System.IO.Path.GetFullPath(arg)).AbsoluteUri;
-                return true;
-            }
-        }
-        catch { }
-
-        url = string.Empty;
-        return false;
-    }
-
     private void OnInstanceMessageReceived(string[] args)
     {
         Dispatcher.InvokeAsync(async () =>
         {
-            foreach (var arg in args)
-            {
-                if (TryGetUrlFromArg(arg, out var parsedUrl))
-                {
-                    var tab = _engine.CreateTab(parsedUrl);
-                    _engine.SwitchTo(tab);
-                    await _engine.ActivateAsync(tab);
-                    break;
-                }
-            }
-
+            var coordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
+            await coordinator.HandleCommandLineArgsAsync(args);
             _chromeManager?.BringToFront();
         });
     }
@@ -189,16 +155,8 @@ public partial class MainWindow : Window
     private async Task HandleCommandLineUrls()
     {
         var args = Environment.GetCommandLineArgs();
-        foreach (var arg in args.Skip(1))
-        {
-            if (TryGetUrlFromArg(arg, out var parsedUrl))
-            {
-                var tab = _engine.CreateTab(parsedUrl);
-                _engine.SwitchTo(tab);
-                await _engine.ActivateAsync(tab);
-                break;
-            }
-        }
+        var coordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
+        await coordinator.HandleCommandLineArgsAsync(args.Skip(1).ToArray());
     }
 
     private KeyboardShortcutMap BuildShortcutMap()
@@ -306,29 +264,8 @@ public partial class MainWindow : Window
             await _engine.ActivateAsync(tab);
         }
 
-        string flagFile = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "post_update.flag");
-        bool isPostUpdate = false;
-        
-        if (System.IO.File.Exists(flagFile))
-        {
-            try { System.IO.File.Delete(flagFile); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
-            isPostUpdate = true;
-        }
-        
-        var currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.2.1";
-        if (_vm.Settings.LastSeenReleaseNotesVersion != currentVersion)
-        {
-            isPostUpdate = true;
-            _vm.Settings.LastSeenReleaseNotesVersion = currentVersion;
-            _settingsStore.Save(_vm.Settings);
-        }
-
-        if (isPostUpdate)
-        {
-            var tab = _engine.CreateTab(InternalUrls.ReleaseNotes);
-            _engine.SwitchTo(tab);
-            await _engine.ActivateAsync(tab);
-        }
+        var coordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
+        await coordinator.HandleReleaseNotesAsync();
     }
 
 

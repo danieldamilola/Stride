@@ -53,6 +53,8 @@ public static class Composition
         services.AddSingleton<UpdateService>();
         services.AddSingleton<TabHibernationManager>();
         services.AddSingleton<NavigationPolicyEngine>();
+        services.AddSingleton<Services.CommandLine.ICommandLineUrlParser, Services.CommandLine.CommandLineUrlParser>();
+        services.AddSingleton<Services.Startup.StartupCoordinator>();
 
         // Reader mode - scaffold: interfaces registered, real bodies in step 2
         services.AddSingleton<Services.Reader.IReaderSanitizer, Services.Reader.ReaderSanitizer>();
