@@ -157,7 +157,7 @@ public partial class MainWindow : Window
         {
             if (System.IO.File.Exists(arg))
             {
-                url = new Uri(arg).AbsoluteUri;
+                url = new Uri(System.IO.Path.GetFullPath(arg)).AbsoluteUri;
                 return true;
             }
         }
@@ -231,7 +231,11 @@ public partial class MainWindow : Window
                 OpenOneTab = () => { OpenOneTabPage(); return Task.CompletedTask; },
                 OpenSettings = () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
                 LaunchTCLens = LaunchTCLensAsync,
-                ToggleReader = () => Task.CompletedTask
+                ToggleReader = async () =>
+                {
+                    if (_engine.ActiveTab is { } tab && _engine.ToggleReaderAsync is { } toggle)
+                        await toggle(tab.Id);
+                }
             });
     }
 

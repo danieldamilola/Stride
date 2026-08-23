@@ -45,9 +45,9 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         yield return MessageRoute.Exact(WebMessagePrefix.OpenBackgroundsFolder, HandleOpenBackgroundsFolder);
         yield return MessageRoute.Exact("check-for-update", async () =>
         {
-            await _updateService.CheckForUpdatesQuietlyAsync();
-            bool hasUpdate = !string.IsNullOrEmpty(_updateService.LatestVersion);
-            _engine.PostMessageToActiveTab($"update-check-result:{hasUpdate.ToString().ToLowerInvariant()}::{_updateService.LatestVersion ?? ""}");
+            var status = await _updateService.CheckForUpdatesQuietlyAsync();
+            string statusStr = status.HasValue ? status.Value.ToString().ToLowerInvariant() : "error";
+            _engine.PostMessageToActiveTab($"update-check-result:{statusStr}:{_updateService.LatestVersion ?? ""}:");
         });
     }
 

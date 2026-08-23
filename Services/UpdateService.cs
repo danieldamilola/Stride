@@ -17,7 +17,7 @@ namespace StrideBrowser.Services;
 public sealed class UpdateService
 {
     private const string GitHubApiUrl = "https://api.github.com/repos/danieldamilola/Stride/releases/latest";
-    private static readonly HttpClient _http = new();
+    private readonly HttpClient _http;
 
     public event EventHandler? UpdateAvailable;
     public event EventHandler<string>? UpdateFailed;
@@ -31,9 +31,13 @@ public sealed class UpdateService
 
     public string? LatestVersion => _latestVersion;
 
-    public UpdateService()
+    public UpdateService(HttpClient http)
     {
-        _http.DefaultRequestHeaders.Add("User-Agent", "StrideBrowser-Updater");
+        _http = http;
+        if (!_http.DefaultRequestHeaders.Contains("User-Agent"))
+        {
+            _http.DefaultRequestHeaders.Add("User-Agent", "StrideBrowser-Updater");
+        }
     }
 
     private void Fail(string message)
@@ -42,13 +46,14 @@ public sealed class UpdateService
         UpdateFailed?.Invoke(this, message);
     }
 
-    public async Task CheckForUpdatesQuietlyAsync()
+    public async Task<bool?> CheckForUpdatesQuietlyAsync()
     {
+        _latestVersion = null;
         try
         {
             var release = await _http.GetFromJsonAsync<GitHubRelease>(GitHubApiUrl);
             if (release is null || string.IsNullOrEmpty(release.TagName))
-                return;
+                return false;
 
             string latestVersionStr = release.TagName.TrimStart('v');
             if (Version.TryParse(latestVersionStr, out var latestVersion))
@@ -58,12 +63,15 @@ public sealed class UpdateService
                 {
                     _latestVersion = release.TagName;
                     UpdateAvailable?.Invoke(this, EventArgs.Empty);
+                    return true;
                 }
             }
+            return false;
         }
         catch (Exception ex)
         {
             Trace.WriteLine($"[updater] Check failed: {ex.Message}");
+            return null;
         }
     }
 

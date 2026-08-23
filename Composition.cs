@@ -34,6 +34,7 @@ public static class Composition
         // Services - registered by interface and concrete type
         services.AddSingleton<NavigationService>();
         services.AddSingleton<FaviconLoader>();
+        services.AddSingleton<HttpClient>();
         services.AddSingleton<HistoryStore>();
         services.AddSingleton<IHistoryStore>(sp => sp.GetRequiredService<HistoryStore>());
         services.AddSingleton<OneTabStore>();

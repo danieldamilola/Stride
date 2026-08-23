@@ -114,6 +114,15 @@ public sealed partial class BrowserViewModel : ObservableObject
             });
         };
 
+        _updateService.UpdateFailed += (s, e) =>
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                UpdateState = UpdateState.UpdateAvailable;
+                UpdateProgress = 0;
+            });
+        };
+
         downloadStore.Items.CollectionChanged += (s, e) =>
         {
             if (e.NewItems != null)

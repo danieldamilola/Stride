@@ -16,7 +16,7 @@ Write-Host "Building release for Version: $version" -ForegroundColor Green
 
 # 3. Publish the app and updater
 Write-Host "Publishing Stride.Updater..." -ForegroundColor Cyan
-dotnet publish Stride.Updater\Stride.Updater.csproj -c Release -r win-x64 --self-contained false -o .\publish
+dotnet publish Stride.Updater\Stride.Updater.csproj -c Release -r win-x64 --self-contained true -o .\publish
 
 Write-Host "Publishing Stride..." -ForegroundColor Cyan
 dotnet publish Stride.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o .\publish

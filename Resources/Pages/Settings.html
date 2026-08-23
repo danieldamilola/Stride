@@ -1419,6 +1419,10 @@
                               status.innerText = 'New version available: ' + version;
                               btn.innerText = 'Download & Install';
                               btn.disabled = false;
+                          } else if (parts[1] === 'error') {
+                              status.innerText = 'Failed to check for updates. Try again later.';
+                              btn.innerText = 'Check for Updates';
+                              btn.disabled = false;
                           } else {
                               status.innerText = 'Stride is up to date (v{{CURRENT_VERSION}}).';
                               btn.innerText = 'Check for Updates';

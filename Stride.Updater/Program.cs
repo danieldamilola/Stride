@@ -44,14 +44,32 @@ public static class Program
             Thread.Sleep(500);
         }
 
-        // Failsafe kill
-        try { foreach (var p in Process.GetProcessesByName("Stride")) { if (p.Id != Process.GetCurrentProcess().Id) p.Kill(); } } catch (System.Exception ex) { System.Console.WriteLine(ex); }
-
+        // Failsafe wait (abort instead of indiscriminate kill)
+        bool anyRemaining = false;
         try
         {
-            string backupDir = Path.Combine(targetDir, "Backup");
-            string stagingDir = Path.Combine(targetDir, "UpdateStaging");
+            foreach (var p in Process.GetProcessesByName("Stride"))
+            {
+                if (p.Id != Process.GetCurrentProcess().Id && 
+                    p.MainModule?.FileName.StartsWith(targetDir, StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    anyRemaining = true;
+                }
+            }
+        } 
+        catch (System.Exception ex) { System.Console.WriteLine(ex); }
 
+        if (anyRemaining)
+        {
+            File.WriteAllText(Path.Combine(targetDir, "updater_error.log"), "Update aborted: Stride processes did not exit.");
+            return;
+        }
+
+        string backupDir = Path.Combine(targetDir, "Backup");
+        string stagingDir = Path.Combine(targetDir, "UpdateStaging");
+        
+        try
+        {
             if (Directory.Exists(backupDir)) Directory.Delete(backupDir, true);
             if (Directory.Exists(stagingDir)) Directory.Delete(stagingDir, true);
 
@@ -68,7 +86,8 @@ public static class Program
                 if (fileName.Equals("Stride.Updater.exe", StringComparison.OrdinalIgnoreCase) ||
                     fileName.Equals("Stride.Updater.dll", StringComparison.OrdinalIgnoreCase) ||
                     fileName.Equals("Stride.Updater.pdb", StringComparison.OrdinalIgnoreCase) ||
-                    fileName.Equals("updater_error.log", StringComparison.OrdinalIgnoreCase))
+                    fileName.Equals("updater_error.log", StringComparison.OrdinalIgnoreCase) ||
+                    fileName.Equals("post_update.flag", StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 File.Move(file, Path.Combine(backupDir, fileName), true);
@@ -87,7 +106,13 @@ public static class Program
             // Move new files from staging to target
             foreach (var file in Directory.GetFiles(stagingDir))
             {
-                File.Move(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
+                var fileName = Path.GetFileName(file);
+                if (fileName.Equals("Stride.Updater.exe", StringComparison.OrdinalIgnoreCase) ||
+                    fileName.Equals("Stride.Updater.dll", StringComparison.OrdinalIgnoreCase) ||
+                    fileName.Equals("Stride.Updater.pdb", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                    
+                File.Move(file, Path.Combine(targetDir, fileName), true);
             }
 
             foreach (var dir in Directory.GetDirectories(stagingDir))
@@ -110,6 +135,27 @@ public static class Program
         }
         catch (Exception ex)
         {
+            // Restore from backup if update failed
+            if (Directory.Exists(backupDir))
+            {
+                try
+                {
+                    foreach (var file in Directory.GetFiles(backupDir))
+                    {
+                        File.Move(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
+                    }
+                    foreach (var dir in Directory.GetDirectories(backupDir))
+                    {
+                        var dest = Path.Combine(targetDir, Path.GetFileName(dir));
+                        if (!Directory.Exists(dest))
+                            Directory.Move(dir, dest);
+                    }
+                } 
+                catch (Exception restoreEx) 
+                {
+                    ex = new AggregateException(ex, restoreEx);
+                }
+            }
             File.WriteAllText(Path.Combine(targetDir, "updater_error.log"), ex.ToString());
         }
     }

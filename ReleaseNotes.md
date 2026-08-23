@@ -26,7 +26,7 @@
 
 **Features**
 * **Native Seamless Updates**: The update flow has been completely redesigned. Say goodbye to the red Settings dot and UAC prompts. A beautiful, native "gear in a tray" icon now appears directly on your toolbar when an update is available. Clicking it shows a real-time circular progress ring wrapping the icon while it downloads in the background, followed by a green checkmark.
-* **Invisible Micro-Updater**: When you click the green checkmark, Stride orchestrates a lightning-fast native restart. It swaps the files behind the scenes using a new invisible Console updater, entirely eliminating wizard dialogs, UAC prompts, and NetSparkle dependencies. 
+* **Invisible Micro-Updater**: When you click the green checkmark, Stride orchestrates a lightning-fast native restart. It swaps the files behind the scenes using a new invisible Windows GUI executable updater, entirely eliminating wizard dialogs, UAC prompts, and NetSparkle dependencies. 
 
 **Under the Hood**
 * Removed all NetSparkle dependencies from the project.
