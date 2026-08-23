@@ -48,7 +48,7 @@ public sealed partial class BrowserSettings : ObservableObject
     /// Read at WebView2 environment creation, so changes require a restart to apply.
     /// </summary>
     [ObservableProperty]
-    private bool _smartScreenEnabled = true;
+    private bool _smartScreenEnabled = false;
 
     [ObservableProperty]
     private bool _clearDataOnExit;
