@@ -1,44 +1,30 @@
-# Release Note: v1.2.1 Polish & Bug Fixes
+# Release Note: v1.2.1
 
 **Features**
-* **Dynamic Context Menu**: Rebuilt the right-click menu from scratch to be context-aware, inspired by Zen Browser. The top row always shows navigation buttons (Back, Forward, Reload). Below that, the menu adapts to what you clicked: plain pages get Find in Page and Select All; editable fields get Undo, Redo, Cut, Copy, Paste; links get "Open in new tab" and "Copy link"; images get "Save image" and "Copy image URL". Plus, Reader View dynamically appears if available, and the T&C Lens extension is available right from the menu. Keyboard shortcuts are now visible for all supported actions. Pure builder logic is now strictly unit-tested.
-* **Release Notes Auto-Open**: Stride now correctly opens the stride://release-notes page automatically after an update is installed, so you always know whats new.
+* **Dynamic Context Menu**: Rebuilt the right-click menu to be context-aware. The top row shows Back, Forward, and Reload buttons. The menu adapts to the clicked target. Plain pages show Find in Page and Select All. Editable fields show Undo, Redo, Cut, Copy, and Paste. Links show "Open in new tab" and "Copy link". Images show "Save image" and "Copy image URL". Reader View appears when available. The T&C Lens extension is accessible from the menu. Keyboard shortcuts display for supported actions.
+* **Release Notes Auto-Open**: Stride opens stride://release-notes automatically after an update installs.
 
 **Bug Fixes**
-* **Link Preview & Reader Mode**: Fixed a bug where using Link Preview (Alt+Click) merely dimmed the screen without showing the preview window, and clicking Reader Mode failed to activate.
-* **Right-Click Menu**: Fixed a bug where right-clicking on web content showed no Stride menu (and often nothing at all). Reading link/image/selection data from the WebView2 context menu target now only happens when that data actually exists; reading it unconditionally threw a COM error that silently killed every menu.
-* **Downloads 100% Hang**: Fixed a frustrating bug where large downloads would freeze at 100%. This was caused by .NET Garbage Collection dropping native events, combined with Microsoft SmartScreen silently suspending downloads in the background. (SmartScreen reputation checks are now fully disabled by default for privacy and speed).
-* **Download UI Commands**: Fixed a bug where clicking Pause, Resume, or Cancel on active downloads did nothing.
-* **Local HTML Files**: Fixed an issue where Stride ignored local .html files when launched from Windows Explorer or the command line. Stride can now securely open local files and be set as your default offline HTML viewer.
-* **New Tab Reloads**: Fixed an issue where adding or removing a shortcut caused the entire New Tab page to flicker and reload. The UI now updates instantly.
-* **New Tab Shortcuts**: Fixed a bug where adding a shortcut with special characters (like single quotes or backslashes) or importing bookmarks would completely break the New Tab page. Shortcuts are now securely passed to the frontend using Base64 encoding.
-* **Toolbar Icon Toggles**: Fixed a bug where toggling the "Show Reader Icon" setting off would not actually hide the icon from the toolbar. The setting is now correctly wired to instantly update the UI.
+* **Link Preview & Reader Mode**: Alt+Click now displays the link preview window instead of only dimming the screen. The Reader Mode button now successfully activates Reader Mode.
+* **Right-Click Menu**: Fixed a COM error that prevented the context menu from rendering. The application now checks for the existence of link, image, or selection data before reading it from the WebView2 target.
+* **Downloads Hang**: Fixed a bug where downloads froze at 100 percent. .NET Garbage Collection dropped native events, and Microsoft SmartScreen suspended background downloads. SmartScreen reputation checks are now disabled by default.
+* **Download UI Commands**: The Pause, Resume, and Cancel buttons on active downloads now function.
+* **Local HTML Files**: Stride now opens local .html files launched from Windows Explorer or the command line. Stride supports being the default offline HTML viewer.
+* **New Tab Reloads**: Adding or removing a shortcut updates the UI instantly without reloading the entire New Tab page.
+* **New Tab Shortcuts**: Adding a shortcut with special characters or importing bookmarks no longer breaks the New Tab page. Stride passes shortcuts to the frontend using Base64 encoding.
+* **Toolbar Icon Toggles**: Disabling the "Show Reader Icon" setting instantly removes the icon from the toolbar.
 
 **Under the Hood**
-* Extracted the URL parsing and command-line argument dispatch logic into dedicated, testable services (CommandLineUrlParser and StartupCoordinator), cleaning up the main window.
-* Purged the last NetSparkle references from live surfaces: removed the stale "NetSparkleUpdater WPF" row from Settings, reworded updater comments, and deleted the obsolete UpdateServiceE2ETests E2E test that targeted the retired appcast pipeline.
+* Extracted URL parsing and command-line argument dispatch from the main window into CommandLineUrlParser and StartupCoordinator services.
+* Removed the "NetSparkleUpdater WPF" row from Settings. Updated updater comments. Deleted the UpdateServiceE2ETests test.
+
+# Release Note: v1.2.0
 
 **Features**
-* **Release Notes Auto-Open**: Stride now correctly opens the `stride://release-notes` page automatically after an update is installed, so you always know what's new.
-
-**Bug Fixes**
-* **Downloads 100% Hang**: Fixed a frustrating bug where large downloads would freeze at 100%. This was caused by .NET Garbage Collection dropping native events, combined with Microsoft SmartScreen silently suspending downloads in the background. (SmartScreen reputation checks are now fully disabled by default for privacy and speed).
-* **Download UI Commands**: Fixed a bug where clicking Pause, Resume, or Cancel on active downloads did nothing.
-* **Local HTML Files**: Fixed an issue where Stride ignored local `.html` files when launched from Windows Explorer or the command line. Stride can now securely open local files and be set as your default offline HTML viewer.
-* **New Tab Reloads**: Fixed an issue where adding or removing a shortcut caused the entire New Tab page to flicker and reload. The UI now updates instantly.
-* **New Tab Shortcuts**: Fixed a bug where adding a shortcut with special characters (like single quotes or backslashes) or importing bookmarks would completely break the New Tab page. Shortcuts are now securely passed to the frontend using Base64 encoding.
-* **Toolbar Icon Toggles**: Fixed a bug where toggling the "Show Reader Icon" setting off would not actually hide the icon from the toolbar. The setting is now correctly wired to instantly update the UI.
-
-# Release Note: v1.2.0 Native Seamless Updater
-
-**Features**
-* **Native Seamless Updates**: The update flow has been completely redesigned. Say goodbye to the red Settings dot and UAC prompts. A beautiful, native "gear in a tray" icon now appears directly on your toolbar when an update is available. Clicking it shows a real-time circular progress ring wrapping the icon while it downloads in the background, followed by a green checkmark.
-* **Invisible Micro-Updater**: When you click the green checkmark, Stride orchestrates a lightning-fast native restart. It swaps the files behind the scenes using a new invisible Windows GUI executable updater, entirely eliminating wizard dialogs, UAC prompts, and NetSparkle dependencies. 
+* **Native Updates**: Redesigned the update flow. A gear icon appears on the toolbar when an update is available. Clicking it shows a circular progress ring during the background download, followed by a green checkmark.
+* **Micro-Updater**: Clicking the green checkmark restarts the application. A background Windows executable swaps the files without wizard dialogs or UAC prompts.
 
 **Under the Hood**
-* Removed all NetSparkle dependencies from the project.
-* `UpdateService` now uses `HttpClient` to natively hit the GitHub REST API and download the `.zip` archive.
-* Reconfigured the build pipeline (`build-release.ps1`) to output both a `.zip` archive for the micro-updater and a `.exe` installer for new users.
-
-
-
+* Removed NetSparkle dependencies.
+* UpdateService uses HttpClient to call the GitHub REST API and download the zip archive.
+* The build-release.ps1 script outputs a zip archive for the micro-updater and an exe installer for new users.
