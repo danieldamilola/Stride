@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -136,6 +136,11 @@ public sealed class WebViewFactory
         core.Settings.IsGeneralAutofillEnabled = false;
         core.Settings.IsPasswordAutosaveEnabled = false;
         core.Settings.AreDefaultScriptDialogsEnabled = false;
+        
+        // SmartScreen for downloads requires the default download dialog to function.
+        // Since we implement a custom download manager and set e.Handled = true, 
+        // we must disable reputation checking on downloads, otherwise it hangs at 100% waiting for a suppressed UI!
+        try { core.Settings.IsReputationCheckingRequired = false; } catch (Exception ex) { Trace.WriteLine(ex); }
 
         try { core.Settings.IsSwipeNavigationEnabled = true; } catch (Exception ex) { Trace.WriteLine(ex); }
     }
