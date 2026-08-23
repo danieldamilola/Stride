@@ -327,21 +327,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task HandleCommandLineUrls()
-    {
-        var args = Environment.GetCommandLineArgs();
-        foreach (var arg in args.Skip(1))
-        {
-            if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            {
-                var tab = _engine.CreateTab(arg);
-                _engine.SwitchTo(tab);
-                await _engine.ActivateAsync(tab);
-                break;
-            }
-        }
-    }
+
 
     private void WireEngineEvents()
     {
