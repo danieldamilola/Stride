@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -69,7 +69,7 @@ public class DownloadMessageHandler : IWebMessageHandler
         var item = _downloadStore.Items.FirstOrDefault(d => d.Id == id);
         if (item != null)
         {
-            _customDownloadManager.Cancel(item.Id);
+            item.State = DownloadState.Cancelled;
         }
         return Task.CompletedTask;
     }
@@ -111,7 +111,7 @@ public class DownloadMessageHandler : IWebMessageHandler
         var item = _downloadStore.Get(id);
         if (item?.State == DownloadState.InProgress)
         {
-            _customDownloadManager.Pause(item.Id);
+            item.State = DownloadState.Paused;
         }
         return Task.CompletedTask;
     }
@@ -122,7 +122,6 @@ public class DownloadMessageHandler : IWebMessageHandler
         if (item?.State == DownloadState.Paused)
         {
             item.State = DownloadState.InProgress;
-            _customDownloadManager.Resume(item.Id);
         }
         return Task.CompletedTask;
     }
@@ -138,7 +137,7 @@ public class DownloadMessageHandler : IWebMessageHandler
         // Cancel anything still running so WebView2 stops the transfer, then drop the whole list.
         foreach (var item in _downloadStore.Items.Where(i => i.State is DownloadState.InProgress or DownloadState.Paused))
         {
-            _customDownloadManager.Cancel(item.Id);
+            item.State = DownloadState.Cancelled;
         }
         _downloadStore.ClearAll();
         return Task.CompletedTask;
