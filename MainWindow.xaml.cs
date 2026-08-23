@@ -331,6 +331,8 @@ public partial class MainWindow : Window
 
     private void WireEngineEvents()
     {
+        _engine.LaunchTCLensAsync = LaunchTCLensAsync;
+
         _engine.FullScreenChanged += isFullScreen =>
         {
             if (isFullScreen)

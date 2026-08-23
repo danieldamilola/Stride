@@ -8,6 +8,7 @@ using Microsoft.Web.WebView2.Wpf;
 using StrideBrowser.Helpers;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
+using StrideBrowser.Services.ContextMenus;
 
 namespace StrideBrowser.Engine;
 
@@ -86,11 +87,11 @@ public sealed class TabEngine : IDisposable
     // so the NavigationStarting handler does not treat them as an implicit exit.
     public bool IsProgrammaticReaderNavigation { get; set; }
 
-    // Injected after construction via Composition to avoid a constructor cycle. Returns true when the tab is in reader.
     public Func<Guid, bool>? IsReaderActive { get; set; }
-
-    // Set by Composition to allow TabEngine to exit reader on link navigation without depending on the service at ctor time.
+    public Func<Guid, bool>? IsReaderAvailable { get; set; }
     public Func<Guid, Task>? ExitReaderAsync { get; set; }
+    public Func<Guid, Task>? ToggleReaderAsync { get; set; }
+    public Func<Task>? LaunchTCLensAsync { get; set; }
 
     private readonly Services.CustomDownloadManager _customDownloadManager;
     private readonly Dictionary<string, Microsoft.Web.WebView2.Core.CoreWebView2DownloadOperation> _activeNativeDownloads = new();
@@ -593,7 +594,7 @@ public sealed class TabEngine : IDisposable
             if (_settings.AdBlockEnabled)
                 AdBlockFilter.Apply(wv.CoreWebView2);
 
-            WireInlinedContextMenu(wv.CoreWebView2);
+            WireInlinedContextMenu(wv.CoreWebView2, tab);
             _webViewFactory.ConfigureCoreWebView(wv.CoreWebView2);
         }
         catch
@@ -606,7 +607,6 @@ public sealed class TabEngine : IDisposable
         WireNavigationEvents(wv, tab);
         WireTitleAndSourceEvents(wv, tab);
         _ipcBridge.Wire(wv, tab);
-        WireContextMenuEvents(wv, tab);
         HandleProcessFailure(wv, tab);
 
         // Network-level ad blocking - block known ad URLs before they load
@@ -624,56 +624,230 @@ public sealed class TabEngine : IDisposable
         _webViewFactory.NavigateInitialUrl(wv, tab);
     }
 
-    private void WireInlinedContextMenu(CoreWebView2 core)
+    private void WireInlinedContextMenu(CoreWebView2 core, BrowserTab tab)
     {
         core.ContextMenuRequested += (object? sender, CoreWebView2ContextMenuRequestedEventArgs args) =>
         {
+            // LinkUri, SourceUri and SelectionText throw COMException when read
+            // without their Has* flag being set, so guard every string read.
+            ContextMenuContext context;
+            try
+            {
+                var target = args.ContextMenuTarget;
+                var hasLink = target.HasLinkUri;
+                var hasSelection = target.HasSelection;
+                context = new ContextMenuContext
+                {
+                    CanGoBack = core.CanGoBack,
+                    CanGoForward = core.CanGoForward,
+                    HasLink = hasLink,
+                    LinkUri = hasLink ? target.LinkUri ?? "" : "",
+                    MediaKind = MapMediaKind(target.Kind),
+                    SourceUri = target.HasSourceUri ? target.SourceUri ?? "" : "",
+                    IsEditable = target.IsEditable,
+                    HasSelection = hasSelection,
+                    SelectionText = hasSelection ? target.SelectionText ?? "" : "",
+                    ForceDarkMode = _settings.ForceDarkMode,
+                    IsReaderAvailable = IsReaderAvailable?.Invoke(tab.Id) ?? false,
+                    IsInReader = IsReaderActive?.Invoke(tab.Id) ?? false,
+                };
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"ContextMenu target extraction failed: {ex}");
+                return;
+            }
+
+            var plan = ContextMenuPlanBuilder.Build(context, _settings.SearchEngine);
+
             var deferral = args.GetDeferral();
             args.Handled = true;
 
             _webViewHost!.Dispatcher.InvokeAsync(() =>
             {
-                var cm = new ContextMenu();
-                cm.PlacementTarget = _webViewHost;
+                try
+                {
+                    var cm = new ContextMenu { PlacementTarget = _webViewHost };
 
-                var back = new MenuItem { Header = "Back", IsEnabled = core.CanGoBack, InputGestureText = "Alt+Left Arrow" };
-                back.Click += (s, e) => core.GoBack();
-                cm.Items.Add(back);
+                    foreach (var item in plan.Items)
+                    {
+                        switch (item)
+                        {
+                            case ContextMenuItemSpec.Separator:
+                                cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
+                                break;
+                            case ContextMenuItemSpec.Command command:
+                            {
+                                var menuItem = new MenuItem
+                                {
+                                    Header = command.Header,
+                                    InputGestureText = command.GestureText,
+                                    IsEnabled = command.IsEnabled,
+                                    Tag = command,
+                                };
+                                menuItem.Click += (s, e) =>
+                                {
+                                    cm.IsOpen = false;
+                                    ExecuteContextMenuCommand(core, (ContextMenuItemSpec.Command)((MenuItem)s!).Tag!);
+                                };
+                                cm.Items.Add(menuItem);
+                                break;
+                            }
+                        }
+                    }
 
-                var forward = new MenuItem { Header = "Forward", IsEnabled = core.CanGoForward, InputGestureText = "Alt+Right Arrow" };
-                forward.Click += (s, e) => core.GoForward();
-                cm.Items.Add(forward);
-
-                var reload = new MenuItem { Header = "Reload", InputGestureText = "Ctrl+R" };
-                reload.Click += (s, e) => core.Reload();
-                cm.Items.Add(reload);
-
-                cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
-
-                var saveAs = new MenuItem { Header = "Save as...", InputGestureText = "Ctrl+S" };
-                saveAs.Click += (s, e) => { /* Not supported in this SDK version */ };
-                cm.Items.Add(saveAs);
-
-                var print = new MenuItem { Header = "Print...", InputGestureText = "Ctrl+P" };
-                print.Click += (s, e) => { try { core.ShowPrintUI(); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } };
-                cm.Items.Add(print);
-
-                cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
-
-                var viewSource = new MenuItem { Header = "View page source", InputGestureText = "Ctrl+U" };
-                // View source can be a navigation to view-source: URI
-                viewSource.Click += (s, e) => { try { core.Navigate("view-source:" + core.Source); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } };
-                cm.Items.Add(viewSource);
-
-                var inspect = new MenuItem { Header = "Inspect", InputGestureText = "Ctrl+Shift+I" };
-                inspect.Click += (s, e) => core.OpenDevToolsWindow();
-                cm.Items.Add(inspect);
-
-                cm.IsOpen = true;
-                deferral.Complete();
+                    cm.IsOpen = true;
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"Context menu failed to open: {ex}");
+                }
+                finally
+                {
+                    deferral.Complete();
+                }
             });
         };
     }
+
+    private void ExecuteContextMenuCommand(CoreWebView2 core, ContextMenuItemSpec.Command command)
+    {
+        switch (command.Id)
+        {
+            case "open-link-new-tab":
+            case "open-image-new-tab":
+            case "search-selection":
+                _ = _dispatcher.InvokeAsync(async () =>
+                {
+                    try { var newTab = CreateTab(command.Payload); await ActivateAsync(newTab); }
+                    catch (Exception ex) { Trace.WriteLine(ex); }
+                });
+                break;
+
+            case "copy-link":
+            case "copy-image-url":
+                try { System.Windows.Clipboard.SetText(command.Payload); }
+                catch (Exception ex) { Trace.WriteLine(ex); }
+                break;
+
+            case "save-image":
+                SaveImage(command.Payload);
+                break;
+
+            case "back":
+                if (core.CanGoBack) core.GoBack();
+                break;
+
+            case "forward":
+                if (core.CanGoForward) core.GoForward();
+                break;
+
+            case "reload":
+                core.Reload();
+                break;
+
+            case "toggle-reader":
+                if (ActiveTab != null)
+                {
+                    _ = ToggleReaderAsync?.Invoke(ActiveTab.Id);
+                }
+                break;
+
+            case "launch-tc-lens":
+                _ = LaunchTCLensAsync?.Invoke();
+                break;
+
+            case "find-in-page":
+                _ = FindInPageAsync();
+                break;
+
+            case "select-all":
+                core.ExecuteScriptAsync("document.execCommand('selectAll')");
+                break;
+
+            case "undo":
+                core.ExecuteScriptAsync("document.execCommand('undo')");
+                break;
+
+            case "redo":
+                core.ExecuteScriptAsync("document.execCommand('redo')");
+                break;
+
+            case "cut":
+                core.ExecuteScriptAsync("document.execCommand('cut')");
+                break;
+
+            case "copy":
+                core.ExecuteScriptAsync("document.execCommand('copy')");
+                break;
+
+            case "paste":
+                core.ExecuteScriptAsync("navigator.clipboard.readText().then(t => document.execCommand('insertText', false, t))");
+                break;
+
+            case "print":
+                try { core.ShowPrintUI(); }
+                catch (Exception ex) { Trace.WriteLine(ex); }
+                break;
+
+            case "view-source":
+                try { core.Navigate("view-source:" + core.Source); }
+                catch (Exception ex) { Trace.WriteLine(ex); }
+                break;
+
+            case "inspect":
+                core.OpenDevToolsWindow();
+                break;
+
+            case "toggle-dark-mode":
+                _settings.ForceDarkMode = !_settings.ForceDarkMode;
+                break;
+        }
+    }
+
+    private void SaveImage(string sourceUri)
+    {
+        try
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = GuessImageFileName(sourceUri),
+                Filter = "Image|*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.avif;*.svg|All files|*.*",
+            };
+            if (dialog.ShowDialog() != true) return;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var http = new System.Net.Http.HttpClient();
+                    var bytes = await http.GetByteArrayAsync(sourceUri);
+                    await System.IO.File.WriteAllBytesAsync(dialog.FileName, bytes);
+                }
+                catch (Exception ex) { Trace.WriteLine($"Image save failed: {ex}"); }
+            });
+        }
+        catch (Exception ex) { Trace.WriteLine($"Image save dialog failed: {ex}"); }
+    }
+
+    private static string GuessImageFileName(string sourceUri)
+    {
+        try
+        {
+            var path = new Uri(sourceUri).AbsolutePath;
+            var name = System.IO.Path.GetFileName(path);
+            return string.IsNullOrWhiteSpace(name) ? "image" : name;
+        }
+        catch { return "image"; }
+    }
+
+    private static ContextMenuMediaKind MapMediaKind(CoreWebView2ContextMenuTargetKind kind) => kind switch
+    {
+        CoreWebView2ContextMenuTargetKind.Image => ContextMenuMediaKind.Image,
+        CoreWebView2ContextMenuTargetKind.Video => ContextMenuMediaKind.Video,
+        CoreWebView2ContextMenuTargetKind.Audio => ContextMenuMediaKind.Audio,
+        _ => ContextMenuMediaKind.Page,
+    };
 
     /// <summary>
     /// Re-injects the YouTube Unhook script into all active YouTube tabs.
@@ -853,20 +1027,6 @@ public sealed class TabEngine : IDisposable
     }
 
     public event Action<bool>? FullScreenChanged;
-
-    private void WireContextMenuEvents(dynamic wv, BrowserTab tab)
-    {
-        // wv is either WebView2 or WebView2CompositionControl depending on
-        // UseFloatingCommandBar. Both expose CoreWebView2, so no cast is needed.
-        CoreWebView2 core = wv.CoreWebView2;
-        Handlers.TabContextMenuHandler.Wire(
-            core,
-            _dispatcher,
-            _settings,
-            url => { _ = _dispatcher.InvokeAsync(async () => { try { var newTab = CreateTab(url); await ActivateAsync(newTab); } catch (Exception ex) { Trace.WriteLine(ex); } }); },
-            () => { _settings.ForceDarkMode = !_settings.ForceDarkMode; }
-        );
-    }
 
 
 

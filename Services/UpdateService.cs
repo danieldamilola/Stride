@@ -11,7 +11,7 @@ using System.Windows;
 namespace StrideBrowser.Services;
 
 /// <summary>
-/// A completely native, zero-stress Micro-Updater that bypasses NetSparkle and Inno Setup.
+/// A completely native, zero-stress Micro-Updater with no external updater frameworks.
 /// It uses the official GitHub REST API to detect releases and downloads the .zip package.
 /// </summary>
 public sealed class UpdateService

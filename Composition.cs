@@ -130,8 +130,16 @@ public static class Composition
         var tabEngine = sp.GetRequiredService<TabEngine>();
         var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
         tabEngine.TabClosed += readerService.RemoveSession;
+        
+        var readerViewModel = sp.GetRequiredService<ViewModels.Reader.ReaderViewModel>();
+        tabEngine.IsReaderAvailable = tabId => readerViewModel.IsReaderAvailable && tabEngine.ActiveTab?.Id == tabId;
         tabEngine.IsReaderActive = tabId => readerService.GetSession(tabId)?.IsInReader == true;
         tabEngine.ExitReaderAsync = tabId => readerService.ExitReaderAsync(tabId);
+        tabEngine.ToggleReaderAsync = async tabId =>
+        {
+            if (tabEngine.ActiveTab?.Id == tabId)
+                await readerViewModel.ToggleAsync();
+        };
 
         // Wire Link Preview - on demand, Alt plus click, sleep not hibernate
         var linkPreviewService = sp.GetRequiredService<Services.LinkPreview.LinkPreviewService>();

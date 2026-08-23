@@ -1,3 +1,14 @@
+# Release Note: Unreleased
+
+**Features**
+* **Dynamic Context Menu**: Rebuilt the right-click menu from scratch to be context-aware, inspired by Zen Browser. The top row always shows navigation buttons (Back, Forward, Reload). Below that, the menu adapts to what you clicked: plain pages get Find in Page and Select All; editable fields get Undo, Redo, Cut, Copy, Paste; links get "Open in new tab" and "Copy link"; images get "Save image" and "Copy image URL". Plus, Reader View dynamically appears if available, and the T&C Lens extension is available right from the menu. Keyboard shortcuts are now visible for all supported actions. Pure builder logic is now strictly unit-tested.
+
+**Bug Fixes**
+* **Right-Click Menu**: Fixed a bug where right-clicking on web content showed no Stride menu (and often nothing at all). Reading link/image/selection data from the WebView2 context menu target now only happens when that data actually exists; reading it unconditionally threw a COM error that silently killed every menu.
+
+**Under the Hood**
+* Purged the last NetSparkle references from live surfaces: removed the stale "NetSparkleUpdater WPF" row from Settings, reworded updater comments, and deleted the obsolete `UpdateServiceE2ETests` E2E test that targeted the retired appcast pipeline. The test suite compiles and runs again (161 passing).
+
 # Release Note: v1.2.1 Polish & Bug Fixes
 
 **Features**

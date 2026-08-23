@@ -26,6 +26,10 @@ Run the tests before finishing any change. A change that breaks the build or the
 
 Prove a change works against the real artifact, not by reading the code. Run the tests, build the project, and where the change touches the running app, exercise it. A claim that "it compiles" is not proof.
 
+## Committing and Pushing
+
+Stop committing and pushing code autonomously. Wait for the user's explicit confirmation that a fix or feature works before you commit and push any changes.
+
 ## Release
 
 Releasing follows the release-management skill in `.agents/skills/release-management/`. Read it before touching versioning, the installer, or release notes. 
