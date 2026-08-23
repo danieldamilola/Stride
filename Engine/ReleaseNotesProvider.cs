@@ -10,6 +10,17 @@ public static class ReleaseNotesProvider
     {
         return new List<ReleaseVersion>
         {
+            new("1.2.1", "Aug 23, 2026", "Dynamic Context Menu", "Rebuilt context-aware right-click menus, plus Link Preview and Reader Mode bug fixes.",
+                new List<(string, string)> {
+                    ("Dynamic Context Menu", "Context-aware right-click menus inspired by Zen Browser"),
+                    ("Auto-Open Release Notes", "Stride now opens the stride://release-notes page automatically after an update installs")
+                },
+                new List<(string, string)> {
+                    ("Link Preview & Reader Mode", "Fixed bugs where Link Preview only dimmed the screen and Reader Mode failed to activate"),
+                    ("Downloads 100% Hang", "Downloads no longer freeze at 100% due to .NET Garbage Collection issues"),
+                    ("Local HTML Files", "Stride can now be set as your default offline HTML viewer")
+                }),
+
             new("1.2.0", "Aug 22, 2026", "Reader Mode & Link Preview", "Distraction-free reading on any article and Alt-triggered link previews, plus smarter tab resource controls.",
                 new List<(string, string)> {
                     ("Reader Mode", "Press Ctrl+Shift+R on an article for a clean, script-free reading view powered by Mozilla Readability"),
@@ -84,3 +95,4 @@ public static class ReleaseNotesProvider
         };
     }
 }
+
