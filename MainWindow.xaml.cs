@@ -149,7 +149,9 @@ public partial class MainWindow : Window
             SyncTabsBinding();
             // Don't auto-open command bar on startup
 
-            await HandleCommandLineUrls();
+            var handledUrl = await HandleCommandLineUrls();
+            var releaseCoordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
+            await releaseCoordinator.HandleReleaseNotesAsync(openTab: !handledUrl);
 
             SingleInstanceManager.InstanceMessageReceived += OnInstanceMessageReceived;
 
@@ -174,11 +176,11 @@ public partial class MainWindow : Window
         });
     }
 
-    private async Task HandleCommandLineUrls()
+    private async Task<bool> HandleCommandLineUrls()
     {
         var args = Environment.GetCommandLineArgs();
         var coordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
-        await coordinator.HandleCommandLineArgsAsync(args.Skip(1).ToArray());
+        return await coordinator.HandleCommandLineArgsAsync(args.Skip(1).ToArray());
     }
 
     private KeyboardShortcutMap BuildShortcutMap()
@@ -285,9 +287,6 @@ public partial class MainWindow : Window
             _engine.SwitchTo(tab);
             await _engine.ActivateAsync(tab);
         }
-
-        var coordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
-        await coordinator.HandleReleaseNotesAsync();
     }
 
 

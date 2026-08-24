@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection;
@@ -49,30 +51,55 @@ public sealed class UpdateService
     public async Task<bool?> CheckForUpdatesQuietlyAsync()
     {
         _latestVersion = null;
-        try
+        const int maxAttempts = 3;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            var release = await _http.GetFromJsonAsync<GitHubRelease>(GitHubApiUrl);
-            if (release is null || string.IsNullOrEmpty(release.TagName))
-                return false;
-
-            string latestVersionStr = release.TagName.TrimStart('v');
-            if (Version.TryParse(latestVersionStr, out var latestVersion))
+            try
             {
-                var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
-                if (latestVersion > currentVersion)
+                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
+                using var response = await _http.GetAsync(GitHubApiUrl, cts.Token);
+                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
                 {
-                    _latestVersion = release.TagName;
-                    UpdateAvailable?.Invoke(this, EventArgs.Empty);
-                    return true;
+                    Trace.WriteLine($"[updater] GitHub rate limited {response.StatusCode}");
+                    return null;
                 }
+                response.EnsureSuccessStatusCode();
+                var release = await response.Content.ReadFromJsonAsync<GitHubRelease>(cancellationToken: cts.Token);
+                if (release is null || string.IsNullOrEmpty(release.TagName))
+                    return false;
+
+                string latestVersionStr = release.TagName.TrimStart('v').Split('-')[0].Split('+')[0].Trim();
+                if (Version.TryParse(latestVersionStr, out var latestVersion))
+                {
+                    var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
+                    if (currentVersion != null && latestVersion > currentVersion)
+                    {
+                        _latestVersion = release.TagName;
+                        UpdateAvailable?.Invoke(this, EventArgs.Empty);
+                        return true;
+                    }
+                }
+                else
+                {
+                    Trace.WriteLine($"[updater] Unable to parse version {release.TagName}");
+                }
+                return false;
             }
-            return false;
+            catch (OperationCanceledException ex)
+            {
+                Trace.WriteLine($"[updater] Check timed out attempt {attempt}: {ex.Message}");
+                if (attempt == maxAttempts) return null;
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[updater] Check failed attempt {attempt}: {ex.Message}");
+                if (attempt == maxAttempts) return null;
+            }
+            if (attempt < maxAttempts)
+                await Task.Delay(500 * attempt);
         }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"[updater] Check failed: {ex.Message}");
-            return null;
-        }
+        return null;
     }
 
     public async Task<bool> DownloadUpdateAsync()
@@ -96,22 +123,51 @@ public sealed class UpdateService
             var canReportProgress = totalBytes != -1;
 
             using var contentStream = await response.Content.ReadAsStreamAsync();
-            using var fileStream = new FileStream(_downloadedZipPath, FileMode.Create, FileAccess.Write, FileShare.None);
-
             var buffer = new byte[81920];
             long totalRead = 0;
             int read;
 
-            while ((read = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            // Write to temp file - scope ensures flush before validation
             {
-                await fileStream.WriteAsync(buffer, 0, read);
-                totalRead += read;
-
-                if (canReportProgress)
+                using var fileStream = new FileStream(_downloadedZipPath, FileMode.Create, FileAccess.Write, FileShare.None);
+                while ((read = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                 {
-                    double progress = ((double)totalRead / totalBytes) * 100.0;
-                    DownloadProgressChanged?.Invoke(this, progress);
+                    await fileStream.WriteAsync(buffer, 0, read);
+                    totalRead += read;
+
+                    if (canReportProgress)
+                    {
+                        double progress = ((double)totalRead / totalBytes) * 100.0;
+                        DownloadProgressChanged?.Invoke(this, progress);
+                    }
                 }
+                await fileStream.FlushAsync();
+            }
+
+            // Validate download - size and zip integrity
+            var fileInfo = new FileInfo(_downloadedZipPath);
+            if (fileInfo.Length == 0)
+                throw new InvalidDataException("Downloaded file is empty");
+
+            if (canReportProgress && totalRead != totalBytes)
+                throw new InvalidDataException($"Incomplete download {totalRead} of {totalBytes} bytes");
+
+            try
+            {
+                using var zip = ZipFile.OpenRead(_downloadedZipPath);
+                bool hasStrideExe = zip.Entries.Any(e => e.Name.Equals("Stride.exe", StringComparison.OrdinalIgnoreCase));
+                if (!hasStrideExe)
+                    throw new InvalidDataException("Downloaded zip does not contain Stride.exe");
+                if (zip.Entries.Count == 0)
+                    throw new InvalidDataException("Downloaded zip is empty");
+            }
+            catch (InvalidDataException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException($"Downloaded file is not a valid zip: {ex.Message}", ex);
             }
 
             DownloadCompleted?.Invoke(this, EventArgs.Empty);
@@ -119,6 +175,8 @@ public sealed class UpdateService
         }
         catch (Exception ex)
         {
+            try { if (!string.IsNullOrEmpty(_downloadedZipPath) && File.Exists(_downloadedZipPath)) File.Delete(_downloadedZipPath); } catch { }
+            _downloadedZipPath = null;
             Fail($"Update download failed: {ex.Message}");
             return false;
         }
@@ -149,15 +207,16 @@ public sealed class UpdateService
         // Fire the event so the UI can close safely
         AppExitRequested?.Invoke();
 
-        // Launch the invisible updater
+        // Launch the invisible updater - ArgumentList handles spaces and quoting safely
         var psi = new ProcessStartInfo
         {
             FileName = updaterExe,
-            Arguments = $"\"{_downloadedZipPath}\" \"{baseDir.TrimEnd('\\')}\"",
             UseShellExecute = false,
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden
         };
+        psi.ArgumentList.Add(_downloadedZipPath);
+        psi.ArgumentList.Add(baseDir.TrimEnd('\\'));
 
         Process.Start(psi);
 
