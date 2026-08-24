@@ -3,7 +3,7 @@ The auto-updater in version 1.1.3 has a bug. Clicking Install below will fail.
 
 To fix this and get all future updates automatically, you must download the latest setup file manually.
 
-Click here to download Stride 1.2.0
+[Download Stride 1.2.0](https://github.com/danieldamilola/Stride/releases/download/v1.2.0/Stride-win-Setup.exe)
 
 # Release Note: v1.2.0 Native Seamless Updater
 
@@ -21,7 +21,7 @@ Click here to download Stride 1.2.0
 * **Popup Dialog Redesign**: All dialog windows now have rounded corners and neutral surface-colored buttons. The bright green accent OK button that clashed with the dark theme has been removed.
 * **Dialog Window Positioning**: Dialogs no longer float above all applications. Topmost has been removed so dialogs stay with Stride, and the offset drop shadow has been removed.
 * **Dynamic Context Menu**: Rebuilt the right-click menu to be context aware. The top row shows Back, Forward, and Reload. Plain pages show Find in Page and Select All. Editable fields show Undo, Redo, Cut, Copy, and Paste. Links show Open in new tab and Copy link. Images show Save image and Copy image URL. Reader View appears when available. The T&C Lens extension is accessible from the menu. Keyboard shortcuts display for supported actions.
-* **Release Notes Auto-Open**: Stride opens stride://release-notes automatically after an update installs.
+* **Release Notes Auto-Open**: Stride opens internal://releasenotes automatically after an update installs.
 
 **Bug Fixes**
 * **Micro-Updater Merge Crash**: Fixed a crash where updates touching existing subdirectories were silently dropped because the updater skipped directories that already existed. The updater now merges directories recursively and validates the package before swapping.

@@ -155,7 +155,7 @@ public sealed class UpdateService
             try
             {
                 using var zip = ZipFile.OpenRead(_downloadedZipPath);
-                bool hasStrideExe = zip.Entries.Any(e => e.Name.Equals("Stride.exe", StringComparison.OrdinalIgnoreCase));
+                bool hasStrideExe = zip.Entries.Any(e => e.FullName.Equals("Stride.exe", StringComparison.OrdinalIgnoreCase));
                 if (!hasStrideExe)
                     throw new InvalidDataException("Downloaded zip does not contain Stride.exe");
                 if (zip.Entries.Count == 0)

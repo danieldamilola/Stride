@@ -14,7 +14,7 @@ public static class ReleaseNotesProvider
                 new List<(string, string)> {
                     ("Native Seamless Updates", "Gear in tray icon with circular progress ring and checkmark to install without UAC or wizards"),
                     ("Invisible Micro-Updater", "Swaps files behind the scenes with a native GUI updater"),
-                    ("Release Notes Auto-Open", "stride://release-notes opens once after each update"),
+                    ("Release Notes Auto-Open", "internal://releasenotes opens once after each update"),
                     ("Dynamic Context Menu", "Context aware menu with navigation row, Find in Page, Edit, Link and Image actions, Reader and T&C Lens"),
                     ("Reader Mode & Link Preview", "Distraction-free reading and Alt triggered link previews")
                 },

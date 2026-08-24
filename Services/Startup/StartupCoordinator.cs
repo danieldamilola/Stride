@@ -40,6 +40,13 @@ public class StartupCoordinator
         return handled;
     }
 
+    public async Task<bool> HandleCommandLineAndReleaseNotesAsync(string[] args)
+    {
+        var handled = await HandleCommandLineArgsAsync(args);
+        await HandleReleaseNotesAsync(openTab: !handled);
+        return handled;
+    }
+
     public async Task HandleReleaseNotesAsync(bool openTab = true)
     {
         string flagFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "post_update.flag");
@@ -58,6 +65,11 @@ public class StartupCoordinator
             isNewVersion = true;
             _settings.LastSeenReleaseNotesVersion = currentVersion;
             _settingsStore.Save(_settings);
+        }
+
+        if (!_settings.HasCompletedOnboarding)
+        {
+            return;
         }
 
         if ((isPostUpdate || isNewVersion) && openTab)

@@ -24,11 +24,7 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
-        // Apply pending updater files staged as .new by the micro updater
-        TryApplyPendingUpdater();
-
-        // Clean stale updater artifacts from a crashed update
-        TryCleanStaleUpdaterArtifacts();
+        new Services.Startup.UpdaterRecoveryService().Run();
 
         // Ensure all data directories exist: base, favicon cache, extensions, WebView2, focus cache.
         Helpers.AppPaths.EnsureDirectories();
@@ -68,41 +64,6 @@ public partial class App : Application
     {
         SingleInstanceManager.Shutdown();
         base.OnExit(e);
-    }
-
-    private static void TryApplyPendingUpdater()
-    {
-        try
-        {
-            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            foreach (var pending in Directory.GetFiles(baseDir, "Stride.Updater*.new"))
-            {
-                var target = pending.Substring(0, pending.Length - 4);
-                try
-                {
-                    if (File.Exists(target)) File.Delete(target);
-                    File.Move(pending, target);
-                    System.Diagnostics.Trace.WriteLine($"Applied pending updater {Path.GetFileName(pending)}");
-                }
-                catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Failed to apply pending updater {pending}: {ex.Message}"); }
-            }
-        }
-        catch { }
-    }
-
-    private static void TryCleanStaleUpdaterArtifacts()
-    {
-        try
-        {
-            var staging = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UpdateStaging");
-            if (Directory.Exists(staging))
-            {
-                try { Directory.Delete(staging, true); } catch { }
-                System.Diagnostics.Trace.WriteLine("Cleaned stale UpdateStaging");
-            }
-            // Backup is kept for rollback until next update, do not delete here
-        }
-        catch { }
     }
 
     private void CheckForPreviousCrash()

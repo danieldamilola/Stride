@@ -52,11 +52,11 @@ public class ShortcutMessageHandler : IWebMessageHandler, ISettingEmitter, IAddr
                 return Task.CompletedTask;
 
             var name = item.Name?.Trim() ?? "";
-            if (name.Length > 24) name = name[..24];
             if (string.IsNullOrWhiteSpace(name))
             {
                 try { name = uri.Host; } catch { name = url; }
             }
+            if (name.Length > 24) name = name[..24];
 
             _settings.NewTabShortcuts.Add(new ShortcutItem { Name = name, Url = url });
             _settingsStore.Save(_settings);

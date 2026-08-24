@@ -33,15 +33,13 @@ public static class Program
                 try
                 {
                     var fileName = p.MainModule?.FileName;
-                    if (fileName != null && fileName.StartsWith(targetDir, StringComparison.OrdinalIgnoreCase))
+                    if (IsInTargetDirectory(fileName, targetDir))
                         isAnyRunning = true;
-                    else if (fileName == null)
-                        isAnyRunning = true; // conservative: cannot determine, assume ours
                 }
                 catch (System.Exception ex)
                 {
                     System.Console.WriteLine(ex);
-                    isAnyRunning = true; // conservative on access denied
+                    isAnyRunning = true;
                 }
                 finally { try { p.Dispose(); } catch { } }
             }
@@ -65,9 +63,7 @@ public static class Program
                 try
                 {
                     var fileName = p.MainModule?.FileName;
-                    if (fileName != null && fileName.StartsWith(targetDir, StringComparison.OrdinalIgnoreCase))
-                        anyRemaining = true;
-                    else if (fileName == null)
+                    if (IsInTargetDirectory(fileName, targetDir))
                         anyRemaining = true;
                 }
                 catch (System.Exception ex) { System.Console.WriteLine(ex); anyRemaining = true; }
@@ -186,6 +182,23 @@ public static class Program
                 }
             }
             File.WriteAllText(Path.Combine(targetDir, "updater_error.log"), ex.ToString());
+        }
+    }
+
+    private static bool IsInTargetDirectory(string? fileName, string targetDir)
+    {
+        if (string.IsNullOrEmpty(fileName)) return true;
+        try
+        {
+            var fileDir = Path.GetDirectoryName(fileName);
+            if (string.IsNullOrEmpty(fileDir)) return true;
+            var normalizedTarget = Path.GetFullPath(targetDir).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var normalizedFileDir = Path.GetFullPath(fileDir).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return string.Equals(normalizedFileDir, normalizedTarget, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return true;
         }
     }
 
