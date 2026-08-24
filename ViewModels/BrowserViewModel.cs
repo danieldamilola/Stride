@@ -78,6 +78,7 @@ public sealed partial class BrowserViewModel : ObservableObject
     private readonly IReaderService _readerService;
     private readonly ReaderViewModel _readerViewModel;
     private readonly UpdateService _updateService;
+    private bool _isInstalling;
 
     public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore, Engine.TabEngine engine, IReaderService readerService, ReaderViewModel readerViewModel, UpdateService updateService)
     {
@@ -102,7 +103,7 @@ public sealed partial class BrowserViewModel : ObservableObject
             App.Current.Dispatcher.Invoke(() =>
             {
                 UpdateState = UpdateState.Downloading;
-                UpdateProgress = progress;
+                UpdateProgress = progress / 100.0;
             });
         };
 
@@ -110,6 +111,7 @@ public sealed partial class BrowserViewModel : ObservableObject
         {
             App.Current.Dispatcher.Invoke(() =>
             {
+                _isInstalling = false;
                 UpdateState = UpdateState.ReadyToInstall;
             });
         };
@@ -118,6 +120,7 @@ public sealed partial class BrowserViewModel : ObservableObject
         {
             App.Current.Dispatcher.Invoke(() =>
             {
+                _isInstalling = false;
                 UpdateState = UpdateState.UpdateAvailable;
                 UpdateProgress = 0;
             });
@@ -288,8 +291,10 @@ public sealed partial class BrowserViewModel : ObservableObject
     [RelayCommand]
     private void HandleUpdateClick()
     {
+        if (_isInstalling) return;
         if (UpdateState == UpdateState.UpdateAvailable)
         {
+            _isInstalling = true;
             UpdateState = UpdateState.Downloading;
             UpdateProgress = 0.0;
             
@@ -297,9 +302,14 @@ public sealed partial class BrowserViewModel : ObservableObject
         }
         else if (UpdateState == UpdateState.ReadyToInstall)
         {
-            string flagFile = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "post_update.flag");
-            System.IO.File.WriteAllText(flagFile, "true");
-            
+            if (_isInstalling) return;
+            _isInstalling = true;
+            try
+            {
+                string flagFile = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "post_update.flag");
+                System.IO.File.WriteAllText(flagFile, "true");
+            }
+            catch { }
             _updateService.InstallUpdate();
         }
     }

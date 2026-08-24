@@ -497,13 +497,29 @@
                               Visibility="{Binding ShowUpdateIcon, Converter={StaticResource BoolToVis}}">
                               
                             <Grid.ToolTip>
-                                <ToolTip Content="Update Available" Visibility="{Binding ShowUpdateRedDot, Converter={StaticResource BoolToVis}}"/>
+                                <ToolTip>
+                                    <TextBlock>
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="Update available - click to download"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ShowUpdateProgress}" Value="True">
+                                                        <Setter Property="Text" Value="{Binding UpdateProgress, StringFormat=Downloading {0:P0} - please wait}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ShowUpdateCheckmark}" Value="True">
+                                                        <Setter Property="Text" Value="Ready to install - click to restart"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </ToolTip>
                             </Grid.ToolTip>
 
                             <Ellipse Width="24" Height="24" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" 
                                      Visibility="{Binding ShowUpdateProgress, Converter={StaticResource BoolToVis}}" />
                               
-                            <!-- Circular spinning progress ring -->
+                            <!-- Circular spinning progress ring - fills with progress and rotates while downloading like Downloads -->
                             <Ellipse Width="24" Height="24" Stroke="#10B981" StrokeThickness="2" 
                                      StrokeDashArray="{Binding UpdateProgress, Converter={StaticResource ProgressToDashArray}}"
                                      StrokeDashCap="Round"
@@ -512,6 +528,24 @@
                                 <Ellipse.RenderTransform>
                                     <RotateTransform Angle="-90"/>
                                 </Ellipse.RenderTransform>
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ShowUpdateProgress}" Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard Name="UpdateSpin">
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle" From="-90" To="270" Duration="0:0:1.2" RepeatBehavior="Forever"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <RemoveStoryboard BeginStoryboardName="UpdateSpin"/>
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
                             </Ellipse>
 
                             <Button Command="{Binding HandleUpdateClickCommand}" Style="{DynamicResource IconBtn}" Width="26" Height="26" FocusVisualStyle="{x:Null}">

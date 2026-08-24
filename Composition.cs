@@ -55,6 +55,7 @@ public static class Composition
         services.AddSingleton<NavigationPolicyEngine>();
         services.AddSingleton<Services.CommandLine.ICommandLineUrlParser, Services.CommandLine.CommandLineUrlParser>();
         services.AddSingleton<Services.Startup.StartupCoordinator>();
+        services.AddSingleton<Services.Startup.UpdaterRecoveryService>();
 
         // Reader mode - scaffold: interfaces registered, real bodies in step 2
         services.AddSingleton<Services.Reader.IReaderSanitizer, Services.Reader.ReaderSanitizer>();

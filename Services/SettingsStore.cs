@@ -27,7 +27,8 @@ public sealed class SettingsStore : ISettingsStore
             if (!File.Exists(FilePath))
             {
                 var freshSettings = new BrowserSettings();
-                freshSettings.NewTabShortcuts = DataImporter.ImportBookmarksToShortcuts(10);
+                // Do not auto import Edge bookmarks without consent - start with empty shortcuts
+                freshSettings.NewTabShortcuts = new();
                 return freshSettings;
             }
 
