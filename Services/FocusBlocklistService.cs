@@ -185,9 +185,9 @@ public sealed class FocusBlocklistService
 
     private static string GetCacheFileName(string url)
     {
-        using var md5 = System.Security.Cryptography.MD5.Create();
+        using var sha = System.Security.Cryptography.SHA256.Create();
         var bytes = System.Text.Encoding.UTF8.GetBytes(url);
-        var hash = md5.ComputeHash(bytes);
+        var hash = sha.ComputeHash(bytes);
         return Convert.ToHexString(hash) + ".txt";
     }
 }

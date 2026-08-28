@@ -68,10 +68,12 @@ public sealed class WebViewFactory
         };
     }
 
-    /// <summary>
+        /// <summary>
     /// Builds the Chromium command-line flags. Notably:
-    /// - The renderer process-limit flag is gone, restoring Chromium's default Site Isolation
-    ///   (each site in its own process) rather than capping at a shared pool.
+    /// - Process-per-site groups pages from the same site into one renderer process, which
+    ///   reduces process isolation between distinct origins on the same registrar domain.
+    ///   This is a memory/performance tradeoff; a separate process-per-site-instance flag
+    ///   would be needed for strict site isolation.
     /// - SmartScreen is ON by default. Disabling it via setting appends the disable flag.
     ///   Note: this flag is read at environment creation, so toggling requires a restart.
     /// - ForceDarkMode uses Chromium's native WebContentsForceDark engine.
@@ -89,7 +91,6 @@ public sealed class WebViewFactory
             "--disable-sync " +
             "--metrics-recording-only " +
             "--process-per-site " + // Groups pages from the same site into the same process
-            "--allow-file-access-from-files " + // Allows local HTML files to execute modules and bypass strict file:// CORS
             "--no-first-run";
 
         if (forceDarkMode)
@@ -129,7 +130,8 @@ public sealed class WebViewFactory
         var userAssetsPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
         if (!System.IO.Directory.Exists(userAssetsPath)) System.IO.Directory.CreateDirectory(userAssetsPath);
         core.SetVirtualHostNameToFolderMapping("user.assets", userAssetsPath, CoreWebView2HostResourceAccessKind.Allow);
-        core.SetVirtualHostNameToFolderMapping("temp.stride", System.IO.Path.GetTempPath(), CoreWebView2HostResourceAccessKind.Allow);
+        // NOTE: no temp.stride mapping. The temp directory is user-owned and must never be
+        // reachable from web content (it would expose %TEMP% to any page). Removed deliberately.
 
         // Strip native Edge bloat UI
         core.Settings.IsBuiltInErrorPageEnabled = false;

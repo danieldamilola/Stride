@@ -19,6 +19,8 @@ public sealed class WindowChromeManager
     // Optional callback for horizontal scroll wheel
     public Action<int>? OnMouseHWheel;
 
+    private Rect _preFullscreenDipBounds;
+
     public WindowChromeManager(Window window)
     {
         _window = window ?? throw new ArgumentNullException(nameof(window));
@@ -31,6 +33,64 @@ public sealed class WindowChromeManager
         _source?.AddHook(WndProc);
 
         ApplyRoundedCorners();
+    }
+
+    /// <summary>
+    /// Sizes the window to the exact monitor rectangle natively so fullscreen
+    /// covers the taskbar, and strips DWM rounded corners and border so no
+    /// light edge shows around fullscreen content.
+    /// </summary>
+    public bool EnterMonitorFullscreen(Rect dipRestoreBounds)
+    {
+        if (_hwnd == IntPtr.Zero) return false;
+
+        var monitor = NativeMethods.MonitorFromWindow(_hwnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
+        if (monitor == IntPtr.Zero) return false;
+        var mi = new NativeMethods.MONITORINFO { cbSize = Marshal.SizeOf<NativeMethods.MONITORINFO>() };
+        if (!NativeMethods.GetMonitorInfo(monitor, ref mi)) return false;
+
+        _preFullscreenDipBounds = dipRestoreBounds;
+
+        _window.WindowState = WindowState.Normal;
+        var mon = mi.rcMonitor;
+        NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero,
+            mon.Left, mon.Top, mon.Right - mon.Left, mon.Bottom - mon.Top,
+            NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_FRAMECHANGED);
+
+        ApplyFullscreenChrome(fullscreen: true);
+        return true;
+    }
+
+    /// <summary>Restores the window bounds and DWM chrome captured on enter.</summary>
+    public void ExitMonitorFullscreen()
+    {
+        ApplyFullscreenChrome(fullscreen: false);
+
+        if (_hwnd == IntPtr.Zero) return;
+        var source = PresentationSource.FromVisual(_window);
+        var device = source?.CompositionTarget.TransformToDevice;
+        double sx = device?.M11 ?? 1.0;
+        double sy = device?.M22 ?? 1.0;
+
+        NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero,
+            (int)(_preFullscreenDipBounds.X * sx),
+            (int)(_preFullscreenDipBounds.Y * sy),
+            (int)(_preFullscreenDipBounds.Width * sx),
+            (int)(_preFullscreenDipBounds.Height * sy),
+            NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_FRAMECHANGED);
+    }
+
+    private void ApplyFullscreenChrome(bool fullscreen)
+    {
+        try
+        {
+            var corners = fullscreen ? NativeMethods.DWMWCP_DONOTROUND : NativeMethods.DWMWCP_ROUND;
+            NativeMethods.DwmSetWindowAttribute(_hwnd, NativeMethods.DWMWA_WINDOW_CORNER_PREFERENCE, ref corners, sizeof(int));
+
+            var border = fullscreen ? NativeMethods.DWMWA_COLOR_NONE : NativeMethods.DWMWA_COLOR_DEFAULT;
+            NativeMethods.DwmSetWindowAttribute(_hwnd, NativeMethods.DWMWA_BORDER_COLOR, ref border, sizeof(int));
+        }
+        catch { /* Pre-Windows 11 - graceful fallback */ }
     }
 
     public void BringToFront()

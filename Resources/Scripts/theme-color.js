@@ -1,4 +1,6 @@
-(function() {
+﻿(function() {
+    var TOKEN = '__STRIDE_IPC_TOKEN__';
+    var t = function(m) { window.chrome.webview.postMessage(TOKEN + ':' + m); };
     function colorToHex(color, baseColor) {
         if (!color || color === 'rgba(0, 0, 0, 0)' || color === 'transparent') return '';
         var canvas = document.createElement('canvas');
@@ -46,7 +48,7 @@
                     if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
                         var h = colorToHex(bg, baseBg);
                         if (h) {
-                            window.chrome.webview.postMessage('THEME_COLOR:' + h);
+                            t('THEME_COLOR:' + h);
                             return;
                         }
                     }
@@ -69,7 +71,7 @@
         }
         var hex = colorToHex(themeColor, baseBg);
         if (hex) {
-            window.chrome.webview.postMessage('THEME_COLOR:' + hex);
+            t('THEME_COLOR:' + hex);
             return;
         }
 
@@ -81,7 +83,7 @@
                 if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
                     var h = colorToHex(bg, baseBg);
                     if (h) {
-                        window.chrome.webview.postMessage('THEME_COLOR:' + h);
+                        t('THEME_COLOR:' + h);
                         return;
                     }
                 }
@@ -93,14 +95,14 @@
                 if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
                     var h = colorToHex(bg, baseBg);
                     if (h) {
-                        window.chrome.webview.postMessage('THEME_COLOR:' + h);
+                        t('THEME_COLOR:' + h);
                         return;
                     }
                 }
             }
         } catch(e) {}
 
-        window.chrome.webview.postMessage('THEME_COLOR:');
+        t('THEME_COLOR:');
     }
     
     let dispatchTimeout;

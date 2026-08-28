@@ -74,10 +74,17 @@ public sealed class NewTabPage
             backgroundPath = backgroundUrls[nextIdx];
         }
 
+        // Defense in depth: encode the background path before it lands in
+        // href="" and url(''). The path is built by the app from its own
+        // directories, but encoding prevents a future refactor from
+        // accidentally introducing a CSS-context injection if a value
+        // ever comes from user input.
+        var safeBackground = StrideBrowser.Helpers.JsEncoder.HtmlEncode(backgroundPath);
+
         return Helpers.ResourceLoader.LoadTemplate("Resources.Pages.NewTab.html",
             new Dictionary<string, string>
             {
-                ["BACKGROUND"] = backgroundPath,
+                ["BACKGROUND"] = safeBackground,
                 ["SHORTCUTS"] = shortcutsB64,
                 ["ACCENT"] = accentColor,
                 ["ACCENT_RGB"] = accentRgb,

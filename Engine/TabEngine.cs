@@ -21,6 +21,7 @@ public sealed class TabEngine : IDisposable
     private Panel? _webViewHost;
     private readonly ExtensionManager _extensionManager;
     private readonly YouTubeUnhook _youtubeUnhook;
+    private readonly YouTubeEnhancer _youtubeEnhancer;
     private readonly BrowserSettings _settings;
     private readonly FaviconLoader _faviconLoader;
     private readonly InternalPages _pages;
@@ -101,6 +102,7 @@ public sealed class TabEngine : IDisposable
     {
         _extensionManager = deps.ExtensionManager;
         _youtubeUnhook = deps.YouTubeUnhook;
+        _youtubeEnhancer = deps.YouTubeEnhancer;
         _settings = deps.Settings;
         _faviconLoader = deps.FaviconLoader;
         _pages = deps.Pages;
@@ -878,34 +880,81 @@ public sealed class TabEngine : IDisposable
     /// <summary>
     /// Re-injects the YouTube Unhook script into all active YouTube tabs.
     /// Called when unhook settings change for live-reload without page refresh.
-    /// Strips all stride-unhook-* classes and re-applies with new config.
+    /// The script detects an already-loaded instance and updates its config in
+    /// place instead of stacking new observers. When unhook is disabled, clears
+    /// the config and removes the applied classes instead.
     /// </summary>
     public async Task ReInjectUnhookAsync()
     {
-        // Remove all unhook classes + reset loaded flag so the script re-runs class toggles
         const string cleanup =
-            "document.documentElement.className = " +
-            "document.documentElement.className.replace(/\\bstride-unhook-\\w+/g, '').trim(); " +
-            "window.__STRIDE_UNHOOK_LOADED = false;";
-        var script = _youtubeUnhook.GetScript(_settings);
+            "window.__STRIDE_UNHOOK = null; " +
+            "try { localStorage.removeItem('__stride_unhook'); } catch (e) {} " +
+            "var rc = document.documentElement.classList; " +
+            "for (var i = rc.length - 1; i >= 0; i--) { " +
+            "if (rc.item(i).indexOf('stride-unhook-') === 0) rc.remove(rc.item(i)); }";
+
+        var script = _youtubeUnhook.GetScript(_settings, forceConfig: true);
 
         foreach (var (_, wv) in _webViews)
         {
             if (wv.CoreWebView2 is null) continue;
-            var url = wv.Source?.ToString() ?? "";
-            if (!url.Contains("youtube.com")) continue;
+            if (!IsYouTubeHost(wv.Source?.Host)) continue;
 
             try
             {
-                await wv.CoreWebView2.ExecuteScriptAsync(cleanup);
                 if (!string.IsNullOrEmpty(script))
                     await wv.CoreWebView2.ExecuteScriptAsync(script);
+                else
+                    await wv.CoreWebView2.ExecuteScriptAsync(cleanup);
             }
             catch (Exception ex)
             {
                 Trace.WriteLine($"Unhook re-injection failed: {ex.Message}");
             }
         }
+    }
+
+    /// <summary>
+    /// Re-injects the YouTube Enhancer script into all active YouTube tabs.
+    /// Called when enhancer settings change for live-reload without page refresh.
+    /// The script detects an already-loaded instance and re-applies with the new
+    /// config instead of stacking listeners. When disabled, clears the config
+    /// and undoes applied state.
+    /// </summary>
+    public async Task ReInjectEnhancerAsync()
+    {
+        const string cleanup =
+            "window.__STRIDE_YT_CONFIG = { enabled: false }; " +
+            "try { localStorage.removeItem('__stride_yt_enhancer'); } catch (e) {} " +
+            "document.querySelectorAll('video').forEach(function(v) { v.loop = false; });";
+
+        var script = _youtubeEnhancer.GetScript(_settings, forceConfig: true);
+
+        foreach (var (_, wv) in _webViews)
+        {
+            if (wv.CoreWebView2 is null) continue;
+            if (!IsYouTubeHost(wv.Source?.Host)) continue;
+
+            try
+            {
+                if (!string.IsNullOrEmpty(script))
+                    await wv.CoreWebView2.ExecuteScriptAsync(script);
+                else
+                    await wv.CoreWebView2.ExecuteScriptAsync(cleanup);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Enhancer re-injection failed: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>Exact-host YouTube check; substring matching would also hit lookalike domains.</summary>
+    private static bool IsYouTubeHost(string? host)
+    {
+        if (string.IsNullOrEmpty(host)) return false;
+        return host.Equals("youtube.com", StringComparison.OrdinalIgnoreCase) ||
+               host.EndsWith(".youtube.com", StringComparison.OrdinalIgnoreCase);
     }
 
 

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stride Codebase Review</title>
+<style>
+  :root { --bg:#16161c; --panel:#1e1e26; --panel2:#25252f; --text:#e6e2da; --muted:#9a94a6;
+          --accent:#d4a574; --crit:#f85149; --med:#e3b341; --low:#7ea3cc; --good:#6fbf8f; --border:#33333f; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif;
+         margin:0; padding:40px 20px; line-height:1.55; }
+  .wrap { max-width:980px; margin:0 auto; }
+  h1 { font-size:30px; margin:0 0 4px; }
+  h1 .accent { color:var(--accent); }
+  .sub { color:var(--muted); font-size:14px; margin-bottom:28px; }
+  h2 { font-size:20px; margin:44px 0 14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  h3 { font-size:15px; margin:26px 0 10px; color:var(--accent); }
+  .dash { display:flex; gap:12px; flex-wrap:wrap; margin:20px 0 8px; }
+  .stat { background:var(--panel); border:1px solid var(--border); border-radius:10px;
+          padding:14px 20px; min-width:130px; }
+  .stat .n { font-size:26px; font-weight:600; }
+  .stat .l { font-size:12px; color:var(--muted); }
+  .n.crit { color:var(--crit); } .n.med { color:var(--med); } .n.low { color:var(--low); } .n.good { color:var(--good); }
+  .finding { background:var(--panel); border:1px solid var(--border); border-left:4px solid var(--border);
+             border-radius:8px; padding:14px 18px; margin:12px 0; }
+  .finding.crit { border-left-color:var(--crit); }
+  .finding.med { border-left-color:var(--med); }
+  .finding.low { border-left-color:var(--low); }
+  .finding.good { border-left-color:var(--good); }
+  .badge { display:inline-block; font-size:10.5px; font-weight:600; letter-spacing:.6px;
+           text-transform:uppercase; border-radius:5px; padding:2px 8px; margin-right:8px; vertical-align:1px; }
+  .badge.crit { background:rgba(248,81,73,.15); color:var(--crit); }
+  .badge.med { background:rgba(227,179,65,.15); color:var(--med); }
+  .badge.low { background:rgba(126,163,204,.15); color:var(--low); }
+  .badge.good { background:rgba(111,191,143,.15); color:var(--good); }
+  .badge.tag { background:var(--panel2); color:var(--muted); }
+  .finding .title { font-weight:600; font-size:15px; margin-bottom:4px; }
+  .finding p { margin:6px 0 0; font-size:13.5px; }
+  .fix { color:var(--muted); }
+  .fix b { color:var(--text); }
+  code { font-family:Consolas,monospace; font-size:12.5px; background:var(--panel2);
+         border-radius:4px; padding:1px 5px; }
+  ul.tight { margin:6px 0 0; padding-left:20px; font-size:13.5px; }
+  ul.tight li { margin:4px 0; }
+  .foot { color:var(--muted); font-size:12px; margin-top:48px; border-top:1px solid var(--border); padding-top:14px; }
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>Stride <span class="accent">Codebase Review</span></h1>
+<div class="sub">Full audit of every feature area. Generated 2026-08-27 from a three-agent parallel review plus a
+manual pass. Branch <code>feature/v1.2.1-update-ui</code>. Build: 0 errors. Tests: 222 passed, 0 failed.</div>
+
+<div class="dash">
+  <div class="stat"><div class="n crit">8</div><div class="l">Critical</div></div>
+  <div class="stat"><div class="n med">19</div><div class="l">Medium</div></div>
+  <div class="stat"><div class="n low">17</div><div class="l">Low / cleanup</div></div>
+  <div class="stat"><div class="n good">10</div><div class="l">Done well</div></div>
+</div>
+
+<h2>Critical</h2>
+
+<div class="finding crit"><div class="title">Virtual hosts expose user folders to every website</div>
+<span class="badge crit">Critical</span><span class="badge tag">Security</span><span class="badge tag">WebViewFactory.cs:128</span>
+<p><code>temp.stride</code> maps the entire user temp directory and <code>user.assets</code> maps the Backgrounds folder
+to any web origin with <code>HostResourceAccessKind.Allow</code>. Any page can fetch
+<code>http://temp.stride/&lt;guessed-name&gt;</code> and read files from <code>%TEMP%</code>.</p>
+<p class="fix"><b>Fix:</b> use <code>Deny</code> or <code>DenyCors</code> and scope mappings to the internal pages that need them.</p></div>
+
+<div class="finding crit"><div class="title">file:// origin isolation disabled</div>
+<span class="badge crit">Critical</span><span class="badge tag">Security</span><span class="badge tag">WebViewFactory.cs:92</span>
+<p><code>--allow-file-access-from-files</code> lets a downloaded or opened local HTML file read arbitrary local files via
+XHR. Stride advertises being the default HTML viewer, so web-downloaded files hit this path.</p>
+<p class="fix"><b>Fix:</b> serve local files through a scoped virtual host, or gate the flag behind an explicit setting with a warning.</p></div>
+
+<div class="finding crit"><div class="title">Session IPC token can leak to external sites</div>
+<span class="badge crit">Critical</span><span class="badge tag">Security</span><span class="badge tag">OnboardingMessageHandler.cs:34, DownloadMessageHandler.cs:146, TabEngine.cs:475</span>
+<p>Handlers check the active tab URL, then post the per-session IPC token to the active WebView. Between the check and
+the post the tab can navigate to a normal website, which receives the token and can forge trusted internal-page messages.</p>
+<p class="fix"><b>Fix:</b> re-verify <code>core.Source</code> starts with the internal origin immediately before every
+<code>PostWebMessageAsString</code>, and verify the tab still owns that core.</p></div>
+
+<div class="finding crit"><div class="title">DownloadStore races itself and corrupts downloads.json</div>
+<span class="badge crit">Critical</span><span class="badge tag">Data loss</span><span class="badge tag">DownloadStore.cs:44</span>
+<p><code>Item_PropertyChanged</code> fires from download threads and <code>Save()</code> enumerates <code>Items</code>
+while <code>Add</code>/<code>Remove</code>/<code>ClearAll</code> can mutate the same collection. WPF also throws on
+cross-thread collection changes bound to the UI.</p>
+<p class="fix"><b>Fix:</b> guard mutations with a lock, serialize a snapshot inside it, marshal collection changes to the UI dispatcher.</p></div>
+
+<div class="finding crit"><div class="title">Updates are installed with no integrity check</div>
+<span class="badge crit">Critical</span><span class="badge tag">Security</span><span class="badge tag">UpdateService.cs:78</span>
+<p>The downloaded zip goes straight to <code>Stride.Updater.exe</code> which replaces application files. No hash or
+signature is verified before launch. The ed25519 signer already exists for the appcast; the package itself is unchecked.
+Also missing: a re-entrancy guard on <code>DownloadUpdateAsync</code>, a threading contract for progress events, and an
+await of <code>Shutdown()</code> before starting the updater.</p>
+<p class="fix"><b>Fix:</b> publish a SHA-256 or ed25519 signature per release, verify before launching the updater, add a semaphore.</p></div>
+
+<div class="finding crit"><div class="title">MainWindow leaks on every resolution</div>
+<span class="badge crit">Critical</span><span class="badge tag">Memory leak</span><span class="badge tag">Composition.cs:126, MainWindow.xaml.cs:75</span>
+<p><code>MainWindow</code> is registered <code>AddTransient</code> but subscribes to singleton events (engine, router,
+theme manager, single-instance manager) and never unsubscribes. Each resolution keeps the previous window alive forever.</p>
+<p class="fix"><b>Fix:</b> register MainWindow as a singleton, or detach every subscription in <code>OnClosing</code>.</p></div>
+
+<div class="finding crit"><div class="title">Leaked WebView when script injection fails</div>
+<span class="badge crit">Critical</span><span class="badge tag">Resource leak</span><span class="badge tag">TabEngine.cs:592</span>
+<p>The try/catch protecting WebView creation ends before <code>InjectAsync</code>. If injection throws, the control is
+already in the visual tree, unregistered, and never disposed: an invisible live WebView stays in the app forever.</p>
+<p class="fix"><b>Fix:</b> move all post-creation awaits inside the failure-cleanup block.</p></div>
+
+<div class="finding crit"><div class="title">Global exception handler swallows every crash</div>
+<span class="badge crit">Critical</span><span class="badge tag">Reliability</span><span class="badge tag">App.xaml.cs:106</span>
+<p>The dispatcher handler sets <code>e.Handled = true</code> unconditionally. Execution continues after any unhandled
+exception with potentially corrupt state.</p>
+<p class="fix"><b>Fix:</b> mark handled only for known-recoverable types, or count failures and shut down after repeated ones.</p></div>
+
+<h2>Medium</h2>
+
+<div class="finding med"><div class="title">Theme and link-preview messages bypass the IPC token check</div>
+<span class="badge med">Medium</span><span class="badge tag">Security</span><span class="badge tag">WebViewIpcBridge.cs:126-175</span>
+<p><code>THEME_COLOR:</code> and <code>LINK_PREVIEW_PEEK:</code> are handled before the token verification, so any web
+page can spoof the tab theme color or spam link-preview requests for arbitrary URLs.</p>
+<p class="fix"><b>Fix:</b> move both branches below the trusted-source and token gate.</p></div>
+
+<div class="finding med"><div class="title">Live IPC token script injected into every page</div>
+<span class="badge med">Medium</span><span class="badge tag">Security</span><span class="badge tag">ContentScriptInjector.cs:38</span>
+<p><code>wallhaven-token.js</code> with the embedded <code>__IPC_TOKEN__</code> is registered on document creation for
+all sites, not just wallhaven. Gate injection on the trusted hosts.</p></div>
+
+<div class="finding med"><div class="title">AdBlockFilter: thread-unsafe set, no retry, inconsistent toggle</div>
+<span class="badge med">Medium</span><span class="badge tag">Stability</span><span class="badge tag">AdBlockFilter.cs:17</span>
+<p>Static <code>HashSet</code> written on a background thread and read from <code>WebResourceRequested</code> on the UI
+thread. A failed download sets <code>_isInitialized</code> so there is no retry for the process lifetime. Toggling
+adblock mid-session only affects new WebViews.</p>
+<p class="fix"><b>Fix:</b> publish an immutable set via <code>Interlocked.Exchange</code>, retry failures, apply to existing WebViews on toggle.</p></div>
+
+<div class="finding med"><div class="title">Dialog suppression heuristic drops legitimate dialogs</div>
+<span class="badge med">Medium</span><span class="badge tag">Behavior</span><span class="badge tag">TabDialogHandler.cs:39</span>
+<p>Any script dialog whose text contains "update", "allow", or "human" is silently dropped, gated on AdBlockEnabled
+which is unrelated. Suppressed <code>beforeunload</code> prompts can strand page JS.</p>
+<p class="fix"><b>Fix:</b> remove the keyword list; keep the custom dialog for everything.</p></div>
+
+<div class="finding med"><div class="title">History rewrites the entire file on every navigation</div>
+<span class="badge med">Medium</span><span class="badge tag">Performance</span><span class="badge tag">HistoryStore.cs:30</span>
+<p>Every <code>Add</code> re-serializes up to 10,000 entries and rewrites <code>history.json</code>. Roughly a 2 MB
+write per page load at cap.</p>
+<p class="fix"><b>Fix:</b> debounce saves (30s plus shutdown), append JSONL, or move to SQLite.</p></div>
+
+<div class="finding med"><div class="title">AtomicFileWriter: shared temp path, no durability</div>
+<span class="badge med">Medium</span><span class="badge tag">Data loss</span><span class="badge tag">AtomicFileWriter.cs:12</span>
+<p>Concurrent writers to the same target share one <code>.tmp</code> path and can interleave before <code>File.Move</code>
+promotes a corrupt file. No fsync before the move either.</p>
+<p class="fix"><b>Fix:</b> unique temp name per write, flush before move, delete the temp on failure.</p></div>
+
+<div class="finding med"><div class="title">post_update.flag written to the install directory</div>
+<span class="badge med">Medium</span><span class="badge tag">Bug</span><span class="badge tag">StartupCoordinator.cs:45</span>
+<p>Under Program Files the flag write fails for non-admins, so release notes after an update either never show or show
+on every launch because the delete also fails.</p>
+<p class="fix"><b>Fix:</b> move the flag to the AppPaths data directory in LocalAppData, both writer and reader.</p></div>
+
+<div class="finding med"><div class="title">Reader sanitizer regex is structurally fragile</div>
+<span class="badge med">Medium</span><span class="badge tag">Security depth</span><span class="badge tag">ReaderSanitizer.cs:24</span>
+<p>Tag matching stops at the first <code>&gt;</code>, so unterminated tags and quoted attributes containing
+<code>&gt;</code> slip through. The <code>script-src 'none'</code> CSP is the real net; the sanitizer header overpromises.</p>
+<p class="fix"><b>Fix:</b> parse with a real HTML parser, or document that the CSP carries the guarantee.</p></div>
+
+<div class="finding med"><div class="title">Reader navigation race in MainWindow</div>
+<span class="badge med">Medium</span><span class="badge tag">Race</span><span class="badge tag">MainWindow.xaml.cs:404</span>
+<p><code>UpdateReaderOverlay</code> disables script, navigates, re-enables at Background priority and clears the
+programmatic-navigation flag. A user navigation landing in that window gets script disabled and misclassified.
+Errors are surfaced through the window Title.</p>
+<p class="fix"><b>Fix:</b> move reader navigation into ReaderService behind one entry point that owns the flag.</p></div>
+
+<div class="finding med"><div class="title">Async void extension initialization</div>
+<span class="badge med">Medium</span><span class="badge tag">Stability</span><span class="badge tag">WebViewFactory.cs:152</span>
+<p><code>Dispatcher.InvokeAsync(async () =&gt; ...)</code> binds the Action overload. Exceptions escape unobserved and a
+failure can permanently block extension retries because the guard flag never resets.</p>
+<p class="fix"><b>Fix:</b> use the Func&lt;Task&gt; overload with <code>.Task.Unwrap()</code> and await it inside the try.</p></div>
+
+<div class="finding med"><div class="title">Shutdown disposes the activation gate mid-use</div>
+<span class="badge med">Medium</span><span class="badge tag">Race</span><span class="badge tag">TabEngine.cs:1343</span>
+<p><code>Shutdown</code> disposes <code>_activationGate</code> while an in-flight <code>ActivateAsync</code> may be
+between WaitAsync and Release, throwing <code>ObjectDisposedException</code>.</p>
+<p class="fix"><b>Fix:</b> track in-flight activations, or await the gate before disposing.</p></div>
+
+<div class="finding med"><div class="title">PreviewKeyDown is async void with late Handled</div>
+<span class="badge med">Medium</span><span class="badge tag">Input</span><span class="badge tag">MainWindow.xaml.cs:1295</span>
+<p><code>e.Handled = true</code> runs only after the awaited shortcut action. Key repeat queues multiple tab switches
+during the await.</p>
+<p class="fix"><b>Fix:</b> set Handled synchronously when the combo matches, dispatch the action without awaiting, guard with an in-flight flag.</p></div>
+
+<div class="finding med"><div class="title">Settings values injected into HTML unescaped</div>
+<span class="badge med">Medium</span><span class="badge tag">Security</span><span class="badge tag">SettingsPage.cs:162</span>
+<p>Custom shortcut names from the user-editable settings file go into the internal settings page without escaping.
+<code>JsEncoder</code> exists for exactly this and is barely used.</p></div>
+
+<div class="finding med"><div class="title">Single-instance pipe accepts anything from any local process</div>
+<span class="badge med">Medium</span><span class="badge tag">Security</span><span class="badge tag">SingleInstanceManager.cs:58</span>
+<p>No ACL on the named pipe and no payload validation beyond JSON shape, so any process can inject URLs that open as
+tabs. One slow client also blocks the accept loop, dropping arguments from later instances.</p>
+<p class="fix"><b>Fix:</b> add a current-user PipeSecurity, bounded reads with a timeout, two server instances.</p></div>
+
+<div class="finding med"><div class="title">Download pause and resume may be cosmetic</div>
+<span class="badge med">Medium</span><span class="badge tag">Bug</span><span class="badge tag">CustomDownloadManager.cs:30</span>
+<p>Pause/Resume/Cancel only flip <code>DownloadItem.State</code>. Unless the handler calls
+<code>CoreWebView2DownloadOperation.Pause()/Resume()</code>, the UI shows Paused while bytes keep flowing. Two parallel
+sources of truth for download state can drift.</p></div>
+
+<div class="finding med"><div class="title">Dynamic WebView typing everywhere</div>
+<span class="badge med">Medium</span><span class="badge tag">Tech debt</span><span class="badge tag">TabEngine.cs:37</span>
+<p>TabEngine holds WebViews as <code>dynamic</code>. Every typo becomes a runtime exception and hot loops like
+<code>ShowOnlyActiveWebView</code> pay binder calls. <code>LinkPreviewWindow.xaml.cs:14</code> does the same.</p>
+<p class="fix"><b>Fix:</b> define a small adapter interface over the two WebView2 control types.</p></div>
+
+<div class="finding med"><div class="title">Dead UI controllers drifted from MainWindow copies</div>
+<span class="badge med">Medium</span><span class="badge tag">Architecture</span><span class="badge tag">Services/UI/*, MainWindow.xaml.cs (1,617 lines)</span>
+<p><code>CommandBarController</code>, <code>TabStripController</code>, <code>WindowLifecycleController</code>,
+<code>TCLensLauncher</code>, <code>ToolbarTintAdapter</code>, <code>SecurityBadgeHelper</code>,
+<code>LoadingAnimationController</code>, <code>WindowChromeHelper</code> are never instantiated. MainWindow
+re-implements all of them and the copies already differ: URL label formats and duplicate-tab behavior disagree.
+This violates the AGENTS.md rule that MainWindow stays clean.</p>
+<p class="fix"><b>Fix:</b> migrate MainWindow logic into the controllers one at a time, or delete them. Pick one direction.</p></div>
+
+<div class="finding med"><div class="title">Favicon caches grow without bounds</div>
+<span class="badge med">Medium</span><span class="badge tag">Disk usage</span><span class="badge tag">FaviconLoader.cs:28</span>
+<p>The disk cache under <code>favicons/</code> is never pruned. Failed loads cache null in memory until restart.</p></div>
+
+<div class="finding med"><div class="title">Two settings snapshots at startup</div>
+<span class="badge med">Medium</span><span class="badge tag">Bug</span><span class="badge tag">App.xaml.cs:43, Composition.cs:24</span>
+<p>Both call <code>settingsStore.Load()</code>, creating two independent mutable copies of settings that can disagree.
+Also <code>HttpClient</code> is registered twice while <code>BrowserViewModel</code> ignores DI and uses its own static.</p></div>
+
+<h2>Low and cleanup</h2>
+
+<div class="finding low"><div class="title">Dead code inventory</div>
+<span class="badge low">Low</span><span class="badge tag">Cleanup</span>
+<ul class="tight">
+<li><code>Services/Reader/ReaderSessionStore.cs</code>: zero references outside the file; ReaderService duplicates its state.</li>
+<li><code>HistoryStore.GetFrequentSites</code>: implemented, never called.</li>
+<li><code>TabEngine</code> line 146: no-op foreach over download items; line 404: NavigateToOneTab/NavigateToHistory ignore their parameters.</li>
+<li><code>ExtensionManager</code>: unused <code>TCLensUrl</code> and <code>Http</code>.</li>
+<li><code>MainWindow.xaml.cs</code>: empty <code>CheckForUpdatesInBackgroundAsync</code>, empty <code>UpdateZoomIndicator</code>, empty <code>TabCreated</code> subscription, empty foreach over extensions, unused <code>WM_MOUSEHWHEEL</code> const.</li>
+<li><code>AppPaths.WebView2Dir</code> alias unused.</li>
+</ul></div>
+
+<div class="finding low"><div class="title">Ctrl/Alt+1-9 tab switching lives outside KeyboardShortcutMap</div>
+<span class="badge low">Low</span><span class="badge tag">Input</span><span class="badge tag">MainWindow.xaml.cs:1317</span>
+<p>Hardcoded in the window, cannot be rebound or tested, and ignores NumPad1-9. Move into ShortcutDefaults.</p></div>
+
+<div class="finding low"><div class="title">PendingTCLensText/Url/Title are public static mutable fields</div>
+<span class="badge low">Low</span><span class="badge tag">Design</span><span class="badge tag">MainWindow.xaml.cs:711</span>
+<p>Global state shared with the TCLens page, race-prone on rapid Alt+T. Move into a scoped service; TCLensLauncher was written for this and shelved.</p></div>
+
+<div class="finding low"><div class="title">DataImporter skips bookmark folders</div>
+<span class="badge low">Low</span><span class="badge tag">Bug</span><span class="badge tag">DataImporter.cs:37</span>
+<p>Only top-level bookmark_bar children import. Bookmarks in folders are silently dropped. Chrome holding a lock on its
+live Bookmarks file also yields a silent partial import.</p></div>
+
+<div class="finding low"><div class="title">SuggestionProvider debounce does not debounce</div>
+<span class="badge low">Low</span><span class="badge tag">Performance</span><span class="badge tag">SuggestionProvider.cs:40</span>
+<p><code>Task.Delay(150)</code> runs per call; every keystroke still spawns a request unless the caller cancels the prior
+one, which nothing enforces. Hold a CancellationTokenSource per query and cancel the previous.</p></div>
+
+<div class="finding low"><div class="title">Update tag interpolated into URL unescaped</div>
+<span class="badge low">Low</span><span class="badge tag">Bug</span><span class="badge tag">UpdateService.cs:88</span>
+<p>A tag containing a space or <code>#</code> breaks the download URL. Escape the segment.</p></div>
+
+<div class="finding low"><div class="title">ReleaseNotesProvider hand-duplicates ReleaseNotes.md</div>
+<span class="badge low">Low</span><span class="badge tag">Drift</span>
+<p>Hardcoded release data with future dates will drift from the markdown source. Generate it from
+<code>ReleaseNotes.md</code> at build time.</p></div>
+
+<div class="finding low"><div class="title">URL feedback and errors fight over the window Title</div>
+<span class="badge low">Low</span><span class="badge tag">UI</span><span class="badge tag">MainWindow.xaml.cs:1495</span>
+<p>Copy-URL confirmation, reader errors, and the real page title all write the window Title. Use a status TextBlock.</p></div>
+
+<div class="finding low"><div class="title">Site Isolation comment does not match the flag</div>
+<span class="badge low">Low</span><span class="badge tag">Docs</span><span class="badge tag">WebViewFactory.cs:73</span>
+<p>The comment claims Site Isolation was restored, but <code>--process-per-site</code> re-merges same-site pages into
+one process. Fix the comment or the flag.</p></div>
+
+<div class="finding low"><div class="title">SaveImage has no size cap; download filenames not sanitized</div>
+<span class="badge low">Low</span><span class="badge tag">Robustness</span><span class="badge tag">TabEngine.cs:836</span>
+<p>SaveImage streams a URL straight to disk unbounded; filenames derive from URLs without stripping invalid or path characters.</p></div>
+
+<h2>Things to add</h2>
+<div class="finding"><div class="title">Feature gaps worth filling</div>
+<ul class="tight">
+<li><b>Update package verification:</b> publish SHA-256 or an ed25519 signature beside each release zip and verify it before the updater runs. The signing tooling already exists.</li>
+<li><b>Settings export and import:</b> a one-click full JSON backup of BrowserSettings, shortcuts, and blocklists. All stores already round-trip JSON, so this is mostly plumbing.</li>
+<li><b>Per-site settings:</b> remember zoom, JavaScript toggle, and user-agent override per domain, stored next to history.</li>
+<li><b>SQLite storage backend:</b> for history and downloads once they outgrow JSON. Removes the rewrite-per-navigation cost and the Save race in one move.</li>
+<li><b>stride://health page:</b> shows extension status, adblock filter age, hibernation counts, cache sizes, update state. Turns invisible internals into a debuggable surface.</li>
+<li><b>Tab search overlay:</b> search open tabs by title and URL from the command bar. The tab strip is the only finder today.</li>
+<li><b>Audio per tab:</b> mute toggle and audio indicator on tab pills. Hibernation already detects playing tabs, so the signal exists.</li>
+<li><b>Bookmark import depth:</b> recursive folder import with folder mapping.</li>
+<li><b>Test coverage for stores and handlers:</b> DownloadStore concurrency, HistoryStore eviction, and the message handlers have no tests today.</li>
+</ul></div>
+
+<h2>Things to change</h2>
+<div class="finding"><div class="title">Structural changes</div>
+<ul class="tight">
+<li><b>Finish or kill the R5 controller migration.</b> Eight dead controllers plus a 1,617-line MainWindow is the worst state to be in: two sources of truth that already disagree. Migrate one controller per round, exercise the app after each.</li>
+<li><b>Replace dynamic WebView references</b> with a small adapter interface shared by the standard and composition controls.</li>
+<li><b>One HttpClient, one settings instance.</b> Register HttpClient once and inject it into BrowserViewModel; load settings once in Composition and pass the instance everywhere.</li>
+<li><b>Unify download state:</b> one owner for active download operations, one for persisted items, with an explicit bridge.</li>
+<li><b>Move reader navigation behind ReaderService</b> with a single entry point that owns the programmatic-navigation flag.</li>
+<li><b>Move TCLens payload out of static fields</b> into the already-written TCLensLauncher service.</li>
+<li><b>Register MainWindow as singleton</b> or unsubscribe all events on close; same for LinkPreviewWindowController.Attach re-subscribing engine events.</li>
+<li><b>Generate ReleaseNotesProvider from ReleaseNotes.md</b> at build time so the in-app notes never drift.</li>
+<li><b>Gate theme-color and link-preview IPC below the token check</b> and gate wallhaven scripts by host at injection time.</li>
+</ul></div>
+
+<h2>Things to reduce for lightweightness</h2>
+<div class="finding"><div class="title">Trim fat without losing features</div>
+<ul class="tight">
+<li><b>Drop AdBlockFilter entirely or fold it into a setting default off.</b> uBlock Origin is the real blocker per the code's own comment. Removing the filter list download, the static set, and the WebResourceRequested hook simplifies startup and every request.</li>
+<li><b>Delete the eight dead UI controllers</b> if migration is not happening. Less code, less drift, faster builds.</li>
+<li><b>Compile out StressTestRunner</b> from release builds with a conditional compilation symbol. It is a dev tool shipping to users.</li>
+<li><b>Prune the favicon disk cache</b> with a size cap and LRU eviction; also stop caching failed loads.</li>
+<li><b>Debounce or cap history:</b> besides the perf win, cap stored entries lower than 10,000 by default and make it a setting.</li>
+<li><b>Lazy-inject scripts:</b> wallhaven, reader, and link-preview scripts are registered for every document; only wallhaven needs gating, but the others could skip internal pages.</li>
+<li><b>Clean the repository root:</b> dump.cs, fix_*.ps1 scratch scripts, and stale analysis JSON reports (core_report.json, unified_report.json, multilang_report.json) do not belong in the repo. The publish/ directory duplicates resources.</li>
+<li><b>Session restore size:</b> persisting every open tab on close is fine, but skip hibernated thumbnails for background tabs beyond a count.</li>
+<li><b>Trim browser arguments:</b> audit BuildBrowserArguments; every undocumented flag is a support surface.</li>
+</ul></div>
+
+<h2>Things to modify for lightness and customization</h2>
+<div class="finding"><div class="title">Make behavior configurable instead of hardcoded</div>
+<ul class="tight">
+<li><b>Settings-driven browser arguments:</b> expose hardware acceleration, process-per-site, and file access flags in an advanced settings section with safe defaults.</li>
+<li><b>Virtual host access level as a constant worth a setting:</b> internal hosts should be DenyCors for pages and Allow only for internal origins.</li>
+<li><b>Per-feature script toggles:</b> adnuke currently rides on AdBlockEnabled. Give the YouTube ad nuker its own switch like the enhancer and unhook have.</li>
+<li><b>History retention setting:</b> days or entry count, with a clear-now button on a stride://history page if one does not exist.</li>
+<li><b>Favicon cache size setting</b> and a clear-cache action.</li>
+<li><b>Toolbar density:</b> compact and comfortable modes via a single Height resource, since the toolbar height is already one binding point.</li>
+<li><b>Shortcut conflicts surfaced in settings:</b> KeyboardShortcutMap supports rebinding; detect and highlight duplicates instead of silently winning by order.</li>
+<li><b>Fullscreen monitor choice:</b> fullscreen currently targets the nearest monitor; a setting for "monitor with cursor" vs "window's monitor" is one line in FullscreenController.</li>
+<li><b>Session restore scope:</b> setting for all tabs, pinned only, or none, instead of the single RestoreSessionOnStartup toggle.</li>
+</ul></div>
+
+<h2>Done well</h2>
+<div class="finding good"><div class="title">Worth keeping exactly as they are</div>
+<ul class="tight">
+<li><span class="badge good">Good</span><b>Per-session IPC token design.</b> Internal pages on about:blank authenticate with a per-instance token instead of fragile origin checks. Right call for NavigateToString pages.</li>
+<li><span class="badge good">Good</span><b>Extension TOFU hashing.</b> Extensions ship with the app and are hash-verified on load, never downloaded after install.</li>
+<li><span class="badge good">Good</span><b>Hibernation guards.</b> Tabs playing audio or mid-download are refused eviction; the preview generation counter handles races cleanly.</li>
+<li><span class="badge good">Good</span><b>Reader mode defense in depth.</b> Allow-list sanitizer, javascript/data/file URL rejection with base-URI resolution, and script-src 'none' CSP.</li>
+<li><span class="badge good">Good</span><b>COM exception discipline.</b> ContextMenuRequested guards every Has* property before string reads.</li>
+<li><span class="badge good">Good</span><b>AtomicFileWriter used consistently</b> for every JSON store, with fail-soft loads that never crash startup on corrupt state.</li>
+<li><span class="badge good">Good</span><b>KeyboardShortcutMap.</b> Declarative table with runtime rebinding driven by settings, replacing a 175-line key cascade, with test coverage.</li>
+<li><span class="badge good">Good</span><b>Fullscreen state machine.</b> Pure, unit-tested, idempotent transitions shared by F11 and WebView2 events, with native monitor bounds in the chrome manager.</li>
+<li><span class="badge good">Good</span><b>YouTube tools config pipeline.</b> JSON-serialized configs persisted in localStorage, identity-tracked listeners, live reload without observer stacking after the recent fixes.</li>
+<li><span class="badge good">Good</span><b>Test suite discipline.</b> 222 passing tests over the pure logic: navigation policy, focus matcher, shortcuts, reader, link preview, context menus, fullscreen.</li>
+</ul></div>
+
+<div class="foot">Stride codebase review, generated 2026-08-27. Findings sourced from a three-area parallel audit:
+engine and tab lifecycle, services and persistence, UI and composition. Verified against the tree at commit time.
+Build and test status at review time: 0 errors, 222 passed, 8 skipped.</div>
+
+</div></body></html>

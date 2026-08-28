@@ -11,11 +11,14 @@ namespace StrideBrowser.Services;
 public sealed class YouTubeUnhook
 {
     /// <summary>
-    /// Returns a JS string that sets window.__STRIDE_UNHOOK config
-    /// then immediately runs the unhook script.
-    /// Returns empty string if unhook is disabled.
+    /// Returns a JS string that seeds the unhook config into localStorage,
+    /// sets window.__STRIDE_UNHOOK for the running document, then runs the
+    /// unhook script. Returns empty string if unhook is disabled.
+    /// <paramref name="forceConfig"/> overwrites the persisted config for live
+    /// reload; initial injection only seeds it so live changes survive
+    /// navigation instead of being reverted by the registered bootstrap.
     /// </summary>
-    public string GetScript(BrowserSettings s)
+    public string GetScript(BrowserSettings s, bool forceConfig = false)
     {
         if (!s.UnhookEnabled) return "";
 
@@ -44,9 +47,20 @@ public sealed class YouTubeUnhook
             inaptSearch = s.UnhookHideInaptSearch
         };
 
-        var config = $"window.__STRIDE_UNHOOK = {JsonSerializer.Serialize(configObj)};";
+        var json = JsonSerializer.Serialize(configObj);
+
+        // Config persists in the page's localStorage so live-reloaded values
+        // survive SPA navigations. Initial injection only seeds it.
+        var seed = forceConfig ? "" : "if (!localStorage.getItem('__stride_unhook')) ";
+        var configLine =
+            "try { " + seed + "localStorage.setItem('__stride_unhook', '" + json + "'); } catch (e) {}";
+
+        // Live reload also points the running document at the new config.
+        if (forceConfig)
+            configLine += " window.__STRIDE_UNHOOK = " + json + ";";
+
         var script = ResourceLoader.Load("Resources.Scripts.youtube-unhook.js");
 
-        return config + "\n" + script;
+        return configLine + "\n" + script;
     }
 }

@@ -122,6 +122,10 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         // Live-reload: re-inject unhook script into YouTube tabs when settings change
         if (key.StartsWith("unhook", StringComparison.Ordinal))
             await _engine.ReInjectUnhookAsync();
+
+        // Live-reload: apply enhancer settings to open YouTube tabs too
+        if (key.StartsWith("yt", StringComparison.Ordinal))
+            await _engine.ReInjectEnhancerAsync();
     }
 
     private static readonly Dictionary<string, Action<BrowserSettings, string>> SettingSetters = new()
@@ -139,6 +143,8 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         ["smartScreen"] = (s, v) => s.SmartScreenEnabled = v == "true",
         ["adBlock"] = (s, v) => s.AdBlockEnabled = v == "true",
         ["clearOnExit"] = (s, v) => s.ClearDataOnExit = v == "true",
+        ["searchSuggestions"] = (s, v) => s.SearchSuggestionsEnabled = v == "true",
+        ["faviconProxy"] = (s, v) => s.FaviconProxyEnabled = v == "true",
         ["blockDupes"] = (s, v) => s.BlockDuplicateTabs = v == "true",
         ["tabHibernation"] = (s, v) => s.TabHibernationEnabled = v == "true",
         ["tabSleep"] = (s, v) => s.TabSleepEnabled = v == "true",

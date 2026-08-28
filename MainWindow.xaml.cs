@@ -40,8 +40,7 @@ public partial class MainWindow : Window
 
     /// <summary>Prevents re-entrant tab selection changes when we programmatically update the ListBox selection.</summary>
     private bool _isUpdatingSelection;
-    private bool _isFullscreen;
-    private WindowState _preFullscreenState;
+    private readonly Services.UI.FullscreenController _fullscreenController;
 
     private const double LoadingIndicatorWidth = 100;
     private const double LoadingOvershootPx = 20;
@@ -54,6 +53,8 @@ public partial class MainWindow : Window
         // since the Command Bar is integrated back into the visual tree.
 
         InitializeComponent();
+
+        _fullscreenController = new Services.UI.FullscreenController(this, Toolbar);
 
         _vm = vm;
         _settingsStore = services.GetRequiredService<ISettingsStore>();
@@ -128,6 +129,8 @@ public partial class MainWindow : Window
             }
         };
         _chromeManager.Initialize();
+
+        _fullscreenController.ChromeManager = _chromeManager;
     }
 
     private const int WM_MOUSEHWHEEL = 0x020E;
@@ -190,8 +193,8 @@ public partial class MainWindow : Window
                 FocusAddressBar = () => { FocusAddressBar(); return Task.CompletedTask; },
                 SaveAllTabs = () => { SaveAllTabs_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
                 CycleTab = async reverse => await CycleTabAsync(reverse),
-                ToggleFullscreen = () => { ToggleFullscreen(); return Task.CompletedTask; },
-                IsFullscreen = () => _isFullscreen,
+                ToggleFullscreen = () => { _fullscreenController.Toggle(); return Task.CompletedTask; },
+                IsFullscreen = () => _fullscreenController.IsFullscreen,
                 OpenHistory = () => { OpenHistoryTab(); return Task.CompletedTask; },
                 OpenDownloads = () => { OpenDownloadsTab(); return Task.CompletedTask; },
                 SwitchToTabIndex = SwitchToTabByIndex,
@@ -296,21 +299,7 @@ public partial class MainWindow : Window
     {
         _engine.LaunchTCLensAsync = LaunchTCLensAsync;
 
-        _engine.FullScreenChanged += isFullScreen =>
-        {
-            if (isFullScreen)
-            {
-                Toolbar.Visibility = Visibility.Collapsed;
-                WindowState = WindowState.Normal;
-                ResizeMode = ResizeMode.NoResize;
-                WindowState = WindowState.Maximized;
-            }
-            else
-            {
-                Toolbar.Visibility = Visibility.Visible;
-                ResizeMode = ResizeMode.CanResize;
-            }
-        };
+        _engine.FullScreenChanged += isFullScreen => _fullscreenController.SetFullscreen(isFullScreen);
 
         _engine.TabStateChanged += async tab =>
         {
@@ -1393,22 +1382,6 @@ public partial class MainWindow : Window
 
     private void ToggleMaximize() =>
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-
-    private void ToggleFullscreen()
-    {
-        _isFullscreen = !_isFullscreen;
-        if (_isFullscreen)
-        {
-            _preFullscreenState = WindowState;
-            Toolbar.Visibility = Visibility.Collapsed;
-            WindowState = WindowState.Maximized;
-        }
-        else
-        {
-            Toolbar.Visibility = Visibility.Visible;
-            WindowState = _preFullscreenState;
-        }
-    }
 
     // ───────────────────── Tab Drag & Drop ─────────────────────
 

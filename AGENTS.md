@@ -1,7 +1,7 @@
 # AGENTS.md
 ## Writing
 
-Writing follows the unslop skill in `~/.config/opencode/skills/unslop/`. Read it before writing any reply, commit message, PR description, or doc change. No em dashes, no parentheses, no filler, no AI vocabulary. Say what the code does, not how it feels.
+Writing follows the unslop skill. Read it before writing any reply, commit message, PR description, or doc change. No em dashes, no parentheses, no filler, no AI vocabulary. Say what the code does, not how it feels.
 
 ## The project
 

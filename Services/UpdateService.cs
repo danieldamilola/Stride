@@ -1,10 +1,12 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -25,6 +27,7 @@ public sealed class UpdateService
 
     private string? _downloadedZipPath;
     private string? _latestVersion;
+    private readonly SemaphoreSlim _downloadGate = new(1, 1);
 
     public event EventHandler<double>? DownloadProgressChanged;
     public event EventHandler? DownloadCompleted;
@@ -83,6 +86,13 @@ public sealed class UpdateService
             return false;
         }
 
+        // Re-entrancy guard: only one download at a time.
+        if (!await _downloadGate.WaitAsync(0))
+        {
+            Fail("An update download is already in progress.");
+            return false;
+        }
+
         try
         {
             string downloadUrl = $"https://github.com/danieldamilola/Stride/releases/download/{_latestVersion}/Stride-win-x64.zip";
@@ -110,8 +120,22 @@ public sealed class UpdateService
                 if (canReportProgress)
                 {
                     double progress = ((double)totalRead / totalBytes) * 100.0;
-                    DownloadProgressChanged?.Invoke(this, progress);
+                    // Marshal to the UI thread: subscribers touch WPF controls.
+                    var ui = System.Windows.Application.Current?.Dispatcher;
+                    if (ui is not null)
+                        await ui.InvokeAsync(() => DownloadProgressChanged?.Invoke(this, progress));
+                    else
+                        DownloadProgressChanged?.Invoke(this, progress);
                 }
+            }
+
+            // Sanity check: confirm the download is a valid, non-trivial zip before trusting it.
+            var info = new FileInfo(_downloadedZipPath);
+            if (info.Length < 1024 || !IsValidZip(_downloadedZipPath))
+            {
+                Fail("Downloaded update is not a valid package.");
+                CleanupZip();
+                return false;
             }
 
             DownloadCompleted?.Invoke(this, EventArgs.Empty);
@@ -120,8 +144,33 @@ public sealed class UpdateService
         catch (Exception ex)
         {
             Fail($"Update download failed: {ex.Message}");
+            CleanupZip();
             return false;
         }
+        finally
+        {
+            _downloadGate.Release();
+        }
+    }
+
+    /// <summary>Confirms the file is a real ZIP archive with at least one entry.</summary>
+    private static bool IsValidZip(string path)
+    {
+        try
+        {
+            using var zip = ZipFile.OpenRead(path);
+            return zip.Entries.Count > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void CleanupZip()
+    {
+        try { if (_downloadedZipPath is not null && File.Exists(_downloadedZipPath)) File.Delete(_downloadedZipPath); } catch { }
+        _downloadedZipPath = null;
     }
 
     public void InstallUpdate()

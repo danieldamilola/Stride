@@ -12,6 +12,7 @@ public sealed record EngineDependencies
 {
     public required ExtensionManager ExtensionManager { get; init; }
     public required YouTubeUnhook YouTubeUnhook { get; init; }
+    public required YouTubeEnhancer YouTubeEnhancer { get; init; }
     public required BrowserSettings Settings { get; init; }
     public required FaviconLoader FaviconLoader { get; init; }
     public required InternalPages Pages { get; init; }

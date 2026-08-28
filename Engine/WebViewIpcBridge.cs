@@ -123,9 +123,12 @@ public sealed class WebViewIpcBridge
             }
             catch (Exception ex) { Trace.WriteLine(ex); }
 
-            if (msg.StartsWith("THEME_COLOR:"))
+            // THEME_COLOR and LINK_PREVIEW are emitted by injected content scripts
+            // which embed the per-session token, so a bearer check keeps arbitrary
+            // pages from spoofing the tab theme or spamming link-preview requests.
+            if (msg.StartsWith(_ipcToken + ":THEME_COLOR:", StringComparison.Ordinal))
             {
-                var colorStr = msg.Substring("THEME_COLOR:".Length);
+                var colorStr = msg.Substring((_ipcToken + ":THEME_COLOR:").Length);
                 _dispatcher.InvokeAsync(() =>
                 {
                     tab.ThemeColor = colorStr;
@@ -134,11 +137,11 @@ public sealed class WebViewIpcBridge
                 return;
             }
 
-            if (msg.StartsWith("LINK_PREVIEW_PEEK:"))
+            if (msg.StartsWith(_ipcToken + ":LINK_PREVIEW_PEEK:", StringComparison.Ordinal))
             {
                 if (!_settings.LinkPreviewEnabled) return;
 
-                var json = msg.Substring("LINK_PREVIEW_PEEK:".Length);
+                var json = msg.Substring((_ipcToken + ":LINK_PREVIEW_PEEK:").Length);
                 try
                 {
                     using var doc = System.Text.Json.JsonDocument.Parse(json);

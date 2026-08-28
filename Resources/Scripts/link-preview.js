@@ -7,6 +7,9 @@
     var lastSentUrl = "";
     var lastSentAt = 0;
 
+    var TOKEN = '__STRIDE_IPC_TOKEN__';
+    var t = function(m) { window.chrome.webview.postMessage(TOKEN + ':' + m); };
+
     function isValidForPreview(href) {
         if (!href) return false;
         href = href.trim();
@@ -50,7 +53,7 @@
                     rect: [rect.left, rect.top, rect.width, rect.height],
                     trigger: "alt-press"
                 });
-                window.chrome.webview.postMessage("LINK_PREVIEW_PEEK:" + payload);
+                t("LINK_PREVIEW_PEEK:" + payload);
             }
         } catch (e) {}
     }
