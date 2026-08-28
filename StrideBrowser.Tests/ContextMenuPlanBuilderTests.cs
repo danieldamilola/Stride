@@ -140,7 +140,7 @@ public class ContextMenuPlanBuilderTests
         Assert.False(HasCommand(plan, "back"));
         Assert.False(HasCommand(plan, "forward"));
         Assert.False(HasCommand(plan, "reload"));
-        Assert.False(HasCommand(plan, "find-in-page"));
+        Assert.True(HasCommand(plan, "find-in-page"));
     }
 
     [Fact]
@@ -191,7 +191,7 @@ public class ContextMenuPlanBuilderTests
         Assert.True(HasCommand(plan, "copy"));
         Assert.True(HasCommand(plan, "search-selection"));
         Assert.False(HasCommand(plan, "back"));
-        Assert.False(HasCommand(plan, "find-in-page"));
+        Assert.True(HasCommand(plan, "find-in-page"));
     }
 
     [Fact]
