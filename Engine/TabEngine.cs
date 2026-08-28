@@ -692,7 +692,11 @@ public sealed class TabEngine : IDisposable
                         refBtn.Click += (s, e) => { cm.IsOpen = false; Reload(); };
                         navPanel.Children.Add(refBtn);
 
-                        var navItem = new MenuItem { Header = navPanel };
+                        var navItem = new MenuItem 
+                        { 
+                            Header = navPanel,
+                            Template = (System.Windows.Controls.ControlTemplate)System.Windows.Application.Current.Resources["ContextMenuNavRowTemplate"]
+                        };
                         cm.Items.Add(navItem);
                         cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
                     }
