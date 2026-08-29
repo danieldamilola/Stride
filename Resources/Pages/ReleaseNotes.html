@@ -242,7 +242,10 @@
     flex-shrink: 0;
   }
   .changelog-tag.feature { color: var(--accent); }
-  .changelog-tag.fix { color: #f43f5e; }
+  :root, :root[data-theme="dark"] { --fix-color: #f43f5e; }
+  :root[data-theme="light"] { --fix-color: #be123c; }
+
+  .changelog-tag.fix { color: var(--fix-color); }
   
   .changelog-content {
     flex: 1;
