@@ -971,6 +971,24 @@ public sealed class TabEngine : IDisposable
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
 
+            // Intercept native PDF navigations and route to PDF.js
+            try
+            {
+                if (Uri.TryCreate(e.Uri, UriKind.Absolute, out var uri) && 
+                    uri.AbsolutePath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && 
+                    !e.Uri.StartsWith("http://local.assets/pdfjs", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.Cancel = true;
+                    var encodedUrl = Uri.EscapeDataString(e.Uri);
+                    core.Navigate($"http://local.assets/pdfjs/web/viewer.html?file={encodedUrl}");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"PDF interception failed: {ex.Message}");
+            }
+
             // Reader mode single-WebView implicit exit. If the tab is in reader and this navigation
             // was not our own Enter or Exit NavigateToString, treat it as a link click inside reader.
             if (IsReaderActive?.Invoke(tab.Id) == true && !IsProgrammaticReaderNavigation)

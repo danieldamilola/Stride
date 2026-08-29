@@ -4,6 +4,15 @@
  * @module lib/providers
  */
 
+// Hosted T&C Lens AI endpoint.
+// Set TCLENS_DEV to true while testing against a local tclens-web dev server
+// (http://localhost:3000 is already allowed by the manifest CSP), then flip it
+// back to false before shipping.
+const TCLENS_DEV = false;
+const TCLENS_ORIGIN = TCLENS_DEV
+  ? "http://localhost:3000"
+  : "https://www.tclens.me";
+
 export const PROVIDERS = {
   tclens: {
     name: "T&C Lens AI",
@@ -16,7 +25,8 @@ export const PROVIDERS = {
         outputCost: 0,
       }
     ],
-    baseUrl: "https://www.tclens.me/api/analyze",
+    baseUrl: `${TCLENS_ORIGIN}/api/analyze`,
+    creditsUrl: `${TCLENS_ORIGIN}/api/credits/balance`,
   },
   openai: {
     name: "OpenAI",
@@ -304,3 +314,4 @@ export function isLikelyChatModel(modelId) {
 
   return Boolean(modelId) && !rejectedTerms.some((term) => id.includes(term));
 }
+

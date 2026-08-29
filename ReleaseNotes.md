@@ -1,3 +1,11 @@
+# Release Note: v1.2.2
+
+**Features**
+* **Settings**: Added the `(Ctrl+,)` keyboard shortcut to the Settings icon tooltip for easier discovery.
+
+**Bug Fixes**
+* **Auto-Updater**: The micro-updater now safely ignores external or elevated ghost processes, allowing updates to complete seamlessly and instantly.
+
 # Release Note: v1.2.1
 
 **Features**
@@ -57,4 +65,5 @@ To fix this and get all future updates automatically, you must download the late
 * Message handlers moved into the engine layer with a sealed router contract, and WebView2 environment plus IPC ownership extracted into dedicated classes.
 * Test suite grew to over 160 unit tests covering navigation policies, router behavior, reader sanitizing, link preview policy, and update verification.
 * Extracted URL parsing and command-line argument dispatch into dedicated services, and removed the NetSparkleUpdater WPF row from Settings.
+
 

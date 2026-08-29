@@ -1,3 +1,25 @@
+if (!window.chrome) window.chrome = {};
+if (!window.chrome.storage) {
+  window.chrome.storage = {
+    local: {
+      get: async (keys) => {
+        const keyArr = Array.isArray(keys) ? keys : typeof keys === "string" ? [keys] : Object.keys(keys);
+        const res = {};
+        for (const k of keyArr) {
+          const v = localStorage.getItem('tclens_' + k);
+          res[k] = v ? JSON.parse(v) : undefined;
+        }
+        return res;
+      },
+      set: async (items) => {
+        for (const [k, v] of Object.entries(items)) {
+          localStorage.setItem('tclens_' + k, JSON.stringify(v));
+        }
+      },
+      getBytesInUse: async () => 0
+    }
+  };
+}
 /**
  * @file storage.js
  * @description chrome.storage.local wrapper for settings and analysis history.
@@ -143,3 +165,4 @@ export async function getStorageStats() {
 }
 
 export { DEFAULT_SETTINGS };
+
