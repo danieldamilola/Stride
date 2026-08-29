@@ -37,4 +37,6 @@ public static class WebMessagePrefix
     public const string ResetSettings = "reset-settings";
     public const string WhatsNewContinue = "whatsnew-continue";
     public const string WhatsNewDismiss = "whatsnew-dismiss";
+    public const string OpenReleaseNotes = "open-releasenotes";
+    public const string OpenOnboarding = "open-onboarding";
 }

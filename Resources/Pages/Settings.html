@@ -1363,6 +1363,24 @@
             <div class="card">
               <div class="setting-row">
                 <div class="setting-info">
+                  <div class="setting-label">What's New</div>
+                  <div class="setting-desc">View the Stride release notes</div>
+                </div>
+                <div class="setting-control">
+                  <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'open-releasenotes')">Open</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Getting Started</div>
+                  <div class="setting-desc">Revisit the Stride onboarding guide</div>
+                </div>
+                <div class="setting-control">
+                  <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'open-onboarding')">Open</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
                   <div class="setting-label">Set as default browser</div>
                   <div class="setting-desc">Open web links with Stride</div>
                 </div>

@@ -49,6 +49,19 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
             string statusStr = status.HasValue ? status.Value.ToString().ToLowerInvariant() : "error";
             _engine.PostMessageToActiveTab($"update-check-result:{statusStr}:{_updateService.LatestVersion ?? ""}:");
         });
+        yield return MessageRoute.Exact(WebMessagePrefix.OpenReleaseNotes, async () =>
+        {
+            var tab = _engine.CreateTab(InternalUrls.ReleaseNotes);
+            await _engine.ActivateAsync(tab);
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.2.0";
+            _engine.NavigateToReleaseNotes(tab, version);
+        });
+        yield return MessageRoute.Exact(WebMessagePrefix.OpenOnboarding, async () =>
+        {
+            var tab = _engine.CreateTab(InternalUrls.Onboarding);
+            await _engine.ActivateAsync(tab);
+            _engine.NavigateToOnboarding(tab);
+        });
     }
 
     /// <summary>Resets all settings to defaults and reloads the settings page.</summary>

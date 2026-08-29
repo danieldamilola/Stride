@@ -4,23 +4,21 @@
 <meta charset="UTF-8">
 <title>What's New in Stride</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap');
-  
   :root { 
     --accent: {{ACCENT}}; 
     --accent-rgb: {{ACCENT_RGB}}; 
   }
   :root, :root[data-theme="dark"] {
-    --bg-base: #09090b;
-    --bg-surface: #141416;
-    --bg-card: #18181b;
-    --bg-hover: #1f1f23;
+    --bg-base: #0e0d0b;
+    --bg-surface: #141310;
+    --bg-card: #181714;
+    --bg-hover: #1f1d19;
     --border: rgba(255, 255, 255, 0.08);
     --border-subtle: rgba(255, 255, 255, 0.04);
-    --text-main: #e4e4e7;
-    --text-bright: #f4f4f5;
-    --text-muted: #a1a1aa;
-    --text-dim: #71717a;
+    --text-main: #e0e0e0;
+    --text-bright: #d4d4d4;
+    --text-muted: #a3a3a3;
+    --text-dim: #808080;
   }
   :root[data-theme="light"] {
     --bg-base: #f8f8fa;
@@ -54,7 +52,7 @@
   body {
     background: var(--bg-base);
     color: var(--text-main);
-    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-y: auto;
   }
@@ -63,9 +61,9 @@
 
   .shell {
     width: 100%;
-    max-width: 680px;
+    max-width: 960px;
     margin: 0 auto;
-    padding: 36px 24px 60px;
+    padding: 36px 40px 60px;
     display: flex;
     flex-direction: column;
   }
@@ -76,7 +74,6 @@
     align-items: center;
     justify-content: space-between;
     padding-bottom: 24px;
-    border-bottom: 1px solid var(--border-subtle);
   }
   .brand {
     display: flex;
@@ -96,12 +93,8 @@
   }
   .badge {
     font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: rgba(var(--accent-rgb), 0.12);
-    color: var(--accent);
-    border: 1px solid rgba(var(--accent-rgb), 0.25);
+    font-family: monospace;
+    color: var(--text-muted);
     font-weight: 500;
     letter-spacing: 0.04em;
   }
@@ -112,7 +105,7 @@
   }
   .eyebrow {
     font-size: 11px;
-    font-family: 'DM Mono', monospace;
+    font-family: monospace;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--accent);
@@ -181,7 +174,7 @@
   }
   .hero-badge {
     font-size: 10px;
-    font-family: 'DM Mono', monospace;
+    font-family: monospace;
     padding: 2px 7px;
     border-radius: 5px;
     background: var(--accent);
@@ -224,7 +217,7 @@
   }
   .log-date {
     font-size: 12px;
-    font-family: 'DM Mono', monospace;
+    font-family: monospace;
     font-weight: 500;
     color: var(--text-muted);
   }
@@ -241,19 +234,15 @@
     align-items: baseline;
   }
   .changelog-tag {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: monospace;
+    letter-spacing: 0.04em;
+    min-width: 52px;
     flex-shrink: 0;
   }
-  .changelog-tag svg {
-    width: 18px;
-    height: 18px;
-  }
-  .changelog-tag.feature { color: var(--color-feature); }
-  .changelog-tag.fix { color: var(--color-fix); }
+  .changelog-tag.feature { color: var(--accent); }
+  .changelog-tag.fix { color: #f43f5e; }
   
   .changelog-content {
     flex: 1;
@@ -353,25 +342,7 @@
   </header>
 
   <main class="stage">
-    <p class="eyebrow">Release Notes</p>
-    <h1>Stride {{VERSION}}<br>is here.</h1>
-    <p class="sub">Thanks for updating. Here's what changed in this release. This page shows once after each update.</p>
 
-    <!-- Hero Highlight -->
-    <div class="hero-card">
-      <div class="hero-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-        </svg>
-      </div>
-      <div class="hero-info">
-        <div class="hero-header">
-          <div class="hero-title">{{HIGHLIGHT_TITLE}}</div>
-          <span class="hero-badge">Highlight</span>
-        </div>
-        <div class="hero-desc">{{HIGHLIGHT_DESC}}</div>
-      </div>
-    </div>
 
     <!-- Full changelog -->
     {{ALL_RELEASES_HTML}}

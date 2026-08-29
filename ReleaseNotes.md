@@ -3,6 +3,8 @@
 **Features**
 * **Dynamic Context Menu**: Rebuilt the right-click menu to be context-aware. The top row shows Back, Forward, and Reload buttons. The menu adapts to the clicked target. Plain pages show Find in Page and Select All. Editable fields show Undo, Redo, Cut, Copy, and Paste. Links show "Open in new tab" and "Copy link". Images show "Save image" and "Copy image URL". Reader View appears when available. The T&C Lens extension is accessible from the menu. Keyboard shortcuts display for supported actions.
 * **Release Notes Auto-Open**: Stride opens stride://release-notes automatically after an update installs.
+* **Internal Pages Design Sync**: Redesigned the Onboarding and Release Notes pages to share the flat, utilitarian layout and styling (system fonts, standardized colors) used across the rest of the browser's internal pages.
+* **Quick Access Links**: Added "What's New" and "Getting Started" buttons to the System & About section of Settings to easily reopen these pages at any time.
 
 **Bug Fixes**
 * **YouTube Tools**: The enhancer and unhook scripts no longer run on lookalike domains that merely contain "youtube.com" in the hostname. Live setting changes no longer revert on the next navigation, re-injection no longer stacks observers and listeners on every settings change, and enhancer settings now apply live to open tabs.
