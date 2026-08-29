@@ -22,7 +22,7 @@ public static class ShortcutDefaults
         new("TCLens",            "Extensions", "Analyze this page with T&C Lens", "Analyze this page with T&C Lens", "Alt+T"),
         new("GoBack",            "Navigation", "Go back",              "Navigate back",                     "Alt+Left"),
         new("GoForward",         "Navigation", "Go forward",           "Navigate forward",                  "Alt+Right"),
-        new("Reload",            "Navigation", "Reload",               "Reload current page",               "F5"),
+        new("Reload",            "Navigation", "Reload",               "Reload current page",               "Ctrl+R"),
 
         // ── View ──
         new("ZoomIn",            "View",       "Zoom in",              "Increase page zoom",                "Ctrl+="),
