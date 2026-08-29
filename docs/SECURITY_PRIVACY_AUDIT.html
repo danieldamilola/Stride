@@ -90,7 +90,7 @@ opened in Stride can exfiltrate documents from disk.</p>
 <p>URL-check-then-post races let a normal website receive the session token and forge internal-page messages.
 Re-verify <code>core.Source</code> immediately before each post.</p></div>
 
-<div class="finding med"><div class="title">Theme and link-preview messages skip authentication</div>
+<div class="finding med"><div class="title">Token-bearing scripts exposed to page environment</div>
 <span class="badge med">Medium</span><span class="badge tag">IPC</span><span class="badge tag">WebViewIpcBridge.cs:126</span>
 <p><code>THEME_COLOR:</code> and <code>LINK_PREVIEW_PEEK:</code> perform token validation, but the token itself is exposed to injected scripts. The actual risk is token exposure to the page environment, requiring scoped token-bearing scripts or an equivalent renderer trust-boundary check.</p></div>
 
