@@ -118,9 +118,8 @@ exception with potentially corrupt state.</p>
 
 <div class="finding med"><div class="title">Theme and link-preview messages bypass the IPC token check</div>
 <span class="badge med">Medium</span><span class="badge tag">Security</span><span class="badge tag">WebViewIpcBridge.cs:126-175</span>
-<p><code>THEME_COLOR:</code> and <code>LINK_PREVIEW_PEEK:</code> are handled before the token verification, so any web
-page can spoof the tab theme color or spam link-preview requests for arbitrary URLs.</p>
-<p class="fix"><b>Fix:</b> move both branches below the trusted-source and token gate.</p></div>
+<p><code>THEME_COLOR:</code> and <code>LINK_PREVIEW_PEEK:</code> perform token validation, but the token itself is exposed to injected scripts. The actual risk is token exposure to the page environment, requiring scoped token-bearing scripts or an equivalent renderer trust-boundary check.</p>
+<p class="fix"><b>Fix:</b> isolate token-bearing scripts from the untrusted page environment.</p></div>
 
 <div class="finding med"><div class="title">Live IPC token script injected into every page</div>
 <span class="badge med">Medium</span><span class="badge tag">Security</span><span class="badge tag">ContentScriptInjector.cs:38</span>

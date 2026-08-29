@@ -158,7 +158,7 @@ public sealed class SettingsPage
             var displayCombo = FormatComboDisplay(currentCombo);
             // Escape user-supplied combo values before embedding in HTML/JS attributes.
             var escCombo = StrideBrowser.Helpers.JsEncoder.Encode(currentCombo);
-            var escDisplay = StrideBrowser.Helpers.JsEncoder.Encode(displayCombo);
+            var escDisplay = StrideBrowser.Helpers.JsEncoder.HtmlEncode(displayCombo);
             var escDefault = StrideBrowser.Helpers.JsEncoder.Encode(def.DefaultCombo);
 
             sb.AppendLine("        <div class=\"setting-row\">");

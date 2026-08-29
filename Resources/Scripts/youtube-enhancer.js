@@ -1,4 +1,4 @@
-﻿// Stride Browser - YouTube Enhancer
+// Stride Browser - YouTube Enhancer
 // Injected on youtube.com to set quality, speed, autoplay, and loop preferences.
 // Only runs on youtube.com. Inspired by MisterTube-V3 (github.com/NextEra-Development/MisterTube-V3).
 // Handles ads, live streams, shorts, quality re-forcing, and speed persistence.
@@ -21,7 +21,8 @@
 
     // Shared config object, mutated in place on live reload so listeners that
     // closed over it always see current values.
-    var cfg = {};
+    if (!window.__STRIDE_YT_ENHANCER_CFG) window.__STRIDE_YT_ENHANCER_CFG = {};
+    var cfg = window.__STRIDE_YT_ENHANCER_CFG;
     function refreshConfig() {
         var latest = readConfig();
         for (var k in cfg) delete cfg[k];

@@ -57,29 +57,30 @@ public static class SingleInstanceManager
 
     private static async Task StartServerAsync(CancellationToken token)
     {
-        // The PipeSecurity-aware constructor is not exposed in the public
-        // surface of System.IO.Pipes on .NET 9, so we cannot restrict the DACL
-        // through that path. Instead, the loop enforces strict validation of
-        // every message: bounded size, JSON shape, URL allowlist, and a
-        // per-instance nonce check. A malicious local user can still connect,
-        // but cannot inject anything the receiving handler will accept.
+#pragma warning disable CA1416 // Validate platform compatibility
+        var ps = new System.IO.Pipes.PipeSecurity();
+        var id = System.Security.Principal.WindowsIdentity.GetCurrent().Owner;
+        if (id != null)
+        {
+            ps.AddAccessRule(new System.IO.Pipes.PipeAccessRule(id, System.IO.Pipes.PipeAccessRights.FullControl, System.Security.AccessControl.AccessControlType.Allow));
+        }
+#pragma warning restore CA1416
+
         while (!token.IsCancellationRequested)
         {
             try
             {
-                using var server = new NamedPipeServerStream(
-                    PipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous,
-                    0, 0);
+#pragma warning disable CA1416
+                using var server = System.IO.Pipes.NamedPipeServerStreamAcl.Create(
+                    PipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0, ps);
+#pragma warning restore CA1416
                 await server.WaitForConnectionAsync(token);
 
-                // Bounded read with a timeout so a stalled or hostile client cannot block the loop.
-                var cts = CancellationTokenSource.CreateLinkedTokenSource(token);
-                cts.CancelAfter(TimeSpan.FromSeconds(5));
                 using var reader = new StreamReader(server);
                 string? json;
                 try
                 {
-                    json = await ReadToEndAsync(reader, cts.Token);
+                    json = await ReadToEndAsync(reader, token);
                 }
                 catch (Exception)
                 {

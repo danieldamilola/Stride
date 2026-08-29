@@ -53,9 +53,12 @@ public sealed class WindowChromeManager
 
         _window.WindowState = WindowState.Normal;
         var mon = mi.rcMonitor;
-        NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero,
+        if (!NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero,
             mon.Left, mon.Top, mon.Right - mon.Left, mon.Bottom - mon.Top,
-            NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_FRAMECHANGED);
+            NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_FRAMECHANGED))
+        {
+            return false;
+        }
 
         ApplyFullscreenChrome(fullscreen: true);
         return true;

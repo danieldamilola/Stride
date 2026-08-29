@@ -182,7 +182,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         ["ytQuality"] = (s, v) => s.YtDefaultQuality = v,
         ["ytAutoplay"] = (s, v) => s.YtDisableAutoplay = v == "true",
         ["ytPauseTab"] = (s, v) => s.YtPauseOnTabSwitch = v == "true",
-        ["ytSpeed"] = (s, v) => { if (double.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out var spd)) s.YtDefaultSpeed = spd; },
+        ["ytSpeed"] = (s, v) => { if (double.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out var spd) && double.IsFinite(spd)) s.YtDefaultSpeed = spd; },
         ["ytLoop"] = (s, v) => s.YtLoopVideo = v == "true",
 
         ["unhookEnabled"] = (s, v) => s.UnhookEnabled = v == "true",

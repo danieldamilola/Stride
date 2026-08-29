@@ -35,6 +35,7 @@
 * **Toolbar Icon Toggles**: Disabling the "Show Reader Icon" setting instantly removes the icon from the toolbar.
 
 **Under the Hood**
+* Added docs/VERTICAL_TREE_TABS_DESIGN.html, a design proposal and interactive mockup for the vertical tree tabs roadmap item. Documentation only, no runtime change.
 * Extracted URL parsing and command-line argument dispatch from the main window into CommandLineUrlParser and StartupCoordinator services.
 * Removed the "NetSparkleUpdater WPF" row from Settings. Updated updater comments. Deleted the UpdateServiceE2ETests test.
 

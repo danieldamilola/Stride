@@ -106,26 +106,27 @@ public sealed class UpdateService
             var canReportProgress = totalBytes != -1;
 
             using var contentStream = await response.Content.ReadAsStreamAsync();
-            using var fileStream = new FileStream(_downloadedZipPath, FileMode.Create, FileAccess.Write, FileShare.None);
-
-            var buffer = new byte[81920];
-            long totalRead = 0;
-            int read;
-
-            while ((read = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            using (var fileStream = new FileStream(_downloadedZipPath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                await fileStream.WriteAsync(buffer, 0, read);
-                totalRead += read;
+                var buffer = new byte[81920];
+                long totalRead = 0;
+                int read;
 
-                if (canReportProgress)
+                while ((read = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                 {
-                    double progress = ((double)totalRead / totalBytes) * 100.0;
-                    // Marshal to the UI thread: subscribers touch WPF controls.
-                    var ui = System.Windows.Application.Current?.Dispatcher;
-                    if (ui is not null)
-                        await ui.InvokeAsync(() => DownloadProgressChanged?.Invoke(this, progress));
-                    else
-                        DownloadProgressChanged?.Invoke(this, progress);
+                    await fileStream.WriteAsync(buffer, 0, read);
+                    totalRead += read;
+
+                    if (canReportProgress)
+                    {
+                        double progress = ((double)totalRead / totalBytes) * 100.0;
+                        // Marshal to the UI thread: subscribers touch WPF controls.
+                        var ui = System.Windows.Application.Current?.Dispatcher;
+                        if (ui is not null)
+                            await ui.InvokeAsync(() => DownloadProgressChanged?.Invoke(this, progress));
+                        else
+                            DownloadProgressChanged?.Invoke(this, progress);
+                    }
                 }
             }
 

@@ -156,7 +156,7 @@ are gone so they cannot drift back in.
 ### Edited: Interop/NativeMethods.cs
 
 Added constants: `DWMWA_BORDER_COLOR` (34), `DWMWCP_DONOTROUND` (1),
-`DWMWA_COLOR_DEFAULT` (0), `DWMWA_COLOR_NONE` (4), `SWP_NOZORDER` (0x0004),
+`DWMWA_COLOR_DEFAULT` (0xFFFFFFFF), `DWMWA_COLOR_NONE` (0xFFFFFFFE), `SWP_NOZORDER` (0x0004),
 `SWP_FRAMECHANGED` (0x0020). `DwmSetWindowAttribute`, `SetWindowPos`,
 `MonitorFromWindow`, and `GetMonitorInfo` already existed.
 

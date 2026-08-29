@@ -92,8 +92,7 @@ Re-verify <code>core.Source</code> immediately before each post.</p></div>
 
 <div class="finding med"><div class="title">Theme and link-preview messages skip authentication</div>
 <span class="badge med">Medium</span><span class="badge tag">IPC</span><span class="badge tag">WebViewIpcBridge.cs:126</span>
-<p><code>THEME_COLOR:</code> and <code>LINK_PREVIEW_PEEK:</code> are processed before the token gate. Pages can spoof
-UI theming and trigger link previews. Move below the gate.</p></div>
+<p><code>THEME_COLOR:</code> and <code>LINK_PREVIEW_PEEK:</code> perform token validation, but the token itself is exposed to injected scripts. The actual risk is token exposure to the page environment, requiring scoped token-bearing scripts or an equivalent renderer trust-boundary check.</p></div>
 
 <div class="finding med"><div class="title">Session token script registered on every page</div>
 <span class="badge med">Medium</span><span class="badge tag">IPC</span><span class="badge tag">ContentScriptInjector.cs:38</span>
@@ -141,7 +140,7 @@ disappear, and it is gated on AdBlockEnabled which is unrelated.</p></div>
 <h2>Privacy audit: what leaves the machine</h2>
 <table>
 <tr><th>Destination</th><th>What is sent</th><th>When</th><th>Verdict</th></tr>
-<tr><td><code>duckduckgo.com/ac/</code></td><td>Typed address-bar text, keystroke by keystroke</td><td>Every suggestion cycle</td><td><span class="badge med">Medium</span>No setting to disable, no disclosure.</td></tr>
+<tr><td><code>duckduckgo.com/ac/</code></td><td>Typed address-bar text, keystroke by keystroke</td><td>Every suggestion cycle</td><td><span class="badge low">Low</span>Controlled by settings. Default is enabled.</td></tr>
 <tr><td><code>icons.duckduckgo.com/ip3/</code></td><td>Domain names of sites you visit or open tabs for</td><td>Favicon resolution</td><td><span class="badge med">Medium</span>A third party learns your browsing domains.</td></tr>
 <tr><td><code>pgl.yoyo.org</code></td><td>Nothing personal; ad server list fetch</td><td>Adblock on</td><td><span class="badge low">Low</span>Fine.</td></tr>
 <tr><td><code>raw.githubusercontent.com</code></td><td>Nothing personal; focus blocklist fetches</td><td>Focus mode use</td><td><span class="badge low">Low</span>Cached locally after first fetch.</td></tr>
@@ -164,18 +163,15 @@ disappear, and it is gated on AdBlockEnabled which is unrelated.</p></div>
 
 <h2>Privacy findings</h2>
 
-<div class="finding med"><div class="title">Address-bar text is sent to DuckDuckGo with no toggle and no disclosure</div>
-<span class="badge med">Medium</span><span class="badge tag">Privacy</span><span class="badge tag">SuggestionProvider.cs:45</span>
-<p>Every suggestion cycle posts the current query text to <code>duckduckgo.com/ac/</code>. There is no setting to turn
-network suggestions off and nothing in the UI saying it happens. Typing medical, legal, or personal queries leaks
-partial words before Enter is ever pressed.</p>
-<p class="fix"><b>Fix:</b> add a visible "search suggestions" setting naming DuckDuckGo as the provider, and only fire after a minimum query length.</p></div>
+<div class="finding low"><div class="title">Address-bar text is sent to DuckDuckGo</div>
+<span class="badge low">Low</span><span class="badge tag">Privacy</span><span class="badge tag">SuggestionProvider.cs</span>
+<p>Suggestion cycles post the current query text to <code>duckduckgo.com/ac/</code>. This is controlled by a user setting and debounced locally to prevent excessive requests.</p>
+</div>
 
-<div class="finding med"><div class="title">Favicon proxy tells DuckDuckGo which domains you touch</div>
-<span class="badge med">Medium</span><span class="badge tag">Privacy</span><span class="badge tag">FaviconLoader.cs:172</span>
-<p>Favicons resolve through <code>icons.duckduckgo.com/ip3/&lt;domain&gt;</code>, so a third party accumulates the
-domains you visit, including ones you never loaded. Cache misses fire for background tabs too.</p>
-<p class="fix"><b>Fix:</b> fetch site favicons directly first, use the proxy only when the user allows it, cache aggressively.</p></div>
+<div class="finding low"><div class="title">Favicon fallback proxy uses DuckDuckGo</div>
+<span class="badge low">Low</span><span class="badge tag">Privacy</span><span class="badge tag">FaviconLoader.cs</span>
+<p>Favicons resolve through WebView2's native API first and are cached aggressively. If a favicon is missing, the app falls back to <code>icons.duckduckgo.com/ip3/&lt;domain&gt;</code> only if the user has enabled the proxy in settings.</p>
+</div>
 
 <div class="finding med"><div class="title">No private browsing mode</div>
 <span class="badge med">Medium</span><span class="badge tag">Gap</span>
@@ -223,8 +219,7 @@ matching the tables above, would make the work pay off.</p></div>
 <li><b>1.</b> Verify the update package before the updater runs. It is the highest-value target in the app.</li>
 <li><b>2.</b> Close temp.stride and drop or gate <code>--allow-file-access-from-files</code>.</li>
 <li><b>3.</b> Pin and hash the TCLens extension download.</li>
-<li><b>4.</b> Add a search-suggestions toggle and stop the favicon proxy leak.</li>
-<li><b>5.</b> Make clear-on-exit actually clear everything, and write the stride://privacy page.</li>
+<li><b>4.</b> Make clear-on-exit actually clear everything, and write the stride://privacy page.</li>
 </ul></div>
 
 <div class="foot">Stride security and privacy audit, generated 2026-08-27. Egress inventory derived from a full

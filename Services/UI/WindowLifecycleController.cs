@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -203,7 +203,7 @@ public sealed class WindowLifecycleController
 
         try
         {
-            if (_vm.Settings.RestoreSessionOnStartup)
+            if (_vm.Settings.RestoreSessionOnStartup && !_vm.Settings.ClearDataOnExit)
             {
                 var tabs = _engine.Tabs
                     .Where(t => !InternalUrls.IsInternal(t.Url))

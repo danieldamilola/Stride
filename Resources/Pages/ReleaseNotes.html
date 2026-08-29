@@ -19,6 +19,7 @@
     --text-bright: #d4d4d4;
     --text-muted: #a3a3a3;
     --text-dim: #808080;
+    --color-fix: #f43f5e;
   }
   :root[data-theme="light"] {
     --bg-base: #f8f8fa;
@@ -31,6 +32,7 @@
     --text-bright: #09090b;
     --text-muted: #71717a;
     --text-dim: #a1a1aa;
+    --color-fix: #be123c;
   }
   @media (prefers-color-scheme: light) {
     :root[data-theme="system"] {
@@ -44,6 +46,7 @@
       --text-bright: #09090b;
       --text-muted: #71717a;
       --text-dim: #a1a1aa;
+    --color-fix: #be123c;
     }
   }
 
@@ -242,7 +245,7 @@
     flex-shrink: 0;
   }
   .changelog-tag.feature { color: var(--accent); }
-  .changelog-tag.fix { color: #f43f5e; }
+  .changelog-tag.fix { color: var(--color-fix); }
   
   .changelog-content {
     flex: 1;
@@ -377,3 +380,4 @@
 </script>
 </body>
 </html>
+

@@ -38,6 +38,7 @@ public sealed class FullscreenController
     private readonly FrameworkElement _toolbar;
     private FullscreenState _state = FullscreenState.Initial;
     private Rect _preFullscreenBounds;
+    private bool _nativeFullscreenActive;
 
     /// <summary>Set by the window once WindowChromeManager exists (OnSourceInitialized).</summary>
     public WindowChromeManager? ChromeManager { get; set; }
@@ -73,9 +74,11 @@ public sealed class FullscreenController
             if (ChromeManager is { } chrome && chrome.EnterMonitorFullscreen(_preFullscreenBounds))
             {
                 // Window sized natively to the exact monitor rectangle; covers the taskbar.
+                _nativeFullscreenActive = true;
             }
             else
             {
+                _nativeFullscreenActive = false;
                 _window.WindowState = WindowState.Maximized; // fallback if native sizing fails
             }
 
@@ -84,7 +87,7 @@ public sealed class FullscreenController
         }
         else
         {
-            if (ChromeManager is { } chrome)
+            if (_nativeFullscreenActive && ChromeManager is { } chrome)
             {
                 chrome.ExitMonitorFullscreen();
                 if (next.SavedWindowState == WindowState.Maximized)
@@ -94,6 +97,7 @@ public sealed class FullscreenController
             {
                 _window.WindowState = next.SavedWindowState;
             }
+            _nativeFullscreenActive = false;
 
             _toolbar.Visibility = Visibility.Visible;
             _window.ResizeMode = ResizeMode.CanResize;

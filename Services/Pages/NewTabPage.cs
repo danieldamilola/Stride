@@ -30,7 +30,7 @@ public sealed class NewTabPage
                                              f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
                                              f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
                                              f.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
-                                 .Select(f => "https://user.assets/" + Path.GetFileName(f))
+                                 .Select(f => "https://user.assets/" + Uri.EscapeDataString(Path.GetFileName(f)))
                                  .ToArray();
             if (userFiles.Length > 0)
                 backgroundUrls = userFiles;
@@ -55,7 +55,7 @@ public sealed class NewTabPage
                                                      f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
                                                      f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
                                                      f.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
-                                         .Select(f => "https://local.assets/Backgrounds/" + Path.GetFileName(f))
+                                         .Select(f => "https://local.assets/Backgrounds/" + Uri.EscapeDataString(Path.GetFileName(f)))
                                          .ToArray();
                     if (files.Length > 0)
                     {
@@ -79,7 +79,14 @@ public sealed class NewTabPage
         // directories, but encoding prevents a future refactor from
         // accidentally introducing a CSS-context injection if a value
         // ever comes from user input.
-        var safeBackground = StrideBrowser.Helpers.JsEncoder.HtmlEncode(backgroundPath);
+        var safeBackground = backgroundPath;
+        if (!string.IsNullOrEmpty(safeBackground) && Uri.TryCreate(safeBackground, UriKind.Absolute, out var bgUri))
+        {
+            var parts = bgUri.AbsolutePath.Split('/');
+            for (int i = 0; i < parts.Length; i++) parts[i] = Uri.EscapeDataString(Uri.UnescapeDataString(parts[i]));
+            var newBuilder = new UriBuilder(bgUri) { Path = string.Join("/", parts) };
+            safeBackground = newBuilder.Uri.ToString();
+        }
 
         return Helpers.ResourceLoader.LoadTemplate("Resources.Pages.NewTab.html",
             new Dictionary<string, string>

@@ -48,7 +48,7 @@ public sealed class YouTubeEnhancer
         {
             enabled = true,
             quality = NormalizeQuality(settings.YtDefaultQuality),
-            speed = settings.YtDefaultSpeed,
+            speed = double.IsFinite(settings.YtDefaultSpeed) ? settings.YtDefaultSpeed : 1.0,
             disableAuto = settings.YtDisableAutoplay,
             pauseOnSwitch = settings.YtPauseOnTabSwitch,
             loop = settings.YtLoopVideo,
