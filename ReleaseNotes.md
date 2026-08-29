@@ -1,7 +1,7 @@
 # Release Note: v1.2.1
 
 **Features**
-* **Dynamic Context Menu**: Rebuilt the right-click menu to be context-aware. The top row shows Back, Forward, and Reload buttons. The menu adapts to the clicked target. Plain pages show Find in Page and Select All. Editable fields show Undo, Redo, Cut, Copy, and Paste. Links show "Open in new tab" and "Copy link". Images show "Save image" and "Copy image URL". Reader View appears when available. The T&C Lens extension is accessible from the menu. Keyboard shortcuts display for supported actions.
+* **Dynamic Context Menu**: Rebuilt the right-click menu to be context-aware. The top row shows Back, Forward, and Reload buttons, properly spaced across the menu. The menu adapts to the clicked target. Find in Page is available across all page viewing contexts. Editable fields show Undo, Redo, Cut, Copy, and Paste. Links show "Open in new tab" and "Copy link". Images show "Save image" and "Copy image URL". Reader View appears when available. The T&C Lens extension is accessible from the menu. Keyboard shortcuts display for supported actions.
 * **Release Notes Auto-Open**: Stride opens stride://release-notes automatically after an update installs.
 * **Internal Pages Design Sync**: Redesigned the Onboarding and Release Notes pages to share the flat, utilitarian layout and styling (system fonts, standardized colors) used across the rest of the browser's internal pages.
 * **Quick Access Links**: Added "What's New" and "Getting Started" buttons to the System & About section of Settings to easily reopen these pages at any time.
@@ -26,7 +26,7 @@
 * **Security: Crypto Hygiene**: Switched from MD5 to SHA-256 for focus mode blocklist cache file naming.
 * **Privacy: Trace Log Rotation**: The diagnostic trace log is now capped at 1 MB, preventing unbounded growth.
 * **Link Preview & Reader Mode**: Alt+Click now displays the link preview window instead of only dimming the screen. The Reader Mode button now successfully activates Reader Mode.
-* **Right-Click Menu**: Fixed a COM error that prevented the context menu from rendering. The application now checks for the existence of link, image, or selection data before reading it from the WebView2 target.
+* **Right-Click Menu**: Fixed a COM error that prevented the context menu from rendering. The application now checks for the existence of link, image, or selection data before reading it from the WebView2 target. The top navigation row (Back, Forward, Reload) now spans the full width of the menu instead of clamping to the left side.
 * **Downloads Hang**: Fixed a bug where downloads froze at 100 percent. .NET Garbage Collection dropped native events, and Microsoft SmartScreen suspended background downloads. SmartScreen reputation checks are now disabled by default.
 * **Download UI Commands**: The Pause, Resume, and Cancel buttons on active downloads now function.
 * **Local HTML Files**: Stride now opens local .html files launched from Windows Explorer or the command line. Stride supports being the default offline HTML viewer.
