@@ -53,6 +53,21 @@ public sealed partial class BrowserSettings : ObservableObject
     [ObservableProperty]
     private bool _clearDataOnExit;
 
+    /// <summary>
+    /// When true, the address bar sends query text to DuckDuckGo for autocomplete.
+    /// Off by default would be safest, but we preserve current behavior;
+    /// the toggle lets privacy-sensitive users disable it.
+    /// </summary>
+    [ObservableProperty]
+    private bool _searchSuggestionsEnabled = true;
+
+    /// <summary>
+    /// When true, missing favicons resolve through the DuckDuckGo icon proxy,
+    /// which shares visited domains with a third party.
+    /// </summary>
+    [ObservableProperty]
+    private bool _faviconProxyEnabled = true;
+
     [ObservableProperty]
     private bool _blockDuplicateTabs = true;
 
@@ -326,6 +341,8 @@ public sealed partial class BrowserSettings : ObservableObject
         LinkPreviewEnabled = d.LinkPreviewEnabled;
         LinkPreviewHotkey = d.LinkPreviewHotkey;
         LinkPreviewAllowPress = d.LinkPreviewAllowPress;
+        SearchSuggestionsEnabled = d.SearchSuggestionsEnabled;
+        FaviconProxyEnabled = d.FaviconProxyEnabled;
     }
 
 }

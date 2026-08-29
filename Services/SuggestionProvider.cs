@@ -37,6 +37,10 @@ public sealed class SuggestionProvider : ISuggestionProvider
             }
         }
 
+        // Privacy: network autocomplete can be disabled. When off, only local matches return.
+        if (!_settings.SearchSuggestionsEnabled)
+            return results.Take(8).ToList();
+
         // Debounce before hitting the network
         await Task.Delay(150, ct);
 

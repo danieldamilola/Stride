@@ -76,6 +76,7 @@ public static class Composition
         {
             ExtensionManager = sp.GetRequiredService<ExtensionManager>(),
             YouTubeUnhook = sp.GetRequiredService<YouTubeUnhook>(),
+            YouTubeEnhancer = sp.GetRequiredService<YouTubeEnhancer>(),
             Settings = sp.GetRequiredService<BrowserSettings>(),
             FaviconLoader = sp.GetRequiredService<FaviconLoader>(),
             Pages = sp.GetRequiredService<InternalPages>(),

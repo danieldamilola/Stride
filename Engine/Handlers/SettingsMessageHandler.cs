@@ -49,6 +49,19 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
             string statusStr = status.HasValue ? status.Value.ToString().ToLowerInvariant() : "error";
             _engine.PostMessageToActiveTab($"update-check-result:{statusStr}:{_updateService.LatestVersion ?? ""}:");
         });
+        yield return MessageRoute.Exact(WebMessagePrefix.OpenReleaseNotes, async () =>
+        {
+            var tab = _engine.CreateTab(InternalUrls.ReleaseNotes);
+            await _engine.ActivateAsync(tab);
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.2.0";
+            _engine.NavigateToReleaseNotes(tab, version);
+        });
+        yield return MessageRoute.Exact(WebMessagePrefix.OpenOnboarding, async () =>
+        {
+            var tab = _engine.CreateTab(InternalUrls.Onboarding);
+            await _engine.ActivateAsync(tab);
+            _engine.NavigateToOnboarding(tab);
+        });
     }
 
     /// <summary>Resets all settings to defaults and reloads the settings page.</summary>
@@ -122,6 +135,10 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         // Live-reload: re-inject unhook script into YouTube tabs when settings change
         if (key.StartsWith("unhook", StringComparison.Ordinal))
             await _engine.ReInjectUnhookAsync();
+
+        // Live-reload: apply enhancer settings to open YouTube tabs too
+        if (key.StartsWith("yt", StringComparison.Ordinal))
+            await _engine.ReInjectEnhancerAsync();
     }
 
     private static readonly Dictionary<string, Action<BrowserSettings, string>> SettingSetters = new()
@@ -139,6 +156,8 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         ["smartScreen"] = (s, v) => s.SmartScreenEnabled = v == "true",
         ["adBlock"] = (s, v) => s.AdBlockEnabled = v == "true",
         ["clearOnExit"] = (s, v) => s.ClearDataOnExit = v == "true",
+        ["searchSuggestions"] = (s, v) => s.SearchSuggestionsEnabled = v == "true",
+        ["faviconProxy"] = (s, v) => s.FaviconProxyEnabled = v == "true",
         ["blockDupes"] = (s, v) => s.BlockDuplicateTabs = v == "true",
         ["tabHibernation"] = (s, v) => s.TabHibernationEnabled = v == "true",
         ["tabSleep"] = (s, v) => s.TabSleepEnabled = v == "true",
@@ -163,7 +182,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         ["ytQuality"] = (s, v) => s.YtDefaultQuality = v,
         ["ytAutoplay"] = (s, v) => s.YtDisableAutoplay = v == "true",
         ["ytPauseTab"] = (s, v) => s.YtPauseOnTabSwitch = v == "true",
-        ["ytSpeed"] = (s, v) => { if (double.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out var spd)) s.YtDefaultSpeed = spd; },
+        ["ytSpeed"] = (s, v) => { if (double.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out var spd) && double.IsFinite(spd)) s.YtDefaultSpeed = spd; },
         ["ytLoop"] = (s, v) => s.YtLoopVideo = v == "true",
 
         ["unhookEnabled"] = (s, v) => s.UnhookEnabled = v == "true",

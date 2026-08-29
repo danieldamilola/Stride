@@ -1,3 +1,15 @@
+# Release Note: v1.2.1
+
+**Features**
+* **Internal Pages Design Sync**: Redesigned the Onboarding and Release Notes pages to share the flat, utilitarian layout and styling (system fonts, standardized colors) used across the rest of the browser's internal pages.
+* **Quick Access Links**: Added "What's New" and "Getting Started" buttons to the System & About section of Settings to easily reopen these pages at any time.
+
+**Bug Fixes**
+* **Security and Privacy**: Resolved multiple findings from the recent architecture and codebase security audits, including hardening the named pipe ACL, ensuring IPC tokens scope correctly, and properly cleaning up privacy data on exit.
+* **YouTube Tools**: Script configurations are now strictly bound to the window object to prevent closure bugs on reload, and invalid playback speeds revert safely to 1.0x.
+* **Fullscreen Modes**: The application correctly aborts entering fullscreen if the monitor positioning call fails, falling back smoothly to a maximized state, and F11 synchronizes correctly with video fullscreen.
+* **Update Verification**: Downloaded update packages are securely verified without locking errors.
+* **New Tab Page**: Background images from user or local folders safely URL-encode their path components.
 # Critical Manual Update Required
 The auto-updater in version 1.1.3 has a bug. Clicking Install below will fail.
 
@@ -45,3 +57,4 @@ To fix this and get all future updates automatically, you must download the late
 * Message handlers moved into the engine layer with a sealed router contract, and WebView2 environment plus IPC ownership extracted into dedicated classes.
 * Test suite grew to over 160 unit tests covering navigation policies, router behavior, reader sanitizing, link preview policy, and update verification.
 * Extracted URL parsing and command-line argument dispatch into dedicated services, and removed the NetSparkleUpdater WPF row from Settings.
+

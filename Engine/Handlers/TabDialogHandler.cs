@@ -14,9 +14,6 @@ public static class TabDialogHandler
     {
         core.ScriptDialogOpening += (_, e) =>
         {
-            if (SuppressSpamDialog(e, settings))
-                return;
-
             var deferral = e.GetDeferral();
             dispatcher.InvokeAsync(() =>
             {
@@ -34,16 +31,6 @@ public static class TabDialogHandler
                 deferral.Complete();
             });
         };
-    }
-
-    private static bool SuppressSpamDialog(CoreWebView2ScriptDialogOpeningEventArgs e, BrowserSettings settings)
-    {
-        if (!settings.AdBlockEnabled)
-            return false;
-
-        var msg = e.Message?.ToLowerInvariant() ?? "";
-        return msg.Contains("robot") || msg.Contains("virus") || msg.Contains("update") ||
-               msg.Contains("allow") || msg.Contains("human") || msg.Contains("vpn");
     }
 
     private static void ShowScriptDialog(CoreWebView2ScriptDialogOpeningEventArgs e)

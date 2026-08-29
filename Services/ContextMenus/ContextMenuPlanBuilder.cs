@@ -55,24 +55,16 @@ public static class ContextMenuPlanBuilder
 
         // ── Navigation items (plain page only, when no link/image/selection) ──
 
-        bool isPlainPage = !ctx.HasLink
-            && ctx.MediaKind == ContextMenuMediaKind.Page
-            && !ctx.HasSelection;
-
-        if (isPlainPage)
+        if (!ctx.HasSelection)
         {
-            items.Add(Cmd("find-in-page", "Find in page", "Ctrl+F"));
-            items.Add(Cmd("select-all", "Select all"));
-            items.Add(Sep());
-        }
-        else if (!ctx.HasSelection)
-        {
-            // Non-plain contexts still get Select all when there is no selection
             items.Add(Cmd("select-all", "Select all"));
             items.Add(Sep());
         }
 
         // ── Page-level globals ──
+
+        items.Add(Cmd("find-in-page", "Find in page", "Ctrl+F"));
+        items.Add(Sep());
 
         // Always show reader toggle to match toolbar button behavior (availability is evaluated on click)
         items.Add(Cmd("toggle-reader",

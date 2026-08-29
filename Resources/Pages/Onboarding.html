@@ -4,16 +4,16 @@
 <meta charset="UTF-8">
 <title>Welcome to Stride</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap');
   :root { --accent: #7fb89a; --accent-rgb: 127,184,154; }
   :root, :root[data-theme="dark"] {
     --bg-base: #0e0d0b;
     --bg-surface: #141310;
     --bg-hover: #1f1d19;
-    --border: #2a2824;
-    --text-main: #e8e2d7;
-    --text-muted: #6b6560;
-    --text-dim: #4a4540;
+    --border: #333333;
+    --text-main: #E0E0E0;
+    --text-bright: #D4D4D4;
+    --text-muted: #A3A3A3;
+    --text-dim: #808080;
   }
   :root[data-theme="light"] {
     --bg-base: #f8f8fa;
@@ -21,6 +21,7 @@
     --bg-hover: #f4f4f6;
     --border: #D4D4D2;
     --text-main: #111113;
+    --text-bright: #000000;
     --text-muted: #666461;
     --text-dim: #A5A3A0;
   }
@@ -31,6 +32,7 @@
       --bg-hover: #f4f4f6;
       --border: #D4D4D2;
       --text-main: #111113;
+      --text-bright: #000000;
       --text-muted: #666461;
       --text-dim: #A5A3A0;
     }
@@ -40,7 +42,7 @@
   body {
     background: var(--bg-base);
     color: var(--text-main);
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }

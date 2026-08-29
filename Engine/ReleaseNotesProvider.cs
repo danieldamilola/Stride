@@ -10,6 +10,17 @@ public static class ReleaseNotesProvider
     {
         return new List<ReleaseVersion>
         {
+            new("1.2.1", "Aug 29, 2026", "Security & Polish", "Major security fixes and UX polish for the dynamic context menu.",
+                new List<(string, string)> {
+                    ("Internal Pages Design Sync", "Redesigned the Onboarding and Release Notes pages"),
+                    ("Quick Access Links", "Added What's New and Getting Started buttons to Settings")
+                },
+                new List<(string, string)> {
+                    ("Security and Privacy", "Resolved multiple findings from the recent architecture and codebase security audits"),
+                    ("YouTube Tools", "Enhanced stability and live reload configuration for YouTube Enhancer and Unhook"),
+                    ("Fullscreen State", "F11 and video fullscreen now properly synchronize and cover the taskbar")
+                }),
+
             new("1.2.0", "Aug 24, 2026", "Native Seamless Updater", "Invisible micro updater, polished downloads, and a context aware menu.",
                 new List<(string, string)> {
                     ("Native Seamless Updates", "Gear in tray icon with circular progress ring and checkmark to install without UAC or wizards"),
@@ -32,3 +43,5 @@ public static class ReleaseNotesProvider
         };
     }
 }
+
+

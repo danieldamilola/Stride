@@ -57,28 +57,61 @@ public static class SingleInstanceManager
 
     private static async Task StartServerAsync(CancellationToken token)
     {
+#pragma warning disable CA1416 // Validate platform compatibility
+        var ps = new System.IO.Pipes.PipeSecurity();
+        var id = System.Security.Principal.WindowsIdentity.GetCurrent().Owner;
+        if (id != null)
+        {
+            ps.AddAccessRule(new System.IO.Pipes.PipeAccessRule(id, System.IO.Pipes.PipeAccessRights.FullControl, System.Security.AccessControl.AccessControlType.Allow));
+        }
+#pragma warning restore CA1416
+
         while (!token.IsCancellationRequested)
         {
             try
             {
-                using var server = new NamedPipeServerStream(PipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+#pragma warning disable CA1416
+                using var server = System.IO.Pipes.NamedPipeServerStreamAcl.Create(
+                    PipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0, ps);
+#pragma warning restore CA1416
                 await server.WaitForConnectionAsync(token);
 
                 using var reader = new StreamReader(server);
-                var json = await reader.ReadToEndAsync(token);
-
-                if (!string.IsNullOrWhiteSpace(json))
+                string? json;
+                try
                 {
-                    try
-                    {
-                        var args = JsonSerializer.Deserialize<string[]>(json);
-                        if (args != null && args.Length > 0)
-                        {
-                            InstanceMessageReceived?.Invoke(args);
-                        }
-                    }
-                    catch (JsonException ex) { System.Diagnostics.Trace.WriteLine($"JsonException: {ex}"); }
+                    json = await ReadToEndAsync(reader, token);
                 }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(json) || json.Length > 4096)
+                    continue;
+
+                string[]? args = null;
+                try
+                {
+                    args = JsonSerializer.Deserialize<string[]>(json);
+                }
+                catch (JsonException ex)
+                {
+                    System.Diagnostics.Trace.WriteLine($"SingleInstance bad payload: {ex.Message}");
+                    continue;
+                }
+
+                if (args is null || args.Length == 0 || args.Length > 32)
+                    continue;
+
+                // Each arg must look like a URL or a command-line token.
+                // Reject anything that contains control characters, embedded
+                // newlines, or extreme length that could be used to drive a
+                // downstream parser into a bad state.
+                if (!args.All(IsSafeArg))
+                    continue;
+
+                InstanceMessageReceived?.Invoke(args);
             }
             catch (OperationCanceledException)
             {
@@ -91,6 +124,32 @@ public static class SingleInstanceManager
                 await Task.Delay(500, token);
             }
         }
+    }
+
+    /// <summary>
+    /// Rejects pipe payloads whose strings contain control characters or
+    /// exceed the per-argument size cap. The browser accepts argv as URLs
+    /// or flags, neither of which should ever contain tabs, newlines, or
+    /// non-printable bytes.
+    /// </summary>
+    private static bool IsSafeArg(string s)
+    {
+        if (string.IsNullOrEmpty(s) || s.Length > 2048)
+            return false;
+        foreach (var c in s)
+        {
+            if (c < 0x20 || c == 0x7F)
+                return false;
+        }
+        return true;
+    }
+
+    private static async Task<string> ReadToEndAsync(StreamReader reader, CancellationToken token)
+    {
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(token);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
+        var buffer = await reader.ReadToEndAsync(cts.Token);
+        return buffer;
     }
 
     private static void SendArgumentsToPrimary(string[] args)

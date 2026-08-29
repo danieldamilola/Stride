@@ -15,7 +15,7 @@ namespace StrideBrowser.Services.UI;
 
 /// <summary>
 /// Coordinates window lifecycle events: startup initialization, session restoration,
-/// command line processing, single instance messaging, fullscreen transitions, and shutdown.
+/// command line processing, single instance messaging, and shutdown.
 /// </summary>
 public sealed class WindowLifecycleController
 {
@@ -29,10 +29,6 @@ public sealed class WindowLifecycleController
     private readonly Action _bringToFront;
 
     private bool _isShuttingDown;
-    private bool _isFullscreen;
-    private WindowState _preFullscreenState;
-
-    public bool IsFullscreen => _isFullscreen;
 
     public WindowLifecycleController(
         Window window,
@@ -174,20 +170,25 @@ public sealed class WindowLifecycleController
         }
     }
 
-    public void ToggleFullscreen()
+    private void ClearLocalPrivacyData()
     {
-        _isFullscreen = !_isFullscreen;
-        if (_isFullscreen)
+        var files = new[]
         {
-            _preFullscreenState = _window.WindowState;
-            _toolbar.Visibility = Visibility.Collapsed;
-            _window.WindowState = WindowState.Maximized;
-        }
-        else
+            StrideBrowser.Helpers.AppPaths.HistoryFile,
+            StrideBrowser.Helpers.AppPaths.SessionFile,
+            StrideBrowser.Helpers.AppPaths.DownloadsFile,
+            StrideBrowser.Helpers.AppPaths.OneTabFile,
+            StrideBrowser.Helpers.AppPaths.LogFile,
+            StrideBrowser.Helpers.AppPaths.CrashLogFile,
+        };
+        foreach (var file in files)
         {
-            _toolbar.Visibility = Visibility.Visible;
-            _window.WindowState = _preFullscreenState;
+            try { if (System.IO.File.Exists(file)) System.IO.File.Delete(file); }
+            catch { /* best-effort; a locked file should not block shutdown */ }
         }
+
+        try { if (System.IO.Directory.Exists(StrideBrowser.Helpers.AppPaths.FaviconCacheDir)) System.IO.Directory.Delete(StrideBrowser.Helpers.AppPaths.FaviconCacheDir, true); }
+        catch { /* best-effort */ }
     }
 
     public async void OnClosing(CancelEventArgs e)
@@ -202,7 +203,7 @@ public sealed class WindowLifecycleController
 
         try
         {
-            if (_vm.Settings.RestoreSessionOnStartup)
+            if (_vm.Settings.RestoreSessionOnStartup && !_vm.Settings.ClearDataOnExit)
             {
                 var tabs = _engine.Tabs
                     .Where(t => !InternalUrls.IsInternal(t.Url))
@@ -212,6 +213,7 @@ public sealed class WindowLifecycleController
 
             if (_vm.Settings.ClearDataOnExit)
             {
+                // The WebView2 profile holds cookies, cache, and site data.
                 try
                 {
                     var profile = _engine.GetCoreWebView2()?.Profile;
@@ -222,6 +224,10 @@ public sealed class WindowLifecycleController
                     }
                 }
                 catch { /* Timeout or disposal - best-effort cleanup */ }
+
+                // Clear Stride's own identifying stores: history, session, downloads,
+                // OneTab groups, favicon cache, and log files.
+                ClearLocalPrivacyData();
             }
 
             _settingsStore.Save(_vm.Settings);

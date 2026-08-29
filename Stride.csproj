@@ -9,11 +9,12 @@
     <RootNamespace>StrideBrowser</RootNamespace>
     <AssemblyName>Stride</AssemblyName>
     <ApplicationIcon>icons\stride.ico</ApplicationIcon>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Stride.Updater\**" />
+    <Compile Remove="dump.cs" />
     <Content Remove="Stride.Updater\**" />
     <None Remove="Stride.Updater\**" />
   </ItemGroup>
@@ -78,3 +79,5 @@
   </ItemGroup>
 
 </Project>
+
+

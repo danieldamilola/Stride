@@ -1,20 +1,45 @@
-﻿// Stride Browser - YouTube Unhook
+// Stride Browser - YouTube Unhook
 // CSS class-toggle pattern inspired by unhookng (github.com/TheArchons/unhookng).
 // Reads window.__STRIDE_UNHOOK config injected by C#.
 // Toggles classes on <html> to gate pre-written CSS rules.
 (function() {
     'use strict';
 
-    if (!location.hostname.includes('youtube.com')) return;
+    var host = location.hostname;
+    if (host !== 'youtube.com' && host !== 'www.youtube.com' && !host.endsWith('.youtube.com')) return;
 
-    // Prevent duplicate injection
-    if (window.__STRIDE_UNHOOK_LOADED) return;
+    // Config source: live re-injection sets window.__STRIDE_UNHOOK and wins;
+    // otherwise the config seeded in localStorage at document creation applies.
+    function readConfig() {
+        if (window.__STRIDE_UNHOOK) return window.__STRIDE_UNHOOK;
+        try {
+            var raw = localStorage.getItem('__stride_unhook');
+            if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return {};
+    }
+
+    // Shared config object, mutated in place on live reload so listeners that
+    // closed over it always see current values.
+    if (!window.__STRIDE_UNHOOK_CFG) window.__STRIDE_UNHOOK_CFG = {};
+    var cfg = window.__STRIDE_UNHOOK_CFG;
+    function refreshConfig() {
+        var latest = readConfig();
+        for (var k in cfg) delete cfg[k];
+        for (var k2 in latest) cfg[k2] = latest[k2];
+        return cfg;
+    }
+    refreshConfig();
+
+    // Live reload: re-read config and re-apply without re-registering
+    // observers or listeners, which would stack on every settings change.
+    if (window.__STRIDE_UNHOOK_LOADED) {
+        refreshConfig();
+        applyClasses();
+        runJsActions();
+        return;
+    }
     window.__STRIDE_UNHOOK_LOADED = true;
-
-    var cfg = window.__STRIDE_UNHOOK || {};
-
-    console.log('[STRIDE UNHOOK] Script running. Config:', JSON.stringify(cfg));
-    console.log('[STRIDE UNHOOK] document.documentElement:', document.documentElement?.tagName);
 
     // ── Static CSS - all rules pre-written, gated by html.stride-unhook-* classes ──
     var CSS = [
@@ -189,25 +214,37 @@
 
     // ── JS-only actions (can't be done with CSS) ─────────────────────
     function runJsActions() {
-        // "More from YouTube" section - text-based match
+        // "More from YouTube" section - match by section links first, since the
+        // header text is locale-dependent, with the English text as fallback.
         if (cfg.moreYT) {
             var sections = document.querySelectorAll('ytd-guide-section-renderer');
             for (var i = 0; i < sections.length; i++) {
                 var header = sections[i].querySelector('#guide-section-title');
-                if (header) {
-                    var text = (header.textContent || '').trim().toLowerCase();
-                    if (text === 'more from youtube') {
-                        sections[i].style.setProperty('display', 'none', 'important');
-                    }
+                var text = header ? (header.textContent || '').trim().toLowerCase() : '';
+                var isMoreFromYt = text === 'more from youtube' ||
+                    !!sections[i].querySelector('a[href*="/premium"], a[href*="/creators"]');
+                if (isMoreFromYt) {
+                    sections[i].style.setProperty('display', 'none', 'important');
                 }
             }
         }
 
-        // Disable autoplay toggle
+        // Disable autoplay toggle. Skip when the YouTube Enhancer is enabled
+        // with autoplay off, since it already owns this toggle.
         if (cfg.autoplay) {
-            var btn = document.querySelector('.ytp-autonav-toggle-button');
-            if (btn && btn.getAttribute('aria-checked') === 'true') {
-                btn.click();
+            var ytCfg = window.__STRIDE_YT_CONFIG;
+            if (!ytCfg) {
+                try {
+                    var raw = localStorage.getItem('__stride_yt_enhancer');
+                    if (raw) ytCfg = JSON.parse(raw);
+                } catch (e) {}
+            }
+            var enhancerHandles = ytCfg && ytCfg.enabled && ytCfg.disableAuto;
+            if (!enhancerHandles) {
+                var btn = document.querySelector('.ytp-autonav-toggle-button');
+                if (btn && btn.getAttribute('aria-checked') === 'true') {
+                    btn.click();
+                }
             }
         }
 

@@ -135,35 +135,48 @@ public sealed class SettingsPage
 
         foreach (var def in ShortcutDefaults.All)
         {
+            // Escape every user-supplied / template-supplied value before it ever reaches HTML.
+            // Text content gets full HTML encoding (so < and > cannot inject tags).
+            // Attribute values get the JS-in-attribute encoding (so quotes cannot break out).
+            var escName = StrideBrowser.Helpers.JsEncoder.Encode(def.Name);
+            var escLabel = StrideBrowser.Helpers.JsEncoder.HtmlEncode(def.Label);
+            var escDescription = StrideBrowser.Helpers.JsEncoder.HtmlEncode(def.Description ?? string.Empty);
+            var escCategory = StrideBrowser.Helpers.JsEncoder.HtmlEncode(def.Category);
+            var escDefaultDisplay = StrideBrowser.Helpers.JsEncoder.Encode(FormatComboDisplay(def.DefaultCombo));
+
             // Category subsection header
             if (def.Category != lastCategory)
             {
                 if (lastCategory is not null)
                     sb.AppendLine(); // spacing between categories
-                sb.AppendLine($"        <div class=\"subsection-label\">{def.Category}</div>");
+                sb.AppendLine($"        <div class=\"subsection-label\">{escCategory}</div>");
                 lastCategory = def.Category;
             }
 
             var currentCombo = ShortcutDefaults.GetCombo(def.Name, customShortcuts);
             var isCustom = customShortcuts.ContainsKey(def.Name);
             var displayCombo = FormatComboDisplay(currentCombo);
+            // Escape user-supplied combo values before embedding in HTML/JS attributes.
+            var escCombo = StrideBrowser.Helpers.JsEncoder.Encode(currentCombo);
+            var escDisplay = StrideBrowser.Helpers.JsEncoder.HtmlEncode(displayCombo);
+            var escDefault = StrideBrowser.Helpers.JsEncoder.Encode(def.DefaultCombo);
 
             sb.AppendLine("        <div class=\"setting-row\">");
             sb.AppendLine("            <div class=\"setting-info\">");
-            sb.AppendLine($"                <div class=\"setting-label\">{def.Label}</div>");
+            sb.AppendLine($"                <div class=\"setting-label\">{escLabel}</div>");
             if (!string.IsNullOrEmpty(def.Description))
-                sb.AppendLine($"                <div class=\"setting-desc\">{def.Description}</div>");
+                sb.AppendLine($"                <div class=\"setting-desc\">{escDescription}</div>");
             sb.AppendLine("            </div>");
             sb.AppendLine("            <div class=\"shortcut-controls\">");
 
             // Reset button (only shown if custom)
             if (isCustom)
             {
-                sb.AppendLine($"                <button class=\"shortcut-reset\" onclick=\"resetShortcut('{def.Name}', this.nextElementSibling)\" title=\"Reset to {FormatComboDisplay(def.DefaultCombo)}\">Reset</button>");
+                sb.AppendLine($"                <button class=\"shortcut-reset\" onclick=\"resetShortcut('{escName}', this.nextElementSibling)\" title=\"Reset to {escDefaultDisplay}\">Reset</button>");
             }
 
             // Clickable combo badge
-            sb.AppendLine($"                <span class=\"shortcut-badge\" data-action=\"{def.Name}\" data-combo=\"{currentCombo}\" data-default-combo=\"{def.DefaultCombo}\" onclick=\"startRecording(this)\">{displayCombo}</span>");
+            sb.AppendLine($"                <span class=\"shortcut-badge\" data-action=\"{escCombo}\" data-combo=\"{escCombo}\" data-default-combo=\"{escDefault}\" onclick=\"startRecording(this)\">{escDisplay}</span>");
 
             sb.AppendLine("            </div>");
             sb.AppendLine("        </div>");

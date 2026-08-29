@@ -9,7 +9,11 @@ internal static class NativeMethods
 {
     internal const int WM_GETMINMAXINFO = 0x0024;
     internal const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    internal const int DWMWA_BORDER_COLOR = 34;
     internal const int DWMWCP_ROUND = 2;
+    internal const int DWMWCP_DONOTROUND = 1;
+    internal const int DWMWA_COLOR_DEFAULT = unchecked((int)0xFFFFFFFF);
+    internal const int DWMWA_COLOR_NONE = unchecked((int)0xFFFFFFFE);
     internal const int MONITOR_DEFAULTTONEAREST = 2;
 
     internal const int GWL_EXSTYLE = -20;
@@ -20,6 +24,8 @@ internal static class NativeMethods
     internal const uint SWP_NOMOVE = 0x0002;
     internal const uint SWP_NOSIZE = 0x0001;
     internal const uint SWP_NOACTIVATE = 0x0010;
+    internal const uint SWP_NOZORDER = 0x0004;
+    internal const uint SWP_FRAMECHANGED = 0x0020;
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct POINT { public int X, Y; }

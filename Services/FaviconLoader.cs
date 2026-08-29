@@ -27,6 +27,13 @@ public sealed class FaviconLoader
 {
     internal const int MaxCacheEntries = 200;
 
+    private readonly BrowserSettings _settings;
+
+    public FaviconLoader(BrowserSettings settings)
+    {
+        _settings = settings;
+    }
+
     // In-memory LRU cache for the current session
     private readonly LinkedList<string> _lruOrder = new();
     private readonly Dictionary<string, (LinkedListNode<string> node, BitmapImage? bitmap)> _cache = new();
@@ -139,7 +146,10 @@ public sealed class FaviconLoader
         var diskBitmap = await LoadFromDiskAsync(host);
         if (diskBitmap is not null) return diskBitmap;
 
-        // 3. Fallback: DuckDuckGo icon service
+        // 3. Fallback: DuckDuckGo icon service. Privacy-gated: when the user
+        //    disables the proxy, a missing favicon simply stays empty.
+        if (!_settings.FaviconProxyEnabled) return null;
+
         return await DownloadFromDuckDuckGoAsync(host);
     }
 

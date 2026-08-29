@@ -77,9 +77,9 @@ public class DownloadMessageHandler : IWebMessageHandler
     private Task HandleDownloadRequest(string url)
     {
         var uri = new Uri(url);
-        var fileName = System.IO.Path.GetFileName(uri.LocalPath);
+        var fileName = SanitizeFileName(System.IO.Path.GetFileName(uri.LocalPath));
         if (string.IsNullOrEmpty(fileName)) fileName = "download";
-        
+
         var downloadsFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
         var filePath = System.IO.Path.Combine(downloadsFolder, fileName);
         
@@ -104,6 +104,25 @@ public class DownloadMessageHandler : IWebMessageHandler
         _customDownloadManager.Add(item); // WebView2 handles the download natively;
         // the manager tracks the item and fires events; Downloads.html refreshes via sync.
         return Task.CompletedTask;
+    }
+
+    /// <summary>Strips path separators and reserved filename characters so a hostile URL cannot escape the download folder.</summary>
+    private static string SanitizeFileName(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "";
+
+        var invalid = System.IO.Path.GetInvalidFileNameChars();
+        var sanitized = new string(name
+            .Replace('\\', '_')
+            .Replace('/', '_')
+            .Where(c => !invalid.Contains(c))
+            .ToArray());
+
+        // Strip reserved device names (CON, PRN, AUX, NUL, COM1-9, LPT1-9)
+        if (System.Text.RegularExpressions.Regex.IsMatch(sanitized, @"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            sanitized = "_" + sanitized;
+
+        return sanitized.Trim().TrimEnd('.', ' ');
     }
 
     private Task HandleDownloadPause(string id)

@@ -28,6 +28,16 @@ public partial class App : Application
 
         // Ensure all data directories exist: base, favicon cache, extensions, WebView2, focus cache.
         Helpers.AppPaths.EnsureDirectories();
+
+        // Rotate log if it exceeds 1 MB
+        try
+        {
+            var logPath = Helpers.AppPaths.LogFile;
+            if (File.Exists(logPath) && new FileInfo(logPath).Length > 1_048_576)
+                File.WriteAllText(logPath, ""); // Truncate
+        }
+        catch { /* Best-effort rotation */ }
+
         System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Helpers.AppPaths.LogFile));
         System.Diagnostics.Trace.AutoFlush = true;
         System.Diagnostics.Trace.WriteLine("--- STRIDE STARTED ---");
