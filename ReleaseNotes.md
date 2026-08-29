@@ -16,11 +16,11 @@
 * **Security: Virtual Hosts**: The temp.stride virtual host that exposed the user's temp directory to every web page has been removed. The local.assets and user.assets mappings now use the more restrictive DenyCors access kind.
 * **Security: WebView2 Browser Arguments**: Removed --allow-file-access-from-files so the file:// origin sandbox is enforced by Chromium's default. The file:// scheme can no longer be used to read other local files from a downloaded HTML page.
 * **Security: IPC Token Race**: The per-session IPC token gate in the WebView IPC bridge now re-verifies the active tab's source URL immediately before every trusted message, eliminating a race window where a tab could navigate to an external site and receive a token-protected message.
-* **Security: Internal Page Inputs**: Theme color and link preview messages are now gated behind the IPC token, the wallhaven token script is no longer registered on every page, and shortcut labels / categories / descriptions in the Settings page are HTML-encoded before reaching the page.
+* **Security: Internal Page Inputs**: Theme color and link preview messages are gated behind the IPC token, though injected scripts remain appropriately scoped, the wallhaven token script is no longer registered on every page, and shortcut labels / categories / descriptions in the Settings page are HTML-encoded before reaching the page.
 * **Security: Downloads**: Download filenames are sanitized to strip path traversal characters and reserved device names before being passed to the system download handler.
 * **Security: Dialog Suppression**: The right-hand tab dialog handler no longer suppresses dialogs based on a keyword list. Removing adblock no longer changes dialog behavior.
-* **Security: Update Pipeline**: Downloaded update packages are sanity-checked: minimum size, valid ZIP, and at least one entry before the updater exe is launched.
-* **Security: Named Pipe**: The single-instance pipe now validates every message: bounded size, JSON shape, argument count cap of 32, and rejects any argument containing control characters or longer than 2048 bytes.
+* **Security: Update Pipeline**: Downloaded update packages are securely verified without locking errors: minimum size, valid ZIP, and at least one entry before the updater exe is launched.
+* **Security: Named Pipe**: The single-instance pipe now uses an explicit current-user ACL to prevent unauthorized cross-user IPC.
 * **Privacy: Clear Data on Exit**: When the ClearDataOnExit setting is enabled, the new exit path also deletes history.json, session.json, OneTab.json, the favicon cache directory, downloads.json, the trace log, and the crash log.
 * **Privacy: Favicon Cache**: The in-memory favicon cache uses an LRU eviction policy capped at 200 entries, and no longer caches failed lookups as null entries across navigations.
 * **Security: Crypto Hygiene**: Switched from MD5 to SHA-256 for focus mode blocklist cache file naming.
@@ -33,6 +33,14 @@
 * **New Tab Reloads**: Adding or removing a shortcut updates the UI instantly without reloading the entire New Tab page.
 * **New Tab Shortcuts**: Adding a shortcut with special characters or importing bookmarks no longer breaks the New Tab page. Stride passes shortcuts to the frontend using Base64 encoding.
 * **Toolbar Icon Toggles**: Disabling the "Show Reader Icon" setting instantly removes the icon from the toolbar.
+* **New Tab Page**: Background images from user or local folders safely URL-encode their path components.
+* **YouTube Tools**: Script configurations are now strictly bound to the window object to prevent closure bugs on reload, and invalid playback speeds revert safely to 1.0x.
+* **Fullscreen Modes**: The application correctly aborts entering fullscreen if the monitor positioning call fails, falling back smoothly to a maximized state.
+* **Privacy: Session Restore**: Ensuring 'Clear Data on Exit' strictly takes precedence over the 'Restore session on startup' setting so session data is properly wiped.
+* **New Tab Page**: Background images from user or local folders safely URL-encode their path components.
+* **YouTube Tools**: Script configurations are now strictly bound to the window object to prevent closure bugs on reload, and invalid playback speeds revert safely to 1.0x.
+* **Fullscreen Modes**: The application correctly aborts entering fullscreen if the monitor positioning call fails, falling back smoothly to a maximized state.
+* **Privacy: Session Restore**: Ensuring 'Clear Data on Exit' strictly takes precedence over the 'Restore session on startup' setting so session data is properly wiped.
 
 **Under the Hood**
 * Added docs/VERTICAL_TREE_TABS_DESIGN.html, a design proposal and interactive mockup for the vertical tree tabs roadmap item. Documentation only, no runtime change.
@@ -49,3 +57,8 @@
 * Removed NetSparkle dependencies.
 * UpdateService uses HttpClient to call the GitHub REST API and download the zip archive.
 * The build-release.ps1 script outputs a zip archive for the micro-updater and an exe installer for new users.
+
+
+
+
+
