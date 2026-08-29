@@ -39,7 +39,26 @@ public class ShortcutMessageHandler : IWebMessageHandler, ISettingEmitter, IAddr
             var item = JsonSerializer.Deserialize<ShortcutItem>(payload, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (item is null || string.IsNullOrWhiteSpace(item.Url)) return Task.CompletedTask;
 
-            _settings.NewTabShortcuts.Add(item);
+            // Enforce max 10 shortcuts
+            if (_settings.NewTabShortcuts.Count >= 10) return Task.CompletedTask;
+
+            var url = item.Url.Trim();
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+                return Task.CompletedTask;
+            if (url.Length > 2048) return Task.CompletedTask;
+
+            // Prevent duplicate URLs
+            if (_settings.NewTabShortcuts.Exists(s => string.Equals(s.Url, url, StringComparison.OrdinalIgnoreCase)))
+                return Task.CompletedTask;
+
+            var name = item.Name?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                try { name = uri.Host; } catch { name = url; }
+            }
+            if (name.Length > 24) name = name[..24];
+
+            _settings.NewTabShortcuts.Add(new ShortcutItem { Name = name, Url = url });
             _settingsStore.Save(_settings);
             SettingChanged?.Invoke("shortcuts", "");
         }

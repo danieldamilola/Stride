@@ -1,6 +1,10 @@
+#ifndef MyAppVersion
+#define MyAppVersion "1.2.1"
+#endif
+
 [Setup]
 AppName=Stride
-AppVersion=1.2.1
+AppVersion={#MyAppVersion}
 UninstallDisplayName=Stride
 AppId=Stride
 DefaultDirName={localappdata}\Stride
@@ -46,5 +50,6 @@ begin
     end;
   end;
 end;
+
 
 

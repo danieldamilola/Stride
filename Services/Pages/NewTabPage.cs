@@ -12,6 +12,7 @@ public sealed class NewTabPage
 {
     private static int _lastBgIndex = -1;
     private static readonly Random _random = new();
+    private static readonly object _randLock = new();
 
     /// <summary>Returns the new tab page HTML.</summary>
     public string Render(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "")
@@ -30,6 +31,7 @@ public sealed class NewTabPage
                                              f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
                                              f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
                                              f.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
+                                 .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
                                  .Select(f => "https://user.assets/" + Uri.EscapeDataString(Path.GetFileName(f)))
                                  .ToArray();
             if (userFiles.Length > 0)
@@ -55,6 +57,7 @@ public sealed class NewTabPage
                                                      f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
                                                      f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
                                                      f.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
+                                         .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
                                          .Select(f => "https://local.assets/Backgrounds/" + Uri.EscapeDataString(Path.GetFileName(f)))
                                          .ToArray();
                     if (files.Length > 0)
@@ -67,10 +70,14 @@ public sealed class NewTabPage
         }
         if (backgroundUrls.Length > 0 && string.IsNullOrEmpty(backgroundPath))
         {
-            int nextIdx = _random.Next(backgroundUrls.Length);
-            if (nextIdx == _lastBgIndex && backgroundUrls.Length > 1)
-                nextIdx = (nextIdx + 1) % backgroundUrls.Length;
-            _lastBgIndex = nextIdx;
+            int nextIdx;
+            lock (_randLock)
+            {
+                nextIdx = _random.Next(backgroundUrls.Length);
+                if (nextIdx == _lastBgIndex && backgroundUrls.Length > 1)
+                    nextIdx = (nextIdx + 1) % backgroundUrls.Length;
+                _lastBgIndex = nextIdx;
+            }
             backgroundPath = backgroundUrls[nextIdx];
         }
 
@@ -100,3 +107,4 @@ public sealed class NewTabPage
             });
     }
 }
+

@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection;
@@ -128,6 +129,7 @@ public sealed class UpdateService
                             DownloadProgressChanged?.Invoke(this, progress);
                     }
                 }
+                await fileStream.FlushAsync();
             }
 
             // Sanity check: confirm the download is a valid, non-trivial zip before trusting it.

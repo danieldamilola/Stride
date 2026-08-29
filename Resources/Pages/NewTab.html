@@ -571,6 +571,10 @@
             try { return new URL(url).hostname; } catch { return url; }
         }
 
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; });
+        }
+
         function renderShortcuts() {
             const grid = document.getElementById('shortcutGrid');
             grid.innerHTML = '';
@@ -585,10 +589,12 @@
                 const name = sc.Name || sc.name || '';
                 const domain = getDomain(url);
 
+                var safeName = escapeHtml(name);
+                var safeDomain = escapeHtml(domain);
                 tile.innerHTML = `
-                    <img src="https://icons.duckduckgo.com/ip3/${domain}.ico"
+                    <img src="https://icons.duckduckgo.com/ip3/${safeDomain}.ico"
                          onerror="this.style.display='none'" alt="">
-                    <span class="tile-name">${name}</span>
+                    <span class="tile-name">${safeName}</span>
                     <button class="tile-remove" data-index="${i}" onclick="event.stopPropagation();removeShortcut(${i})" tabindex="-1">&times;</button>
                 `;
 

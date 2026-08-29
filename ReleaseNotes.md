@@ -1,64 +1,60 @@
 # Release Note: v1.2.1
 
 **Features**
-* **Dynamic Context Menu**: Rebuilt the right-click menu to be context-aware. The top row shows Back, Forward, and Reload buttons, properly spaced across the menu. The menu adapts to the clicked target. Find in Page is available across all page viewing contexts. Editable fields show Undo, Redo, Cut, Copy, and Paste. Links show "Open in new tab" and "Copy link". Images show "Save image" and "Copy image URL". Reader View appears when available. The T&C Lens extension is accessible from the menu. Keyboard shortcuts display for supported actions.
-* **Release Notes Auto-Open**: Stride opens stride://release-notes automatically after an update installs.
 * **Internal Pages Design Sync**: Redesigned the Onboarding and Release Notes pages to share the flat, utilitarian layout and styling (system fonts, standardized colors) used across the rest of the browser's internal pages.
 * **Quick Access Links**: Added "What's New" and "Getting Started" buttons to the System & About section of Settings to easily reopen these pages at any time.
-* **UI Tweaks**: Removed icon boxes on the Downloads page for a cleaner look. Adjusted the default tab hibernation opacity from 15% to 50%.
 
 **Bug Fixes**
-* **YouTube Tools**: The enhancer and unhook scripts no longer run on lookalike domains that merely contain "youtube.com" in the hostname. Live setting changes no longer revert on the next navigation, re-injection no longer stacks observers and listeners on every settings change, and enhancer settings now apply live to open tabs.
-* **YouTube Enhancer**: Asking for a quality the video does not offer now picks the closest lower quality instead of jumping to the highest. Manually chosen playback speed is respected until the next video. Settings apply after multi-ad breaks. Quality values are validated before reaching the generated script.
-* **YouTube Unhook**: Removed debug console logging. The "More from YouTube" sidebar section is now hidden on non-English YouTube interfaces too.
-* **Video Fullscreen**: Clicking fullscreen on a video now covers the taskbar and fills the whole monitor with no light border around the content. Exiting restores the window to its previous size.
-* **Fullscreen State Sync**: F11 and video fullscreen now share one state machine, so pressing F11 while a video is fullscreen no longer leaves the toolbar or window state stuck.
-* **Security: Virtual Hosts**: The temp.stride virtual host that exposed the user's temp directory to every web page has been removed. The local.assets and user.assets mappings now use the more restrictive DenyCors access kind.
-* **Security: WebView2 Browser Arguments**: Removed --allow-file-access-from-files so the file:// origin sandbox is enforced by Chromium's default. The file:// scheme can no longer be used to read other local files from a downloaded HTML page.
-* **Security: IPC Token Race**: The per-session IPC token gate in the WebView IPC bridge now re-verifies the active tab's source URL immediately before every trusted message, eliminating a race window where a tab could navigate to an external site and receive a token-protected message.
-* **Security: Internal Page Inputs**: Theme color and link preview messages are gated behind the IPC token, though injected scripts remain appropriately scoped, the wallhaven token script is no longer registered on every page, and shortcut labels / categories / descriptions in the Settings page are HTML-encoded before reaching the page.
-* **Security: Downloads**: Download filenames are sanitized to strip path traversal characters and reserved device names before being passed to the system download handler.
-* **Security: Dialog Suppression**: The right-hand tab dialog handler no longer suppresses dialogs based on a keyword list. Removing adblock no longer changes dialog behavior.
-* **Security: Update Pipeline**: Downloaded update packages are securely verified without locking errors: minimum size, valid ZIP, and at least one entry before the updater exe is launched.
-* **Security: Named Pipe**: The single-instance pipe now uses an explicit current-user ACL to prevent unauthorized cross-user IPC.
-* **Privacy: Clear Data on Exit**: When the ClearDataOnExit setting is enabled, the new exit path also deletes history.json, session.json, OneTab.json, the favicon cache directory, downloads.json, the trace log, and the crash log.
-* **Privacy: Favicon Cache**: The in-memory favicon cache uses an LRU eviction policy capped at 200 entries, and no longer caches failed lookups as null entries across navigations.
-* **Security: Crypto Hygiene**: Switched from MD5 to SHA-256 for focus mode blocklist cache file naming.
-* **Privacy: Trace Log Rotation**: The diagnostic trace log is now capped at 1 MB, preventing unbounded growth.
-* **Link Preview & Reader Mode**: Alt+Click now displays the link preview window instead of only dimming the screen. The Reader Mode button now successfully activates Reader Mode.
-* **Right-Click Menu**: Fixed a COM error that prevented the context menu from rendering. The application now checks for the existence of link, image, or selection data before reading it from the WebView2 target. The top navigation row (Back, Forward, Reload) now spans the full width of the menu instead of clamping to the left side.
-* **Downloads Hang**: Fixed a bug where downloads froze at 100 percent. .NET Garbage Collection dropped native events, and Microsoft SmartScreen suspended background downloads. SmartScreen reputation checks are now disabled by default.
+* **Security and Privacy**: Resolved multiple findings from the recent architecture and codebase security audits, including hardening the named pipe ACL, ensuring IPC tokens scope correctly, and properly cleaning up privacy data on exit.
+* **YouTube Tools**: Script configurations are now strictly bound to the window object to prevent closure bugs on reload, and invalid playback speeds revert safely to 1.0x.
+* **Fullscreen Modes**: The application correctly aborts entering fullscreen if the monitor positioning call fails, falling back smoothly to a maximized state, and F11 synchronizes correctly with video fullscreen.
+* **Update Verification**: Downloaded update packages are securely verified without locking errors.
+* **New Tab Page**: Background images from user or local folders safely URL-encode their path components.
+# Critical Manual Update Required
+The auto-updater in version 1.1.3 has a bug. Clicking Install below will fail.
+
+To fix this and get all future updates automatically, you must download the latest setup file manually.
+
+[Download Stride 1.2.0](https://github.com/danieldamilola/Stride/releases/download/v1.2.0/Stride-win-Setup.exe)
+
+# Release Note: v1.2.0 Native Seamless Updater
+
+**Features**
+* **Native Seamless Updates**: The update flow has been completely redesigned. A native gear in a tray icon appears on your toolbar when an update is available. Clicking it shows a real-time circular progress ring while it downloads in the background, followed by a green checkmark to install.
+* **Invisible Micro-Updater**: When you click the green checkmark, Stride swaps files behind the scenes using a new invisible Windows GUI executable updater, eliminating wizard dialogs, UAC prompts, and NetSparkle dependencies.
+* **Reader Mode**: Press Ctrl+Shift+R on any article to switch it to a clean, distraction-free reading view. Powered by Mozilla Readability, scripts are disabled while reading, and links clicked inside reader exit gracefully back to the live page. The reader mode icon is now a static toolbar button and can be toggled in Settings. The hotkey Ctrl+Shift+R still works anytime.
+* **Link Preview**: Hold Alt and click or hover any link to peek at it in an isolated preview window without leaving your current page. Open it in a new tab or your current tab from the preview toolbar, or press Esc to dismiss.
+* **Customizable Tab Dim**: New Performance settings let you dim sleeping and hibernated tabs, with independent opacity sliders so you can tune how faded background tabs look.
+* **Pinned Tab Resource Controls**: Two new toggles allow pinned tabs to sleep and hibernate like normal tabs when you want maximum memory savings. Off by default, pinned tabs stay fully alive unless you opt in.
+* **What's New Page**: Stride now shows a styled release-notes page once after each update, using the same design language as onboarding. It never interrupts first-run setup and remembers what you have seen.
+* **Redesigned Settings**: Settings were reorganized into clear sections with a search bar, making it easy to find any option fast.
+* **First-Run Onboarding**: A guided welcome flow covers address bar style, privacy defaults, built-in tools, search engine, theme, accent color, and import. It appears only on first launch, never again on every start.
+* **Downloads Page Redesign**: Borderless cards with subtle backgrounds match the History page philosophy. White progress bars replace green, and neutral status dots are used. File type icons use Icons8 instead of plain text abbreviations. Completed downloads show only the filename.
+* **Popup Dialog Redesign**: All dialog windows now have rounded corners and neutral surface-colored buttons. The bright green accent OK button that clashed with the dark theme has been removed.
+* **Dialog Window Positioning**: Dialogs no longer float above all applications. Topmost has been removed so dialogs stay with Stride, and the offset drop shadow has been removed.
+* **Dynamic Context Menu**: Rebuilt the right-click menu to be context aware. The top row shows Back, Forward, and Reload. Plain pages show Find in Page and Select All. Editable fields show Undo, Redo, Cut, Copy, and Paste. Links show Open in new tab and Copy link. Images show Save image and Copy image URL. Reader View appears when available. The T&C Lens extension is accessible from the menu. Keyboard shortcuts display for supported actions.
+* **Release Notes Auto-Open**: Stride opens internal://releasenotes automatically after an update installs.
+
+**Bug Fixes**
+* **Micro-Updater Merge Crash**: Fixed a crash where updates touching existing subdirectories were silently dropped because the updater skipped directories that already existed. The updater now merges directories recursively and validates the package before swapping.
+* **Tab Dim Flicker**: Stale suspend callbacks could mark a tab you just switched to as sleeping, re-dimming it during restoration or crash recovery. Suspension generations now invalidate outdated callbacks.
+* **Sleep Setting Race**: Disabling Tab Sleep now reliably clears the sleeping state instead of racing with in-flight suspends.
+* **Reader Extraction Hang**: Extraction now times out instead of freezing the UI when a page is hibernated or unresponsive.
+* **Preview Safety**: Link previews validate window dimensions and suppress stray downloads triggered inside the peek window.
+* **Update Pipeline Hardening**: Installer downloads are Ed25519 signature verified against the appcast before anything executes, and the micro updater now validates zip integrity, handles pre-release tags, and uses ArgumentList with retries.
+* **Link Preview and Reader Mode**: Alt+Click now displays the link preview window instead of only dimming. The Reader Mode button now successfully activates.
+* **Right-Click Menu**: Fixed a COM error that prevented the context menu from rendering. The application now checks for the existence of link, image, or selection data before reading it.
+* **Downloads Hang**: Fixed a bug where downloads froze at 100 percent. .NET Garbage Collection dropped native events, and SmartScreen suspended background downloads. SmartScreen is now disabled by default.
 * **Download UI Commands**: The Pause, Resume, and Cancel buttons on active downloads now function.
 * **Local HTML Files**: Stride now opens local .html files launched from Windows Explorer or the command line. Stride supports being the default offline HTML viewer.
 * **New Tab Reloads**: Adding or removing a shortcut updates the UI instantly without reloading the entire New Tab page.
-* **New Tab Shortcuts**: Adding a shortcut with special characters or importing bookmarks no longer breaks the New Tab page. Stride passes shortcuts to the frontend using Base64 encoding.
-* **Toolbar Icon Toggles**: Disabling the "Show Reader Icon" setting instantly removes the icon from the toolbar.
-* **New Tab Page**: Background images from user or local folders safely URL-encode their path components.
-* **YouTube Tools**: Script configurations are now strictly bound to the window object to prevent closure bugs on reload, and invalid playback speeds revert safely to 1.0x.
-* **Fullscreen Modes**: The application correctly aborts entering fullscreen if the monitor positioning call fails, falling back smoothly to a maximized state.
-* **Privacy: Session Restore**: Ensuring 'Clear Data on Exit' strictly takes precedence over the 'Restore session on startup' setting so session data is properly wiped.
-* **New Tab Page**: Background images from user or local folders safely URL-encode their path components.
-* **YouTube Tools**: Script configurations are now strictly bound to the window object to prevent closure bugs on reload, and invalid playback speeds revert safely to 1.0x.
-* **Fullscreen Modes**: The application correctly aborts entering fullscreen if the monitor positioning call fails, falling back smoothly to a maximized state.
-* **Privacy: Session Restore**: Ensuring 'Clear Data on Exit' strictly takes precedence over the 'Restore session on startup' setting so session data is properly wiped.
+* **New Tab Shortcuts**: Adding a shortcut with special characters or importing bookmarks no longer breaks the New Tab page. Shortcuts are now passed using Base64 encoding.
+* **Toolbar Icon Toggles**: Disabling the Show Reader Icon setting instantly removes the icon from the toolbar.
 
 **Under the Hood**
-* Added docs/VERTICAL_TREE_TABS_DESIGN.html, a design proposal and interactive mockup for the vertical tree tabs roadmap item. Documentation only, no runtime change.
-* Extracted URL parsing and command-line argument dispatch from the main window into CommandLineUrlParser and StartupCoordinator services.
-* Removed the "NetSparkleUpdater WPF" row from Settings. Updated updater comments. Deleted the UpdateServiceE2ETests test.
-
-# Release Note: v1.2.0
-
-**Features**
-* **Native Updates**: Redesigned the update flow. A gear icon appears on the toolbar when an update is available. Clicking it shows a circular progress ring during the background download, followed by a green checkmark.
-* **Micro-Updater**: Clicking the green checkmark restarts the application. A background Windows executable swaps the files without wizard dialogs or UAC prompts.
-
-**Under the Hood**
-* Removed NetSparkle dependencies.
-* UpdateService uses HttpClient to call the GitHub REST API and download the zip archive.
-* The build-release.ps1 script outputs a zip archive for the micro-updater and an exe installer for new users.
-
-
-
-
+* Removed all NetSparkle dependencies. `UpdateService` now uses `HttpClient` to hit the GitHub REST API and download the zip archive. `build-release.ps1` now outputs both a zip for the micro updater and an exe installer for new users, with atomic zip creation and clean publish.
+* Added hardening to the micro updater: recursive directory merge, zip validation for `Stride.exe`, retry and timeout handling for GitHub API including pre-release tags, dynamic version wiring into Inno Setup, self update via pending .new files, and robust process handling with ArgumentList and grace period for WebView2 locks.
+* Message handlers moved into the engine layer with a sealed router contract, and WebView2 environment plus IPC ownership extracted into dedicated classes.
+* Test suite grew to over 160 unit tests covering navigation policies, router behavior, reader sanitizing, link preview policy, and update verification.
+* Extracted URL parsing and command-line argument dispatch into dedicated services, and removed the NetSparkleUpdater WPF row from Settings.
 

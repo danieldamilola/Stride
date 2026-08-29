@@ -24,6 +24,8 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
+        new Services.Startup.UpdaterRecoveryService().Run();
+
         // Ensure all data directories exist: base, favicon cache, extensions, WebView2, focus cache.
         Helpers.AppPaths.EnsureDirectories();
 
