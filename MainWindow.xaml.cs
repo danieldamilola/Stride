@@ -36,6 +36,7 @@ public partial class MainWindow : Window
     private readonly ReaderViewModel _readerVm;
     private readonly IReaderService _readerService;
     private readonly ViewModels.LinkPreview.LinkPreviewViewModel _linkPreviewVm;
+    private readonly Services.UI.TCLensLauncher _tcLensLauncher;
     private KeyboardShortcutMap? _shortcuts;
 
     /// <summary>Prevents re-entrant tab selection changes when we programmatically update the ListBox selection.</summary>
@@ -62,6 +63,7 @@ public partial class MainWindow : Window
         _sessionStore = services.GetRequiredService<ISessionStore>();
         _historyStore = services.GetRequiredService<IHistoryStore>();
         _downloadStore = services.GetRequiredService<IDownloadStore>();
+        _tcLensLauncher = services.GetRequiredService<Services.UI.TCLensLauncher>();
 
         _engine = services.GetRequiredService<TabEngine>();
         _engine.AttachHost(WebViewHost);
@@ -206,7 +208,7 @@ public partial class MainWindow : Window
                 SyncTabsBinding = SyncTabsBinding,
                 OpenOneTab = () => { OpenOneTabPage(); return Task.CompletedTask; },
                 OpenSettings = () => { Settings_Click(this, new RoutedEventArgs()); return Task.CompletedTask; },
-                LaunchTCLens = LaunchTCLensAsync,
+                LaunchTCLens = () => _tcLensLauncher.LaunchTCLensAsync(),
                 ToggleReader = async () =>
                 {
                     if (_engine.ActiveTab is { } tab && _engine.ToggleReaderAsync is { } toggle)
@@ -215,44 +217,6 @@ public partial class MainWindow : Window
             });
     }
 
-    private async Task LaunchTCLensAsync()
-    {
-        var wv = _engine.GetCoreWebView2();
-        if (wv != null)
-        {
-            try
-            {
-                var exts = await wv.Profile.GetBrowserExtensionsAsync();
-                foreach (var ex in exts) {
-                }
-                var tcLens = exts.FirstOrDefault(e => e.Name.Contains("T&C Lens", StringComparison.OrdinalIgnoreCase) || e.Name.Contains("T-C", StringComparison.OrdinalIgnoreCase));
-                if (tcLens != null)
-                {
-                    var url = $"extension://{tcLens.Id}/options/options.html";
-                    
-                    // Look for existing tab
-                    var existing = _engine.Tabs.FirstOrDefault(t => t.Url != null && t.Url.StartsWith($"extension://{tcLens.Id}/options"));
-                    if (existing != null)
-                    {
-                        _engine.SwitchTo(existing);
-                    }
-                    else
-                    {
-                        var tab = _engine.CreateTab(url);
-                        _engine.SwitchTo(tab);
-                        await _engine.ActivateAsync(tab);
-                    }
-                }
-                else
-                {
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Trace.WriteLine($"Failed to launch T&C Lens: {ex.Message}");
-            }
-        }
-    }
 
     private async Task RestoreSessionOrCreateTab()
     {
@@ -287,7 +251,7 @@ public partial class MainWindow : Window
 
     private void WireEngineEvents()
     {
-        _engine.LaunchTCLensAsync = LaunchTCLensAsync;
+        _engine.LaunchTCLensAsync = () => _tcLensLauncher.LaunchTCLensAsync();
 
         _engine.FullScreenChanged += isFullScreen => _fullscreenController.SetFullscreen(isFullScreen);
 
@@ -698,36 +662,6 @@ public partial class MainWindow : Window
         }
     }
 
-    public static string PendingTCLensText = "";
-    public static string PendingTCLensUrl = "";
-    public static string PendingTCLensTitle = "";
-
-    private async Task HandleNativeTCLensShortcutAsync()
-    {
-        try
-        {
-            var activeTab = _engine.ActiveTab;
-            if (activeTab == null) return;
-            var wv = _engine.GetCoreWebView2();
-            if (wv == null) return;
-
-            var rawJson = await wv.ExecuteScriptAsync("document.body.innerText");
-            if (!string.IsNullOrEmpty(rawJson) && rawJson != "null")
-            {
-                PendingTCLensText = System.Text.Json.JsonSerializer.Deserialize<string>(rawJson) ?? "";
-            }
-            PendingTCLensUrl = activeTab.Url ?? "";
-            PendingTCLensTitle = activeTab.Title ?? "";
-
-            var newTab = _engine.CreateTab("http://local.assets/TCLens/options/options.html");
-            _engine.SwitchTo(newTab);
-            await _engine.ActivateAsync(newTab);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"HandleNativeTCLensShortcutAsync failed: {ex}");
-        }
-    }
 
     // ───────────────────── Interop Helpers ─────────────────────
 
@@ -1293,7 +1227,7 @@ public partial class MainWindow : Window
                 
                 if (modifiers == ModifierKeys.Alt && actualKey == Key.T)
                 {
-                    await HandleNativeTCLensShortcutAsync();
+                    await _tcLensLauncher.HandleNativeTCLensShortcutAsync();
                     e.Handled = true;
                     return;
                 }

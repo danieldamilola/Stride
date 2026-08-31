@@ -582,7 +582,7 @@
 
                         <Grid Visibility="{Binding Settings.ShowSettingsIcon, Converter={StaticResource BoolToVis}}">
                             <Button Click="Settings_Click" Style="{DynamicResource IconBtn}"
-                                    ToolTip="Settings" Width="26" Height="26" Margin="4,0" Cursor="Hand" FocusVisualStyle="{x:Null}">
+                                    ToolTip="Settings (Ctrl+,)" Width="26" Height="26" Margin="4,0" Cursor="Hand" FocusVisualStyle="{x:Null}">
                                 <Path Data="{StaticResource IconSettings}" 
                                       Stroke="{DynamicResource TextSecondary}" Fill="Transparent"
                                       StrokeThickness="1.4" Width="14" Height="14" 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file options.js
  * @description Dashboard orchestration for T&C Lens.
  *              Handles bootstrap, state, event wiring, view routing,
@@ -8,6 +8,7 @@
 import {
   analyze,
   estimateCost,
+  fetchTCLensBalance,
   getProviders,
   listAvailableModels,
   prepareTextForAI,
@@ -37,11 +38,12 @@ import { exportAnalysis } from "./export.js";
 
 const providers = getProviders();
 
-/** @type {{ settings: Object|null, targetTab: Object|null, targetTabId: number|null }} */
+/** @type {{ settings: Object|null, targetTab: Object|null, targetTabId: number|null, tclensBalance: Object|null }} */
 const state = {
   settings: null,
   targetTab: null,
   targetTabId: null,
+  tclensBalance: null,
 };
 
 /** @type {Object<string, HTMLElement>} */
@@ -90,9 +92,15 @@ function bindElements() {
   el.historyList = document.getElementById("history-list");
   el.clearHistoryBtn = document.getElementById("btn-clear-history");
 
-  // Coming soon / BYOK toggle
-  el.comingSoonBanner = document.getElementById("coming-soon-banner");
-  el.byokFields = document.getElementById("byok-fields");
+  // T&C Lens AI credits card
+  el.tclensCredits = document.getElementById("tclens-credits");
+  el.tclensTier = document.getElementById("tclens-tier");
+  el.tclensCount = document.getElementById("tclens-count");
+  el.tclensFill = document.getElementById("tclens-fill");
+  el.tclensTotal = document.getElementById("tclens-total");
+  el.tclensUsed = document.getElementById("tclens-used");
+  el.tclensWarning = document.getElementById("tclens-warning");
+  el.tclensNote = document.getElementById("tclens-note");
 
   // Loading
   el.loadingOverlay = document.getElementById("loading-overlay");
@@ -122,7 +130,10 @@ function bindEvents() {
     updateCostEstimate();
   });
   el.modelSelect.addEventListener("change", updateCostEstimate);
-  el.apiKeyInput.addEventListener("input", updateCostEstimate);
+  el.apiKeyInput.addEventListener("input", () => {
+    updateCostEstimate();
+    refreshTCLensBalance();
+  });
 
   el.refreshModelsBtn.addEventListener("click", refreshAvailableModels);
   el.settingsForm.addEventListener("submit", handleSettingsSubmit);
@@ -136,13 +147,21 @@ async function loadInitialState() {
   applySettingsToForm(state.settings);
   state.settings = { ...state.settings, model: el.modelSelect.value };
 
-  const stored = await chrome.storage.local.get("targetTabId");
-  state.targetTabId = stored.targetTabId;
-  state.targetTab = await getTargetTab(state.targetTabId);
+  try {
+    const stored = await chrome.storage.local.get("targetTabId");
+    state.targetTabId = stored.targetTabId;
+    state.targetTab = await getTargetTab(state.targetTabId);
+  } catch (e) {
+    console.warn("Chrome storage not available, running in native Stride mode.");
+  }
 
   await renderDashboard(state, el, providers);
   updateCostEstimate();
   await renderHistory(el, openHistoryEntry);
+
+  if (window.chrome?.webview) {
+    window.chrome.webview.postMessage("tclens-get-text:");
+  }
 }
 
 /* ─── Provider / model selects ───────────────────────────────── */
@@ -152,7 +171,7 @@ function populateProviderOptions() {
   for (const [id, p] of Object.entries(providers)) {
     const opt = document.createElement("option");
     opt.value = id;
-    opt.textContent = p.comingSoon ? `${p.name} - Coming Soon` : p.name;
+    opt.textContent = p.name;
     el.providerSelect.appendChild(opt);
   }
 }
@@ -174,28 +193,30 @@ function populateModelOptions(providerId, selectedModel) {
 
 function applySettingsToForm(settings) {
   el.providerSelect.value = settings.provider;
-  handleProviderChange();
-  populateModelOptions(settings.provider, settings.model);
   el.apiKeyInput.value = settings.apiKey || "";
+  handleProviderChange(settings.model);
 }
 
-function handleProviderChange() {
+function handleProviderChange(selectedModel) {
   const providerId = el.providerSelect.value;
   const provider = providers[providerId];
 
-  // Toggle between coming-soon banner and BYOK fields
-  const isComingSoon = Boolean(provider.comingSoon);
-  el.comingSoonBanner.classList.toggle("hidden", !isComingSoon);
-  el.byokFields.classList.toggle("hidden", isComingSoon);
+  // Toggle the hosted T&C Lens AI credits card
+  const isTCLens = providerId === "tclens";
+  el.tclensCredits.classList.toggle("hidden", !isTCLens);
+  if (!isTCLens) state.tclensBalance = null;
 
-  if (!isComingSoon) {
+  if (selectedModel) {
+    populateModelOptions(providerId, selectedModel);
+  } else {
     populateModelOptions(providerId, provider.models[0].id);
   }
+
+  refreshTCLensBalance();
 }
 
 function updateCostEstimate() {
-  const provider = el.providerSelect.value;
-  const model = el.modelSelect.value;
+  const providerId = el.providerSelect.value;
   const hasKey = Boolean(el.apiKeyInput.value.trim());
 
   if (!hasKey) {
@@ -203,17 +224,112 @@ function updateCostEstimate() {
     return;
   }
 
-  const cost = estimateCost("", provider, model);
+  if (providerId === "tclens") {
+    el.costEstimate.textContent = "";
+    return;
+  }
+
+  const cost = estimateCost("", providerId, el.modelSelect.value);
   if (!cost) {
     el.costEstimate.textContent = "";
     return;
   }
 
   if (cost.totalCost === 0) {
-    el.costEstimate.textContent = "free tier";
+    el.costEstimate.textContent = "own AI";
   } else {
     el.costEstimate.textContent = `~$${cost.totalCost.toFixed(4)} base cost`;
   }
+}
+
+/* ─── T&C Lens AI credits ────────────────────────────────────── */
+
+let balanceTimer;
+
+function refreshTCLensBalance() {
+  const providerId = el.providerSelect.value;
+  const apiKey = el.apiKeyInput.value.trim();
+
+  el.tclensCredits.classList.toggle("hidden", providerId !== "tclens");
+  clearTimeout(balanceTimer);
+  if (providerId !== "tclens") return;
+
+  if (!apiKey) {
+    resetTCLensPanel("Paste your tcl_live key above to check your balance.");
+    return;
+  }
+
+  setTCLensLoading();
+  balanceTimer = setTimeout(async () => {
+    if (el.providerSelect.value !== "tclens") return;
+    try {
+      state.tclensBalance = await fetchTCLensBalance(apiKey);
+      renderTCLensCredits(state.tclensBalance);
+    } catch {
+      state.tclensBalance = null;
+      resetTCLensPanel(
+        "Could not verify this key. Check it and try again.",
+      );
+    }
+  }, 400);
+}
+
+function setTCLensLoading() {
+  el.tclensCount.textContent = "…";
+  el.tclensTotal.textContent = "—";
+  el.tclensUsed.textContent = "—";
+  if (el.tclensTier) {
+    el.tclensTier.textContent = "—";
+    el.tclensTier.className = "credits-tier";
+  }
+  el.tclensWarning.classList.add("hidden");
+  el.tclensNote.textContent = "Checking your balance…";
+  updateCostEstimate();
+}
+
+function renderTCLensCredits(balance) {
+  const credits = Number(balance.credits) || 0;
+  const total = Number(balance.total_purchased_credits) || 0;
+  const actualTotal = Math.max(total, credits);
+  const pctUsed =
+    actualTotal > 0
+      ? Math.max(0, Math.min(100, Math.round(((actualTotal - credits) / actualTotal) * 100)))
+      : 0;
+  const paid = total > 1;
+
+  el.tclensCount.textContent = credits;
+  el.tclensFill.style.width = `${pctUsed}%`;
+  el.tclensTotal.textContent = `${actualTotal} credits purchased`;
+  el.tclensUsed.textContent = `${pctUsed}% used`;
+  if (el.tclensTier) {
+    el.tclensTier.textContent = paid ? "paid" : "free";
+    el.tclensTier.className = `credits-tier${paid ? " credits-tier--paid" : ""}`;
+  }
+
+  const low = credits < 20;
+  el.tclensWarning.textContent = low
+    ? "Running low, buy more at tclens.me."
+    : "";
+  el.tclensWarning.classList.toggle("hidden", !low);
+
+  el.tclensNote.textContent = paid
+    ? "Paid plan, need more? Visit tclens.me."
+    : "Free tier, 1 free credit included with signup.";
+  updateCostEstimate();
+}
+
+function resetTCLensPanel(note) {
+  el.tclensCount.textContent = "—";
+  el.tclensFill.style.width = "0%";
+  el.tclensTotal.textContent = "—";
+  el.tclensUsed.textContent = "—";
+  if (el.tclensTier) {
+    el.tclensTier.textContent = "—";
+    el.tclensTier.className = "credits-tier";
+  }
+  el.tclensWarning.classList.add("hidden");
+  el.tclensNote.textContent = note;
+  updateCostEstimate();
 }
 
 /* ─── Model refresh ──────────────────────────────────────────── */
@@ -356,6 +472,7 @@ async function analyzeCurrentPage() {
 
     renderAnalysis(entry, el);
     document.getElementById("btn-export").onclick = () => exportAnalysis(entry);
+    if (state.settings.provider === "tclens") refreshTCLensBalance();
     await renderDashboard(state, el, providers);
     await renderHistory(el, openHistoryEntry);
     showView("analysis-view");
@@ -410,9 +527,30 @@ function hideLoading() {
   el.loadingOverlay.classList.add("hidden");
 }
 
-/* ─── Chrome messaging ───────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+ * Stride Integration: tclensProcessInjection
+ * ───────────────────────────────────────────────────────────── */
+window.tclensProcessInjection = async (payload) => {
+  window.__strideTCLensPayload = payload;
+  state.targetTabId = -1;
+  state.targetTab = { url: payload.url, title: payload.title };
+  await renderDashboard(state, el, providers);
+};
+
+/* ─────────────────────────────────────────────────────────────
+ * Chrome messaging 
+ * ───────────────────────────────────────────────────────────── */
 
 async function sendBg(message) {
+  if (window.__strideTCLensPayload) {
+    if (message.type === "INJECT_SCRAPER") return { success: true };
+    if (message.type === "EXTRACT_PAGE_TEXT") return { text: window.__strideTCLensPayload.text, success: true };
+    if (message.type === "SET_BADGE") return { success: true };
+  }
+  if (!window.chrome?.runtime?.sendMessage) {
+      console.warn("Running outside extension, ignoring sendBg.");
+      return { success: true };
+  }
   const response = await chrome.runtime.sendMessage(message);
   if (!response || response.success === false || response.error) {
     throw new Error(response?.error || "Extension message failed.");
@@ -420,12 +558,17 @@ async function sendBg(message) {
   return response;
 }
 
-/* ─── Tab helpers ────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+ * Tab helpers 
+ * ───────────────────────────────────────────────────────────── */
 
 async function getTargetTab(tabId) {
+  if (tabId === -1 && window.__strideTCLensPayload) {
+    return { url: window.__strideTCLensPayload.url, title: window.__strideTCLensPayload.title };
+  }
   if (!Number.isInteger(tabId)) return null;
   try {
-    return await chrome.tabs.get(tabId);
+    return window.chrome?.tabs?.get ? await chrome.tabs.get(tabId) : null;
   } catch {
     return null;
   }
