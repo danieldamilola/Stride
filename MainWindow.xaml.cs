@@ -342,6 +342,7 @@ public partial class MainWindow : Window
         _engine.WebMessageReceived += HandleWebMessage;
         _engine.TabCreated += tab =>
         {
+            EnsureTabVisible(tab);
         };
     }
 
@@ -511,6 +512,90 @@ public partial class MainWindow : Window
         }
         return null;
     }
+
+    private void EnsureTabVisible(BrowserTab tab)
+    {
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            try
+            {
+                var sv = GetScrollViewer(TabList);
+                if (sv == null) return;
+
+                var container = TabList.ItemContainerGenerator.ContainerFromItem(tab) as FrameworkElement;
+                if (container == null)
+                {
+                    TabList.ScrollIntoView(tab);
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        try
+                        {
+                            var c2 = TabList.ItemContainerGenerator.ContainerFromItem(tab) as FrameworkElement;
+                            if (c2 != null)
+                                AnimateTabIntoView(sv, c2);
+                            else
+                                TabList.ScrollIntoView(tab);
+                        }
+                        catch (Exception ex) { Trace.WriteLine($"EnsureTabVisible retry failed: {ex}"); }
+                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                    return;
+                }
+
+                AnimateTabIntoView(sv, container);
+            }
+            catch (Exception ex) { Trace.WriteLine($"EnsureTabVisible failed: {ex}"); }
+        }), System.Windows.Threading.DispatcherPriority.Loaded);
+    }
+
+    private void AnimateTabIntoView(ScrollViewer sv, FrameworkElement container)
+    {
+        try
+        {
+            var transform = container.TransformToAncestor(sv);
+            var rect = transform.TransformBounds(new Rect(0, 0, container.ActualWidth, container.ActualHeight));
+
+            double targetOffset = sv.HorizontalOffset;
+            const double padding = 4;
+
+            if (rect.Left < padding)
+                targetOffset += rect.Left - padding;
+            else if (rect.Right > sv.ViewportWidth - padding)
+                targetOffset += rect.Right - sv.ViewportWidth + padding;
+
+            targetOffset = Math.Max(0, Math.Min(targetOffset, sv.ExtentWidth - sv.ViewportWidth));
+            if (Math.Abs(targetOffset - sv.HorizontalOffset) < 0.5) return;
+
+            var animation = new DoubleAnimation
+            {
+                From = sv.HorizontalOffset,
+                To = targetOffset,
+                Duration = TimeSpan.FromMilliseconds(200),
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            var dummy = new System.Windows.Controls.Border { Tag = sv };
+            dummy.SetValue(ScrollViewerHelper.HorizontalOffsetProperty, sv.HorizontalOffset);
+            dummy.BeginAnimation(ScrollViewerHelper.HorizontalOffsetProperty, animation);
+        }
+        catch
+        {
+            container.BringIntoView();
+        }
+    }
+
+    private static class ScrollViewerHelper
+    {
+        public static readonly DependencyProperty HorizontalOffsetProperty =
+            DependencyProperty.RegisterAttached("HorizontalOffset", typeof(double), typeof(ScrollViewerHelper),
+                new PropertyMetadata(0.0, OnOffsetChanged));
+
+        private static void OnOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is System.Windows.Controls.Border border && border.Tag is ScrollViewer sv)
+                sv.ScrollToHorizontalOffset((double)e.NewValue);
+        }
+    }
+
     private async void TabList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isUpdatingSelection) return;

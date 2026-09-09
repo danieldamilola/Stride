@@ -1,3 +1,12 @@
+# Release Note: v1.2.2
+
+**Features**
+* **Updated App Icons**: New Stride logo across the app with larger, more visible taskbar and Task Manager icons, refreshed tab fallback favicon for new tabs, and updated branding in Onboarding and Release Notes. Includes multiple sizes 16, 32, 48, 128, 256, 512 and a new multi-resolution ICO.
+* **Toolbar Auto-Scroll**: Opening a new tab now automatically scrolls the tab strip to bring the new tab into view when tabs overflow. Previously new tabs could be hidden behind the address bar and required manual scrolling.
+
+**Bug Fixes**
+* **Tab Strip Overflow**: Fixed an issue where newly opened tabs were hidden when the toolbar overflowed. The strip now ensures the newly created tab is visible without affecting manual scroll position when viewing older tabs.
+
 # Release Note: v1.2.1
 
 **Features**

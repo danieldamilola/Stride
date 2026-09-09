@@ -10,6 +10,15 @@ public static class ReleaseNotesProvider
     {
         return new List<ReleaseVersion>
         {
+            new("1.2.2", "Sep 09, 2026", "Icons & Toolbar Polish", "New app icons and automatic tab strip scrolling.",
+                new List<(string, string)> {
+                    ("Updated App Icons", "New Stride logo across the app with larger taskbar and Task Manager icons, refreshed tab fallback and onboarding branding. Multiple sizes 16 to 512 and new ICO"),
+                    ("Toolbar Auto-Scroll", "Opening a new tab now scrolls the strip to bring the new tab into view when overflowed")
+                },
+                new List<(string, string)> {
+                    ("Tab Strip Overflow", "Fixed hidden new tabs when toolbar overflowed. Manual scroll left to view older tabs no longer snaps back")
+                }),
+
             new("1.2.1", "Aug 29, 2026", "Security & Polish", "Major security fixes and UX polish for the dynamic context menu.",
                 new List<(string, string)> {
                     ("Internal Pages Design Sync", "Redesigned the Onboarding and Release Notes pages"),
