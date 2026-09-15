@@ -153,7 +153,7 @@ Real shadows, restrained.
 
 ### 8.2 Favicon pill tabs
 
-The pill is the signature element. `FaviconTabListStyle` in `App.xaml` owns the states. The item template in `MainWindow.xaml` renders them. Inactive is icon only. Active is a pill with title. Pinned is icon plus a persistent wash. Max title 160px, 12px, `CharacterEllipsis`.
+The pill is the signature element. `FaviconTabListStyle` in `App.xaml` owns the states. The item template in `MainWindow.xaml` renders them. Inactive is icon only. Active is a pill with title. Pinned is icon plus a persistent wash. Max title 160px, 12px, no trimming.
 
 | State | Pill background | Favicon opacity | Title | Close |
 |---|---|---|---|---|

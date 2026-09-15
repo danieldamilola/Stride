@@ -74,6 +74,10 @@ public sealed partial class BrowserViewModel : ObservableObject
     [ObservableProperty]
     private string _updateVersion = string.Empty;
 
+    /// <summary>Fallback tab favicon that follows the app theme. Dark by default.</summary>
+    [ObservableProperty]
+    private string _fallbackIconUri = "pack://application:,,,/icons/stride-browser-dark-32x32.png";
+
     private readonly Engine.TabEngine _engine;
     private readonly IReaderService _readerService;
     private readonly ReaderViewModel _readerViewModel;

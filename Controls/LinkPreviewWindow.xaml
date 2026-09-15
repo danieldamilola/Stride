@@ -34,8 +34,8 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Center">
-                        <TextBlock x:Name="UrlText" FontSize="11" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis" Text="Preview"/>
-                        <TextBlock x:Name="TitleText" FontSize="12" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis" Text="Loading..."/>
+                        <TextBlock x:Name="UrlText" FontSize="11" Foreground="{DynamicResource TextMuted}" TextTrimming="None" Text="Preview"/>
+                        <TextBlock x:Name="TitleText" FontSize="12" Foreground="{DynamicResource TextPrimary}" TextTrimming="None" Text="Loading"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
                         <Button x:Name="OpenNewTabButton" Style="{DynamicResource IconBtn}" Width="32" Height="32" ToolTip="Open in new tab" Margin="4,0" Click="OpenNewTab_Click">

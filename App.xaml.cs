@@ -72,6 +72,8 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        try { System.Diagnostics.Trace.WriteLine($"App OnExit code={e.ApplicationExitCode}"); System.Diagnostics.Trace.Flush(); }
+        catch { }
         SingleInstanceManager.Shutdown();
         base.OnExit(e);
     }
@@ -118,6 +120,8 @@ public partial class App : Application
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         LogException(e.Exception);
+        try { System.Diagnostics.Trace.WriteLine($"DispatcherUnhandled: {e.Exception}"); System.Diagnostics.Trace.Flush(); }
+        catch { }
         Dispatcher.InvokeAsync(() =>
         {
             MessageBox.Show(
@@ -132,7 +136,11 @@ public partial class App : Application
     private static void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         if (e.ExceptionObject is Exception ex)
+        {
             LogException(ex);
+            try { System.Diagnostics.Trace.WriteLine($"AppDomainUnhandled terminating={e.IsTerminating}: {ex}"); System.Diagnostics.Trace.Flush(); }
+            catch { }
+        }
     }
 
     private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)

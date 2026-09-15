@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -16,6 +17,7 @@ using StrideBrowser.Services.Input;
 using StrideBrowser.ViewModels;
 using StrideBrowser.ViewModels.Reader;
 using StrideBrowser.Services.Reader;
+using StrideBrowser.Services.UI;
 
 namespace StrideBrowser;
 
@@ -100,6 +102,7 @@ public partial class MainWindow : Window
                 }
             }
             _engine.ApplyAppThemeToWebViews();
+            ApplyAppIcon();
         };
 
         DataContext = _vm;
@@ -152,6 +155,14 @@ public partial class MainWindow : Window
 
             await RestoreSessionOrCreateTab();
             SyncTabsBinding();
+            ApplyAppIcon();
+            _vm.Settings.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == nameof(BrowserSettings.ShowTabNames))
+                    ApplyTabShrink();
+            };
+            Dispatcher.BeginInvoke(new Action(ApplyTabShrink),
+                System.Windows.Threading.DispatcherPriority.Loaded);
 
             var startupCoordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
             await startupCoordinator.HandleCommandLineAndReleaseNotesAsync(Environment.GetCommandLineArgs().Skip(1).ToArray());
@@ -306,6 +317,7 @@ public partial class MainWindow : Window
         _engine.WebMessageReceived += HandleWebMessage;
         _engine.TabCreated += tab =>
         {
+            EnsureTabVisible(tab);
         };
     }
 
@@ -448,6 +460,73 @@ public partial class MainWindow : Window
     private void SyncTabsBinding()
     {
         TabList.ItemsSource = _engine.Tabs;
+        Dispatcher.BeginInvoke(new Action(ApplyTabShrink),
+            System.Windows.Threading.DispatcherPriority.Loaded);
+    }
+
+    private bool _appIconLight;
+
+    /// <summary>
+    /// Applies the theme aware app icon: dark skull everywhere by default,
+    /// light skull only on the light theme. Covers the window taskbar icon
+    /// and the tab fallback favicon.
+    /// </summary>
+    private void ApplyAppIcon()
+    {
+        try
+        {
+            var themeManager = ((App)Application.Current).Services.GetRequiredService<ThemeManager>();
+            _appIconLight = !themeManager.IsCurrentlyDark();
+            Icon = new BitmapImage(new Uri(_appIconLight
+                ? "pack://application:,,,/icons/stride-light.ico"
+                : "pack://application:,,,/icons/stride.ico"));
+            _vm.FallbackIconUri = _appIconLight
+                ? "pack://application:,,,/icons/stride-browser-light-32x32.png"
+                : "pack://application:,,,/icons/stride-browser-dark-32x32.png";
+        }
+        catch (Exception ex) { Trace.WriteLine($"ApplyAppIcon failed: {ex.Message}"); }
+    }
+
+    /// <summary>
+    /// Drives the shrink panel from code: Full Names shares the strip width
+    /// across tabs, Compact stacks natural sizes. Code driven because template
+    /// bindings resolve unreliably for items panels.
+    /// </summary>
+    private void ApplyTabShrink()
+    {
+        try
+        {
+            var shrink = _vm.Settings.ShowTabNames;
+            var panel = FindVisualChild<TabShrinkPanel>(TabList);
+            if (panel is not null)
+                TabShrinkPanel.SetShrinkEnabled(panel, shrink);
+            // A scrolling strip measures content with infinite width, which can
+            // never shrink. Full Names disables strip scrolling so the panel
+            // measures against the real viewport and every tab stays visible.
+            var scrollViewer = GetScrollViewer(TabList);
+            if (scrollViewer is not null)
+                scrollViewer.HorizontalScrollBarVisibility = shrink
+                    ? ScrollBarVisibility.Disabled
+                    : ScrollBarVisibility.Hidden;
+            foreach (var item in TabList.Items)
+            {
+                if (TabList.ItemContainerGenerator.ContainerFromItem(item) is ListBoxItem container)
+                    container.ClearValue(UIElement.RenderTransformProperty);
+            }
+        }
+        catch (Exception ex) { Trace.WriteLine($"ApplyTabShrink failed: {ex.Message}"); }
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is T match) return match;
+            var nested = FindVisualChild<T>(child);
+            if (nested is not null) return nested;
+        }
+        return null;
     }
 
     // ───────────────────── Tab Events ─────────────────────
@@ -475,6 +554,90 @@ public partial class MainWindow : Window
         }
         return null;
     }
+
+    private void EnsureTabVisible(BrowserTab tab)
+    {
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            try
+            {
+                var sv = GetScrollViewer(TabList);
+                if (sv == null) return;
+
+                var container = TabList.ItemContainerGenerator.ContainerFromItem(tab) as FrameworkElement;
+                if (container == null)
+                {
+                    TabList.ScrollIntoView(tab);
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        try
+                        {
+                            var c2 = TabList.ItemContainerGenerator.ContainerFromItem(tab) as FrameworkElement;
+                            if (c2 != null)
+                                AnimateTabIntoView(sv, c2);
+                            else
+                                TabList.ScrollIntoView(tab);
+                        }
+                        catch (Exception ex) { Trace.WriteLine($"EnsureTabVisible retry failed: {ex}"); }
+                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                    return;
+                }
+
+                AnimateTabIntoView(sv, container);
+            }
+            catch (Exception ex) { Trace.WriteLine($"EnsureTabVisible failed: {ex}"); }
+        }), System.Windows.Threading.DispatcherPriority.Loaded);
+    }
+
+    private void AnimateTabIntoView(ScrollViewer sv, FrameworkElement container)
+    {
+        try
+        {
+            var transform = container.TransformToAncestor(sv);
+            var rect = transform.TransformBounds(new Rect(0, 0, container.ActualWidth, container.ActualHeight));
+
+            double targetOffset = sv.HorizontalOffset;
+            const double padding = 4;
+
+            if (rect.Left < padding)
+                targetOffset += rect.Left - padding;
+            else if (rect.Right > sv.ViewportWidth - padding)
+                targetOffset += rect.Right - sv.ViewportWidth + padding;
+
+            targetOffset = Math.Max(0, Math.Min(targetOffset, sv.ExtentWidth - sv.ViewportWidth));
+            if (Math.Abs(targetOffset - sv.HorizontalOffset) < 0.5) return;
+
+            var animation = new DoubleAnimation
+            {
+                From = sv.HorizontalOffset,
+                To = targetOffset,
+                Duration = TimeSpan.FromMilliseconds(200),
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            var dummy = new System.Windows.Controls.Border { Tag = sv };
+            dummy.SetValue(ScrollViewerHelper.HorizontalOffsetProperty, sv.HorizontalOffset);
+            dummy.BeginAnimation(ScrollViewerHelper.HorizontalOffsetProperty, animation);
+        }
+        catch
+        {
+            container.BringIntoView();
+        }
+    }
+
+    private static class ScrollViewerHelper
+    {
+        public static readonly DependencyProperty HorizontalOffsetProperty =
+            DependencyProperty.RegisterAttached("HorizontalOffset", typeof(double), typeof(ScrollViewerHelper),
+                new PropertyMetadata(0.0, OnOffsetChanged));
+
+        private static void OnOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is System.Windows.Controls.Border border && border.Tag is ScrollViewer sv)
+                sv.ScrollToHorizontalOffset((double)e.NewValue);
+        }
+    }
+
     private async void TabList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isUpdatingSelection) return;
@@ -919,39 +1082,12 @@ public partial class MainWindow : Window
 
     private void UpdateToolbarTint(BrowserTab tab)
     {
-        var hex = tab.ThemeColor ?? "";
+        var hex = _vm.Settings.AdaptiveToolbarTint ? tab.ThemeColor ?? "" : "";
         if (hex == _currentThemeColorHex) return;
         _currentThemeColorHex = hex;
 
         var baseColor = (Color)FindResource("SidebarColor");
-        Color targetColor;
-
-        if (!string.IsNullOrEmpty(hex))
-        {
-            try
-            {
-                targetColor = (Color)ColorConverter.ConvertFromString(hex);
-                // Reject pure/near white. This prevents the toolbar from turning blindingly white 
-                // when Dark Reader is active but the site's meta theme-color tag still says #FFFFFF.
-                if (targetColor.R > 245 && targetColor.G > 245 && targetColor.B > 245)
-                {
-                    targetColor = Color.FromRgb(0x11, 0x11, 0x11);
-                }
-                // Reject strong green colors (e.g. jiji.ng) because they clash with the dark theme
-                else if (targetColor.G > 120 && targetColor.G > targetColor.R + 40 && targetColor.G > targetColor.B + 40)
-                {
-                    targetColor = Color.FromRgb(0x11, 0x11, 0x11);
-                }
-            }
-            catch
-            {
-                targetColor = baseColor;
-            }
-        }
-        else
-        {
-            targetColor = baseColor;
-        }
+        var targetColor = ToolbarTintResolver.ResolveTargetColor(hex, baseColor);
 
         var anim = new ColorAnimation
         {
@@ -969,8 +1105,7 @@ public partial class MainWindow : Window
         brush.BeginAnimation(SolidColorBrush.ColorProperty, anim);
 
         // Dynamic Contrast: If the toolbar adapts to a light color, switch icons/text to dark
-        var luminance = (0.299 * targetColor.R + 0.587 * targetColor.G + 0.114 * targetColor.B) / 255.0;
-        if (luminance > 0.5)
+        if (ToolbarTintResolver.IsLight(targetColor))
         {
             Toolbar.Resources["TextPrimary"] = new SolidColorBrush(Color.FromRgb(30, 30, 34));
             Toolbar.Resources["TextSecondary"] = new SolidColorBrush(Color.FromRgb(70, 70, 74));
@@ -1168,6 +1303,12 @@ public partial class MainWindow : Window
         if (key == "accentColor")
             ApplyAccentColor(_vm.Settings.AccentColor);
 
+        if (key == "adaptiveTint" && _engine.ActiveTab is not null)
+        {
+            _currentThemeColorHex = "";
+            UpdateToolbarTint(_engine.ActiveTab);
+        }
+
         // Live-rebuild shortcut bindings when user rebinds a key
         if (key is "shortcut" or "shortcutReset")
             _shortcuts?.RebuildBindings(_vm.Settings.CustomShortcuts);
@@ -1311,6 +1452,11 @@ public partial class MainWindow : Window
 
     private Point _dragStartPoint;
     private bool _isDragging;
+    private TabDragAdorner? _dragAdorner;
+    private AdornerLayer? _dragLayer;
+    private ListBoxItem? _dragContainer;
+    private double _dragWidth;
+    private double _dragLastX;
 
     private void TabList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -1321,7 +1467,7 @@ public partial class MainWindow : Window
     private void TabList_PreviewMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton != MouseButtonState.Pressed || _isDragging) return;
-        
+
         var pos = e.GetPosition(null);
         var diff = _dragStartPoint - pos;
         if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
@@ -1331,36 +1477,199 @@ public partial class MainWindow : Window
             if (listBox?.SelectedItem is BrowserTab tab)
             {
                 _isDragging = true;
-                DragDrop.DoDragDrop(listBox, tab, DragDropEffects.Move);
-                _isDragging = false;
+                try
+                {
+                    BeginTabDragVisual(listBox, tab);
+                    DragDrop.DoDragDrop(listBox, tab, DragDropEffects.Move);
+                }
+                finally
+                {
+                    EndTabDragVisual();
+                    _isDragging = false;
+                }
             }
         }
+    }
+
+    private void BeginTabDragVisual(ListBox listBox, BrowserTab tab)
+    {
+        try
+        {
+            _dragContainer = listBox.ItemContainerGenerator.ContainerFromItem(tab) as ListBoxItem;
+            _dragLayer = AdornerLayer.GetAdornerLayer(listBox);
+            if (_dragLayer is null)
+            {
+                Trace.WriteLine("[DEBUG-tabdrag] begin with null layer");
+                return;
+            }
+            if (_dragContainer is not null)
+            {
+                _dragWidth = _dragContainer.RenderSize.Width;
+                _dragLastX = _dragContainer.TransformToAncestor(listBox).Transform(new Point(0, 0)).X
+                    + _dragWidth / 2;
+                _dragContainer.ClearValue(VisibilityProperty);
+                _dragContainer.Visibility = Visibility.Hidden;
+            }
+            _dragAdorner = new TabDragAdorner(listBox, tab.Favicon ?? TabDragAdorner.DefaultIcon(_appIconLight), tab.Title ?? "", _dragContainer?.RenderSize.Height ?? 28);
+            _dragLayer.Add(_dragAdorner);
+        }
+        catch (Exception ex) { Trace.WriteLine($"Tab drag visual failed: {ex.Message}"); }
+    }
+
+    private void EndTabDragVisual()
+    {
+        try
+        {
+            if (_dragAdorner is not null && _dragLayer is not null)
+                _dragLayer.Remove(_dragAdorner);
+            _dragContainer?.ClearValue(VisibilityProperty);
+            foreach (var item in TabList.Items)
+            {
+                if (TabList.ItemContainerGenerator.ContainerFromItem(item) is ListBoxItem container)
+                    container.ClearValue(UIElement.RenderTransformProperty);
+            }
+        }
+        catch (Exception ex) { Trace.WriteLine($"Tab drag cleanup failed: {ex.Message}"); }
+        finally
+        {
+            _dragAdorner = null;
+            _dragLayer = null;
+            _dragContainer = null;
+        }
+    }
+
+    private void TabList_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetData(typeof(BrowserTab)) is not BrowserTab draggedTab || sender is not ListBox listBox) return;
+        e.Effects = DragDropEffects.Move;
+        e.Handled = true;
+
+        try
+        {
+            var pos = e.GetPosition(listBox);
+            if (_dragAdorner is not null)
+                _dragAdorner.Update(pos);
+            else
+                Trace.WriteLine("[DEBUG-tabdrag] over with null adorner");
+            AutoScrollStrip(listBox, pos.X);
+
+            // Live slide: the model stays put, in-between tabs shift aside
+            // animated, the drop commits. No transparency anywhere.
+            var oldIndex = _engine.Tabs.IndexOf(draggedTab);
+            if (oldIndex < 0) return;
+            var finalIndex = ShiftedIndex(listBox, oldIndex, pos.X);
+            _dragLastX = pos.X;
+            if (finalIndex >= 0)
+                ApplyDragShift(listBox, oldIndex, finalIndex);
+        }
+        catch (Exception ex) { Trace.WriteLine($"[DEBUG-tabdrag] over failed: {ex.Message}"); }
+    }
+
+    /// <summary>
+    /// Target slot for the dragged tab at a horizontal cursor position, measured
+    /// over all tabs including the hidden dragged one, compensating for its slot.
+    /// Returns -1 when the layout is not ready to measure.
+    /// </summary>
+    private int ShiftedIndex(ListBox listBox, int oldIndex, double x)
+    {
+        var centers = new List<double>();
+        foreach (var item in _engine.Tabs)
+        {
+            if (listBox.ItemContainerGenerator.ContainerFromItem(item) is not ListBoxItem container)
+                return -1;
+            centers.Add(container.TransformToAncestor(listBox).Transform(new Point(0, 0)).X
+                + container.RenderSize.Width / 2);
+        }
+        return TabDragAdorner.ComputeShiftedIndex(centers, oldIndex, x, _dragLastX, _dragWidth / 2);
+    }
+
+    /// <summary>Slides in-between tabs aside by the dragged tab width, animated.</summary>
+    private void ApplyDragShift(ListBox listBox, int oldIndex, int finalIndex)
+    {
+        for (var i = 0; i < _engine.Tabs.Count; i++)
+        {
+            if (listBox.ItemContainerGenerator.ContainerFromItem(_engine.Tabs[i]) is not ListBoxItem container)
+                continue;
+            double shift = 0;
+            if (finalIndex > oldIndex && i > oldIndex && i <= finalIndex) shift = -_dragWidth;
+            else if (finalIndex < oldIndex && i >= finalIndex && i < oldIndex) shift = _dragWidth;
+            AnimateX(container, shift);
+        }
+    }
+
+    private static void AnimateX(UIElement element, double to)
+    {
+        try
+        {
+            var transform = element.RenderTransform as TranslateTransform;
+            if (transform is null)
+            {
+                transform = new TranslateTransform();
+                element.RenderTransform = transform;
+            }
+            var animation = new DoubleAnimation(to, new Duration(TimeSpan.FromMilliseconds(120)))
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },
+                FillBehavior = FillBehavior.HoldEnd
+            };
+            transform.BeginAnimation(TranslateTransform.XProperty, animation);
+        }
+        catch (Exception ex) { Trace.WriteLine($"Tab shift animation failed: {ex.Message}"); }
+    }
+
+    /// <summary>Nudges an overflowing strip while the cursor sits in its edge zones.</summary>
+    private void AutoScrollStrip(ListBox listBox, double x)
+    {
+        var scrollViewer = GetScrollViewer(listBox);
+        if (scrollViewer is null || scrollViewer.ScrollableWidth <= 0) return;
+        const double edge = 32;
+        if (x < edge)
+            scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - 24);
+        else if (x > listBox.RenderSize.Width - edge)
+            scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + 24);
     }
 
     private void TabList_Drop(object sender, DragEventArgs e)
     {
         if (e.Data.GetData(typeof(BrowserTab)) is not BrowserTab droppedTab) return;
-        
+
         var listBox = sender as ListBox;
         if (listBox is null) return;
-        
+
+        var oldIndex = _engine.Tabs.IndexOf(droppedTab);
+        if (oldIndex < 0) return;
+
+        // Commit the visually shifted slot. Transforms are cleared by the
+        // drag cleanup running after DoDragDrop returns.
+        var finalIndex = ShiftedIndex(listBox, oldIndex, e.GetPosition(listBox).X);
+        if (finalIndex >= 0)
+        {
+            MoveTab(droppedTab, finalIndex);
+            return;
+        }
+
         var targetElement = e.OriginalSource as FrameworkElement;
         while (targetElement != null && targetElement != listBox)
         {
             if (targetElement.DataContext is BrowserTab targetTab && targetTab != droppedTab)
             {
-                var oldIndex = _engine.Tabs.IndexOf(droppedTab);
-                var newIndex = _engine.Tabs.IndexOf(targetTab);
-                if (oldIndex >= 0 && newIndex >= 0)
-                {
-                    _isUpdatingSelection = true;
-                    try { _engine.Tabs.Move(oldIndex, newIndex); }
-                    finally { _isUpdatingSelection = false; }
-                }
-                break;
+                MoveTab(droppedTab, _engine.Tabs.IndexOf(targetTab));
+                return;
             }
             targetElement = VisualTreeHelper.GetParent(targetElement) as FrameworkElement;
         }
+
+        // Dropped on empty strip space: move to the end.
+        MoveTab(droppedTab, _engine.Tabs.Count - 1);
+    }
+
+    private void MoveTab(BrowserTab droppedTab, int newIndex)
+    {
+        var oldIndex = _engine.Tabs.IndexOf(droppedTab);
+        if (oldIndex < 0 || newIndex < 0 || oldIndex == newIndex) return;
+        _isUpdatingSelection = true;
+        try { _engine.Tabs.Move(oldIndex, newIndex); }
+        finally { _isUpdatingSelection = false; }
     }
 
     // ───────────────────── Zoom Indicator ─────────────────────

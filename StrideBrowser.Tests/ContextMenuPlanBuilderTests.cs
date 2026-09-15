@@ -210,7 +210,7 @@ public class ContextMenuPlanBuilderTests
         const string longText = "abcdefghijklmnopqrstuvwxyz";
         var ctx = PageContext() with { HasSelection = true, SelectionText = longText };
 
-        Assert.Equal("Search Stride for 'abcdefghijklmnopq...'",
+        Assert.Equal("Search Stride for 'abcdefghijklmnopqrst'",
             Header(ContextMenuPlanBuilder.Build(ctx, ""), "search-selection"));
     }
 
