@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -100,20 +100,6 @@
             <select id="provider-select" name="provider"></select>
           </div>
 
-          <!-- Coming soon banner - shown when T&C Lens AI is selected -->
-          <div id="coming-soon-banner" class="coming-soon hidden">
-            <div class="coming-soon-badge">Coming Soon</div>
-            <p class="coming-soon-title">T&C Lens AI</p>
-            <p class="coming-soon-description">
-              No API key needed. We handle everything - just click analyze.<br />
-              A simple, affordable hosted option for everyone.
-            </p>
-            <p class="coming-soon-cta">
-              Want early access? <a href="https://github.com/danieldamilola/T-C" target="_blank" rel="noopener noreferrer">Star the repo</a> to stay updated.
-            </p>
-          </div>
-
-          <!-- BYOK fields - hidden when T&C Lens AI is selected -->
           <div id="byok-fields">
           <div class="form-group">
             <label class="form-label" for="model-select">Model</label>
@@ -143,6 +129,29 @@
             <button class="btn" type="submit">Save</button>
             <span id="cost-estimate" class="cost-estimate"></span>
           </div>
+          </div>
+
+          <!-- T&C Lens AI credits card — shown when the hosted provider is selected, below Save -->
+          <div id="tclens-credits" class="credits-card hidden">
+            <div class="credits-card-header">
+              <span class="credits-card-title">T&C Lens AI</span>
+            </div>
+            <div class="credits-count-row">
+              <span id="tclens-count" class="credits-count">&mdash;</span>
+              <span class="credits-unit">credits left</span>
+            </div>
+            <div class="credits-track">
+              <div id="tclens-fill" class="credits-fill" style="width: 0%"></div>
+            </div>
+            <div class="credits-meta">
+              <span id="tclens-total">&mdash;</span>
+              <span id="tclens-used">&mdash;</span>
+            </div>
+            <p id="tclens-warning" class="credits-warning hidden"></p>
+            <p id="tclens-note" class="credits-note">
+              Paste your <span class="mono">tcl_live_</span> key above to check
+              your balance.
+            </p>
           </div>
 
           <div id="settings-message" class="message hidden" role="status"></div>

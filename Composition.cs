@@ -105,6 +105,7 @@ public static class Composition
 
         services.AddSingleton<WebMessageRouter>();
         services.AddSingleton<TCLensTransferService>();
+        services.AddSingleton<Services.UI.TCLensLauncher>();
 
         // ViewModel and Views
         services.AddSingleton<BrowserViewModel>(sp =>

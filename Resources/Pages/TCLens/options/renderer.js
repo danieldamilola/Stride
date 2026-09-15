@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file renderer.js
  * @description DOM rendering functions for T&C Lens dashboard and analysis views.
  * @module options/renderer
@@ -64,9 +64,19 @@ export function renderProviderCell(state, el, providers) {
   el.apiStatus.className = hasKey
     ? "status-dot status-dot--ok"
     : "status-dot status-dot--warn";
+
+  if (state.settings.provider === "tclens") {
+    el.providerStatus.textContent = !hasKey
+      ? "No API key — go to Settings."
+      : state.tclensBalance
+        ? `${state.tclensBalance.credits} credits left`
+        : "Hosted AI";
+    return;
+  }
+
   el.providerStatus.textContent = hasKey
     ? `${el.modelSelect.value || state.settings.model}`
-    : "No API key - go to Settings.";
+    : "No API key — go to Settings.";
 }
 
 /**
@@ -99,7 +109,7 @@ export function renderAnalysis(analysis, el) {
   const findings = analysis.findings.map(renderFinding).join("");
 
   const truncationNotice = analysis.wasTruncated
-    ? `<div class="truncation-notice">Document was too long - only the first portion was analyzed.</div>`
+    ? `<div class="truncation-notice">Document was too long — only the first portion was analyzed.</div>`
     : "";
 
   setHTML(

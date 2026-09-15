@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file ai-client.js
  * @description Provider-agnostic AI API wrapper for T&C Lens.
  * @module lib/ai-client
@@ -138,7 +138,7 @@ export async function listAvailableModels(provider, apiKey) {
 /**
  * Prepare page text for the selected model context window.
  *
- * Keeps the beginning of the document - where definitions, scope, and the
+ * Keeps the beginning of the document — where definitions, scope, and the
  * most important clauses typically appear in legal agreements.
  *
  * @param {string} rawText - Raw extracted page text.
@@ -151,7 +151,7 @@ export function prepareTextForAI(rawText, maxTokens = 8000) {
   const wasTruncated = text.length > maxChars;
 
   const prepared = wasTruncated
-    ? `${text.slice(0, maxChars)}\n\n[Note: Document was truncated - ${Math.round(text.length / 1000)}k characters total, showing first ${Math.round(maxChars / 1000)}k.]`
+    ? `${text.slice(0, maxChars)}\n\n[Note: Document was truncated — ${Math.round(text.length / 1000)}k characters total, showing first ${Math.round(maxChars / 1000)}k.]`
     : text;
 
   return { text: prepared, wasTruncated };
@@ -300,6 +300,30 @@ async function analyzeWithTCLens(text, apiKey, url) {
   if (response.status === 200) {
     const data = await response.json();
     if (data.success && data.text) return data.text;
+  }
+
+  await throwProviderError(response, "T&C Lens AI");
+}
+
+/**
+ * Fetch the hosted T&C Lens AI credit balance for an API key.
+ *
+ * @param {string} apiKey - Hosted tclens API key.
+ * @returns {Promise<{credits: number, total_purchased_credits: number}>} Credit balance.
+ * @throws {TCLError} When the key is invalid or the service errors.
+ */
+export async function fetchTCLensBalance(apiKey) {
+  const response = await fetchWithRetry(PROVIDERS.tclens.creditsUrl, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+  });
+
+  if (response.status === 200) {
+    const data = await response.json();
+    if (typeof data.credits === "number") return data;
   }
 
   await throwProviderError(response, "T&C Lens AI");

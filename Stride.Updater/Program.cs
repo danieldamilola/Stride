@@ -39,7 +39,7 @@ public static class Program
                 catch (System.Exception ex)
                 {
                     System.Console.WriteLine(ex);
-                    isAnyRunning = true;
+                    // Ignore processes we can't inspect (e.g. ghost/elevated/other users)
                 }
                 finally { try { p.Dispose(); } catch { } }
             }
@@ -66,7 +66,7 @@ public static class Program
                     if (IsInTargetDirectory(fileName, targetDir))
                         anyRemaining = true;
                 }
-                catch (System.Exception ex) { System.Console.WriteLine(ex); anyRemaining = true; }
+                catch (System.Exception ex) { System.Console.WriteLine(ex); }
                 finally { try { p.Dispose(); } catch { } }
             }
         } 

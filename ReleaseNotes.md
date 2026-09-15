@@ -16,9 +16,11 @@
 **Features**
 * **Updated App Icons**: New Stride logo across the app with larger, more visible taskbar and Task Manager icons, refreshed tab fallback favicon for new tabs, and updated branding in Onboarding and Release Notes. Includes multiple sizes 16, 32, 48, 128, 256, 512 and a new multi-resolution ICO.
 * **Toolbar Auto-Scroll**: Opening a new tab now automatically scrolls the tab strip to bring the new tab into view when tabs overflow. Previously new tabs could be hidden behind the address bar and required manual scrolling.
+* **Settings**: Added the `(Ctrl+,)` keyboard shortcut to the Settings icon tooltip for easier discovery.
 
 **Bug Fixes**
 * **Tab Strip Overflow**: Fixed an issue where newly opened tabs were hidden when the toolbar overflowed. The strip now ensures the newly created tab is visible without affecting manual scroll position when viewing older tabs.
+* **Auto-Updater**: The micro-updater now safely ignores external or elevated ghost processes, allowing updates to complete seamlessly and instantly.
 
 # Release Note: v1.2.1
 
@@ -79,4 +81,3 @@ To fix this and get all future updates automatically, you must download the late
 * Message handlers moved into the engine layer with a sealed router contract, and WebView2 environment plus IPC ownership extracted into dedicated classes.
 * Test suite grew to over 160 unit tests covering navigation policies, router behavior, reader sanitizing, link preview policy, and update verification.
 * Extracted URL parsing and command-line argument dispatch into dedicated services, and removed the NetSparkleUpdater WPF row from Settings.
-
