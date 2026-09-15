@@ -131,7 +131,7 @@ public static class ContextMenuPlanBuilder
     private static string Truncate(string text)
     {
         if (text.Length <= SelectionPreviewLimit) return text;
-        return text[..(SelectionPreviewLimit - 3)] + "...";
+        return text[..SelectionPreviewLimit];
     }
 
     private static ContextMenuItemSpec.Command Cmd(

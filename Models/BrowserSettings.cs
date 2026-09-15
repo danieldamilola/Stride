@@ -125,6 +125,10 @@ public sealed partial class BrowserSettings : ObservableObject
     [ObservableProperty]
     private bool _showTabNames;
 
+    /// <summary>When on, the toolbar follows the active site theme color.</summary>
+    [ObservableProperty]
+    private bool _adaptiveToolbarTint = true;
+
     [ObservableProperty]
     private bool _addressBarOnLeft;
 
@@ -299,6 +303,7 @@ public sealed partial class BrowserSettings : ObservableObject
         ShowForwardArrow = d.ShowForwardArrow;
         ShowRefreshButton = d.ShowRefreshButton;
         ShowTabNames = d.ShowTabNames;
+        AdaptiveToolbarTint = d.AdaptiveToolbarTint;
         AddressBarOnLeft = d.AddressBarOnLeft;
         NewTabBackground = d.NewTabBackground;
         NewTabShortcuts = new List<ShortcutItem>(d.NewTabShortcuts);

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
@@ -68,6 +70,7 @@ public sealed class WebViewIpcBridge
     public void Wire(dynamic wv, BrowserTab tab)
     {
         CoreWebView2 core = wv.CoreWebView2;
+        TryDetachHostWindowClose((object)wv, (object)core);
         core.ContainsFullScreenElementChanged += (_, _) =>
         {
             if (!_isTabAlive(tab.Id)) return;
@@ -88,6 +91,63 @@ public sealed class WebViewIpcBridge
         };
 
         Handlers.TabDialogHandler.Wire(core, _dispatcher, _settings);
+    }
+
+    /// <summary>
+    /// Removes the WebView2 control's built-in WindowCloseRequested handler. That handler
+    /// closes the host WPF window whenever page script calls window.close, which is how a
+    /// download landing page takes the whole browser down. Stride closes only the tab, so
+    /// the built-in handler must go. Returns true when a built-in handler was removed.
+    /// </summary>
+    public static bool TryDetachHostWindowClose(object? control, object? core)
+    {
+        if (control is null || core is null) return false;
+        try
+        {
+            var evt = core.GetType().GetEvent("WindowCloseRequested");
+            if (evt?.EventHandlerType is null) return false;
+
+            var inner = FindInnerWebView2Base(control);
+            if (inner is null) return false;
+
+            var removed = false;
+            for (var t = inner.GetType(); t is not null && t != typeof(object); t = t.BaseType)
+            {
+                var candidates = t.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+                    .Where(m => m.Name.Contains("WindowClose", StringComparison.Ordinal));
+                foreach (var method in candidates)
+                {
+                    try
+                    {
+                        var del = Delegate.CreateDelegate(evt.EventHandlerType, inner, method, throwOnBindFailure: false);
+                        if (del is null) continue;
+                        evt.RemoveEventHandler(core, del);
+                        removed = true;
+                    }
+                    catch { /* try the next candidate */ }
+                }
+            }
+            return removed;
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Host window-close detach failed: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Finds the WebView2Base engine held inside a WebView2 or WebView2CompositionControl.
+    /// The built-in window-close handler lives on that inner instance, not on the control.
+    /// </summary>
+    internal static object? FindInnerWebView2Base(object control)
+    {
+        for (var t = control.GetType(); t is not null && t != typeof(object); t = t.BaseType)
+        {
+            var field = t.GetField("m_webview2Base", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            if (field?.GetValue(control) is object inner) return inner;
+        }
+        return null;
     }
 
     public void PostMessageToActiveTab(Guid? activeTabId, string message)

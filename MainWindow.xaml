@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:StrideBrowser.Controls"
         xmlns:conv="clr-namespace:StrideBrowser.Converters"
+        xmlns:ui="clr-namespace:StrideBrowser.Services.UI"
         Title="Stride"
         Icon="pack://application:,,,/icons/stride.ico"
         Width="1280" Height="800"
@@ -14,6 +15,8 @@
 
         <Window.Resources>
         <conv:TabOpacityConverter x:Key="TabOpacityConverter"/>
+        <conv:TabWidthToVisibilityConverter x:Key="TabWidthToVisibilityConverter"/>
+        <conv:TabCloseVisibilityConverter x:Key="TabCloseVisibilityConverter"/>
         <Style x:Key="SuggestionItemStyle" TargetType="ListBoxItem">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -56,7 +59,7 @@
         </Style>
 
         <DataTemplate x:Key="SuggestionItemTemplate">
-            <TextBlock Text="{Binding}" FontFamily="Segoe UI Variable, Segoe UI" FontSize="13" Foreground="#C8C4BF" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+            <TextBlock Text="{Binding}" FontFamily="Segoe UI Variable, Segoe UI" FontSize="13" Foreground="#C8C4BF" VerticalAlignment="Center" TextTrimming="None"/>
         </DataTemplate>
         <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <!--  FAVICON PILL TAB â€” The Stride signature element       -->
@@ -69,14 +72,14 @@
                   ToolTip="{Binding Title}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="20"/>    <!-- Favicon + hover close overlay -->
-                    <ColumnDefinition Width="Auto"/>  <!-- Title (active only) -->
+                    <ColumnDefinition Width="*"/>     <!-- Title takes leftover, never pushes close out -->
                     <ColumnDefinition Width="Auto"/>  <!-- Close pill (active only) -->
                 </Grid.ColumnDefinitions>
                 <!-- Pin indicator removed in favor of pill background -->
                 <!-- Favicon â€” 20Ã-20 area with 16Ã-16 icon -->
                 <Grid Grid.Column="0" Width="20" Height="20" VerticalAlignment="Center">
                     <!-- Default Stride icon — hidden when site favicon loads, shares same dim as favicon -->
-                    <Image Source="pack://application:,,,/icons/stride-browser-32x32.png"
+                    <Image Source="{Binding DataContext.FallbackIconUri, RelativeSource={RelativeSource AncestorType=Window}}"
                            Width="14" Height="14"
                            RenderOptions.BitmapScalingMode="HighQuality"
                            HorizontalAlignment="Center"
@@ -173,6 +176,18 @@
                                     <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
+                                    <!-- Full Names: close lives at the card end, not on the icon -->
+                                    <DataTrigger Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <!-- Crowded strip: overlay returns on the favicon top right -->
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"/>
+                                            <Condition Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=!44}" Value="Visible"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </MultiDataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Button.Style>
@@ -187,8 +202,7 @@
                            FontSize="12" FontFamily="{DynamicResource UIFont}"
                            FontWeight="Normal"
                            VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis"
-                           MaxWidth="160"
+                           TextTrimming="None"
                            Margin="6,0,0,0"
                            x:Name="TabTitle">
                     <TextBlock.Style>
@@ -203,6 +217,10 @@
                                 <DataTrigger Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
                                     <Setter Property="Visibility" Value="Visible"/>
                                 </DataTrigger>
+                                <!-- Crowded strip: collapse to favicon once the tab nears icon width -->
+                                <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=64}" Value="Collapsed">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
                                 <!-- Pinned tabs never show title -->
                                 <DataTrigger Binding="{Binding IsPinned}" Value="True">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -216,9 +234,17 @@
                         ToolTip="Close tab"
                         Width="14" Height="14" Margin="6,0,2,0"
                         VerticalAlignment="Center" Cursor="Hand">
+                    <Button.Visibility>
+                        <MultiBinding Converter="{StaticResource TabCloseVisibilityConverter}">
+                            <Binding Path="IsSelected" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                            <Binding Path="DataContext.Settings.ShowTabNames" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                            <Binding Path="IsMouseOver" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                            <Binding Path="IsPinned"/>
+                        </MultiBinding>
+                    </Button.Visibility>
                     <Button.Style>
                         <Style TargetType="Button">
-                            <Setter Property="Visibility" Value="Collapsed"/>
                             <Setter Property="Background" Value="Transparent"/>
                             <Setter Property="BorderThickness" Value="0"/>
                             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -238,15 +264,6 @@
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                                <!-- Pinned tabs never show close button -->
-                                <DataTrigger Binding="{Binding IsPinned}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
                         </Style>
                     </Button.Style>
                     <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextMuted}"
@@ -346,8 +363,8 @@
                                            Foreground="{DynamicResource TextMuted}"
                                            FontSize="11.5" FontFamily="{DynamicResource UIFont}"
                                            VerticalAlignment="Center"
-                                           TextTrimming="CharacterEllipsis"
-                                           Width="80"
+                                           TextTrimming="None"
+                                           MaxWidth="200"
                                            MouseLeftButtonDown="UrlLabel_Click"
                                            Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource BoolToVis}}"/>
                                 <Border x:Name="StandardAddressBarBorder"
@@ -452,11 +469,15 @@
                                  Margin="4,0,4,0"
                                  VerticalAlignment="Center"
                                  PreviewMouseWheel="TabList_PreviewMouseWheel"
+                                 PreviewMouseLeftButtonDown="TabList_PreviewMouseLeftButtonDown"
+                                 PreviewMouseMove="TabList_PreviewMouseMove"
+                                 DragOver="TabList_DragOver"
+                                 Drop="TabList_Drop"
                                  AllowDrop="True"
                                  ItemTemplate="{StaticResource TabItemTemplate}">
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
+                                    <ui:TabShrinkPanel/>
                                 </ItemsPanelTemplate>
                             </ListBox.ItemsPanel>
                         </ListBox>
@@ -786,7 +807,7 @@
                                            FontSize="13"
                                            Foreground="#C8C4BF"
                                            VerticalAlignment="Center"
-                                           TextTrimming="CharacterEllipsis"/>
+                                           TextTrimming="None"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

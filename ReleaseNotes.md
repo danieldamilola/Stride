@@ -1,3 +1,16 @@
+# Release Note: v1.2.3
+
+**Features**
+* **Taskbar Icon Sharpness**: Rebuilt stride.ico and stride-light.ico from the 1024 masters with the full Windows size set 16, 20, 24, 32, 40, 48, 64, 96, 128, 256 so the taskbar finds a native 24px entry at 100 percent DPI instead of scaling the nearest size. Both ICOs are now embedded as resources.
+* **No Dots Truncation**: Removed ellipsis trimming across tab titles, URL label, suggestion lists, link preview, drag ghost, and context menu preview so clipped text ends clean with no dots. The URL label now uses MaxWidth 200 instead of a fixed 80 width.
+* **Tab Drag Reorder**: Tabs can now be reorganised by dragging. A solid pill with the tab favicon and title follows the cursor, edge zones auto scroll overflowing strips, and the drop commits the new order. Cancelling restores the start slot.
+* **Full Names Shrink To Fit**: Full Names mode now shares the strip width across every tab, capped at full card width. Opening more tabs shrinks every card so all tabs stay visible with no scrolling. Titles collapse to favicons on tiny cards, and the close button moves from the card end to the favicon overlay as cards shrink. Compact mode is unchanged.
+* **Adaptive Toolbar Color**: New Layout toggle. On keeps today's behavior, tinting the toolbar with the active site theme. Off keeps the neutral toolbar on every site.
+* **New Skull App Icon**: New dark and light skull mark across the window icon, taskbar, installer, and tab fallback favicon, with resized sets and a rebuilt multi resolution ICO. Dark skull shows by default and the light skull follows the light theme.
+
+**Bug Fixes**
+* **Download Closes Browser**: Fixed the browser shutting itself when starting a download. Download landing pages call window.close once the file starts, and the WebView2 control answers that by closing the whole host window, not just the tab. Stride now detaches that built-in handler when wiring each tab, so only the tab closes and the download keeps running. The download handler also guards every native read, posts store updates without blocking, and falls back to the URL or a default file name when the native path is missing. Proven by stride.log showing WebView2's own window-close handler on the shutdown stack.
+
 # Release Note: v1.2.2
 
 **Features**

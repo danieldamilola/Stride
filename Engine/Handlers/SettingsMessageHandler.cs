@@ -168,6 +168,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         ["sidebarPosition"] = (s, v) => s.IsSidebarOnRight = v == "right",
         ["addressBarOnLeft"] = (s, v) => s.AddressBarOnLeft = v == "true",
         ["showTabNames"] = (s, v) => s.ShowTabNames = v == "true",
+        ["adaptiveTint"] = (s, v) => s.AdaptiveToolbarTint = v == "true",
         ["showBackArrow"] = (s, v) => s.ShowBackArrow = v == "true",
         ["showForwardArrow"] = (s, v) => s.ShowForwardArrow = v == "true",
         ["showRefreshButton"] = (s, v) => s.ShowRefreshButton = v == "true",

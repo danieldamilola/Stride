@@ -1115,6 +1115,8 @@ public sealed class TabEngine : IDisposable
         CoreWebView2 core = wv.CoreWebView2;
         core.ProcessFailed += (_, e) =>
         {
+            try { Trace.WriteLine($"ProcessFailed kind={e.ProcessFailedKind} tab={tab.Title}"); Trace.Flush(); }
+            catch { }
             _dispatcher.Invoke(() =>
             {
                 try
