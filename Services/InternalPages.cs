@@ -16,6 +16,7 @@ public sealed class InternalPages
     private readonly DownloadPage _downloads = new();
     private readonly OnboardingPage _onboarding = new();
     private readonly ReleaseNotesPage _releaseNotes = new();
+    private readonly HealthPage _health = new();
     private readonly ErrorPage _error = new();
     private readonly ThemeManager _themeManager;
 
@@ -63,6 +64,10 @@ public sealed class InternalPages
 
     /// <summary>Returns the focus block page HTML.</summary>
     public string FocusPage() => Helpers.ResourceLoader.Load("Resources.Pages.Focus.html");
+
+    /// <summary>Returns the health page HTML.</summary>
+    public string HealthPage(string currentVersion, ExtensionManager.ExtensionHealth health, string ipcToken) =>
+        _health.Render(currentVersion, health, ipcToken);
 
     /// <summary>Converts a hex color like #7fb89a to an RGB triplet like 127,184,154.</summary>
     public static string HexToRgb(string hex)

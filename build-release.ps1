@@ -20,6 +20,27 @@ if (Test-Path ".\publish") { Remove-Item ".\publish" -Recurse -Force }
 New-Item -ItemType Directory -Path ".\publish" | Out-Null
 if (-not (Test-Path ".\Releases")) { New-Item -ItemType Directory -Path ".\Releases" | Out-Null }
 
+# 3a. Ensure uBlock Origin zip is present for bundling (runtime fallback also exists)
+# This guarantees fresh installs and auto-update zips carry the extension even if git-ignored.
+$ublockVersion = "1.73.0"
+$ublockZipName = "uBlock0_${ublockVersion}.chromium.zip"
+$ublockUrl = "https://github.com/gorhill/uBlock/releases/download/${ublockVersion}/${ublockZipName}"
+$ublockDestDir = ".\Resources\Extensions"
+$ublockDestPath = Join-Path $ublockDestDir $ublockZipName
+if (-not (Test-Path $ublockDestPath)) {
+    Write-Host "Downloading uBlock $ublockVersion for bundling..." -ForegroundColor Cyan
+    New-Item -ItemType Directory -Force -Path $ublockDestDir | Out-Null
+    try {
+        Invoke-WebRequest -Uri $ublockUrl -OutFile $ublockDestPath -UseBasicParsing
+        Write-Host "uBlock downloaded to $ublockDestPath" -ForegroundColor Green
+    } catch {
+        Write-Host "Warning: failed to download uBlock $ublockVersion : $_" -ForegroundColor Yellow
+        Write-Host "Build will continue - runtime will download on first launch." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "uBlock $ublockVersion already cached at $ublockDestPath" -ForegroundColor DarkGray
+}
+
 Write-Host "Publishing Stride.Updater..." -ForegroundColor Cyan
 dotnet publish Stride.Updater\Stride.Updater.csproj -c Release -r win-x64 --self-contained true -o .\publish
 

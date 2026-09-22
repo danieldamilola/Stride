@@ -200,6 +200,7 @@ public sealed class TabEngine : IDisposable
             InternalUrls.Onboarding => "Welcome to Stride",
             InternalUrls.ReleaseNotes => "What's New in Stride",
             InternalUrls.Focus => "Focus Locked",
+            InternalUrls.Health => "Health",
             _ => "New Tab"
         };
 
@@ -384,6 +385,11 @@ public sealed class TabEngine : IDisposable
             NavigateToFocus(tab);
             return;
         }
+        if (url == InternalUrls.Health)
+        {
+            NavigateToHealth(tab);
+            return;
+        }
 
         try { wv.CoreWebView2.Navigate(url); }
         catch (ArgumentException) { /* Invalid URL */ }
@@ -442,6 +448,18 @@ public sealed class TabEngine : IDisposable
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
         try { wv.CoreWebView2.NavigateToString(_pages.FocusPage()); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+    }
+
+    public void NavigateToHealth(BrowserTab tab)
+    {
+        if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
+        try
+        {
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.2.0";
+            var health = _extensionManager.GetHealth();
+            wv.CoreWebView2.NavigateToString(_pages.HealthPage(version, health, _ipcToken));
+        }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void GoBack()
@@ -1209,6 +1227,7 @@ public sealed class TabEngine : IDisposable
             InternalUrls.OneTab => "OneTab",
             InternalUrls.Downloads => "Downloads",
             InternalUrls.Focus => "Focus Locked",
+            InternalUrls.Health => "Health",
             _ => tab.Title
         };
     }

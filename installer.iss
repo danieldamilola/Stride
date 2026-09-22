@@ -1,5 +1,5 @@
 #ifndef MyAppVersion
-#define MyAppVersion "1.2.1"
+#define MyAppVersion "1.2.2"
 #endif
 
 [Setup]
@@ -23,8 +23,8 @@ RestartApplications=no
 Source: "publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\Stride"; Filename: "{app}\Stride.exe"
-Name: "{autodesktop}\Stride"; Filename: "{app}\Stride.exe"; Tasks: desktopicon
+Name: "{group}\Stride"; Filename: "{app}\Stride.exe"; AppUserModelID: "Stride"
+Name: "{autodesktop}\Stride"; Filename: "{app}\Stride.exe"; Tasks: desktopicon; AppUserModelID: "Stride"
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"; Flags: unchecked
@@ -37,6 +37,16 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Uninstall\Stride"
 Filename: "{app}\Stride.exe"; Description: "Launch Stride"; Flags: nowait postinstall skipifsilent
 
 [Code]
+procedure SHChangeNotify(lEvent: Longint; uFlags: Cardinal; dwItem1: Longint; dwItem2: Longint); external 'SHChangeNotify@shell32.dll stdcall';
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    SHChangeNotify($08000000, 0, 0, 0);
+  end;
+end;
+
 procedure CurPageChanged(CurPageID: Integer);
 begin
   if CurPageID = wpReady then

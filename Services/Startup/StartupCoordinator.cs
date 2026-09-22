@@ -14,13 +14,15 @@ public class StartupCoordinator
     private readonly ICommandLineUrlParser _parser;
     private readonly BrowserSettings _settings;
     private readonly ISettingsStore _settingsStore;
+    private readonly IShellIntegrationService _shell;
 
-    public StartupCoordinator(TabEngine engine, ICommandLineUrlParser parser, BrowserSettings settings, ISettingsStore settingsStore)
+    public StartupCoordinator(TabEngine engine, ICommandLineUrlParser parser, BrowserSettings settings, ISettingsStore settingsStore, IShellIntegrationService? shell = null)
     {
         _engine = engine;
         _parser = parser;
         _settings = settings;
         _settingsStore = settingsStore;
+        _shell = shell ?? new ShellIntegrationService();
     }
 
     public async Task<bool> HandleCommandLineArgsAsync(string[] args)
@@ -66,6 +68,8 @@ public class StartupCoordinator
             _settings.LastSeenReleaseNotesVersion = currentVersion;
             _settingsStore.Save(_settings);
         }
+
+        try { _shell.EnsureShellIntegration(isPostUpdate, isNewVersion); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
 
         if (!_settings.HasCompletedOnboarding)
         {

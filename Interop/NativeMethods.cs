@@ -136,4 +136,13 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool IsIconic(IntPtr hWnd);
+
+    // ── Shell icon refresh ──
+    // Sent after install or update so the Start menu and taskbar drop cached
+    // bitmaps for Stride.exe and read the new icon without a manual clear.
+    internal const int SHCNE_ASSOCCHANGED = 0x08000000;
+    internal const uint SHCNF_IDLIST = 0;
+
+    [DllImport("shell32.dll")]
+    internal static extern void SHChangeNotify(int wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
 }
