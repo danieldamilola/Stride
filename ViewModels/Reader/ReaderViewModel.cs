@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using StrideBrowser.Models.Reader;
 using StrideBrowser.Services.Reader;
 
@@ -132,14 +132,12 @@ public sealed partial class ReaderViewModel : ObservableObject
             if (_getActiveTabId() != capturedTabId || version != _operationVersion) return;
             Error = "Reader not yet implemented in this scaffold: " + ex.Message;
             System.Diagnostics.Trace.WriteLine($"Reader enter failed scaffold: {ex}");
-            System.Diagnostics.Debug.WriteLine($"Reader enter failed scaffold: {ex}");
         }
         catch (Exception ex)
         {
             if (_getActiveTabId() != capturedTabId || version != _operationVersion) return;
             Error = ex.Message;
             System.Diagnostics.Trace.WriteLine($"Reader enter failed: {ex}");
-            System.Diagnostics.Debug.WriteLine($"Reader enter failed: {ex}");
         }
         finally
         {

@@ -3,12 +3,16 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Stride.Updater;
 
 public static class Program
 {
+    [DllImport("shell32.dll")]
+    private static extern void SHChangeNotify(int wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
+
     public static void Main(string[] args)
     {
         if (args.Length < 2)
@@ -151,6 +155,12 @@ public static class Program
             // Cleanup staging and zip
             if (Directory.Exists(stagingDir)) Directory.Delete(stagingDir, true);
             File.Delete(updateZipPath);
+
+            try
+            {
+                SHChangeNotify(0x08000000, 0, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch { }
 
             // Launch new app
             Process.Start(new ProcessStartInfo

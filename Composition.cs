@@ -54,6 +54,7 @@ public static class Composition
         services.AddSingleton<TabHibernationManager>();
         services.AddSingleton<NavigationPolicyEngine>();
         services.AddSingleton<Services.CommandLine.ICommandLineUrlParser, Services.CommandLine.CommandLineUrlParser>();
+        services.AddSingleton<Services.Startup.IShellIntegrationService, Services.Startup.ShellIntegrationService>();
         services.AddSingleton<Services.Startup.StartupCoordinator>();
         services.AddSingleton<Services.Startup.UpdaterRecoveryService>();
 

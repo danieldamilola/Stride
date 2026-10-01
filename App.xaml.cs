@@ -50,6 +50,15 @@ public partial class App : Application
         // Build DI container
         _serviceProvider = Composition.BuildServiceProvider();
 
+        // Eagerly ensure uBlock folder exists so updater reposition survives even if first WebView init races
+        // This mirrors Helium ComponentLoader::AddUBlock at browser start and does not need a WebView
+        var extensionManager = _serviceProvider.GetRequiredService<ExtensionManager>();
+        _ = Task.Run(async () =>
+        {
+            try { await extensionManager.EnsureUBlockDownloadedAsync(); }
+            catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Eager uBlock ensure failed: {ex.Message}"); }
+        });
+
         // Check for updates silently if enabled
         var settingsStore = _serviceProvider.GetRequiredService<ISettingsStore>();
         var settings = settingsStore.Load();

@@ -160,7 +160,13 @@ public sealed class WebViewFactory
                 {
                     CoreWebView2 core = wv.CoreWebView2;
                     await _extensionManager.InitializeAsync(core, _settings);
-                    _extensionsLoaded = true;
+                    // Only mark as loaded if we actually have a folder or AdBlock is off
+                    // This allows retry on next tab if network failed during first load
+                    var health = _extensionManager.GetHealth();
+                    if (health.HasFolder || !_settings.AdBlockEnabled)
+                        _extensionsLoaded = true;
+                    else
+                        Trace.WriteLine("Extension init incomplete, will retry on next tab");
                 });
             }
             catch (Exception ex)
@@ -172,6 +178,12 @@ public sealed class WebViewFactory
                 Interlocked.Exchange(ref _extensionsInitStarted, 0);
             }
         });
+    }
+
+    public void ResetExtensionInitForRetry()
+    {
+        _extensionsLoaded = false;
+        Interlocked.Exchange(ref _extensionsInitStarted, 0);
     }
 
     public void NavigateInitialUrl(dynamic wv, BrowserTab tab)

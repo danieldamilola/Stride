@@ -7,7 +7,6 @@ namespace StrideBrowser.Engine;
 
 public sealed class ContentScriptInjector
 {
-    private readonly YouTubeEnhancer _youtubeEnhancer;
     private readonly YouTubeUnhook _youtubeUnhook;
 
     private static readonly HashSet<string> _trustedExternalOrigins = new(StringComparer.OrdinalIgnoreCase)
@@ -16,23 +15,19 @@ public sealed class ContentScriptInjector
         "www.wallhaven.cc",
     };
 
-    public ContentScriptInjector(YouTubeEnhancer youtubeEnhancer, YouTubeUnhook youtubeUnhook)
+    public ContentScriptInjector(YouTubeUnhook youtubeUnhook)
     {
-        _youtubeEnhancer = youtubeEnhancer;
         _youtubeUnhook = youtubeUnhook;
     }
 
     public async Task InjectAsync(CoreWebView2 core, BrowserSettings settings, string ipcToken)
     {
-        if (settings.AdBlockEnabled)
-        {
-            await core.AddScriptToExecuteOnDocumentCreatedAsync(
-                ResourceLoader.Load("Resources.Scripts.youtube-adnuke.js"));
-        }
-
-        var enhancer = _youtubeEnhancer.GetScript(settings);
-        if (!string.IsNullOrEmpty(enhancer))
-            await core.AddScriptToExecuteOnDocumentCreatedAsync(enhancer);
+        // YouTube Unhook is injected. The Shorts and sidebar features were
+        // removed from it because they broke scrolling; see YouTubeUnhook.cs.
+        // The enhancer and adnuke scripts stay parked in Parked/youtube.
+        var unhook = _youtubeUnhook.GetScript(settings);
+        if (!string.IsNullOrEmpty(unhook))
+            await core.AddScriptToExecuteOnDocumentCreatedAsync(unhook);
 
         // Wallhaven Direct Downloader
         var hostsJson = string.Join(", ", _trustedExternalOrigins.Select(h => $"\"{h}\""));
@@ -42,10 +37,6 @@ public sealed class ContentScriptInjector
         await core.AddScriptToExecuteOnDocumentCreatedAsync(tokenScript);
         await core.AddScriptToExecuteOnDocumentCreatedAsync(
             ResourceLoader.Load("Resources.Scripts.wallhaven-downloader.js"));
-
-        var unhook = _youtubeUnhook.GetScript(settings);
-        if (!string.IsNullOrEmpty(unhook))
-            await core.AddScriptToExecuteOnDocumentCreatedAsync(unhook);
 
         // Adaptive Theme Color Extractor (Ported from Adaptive-Tab-Bar-Colour Extension)
         // The token lets the bridge authenticate the posts against arbitrary page spoofing.

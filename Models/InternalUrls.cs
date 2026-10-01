@@ -11,6 +11,7 @@ public static class InternalUrls
     public const string Onboarding = "internal://onboarding";
     public const string ReleaseNotes = "internal://releasenotes";
     public const string Focus = "internal://focus";
+    public const string Health = "internal://health";
     public const string Prefix = "internal://";
 
     public static bool IsInternal(string url) =>
