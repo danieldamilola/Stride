@@ -30,12 +30,20 @@ $ublockDestPath = Join-Path $ublockDestDir $ublockZipName
 if (-not (Test-Path $ublockDestPath)) {
     Write-Host "Downloading uBlock $ublockVersion for bundling..." -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path $ublockDestDir | Out-Null
+    # Download to a temp file and move it into place only after it completes.
+    # A truncated zip left at the destination would be treated as cached by the
+    # Test-Path above on every later build, shipped in the release, and its hash
+    # could then be trusted by the runtime's TOFU check.
+    $ublockTmpPath = "$ublockDestPath.tmp"
+    if (Test-Path $ublockTmpPath) { Remove-Item $ublockTmpPath -Force }
     try {
-        Invoke-WebRequest -Uri $ublockUrl -OutFile $ublockDestPath -UseBasicParsing
+        Invoke-WebRequest -Uri $ublockUrl -OutFile $ublockTmpPath -UseBasicParsing
+        Move-Item -Path $ublockTmpPath -Destination $ublockDestPath -Force
         Write-Host "uBlock downloaded to $ublockDestPath" -ForegroundColor Green
     } catch {
         Write-Host "Warning: failed to download uBlock $ublockVersion : $_" -ForegroundColor Yellow
         Write-Host "Build will continue - runtime will download on first launch." -ForegroundColor Yellow
+        if (Test-Path $ublockTmpPath) { Remove-Item $ublockTmpPath -Force }
     }
 } else {
     Write-Host "uBlock $ublockVersion already cached at $ublockDestPath" -ForegroundColor DarkGray
