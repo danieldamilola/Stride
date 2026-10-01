@@ -12,7 +12,6 @@ namespace StrideBrowser.Services;
 /// </summary>
 public sealed class YouTubeEnhancer
 {
-    private const string TemplatePath = "Resources.Scripts.youtube-enhancer.js";
     private const string StorageKey = "__stride_yt_enhancer";
 
     /// <summary>Quality values YouTube's player API accepts plus our meta-values.</summary>
@@ -21,6 +20,23 @@ public sealed class YouTubeEnhancer
         "auto", "highest", "lowest", "highres", "hd2160", "hd1440",
         "hd1080", "hd720", "large", "medium", "small", "tiny",
     };
+
+    /// <summary>Lowest and highest playback rate the YouTube player honours.</summary>
+    private const double MinSpeed = 0.25;
+    private const double MaxSpeed = 2.0;
+
+    /// <summary>
+    /// Clamps a playback rate to the range the player honours. The settings UI
+    /// allows up to 3, but the player pulls anything above 2 back down, which
+    /// the script would then read as the user changing the speed.
+    /// </summary>
+    public static double NormalizeSpeed(double? speed)
+    {
+        if (speed is not double value || !double.IsFinite(value)) return 1.0;
+        if (value < MinSpeed) return MinSpeed;
+        if (value > MaxSpeed) return MaxSpeed;
+        return value;
+    }
 
     /// <summary>
     /// Maps unknown or missing quality values to auto so nothing unvalidated
@@ -48,7 +64,7 @@ public sealed class YouTubeEnhancer
         {
             enabled = true,
             quality = NormalizeQuality(settings.YtDefaultQuality),
-            speed = double.IsFinite(settings.YtDefaultSpeed) ? settings.YtDefaultSpeed : 1.0,
+            speed = NormalizeSpeed(settings.YtDefaultSpeed),
             disableAuto = settings.YtDisableAutoplay,
             pauseOnSwitch = settings.YtPauseOnTabSwitch,
             loop = settings.YtLoopVideo,
@@ -65,6 +81,9 @@ public sealed class YouTubeEnhancer
         if (forceConfig)
             configLine += " window.__STRIDE_YT_CONFIG = " + json + ";";
 
-        return configLine + "\n" + ResourceLoader.Load(TemplatePath);
+        // The enhancer script is parked in Parked/youtube and no longer injected.
+        // The config line is still returned so live reload can flip the running
+        // document to enabled:false and undo what the parked script applied.
+        return configLine + "\n" + "// youtube-enhancer.js parked, not injected";
     }
 }

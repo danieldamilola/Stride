@@ -29,8 +29,7 @@ public sealed class YouTubeUnhook
             mixes = s.UnhookHideMixes,
             explore = s.UnhookHideExplore,
             subscriptions = s.UnhookHideSubscriptions,
-            sidebar = s.UnhookHideVideoSidebar,
-            recommended = s.UnhookHideRecommended,
+            sidebar = s.UnhookHideVideoSidebar || s.UnhookHideRecommended,
             comments = s.UnhookHideComments,
             videoInfo = s.UnhookHideVideoInfo,
             liveChat = s.UnhookHideLiveChat,
@@ -47,6 +46,13 @@ public sealed class YouTubeUnhook
             inaptSearch = s.UnhookHideInaptSearch
         };
 
+        // The old Hide recommended videos toggle is folded into 'sidebar'. It emptied
+        // the sidebar's contents but left the column, so the video stayed narrow
+        // beside an empty strip. Its stored setting is still honoured above so an
+        // existing config keeps working, but the script only sees one key.
+        // The sidebar feature is sent again, rebuilt without the '#primary
+        // max-width' rule that caused its scroll problems.
+
         var json = JsonSerializer.Serialize(configObj);
 
         // Config persists in the page's localStorage so live-reloaded values
@@ -59,8 +65,8 @@ public sealed class YouTubeUnhook
         if (forceConfig)
             configLine += " window.__STRIDE_UNHOOK = " + json + ";";
 
-        var script = ResourceLoader.Load("Resources.Scripts.youtube-unhook.js");
-
-        return configLine + "\n" + script;
+        // The unhook script is injected again. Shorts and sidebar are gone from
+        // the config; see the notes above.
+        return configLine + "\n" + ResourceLoader.Load("Resources.Scripts.youtube-unhook.js");
     }
 }
