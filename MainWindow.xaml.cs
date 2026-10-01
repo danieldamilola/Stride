@@ -33,7 +33,6 @@ public partial class MainWindow : Window
     private readonly ISettingsStore _settingsStore;
     private readonly ISessionStore _sessionStore;
     private readonly IHistoryStore _historyStore;
-    private readonly IDownloadStore _downloadStore;
     private readonly WebMessageRouter _router;
     private readonly ReaderViewModel _readerVm;
     private readonly IReaderService _readerService;
@@ -64,7 +63,6 @@ public partial class MainWindow : Window
         _oneTabStore = services.GetRequiredService<IOneTabStore>();
         _sessionStore = services.GetRequiredService<ISessionStore>();
         _historyStore = services.GetRequiredService<IHistoryStore>();
-        _downloadStore = services.GetRequiredService<IDownloadStore>();
         _tcLensLauncher = services.GetRequiredService<Services.UI.TCLensLauncher>();
 
         _engine = services.GetRequiredService<TabEngine>();
@@ -137,10 +135,6 @@ public partial class MainWindow : Window
 
         _fullscreenController.ChromeManager = _chromeManager;
     }
-
-    private const int WM_MOUSEHWHEEL = 0x020E;
-
-
 
     // ───────────────────── Initialization ─────────────────────
 
@@ -1423,10 +1417,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private Task CheckForUpdatesInBackgroundAsync()
-    {
-        return Task.CompletedTask;
-    }
+    
 
     // ───────────────────── Title Bar ─────────────────────
 
@@ -1673,12 +1664,6 @@ public partial class MainWindow : Window
     }
 
     // ───────────────────── Zoom Indicator ─────────────────────
-
-    private void UpdateZoomIndicator()
-    {
-        // Stride minimal UI — no visible zoom indicator
-        // Zoom still works via Ctrl+/- shortcuts
-    }
 
     private void ZoomIndicator_Click(object sender, MouseButtonEventArgs e)
     {

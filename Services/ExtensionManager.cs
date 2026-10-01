@@ -23,7 +23,7 @@ public sealed class ExtensionManager
     private const string UBlockDownloadUrl =
         $"https://github.com/gorhill/uBlock/releases/download/{UBlockVersion}/uBlock0_{UBlockVersion}.chromium.zip";
 
-    private const string TCLensUrl = "https://github.com/danieldamilola/T-C/archive/refs/heads/main.zip";
+
 
     /// <summary>Path to the stored SHA-256 hash for TOFU (Trust On First Use) verification.</summary>
     private static readonly string HashFilePath = AppPaths.UBlockHashFile + "." + UBlockVersion;

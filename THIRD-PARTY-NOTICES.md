@@ -1,16 +1,7 @@
-﻿# Third-Party Notices
+# Third-Party Notices
 
 Stride is licensed under the MIT License (see `LICENSE`). It bundles or
 downloads the following third-party components at runtime.
-
-## Dark Reader
-
-- **License:** MIT
-- **Source:** https://github.com/darkreader/darkreader
-- **Usage:** `Resources/Scripts/darkreader.min.js` is embedded directly in the
-  Stride binary and injected into pages when Force Dark Mode is enabled
-  (`ContentScriptInjector`). MIT is compatible with Stride's MIT license;
-  this notice satisfies Dark Reader's attribution requirement.
 
 ## uBlock Origin
 
