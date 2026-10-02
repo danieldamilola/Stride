@@ -1,6 +1,7 @@
 # Release Note: v1.2.3
 
 **Features**
+* **Extensions Settings Section**: Ad and tracker blocking, YouTube Enhancer and YouTube Unhook now sit together in a new Extensions section instead of being split across Privacy & Security and YouTube. Everything that changes what the browser does to a page is in one place. YouTube Enhancer and YouTube Unhook collapse so a 20-toggle group is not a wall of switches, and each one shows how many of its own settings are on while collapsed.
 * **Taskbar Icon Sharpness**: Rebuilt stride.ico and stride-light.ico from the 1024 masters with the full Windows size set 16, 20, 24, 32, 40, 48, 64, 96, 128, 256 so the taskbar finds a native 24px entry at 100 percent DPI instead of scaling the nearest size. Both ICOs are now embedded as resources.
 * **No Dots Truncation**: Removed ellipsis trimming across tab titles, URL label, suggestion lists, link preview, drag ghost, and context menu preview so clipped text ends clean with no dots. The URL label now uses MaxWidth 200 instead of a fixed 80 width.
 * **Tab Drag Reorder**: Tabs can now be reorganised by dragging. A solid pill with the tab favicon and title follows the cursor, edge zones auto scroll overflowing strips, and the drop commits the new order. Cancelling restores the start slot.

@@ -266,6 +266,66 @@
           border-top: none;
       }
 
+      /* ── Collapsible group ── */
+      /* For sections with enough settings that a flat list is a wall of
+         toggles. Uses a native details element so it opens with the keyboard
+         and survives being restored by the search filter. */
+      .collapsible {
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          overflow: hidden;
+          margin-bottom: 16px;
+      }
+      .collapsible > summary {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 16px;
+          cursor: pointer;
+          list-style: none;
+          user-select: none;
+      }
+      .collapsible > summary::-webkit-details-marker { display: none; }
+      .collapsible > summary:hover { background: var(--bg-hover); }
+      .collapsible > summary:focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: -2px;
+      }
+      .collapsible-summary-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-bright);
+      }
+      .collapsible-summary-meta {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+      }
+      /* Count of enabled sub-toggles, so a collapsed group still shows
+         whether anything in it is on. */
+      .collapsible-count {
+          font-size: 11px;
+          color: var(--text-dim);
+          font-family: monospace;
+      }
+      .collapsible-count.is-on { color: var(--text-muted); }
+      .collapsible-chevron {
+          width: 16px;
+          height: 16px;
+          color: var(--text-dim);
+          transition: transform 0.15s ease;
+          flex-shrink: 0;
+      }
+      .collapsible[open] > summary .collapsible-chevron { transform: rotate(90deg); }
+      /* The nested card inside a collapsible must not draw its own border,
+         the collapsible is already the bordered box. */
+      .collapsible > .card {
+          border: none;
+          border-radius: 0;
+          border-top: 1px solid var(--border);
+      }
+
       /* ── Color swatches ── */
       .color-swatches {
           display: flex;
@@ -560,6 +620,14 @@
                 sec.style.display = 'none';
                 sec.classList.remove('active');
               }
+
+              // A collapsed group hides its rows, so a match inside one would
+              // be found but not visible. Open any group that has a hit, and
+              // close the ones that do not.
+              sec.querySelectorAll('.collapsible').forEach(function(col) {
+                var hit = col.querySelector('.setting-row:not([style*="display: none"])');
+                col.open = !!hit;
+              });
             });
           });
         }
@@ -612,6 +680,77 @@
         } else if (navItems.length > 0) {
           activateTab(navItems[0].dataset.target);
         }
+
+        // ── Collapsible group counts ──
+        // Each group shows how many of its sub-toggles are on, so a collapsed
+        // group still communicates its state instead of looking untouched.
+        // The master toggle is excluded: it is the group's own switch, not one
+        // of its options.
+        var collapsibles = document.querySelectorAll('.collapsible');
+
+        function refreshCounts() {
+          collapsibles.forEach(function(col) {
+            var key = col.dataset.collapsible;
+            var badge = col.querySelector('[data-count-for="' + key + '"]');
+            if (!badge) return;
+
+            var master = null;
+            col.querySelectorAll('.setting-row').forEach(function(row) {
+              var label = row.querySelector('.setting-label');
+              var cb = row.querySelector('input[type="checkbox"]');
+              if (label && cb && /^Enable /.test(label.textContent.trim())) master = cb;
+            });
+
+            var total = 0, on = 0;
+            col.querySelectorAll('.setting-row input[type="checkbox"]').forEach(function(cb) {
+              if (cb === master) return;
+              total++;
+              if (cb.checked) on++;
+            });
+
+            // A disabled group reads as off regardless of what its sub-toggles
+            // still hold, since none of them are being applied.
+            if (master && !master.checked) {
+              badge.textContent = 'off';
+              badge.classList.remove('is-on');
+            } else if (total === 0) {
+              badge.textContent = '';
+            } else if (on === 0) {
+              badge.textContent = 'off';
+              badge.classList.remove('is-on');
+            } else {
+              badge.textContent = on + '/' + total;
+              badge.classList.add('is-on');
+            }
+          });
+        }
+
+        // Keep the counts honest when the master toggle flips the whole group
+        // off: the sub-toggles stay checked in the DOM, so reflect the master.
+        collapsibles.forEach(function(col) {
+          col.addEventListener('toggle', refreshCounts);
+        });
+
+        document.addEventListener('change', function(e) {
+          if (e.target && e.target.type === 'checkbox') refreshCounts();
+        });
+
+        // Clearing the search must put the groups back the way the markup had
+        // them, since searching rewrites the open attribute.
+        var defaultOpen = {};
+        collapsibles.forEach(function(col) { defaultOpen[col.dataset.collapsible] = col.open; });
+        var searchInputEl = document.getElementById('searchInput');
+        if (searchInputEl) {
+          searchInputEl.addEventListener('input', function() {
+            if (this.value.trim()) return;
+            collapsibles.forEach(function(col) {
+              col.open = !!defaultOpen[col.dataset.collapsible];
+            });
+            refreshCounts();
+          });
+        }
+
+        refreshCounts();
 
         // Init dim sliders disabled state
         var sleepDimChk = document.querySelector('input[onchange*="tabSleepDim"]');
@@ -759,9 +898,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             Performance
           </li>
-          <li class="sidebar-nav-item" data-target="section-youtube">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            YouTube
+          <li class="sidebar-nav-item" data-target="section-extensions">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            Extensions
           </li>
           <li class="sidebar-nav-item" data-target="section-shortcuts">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M10 16h4"/></svg>
@@ -998,15 +1137,6 @@
             <div class="card">
               <div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Native ad & tracker blocking</div>
-                  <div class="setting-desc">Block ads and trackers natively</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_ADBLOCK}} onchange="s('adBlock', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
                   <div class="setting-label">Force HTTPS</div>
                   <div class="setting-desc">Upgrade insecure connections automatically</div>
                 </div>
@@ -1111,9 +1241,34 @@
           </div>
 
           <!-- ════════ YOUTUBE ════════ -->
-          <div class="section" id="section-youtube">
-            <div class="section-header">YouTube Enhancer</div>
+          <!-- ════════ EXTENSIONS ════════ -->
+          <div class="section" id="section-extensions">
+            <div class="section-header">Extensions</div>
+
+            <div class="subsection-label">Ad &amp; Tracker Blocking</div>
             <div class="card">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Native ad &amp; tracker blocking</div>
+                  <div class="setting-desc">Block ads and trackers natively</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_ADBLOCK}} onchange="s('adBlock', this)" />
+                </div>
+              </div>
+            </div>
+
+            <div class="subsection-label">YouTube</div>
+
+            <details class="collapsible" data-collapsible="enhancer">
+              <summary>
+                <span class="collapsible-summary-label">YouTube Enhancer</span>
+                <span class="collapsible-summary-meta">
+                  <span class="collapsible-count" data-count-for="enhancer"></span>
+                  <svg class="collapsible-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </span>
+              </summary>
+              <div class="card">
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Enable YouTube Enhancer</div>
@@ -1175,10 +1330,18 @@
                   <input type="checkbox" class="toggle" {{CHK_YT_LOOP}} onchange="s('ytLoop', this)" />
                 </div>
               </div>
-            </div>
+              </div>
+            </details>
 
-            <div class="section-header" style="margin-top:20px;">YouTube Unhook</div>
-            <div class="card">
+            <details class="collapsible" data-collapsible="unhook">
+              <summary>
+                <span class="collapsible-summary-label">YouTube Unhook</span>
+                <span class="collapsible-summary-meta">
+                  <span class="collapsible-count" data-count-for="unhook"></span>
+                  <svg class="collapsible-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </span>
+              </summary>
+              <div class="card">
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Enable YouTube Unhook</div>
@@ -1270,7 +1433,8 @@
                 <div class="setting-info"><div class="setting-label">Hide irrelevant search results</div></div>
                 <div class="setting-control"><input type="checkbox" class="toggle" {{CHK_UNHOOK_INAPTSEARCH}} onchange="s('unhookInaptSearch', this)" /></div>
               </div>
-            </div>
+              </div>
+            </details>
           </div>
 
           <!-- ════════ KEYBOARD SHORTCUTS ════════ -->
