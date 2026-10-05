@@ -187,7 +187,7 @@ public sealed class UpdateService
                     totalRead += read;
                     if (totalRead > MaxPackageBytes)
                     {
-                        Trace.WriteLine($"[updater] Package passed the {MaxPackageBytes} byte cap. Aborting.");
+                        Fail($"Update package exceeds the {MaxPackageBytes} byte limit.");
                         await fileStream.DisposeAsync();
                         CleanupZip();
                         return false;

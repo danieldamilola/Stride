@@ -11,13 +11,21 @@ public sealed class SettingsStoreAccentColorTests
 {
     [Theory]
     [InlineData("#D4A574")]
-    [InlineData("#abc")]
     [InlineData("#ABCDEF")]
     [InlineData("#ffffff")]
     [InlineData("  #ff0000  ")]
     public void NormalizeAccentColor_ValidHex_IsKept(string value)
     {
         Assert.Equal(value.Trim(), SettingsStore.NormalizeAccentColor(value));
+    }
+
+    [Theory]
+    [InlineData("#abc", "#aabbcc")]
+    [InlineData("#ABC", "#AABBCC")]
+    [InlineData("#123", "#112233")]
+    public void NormalizeAccentColor_ThreeDigitHex_IsExpanded(string value, string expected)
+    {
+        Assert.Equal(expected, SettingsStore.NormalizeAccentColor(value));
     }
 
     /// <summary>

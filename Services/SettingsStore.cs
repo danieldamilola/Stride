@@ -62,7 +62,11 @@ public sealed class SettingsStore : ISettingsStore
         if (string.IsNullOrWhiteSpace(value)) return DefaultAccentColor;
         var trimmed = value.Trim();
         if (trimmed.Length is 4 or 7 && trimmed[0] == '#' && trimmed.Skip(1).All(Uri.IsHexDigit))
+        {
+            if (trimmed.Length == 4)
+                return $"#{trimmed[1]}{trimmed[1]}{trimmed[2]}{trimmed[2]}{trimmed[3]}{trimmed[3]}";
             return trimmed;
+        }
         return DefaultAccentColor;
     }
 

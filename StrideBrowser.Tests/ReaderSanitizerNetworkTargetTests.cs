@@ -21,6 +21,8 @@ public sealed class ReaderSanitizerNetworkTargetTests
     [InlineData("http://192.168.1.1/admin")]
     [InlineData("http://172.16.5.4/")]
     [InlineData("http://[fd00::1]/")]
+    [InlineData("http://[::ffff:169.254.169.254]/")]
+    [InlineData("http://[::ffff:10.0.0.1]/")]
     public void Sanitize_DropsImageSourcesPointingAtLocalOrPrivateHosts(string url)
     {
         var result = _sanitizer.Sanitize($"<p>t</p><img src=\"{url}\">", Base);

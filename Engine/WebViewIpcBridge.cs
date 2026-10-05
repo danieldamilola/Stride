@@ -163,26 +163,6 @@ public sealed class WebViewIpcBridge
     }
 
     /// <summary>
-    /// Origins whose web messages bypass the per-session IPC token.
-    /// <para>
-    /// Only <c>local.assets</c> qualifies. That origin is mapped to the application's own
-    /// read-only <c>Resources\Pages</c> folder, which ships with the binary and holds the
-    /// bundled internal page templates.
-    /// </para>
-    /// <para>
-    /// <c>user.assets</c> must never appear here. It is mapped to
-    /// <c>%APPDATA%\Stride\Backgrounds</c>, a user-writable folder the Settings page
-    /// opens in Explorer for the user to drop wallpaper images into. Any HTML file
-    /// landing there becomes a document on a real HTTPS origin with <c>window.chrome.webview</c>
-    /// available, so treating it as trusted hands unauthenticated callers the whole
-    /// privileged route table (<c>install-update:</c>, <c>download-request:</c>,
-    /// <c>download-open:</c>, <c>open:</c>, every <c>setting:</c> key) with no secret.
-    /// The same reasoning already keeps the temp directory unmapped; see
-    /// <see cref="WebViewFactory"/>. Backgrounds are only ever consumed as image URLs,
-    /// so requiring the token costs nothing.
-    /// </para>
-    /// </summary>
-    /// <summary>
     /// A theme colour is either empty, meaning "use the default", or a <c>#rrggbb</c> literal.
     /// Nothing else is accepted, because the value is applied to the toolbar tint and written
     /// into the UI without further encoding.
@@ -315,11 +295,6 @@ public sealed class WebViewIpcBridge
                 return;
             }
 
-            // LINK_PREVIEW_PEEK arrives without the session token. It carries no privilege of its own:
-            // it asks the host to consider showing a preview, and LinkPreviewService runs the
-            // URL through LinkPreviewPolicy before anything is fetched or rendered. The token
-            // used to guard it only proved the sender had read the injected script, which the
-            // page itself is the source of.
             // The wallhaven download button posts this from a page on wallhaven.cc. Authorisation is by
             // message source origin, not by a token, because the old scheme published the
             // session token as a global on those origins. Any script on wallhaven.cc could read
@@ -335,6 +310,11 @@ public sealed class WebViewIpcBridge
                 return;
             }
 
+            // LINK_PREVIEW_PEEK arrives without the session token. It carries no privilege of its own:
+            // it asks the host to consider showing a preview, and LinkPreviewService runs the
+            // URL through LinkPreviewPolicy before anything is fetched or rendered. The token
+            // used to guard it only proved the sender had read the injected script, which the
+            // page itself is the source of.
             if (msg.StartsWith("LINK_PREVIEW_PEEK:", StringComparison.Ordinal))
             {
                 if (!_settings.LinkPreviewEnabled) return;

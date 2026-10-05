@@ -541,20 +541,64 @@ public sealed class ExtensionManager
         {
             if (!Directory.Exists(ExtensionsDir)) return;
             // Only directories that look exactly like a previous uBlock version are removed. The
-            // wildcard is uBlock0_*, so a folder a user added keeps its name and is skipped,
-            // but a user extension nested inside one of these would still be swept. Refuse
-            // to recurse so the delete stays at the version folder itself.
+            // wildcard is uBlock0_*, so a folder a user added keeps its name and is skipped.
+            // A user extension nested inside one of these would still be swept, so confirm the
+            // folder holds a uBlock manifest before deleting. Old version folders always hold
+            // extracted files, so the delete must recurse.
             foreach (var dir in Directory.EnumerateDirectories(ExtensionsDir, "uBlock0_*"))
             {
                 var name = Path.GetFileName(dir);
                 if (!string.Equals(name, $"uBlock0_{UBlockVersion}", StringComparison.OrdinalIgnoreCase))
                 {
+                    if (!LooksLikeUBlockVersionDir(dir))
+                    {
+                        Trace.WriteLine($"ExtensionManager: skipping {name}, not a uBlock version folder.");
+                        continue;
+                    }
                     Trace.WriteLine($"ExtensionManager: removing old version {name}");
-                    try { Directory.Delete(dir, recursive: false); } catch (Exception ex) { Trace.WriteLine($"Failed to delete old version {name}: {ex.Message}"); }
+                    try { Directory.Delete(dir, recursive: true); } catch (Exception ex) { Trace.WriteLine($"Failed to delete old version {name}: {ex.Message}"); }
                 }
             }
         }
         catch (Exception ex) { Trace.WriteLine($"CleanupOldVersions failed: {ex.Message}"); }
+    }
+
+    private static bool LooksLikeUBlockVersionDir(string dir)
+    {
+        try
+        {
+            var rootManifest = Path.Combine(dir, "manifest.json");
+            if (IsUBlockManifest(rootManifest)) return true;
+            foreach (var level1 in Directory.EnumerateDirectories(dir))
+            {
+                if (IsUBlockManifest(Path.Combine(level1, "manifest.json"))) return true;
+            }
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsUBlockManifest(string manifestPath)
+    {
+        try
+        {
+            if (!File.Exists(manifestPath)) return false;
+            var json = File.ReadAllText(manifestPath);
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("name", out var name))
+            {
+                var value = name.GetString();
+                return string.Equals(value, "uBlock Origin", StringComparison.OrdinalIgnoreCase);
+            }
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static async Task<string> ComputeFileHashAsync(string filePath)

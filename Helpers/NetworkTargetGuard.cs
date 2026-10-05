@@ -42,6 +42,7 @@ public static class NetworkTargetGuard
         var bare = host.StartsWith('[') && host.EndsWith(']') ? host[1..^1] : host;
 
         if (!IPAddress.TryParse(bare, out var address)) return false;
+        if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
         if (IPAddress.IsLoopback(address)) return true;
         if (address.Equals(IPAddress.Any) || address.Equals(IPAddress.IPv6Any)) return true;
         // Multicast, both families. IPAddress exposes IsIPv6Multicast only, so the IPv4
@@ -77,6 +78,7 @@ public static class NetworkTargetGuard
 
         var bare = host.StartsWith('[') && host.EndsWith(']') ? host[1..^1] : host;
         if (!IPAddress.TryParse(bare, out var address)) return false;
+        if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
 
         if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
         {

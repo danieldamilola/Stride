@@ -21,6 +21,8 @@ public sealed class NetworkTargetGuardTests
     [InlineData("db.internal")]
     [InlineData("224.0.0.1")]
     [InlineData("ff02::1")]
+    [InlineData("[::ffff:169.254.169.254]")]
+    [InlineData("::ffff:169.254.169.254")]
     public void IsForbiddenHost_LocalAndMetadataTargets_AreBlocked(string host)
     {
         Assert.True(NetworkTargetGuard.IsForbiddenHost(host));
@@ -66,14 +68,16 @@ public sealed class NetworkTargetGuardTests
     [InlineData("[fc00::1]")]
     [InlineData("127.0.0.1")]
     [InlineData("169.254.169.254")]
+    [InlineData("[::ffff:10.0.0.1]")]
+    [InlineData("::ffff:192.168.1.1")]
     public void IsPrivateHost_PrivateAndLocalTargets_AreBlocked(string host)
     {
         Assert.True(NetworkTargetGuard.IsPrivateHost(host));
     }
 
     [Theory]
-    [InlineData("https://example.com/a.png")]
-    [InlineData("http://8.8.8.8/a.png")]
+    [InlineData("example.com")]
+    [InlineData("8.8.8.8")]
     public void IsPrivateHost_PublicTargets_AreAllowed(string host)
     {
         Assert.False(NetworkTargetGuard.IsPrivateHost(host));
