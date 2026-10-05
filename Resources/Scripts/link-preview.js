@@ -7,8 +7,9 @@
     var lastSentUrl = "";
     var lastSentAt = 0;
 
-    var TOKEN = '__STRIDE_IPC_TOKEN__';
-    var t = function(m) { window.chrome.webview.postMessage(TOKEN + ':' + m); };
+    // No token here. The host validates the peek URL through LinkPreviewPolicy before it
+    // acts, so the token added nothing but a copy of the session secret in every page.
+    var t = function(m) { window.chrome.webview.postMessage(m); };
 
     function isValidForPreview(href) {
         if (!href) return false;

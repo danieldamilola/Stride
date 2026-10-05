@@ -120,6 +120,17 @@ public sealed class ReaderSanitizer : IReaderSanitizer
             {
                 var sanitized = SanitizeUrl(value, baseUrl);
                 if (sanitized is null) continue;
+
+                // The renderer fetches these with the user's cookie jar. An article is
+                // remote content, so a src aimed at 127.0.0.1 or 169.254.169.254 would be a
+                // blind authenticated request against the user's own network. Script cannot
+                // read the response under the template's script-src 'none', but the request
+                // itself still fires. Refuse the private and local targets.
+                if (lowerName == "src" && Helpers.NetworkTargetGuard.IsPrivateHost(UriHost(sanitized)))
+                {
+                    continue;
+                }
+
                 parts.Add($"{lowerName}=\"{EscapeAttribute(sanitized)}\"");
                 continue;
             }
@@ -174,6 +185,11 @@ public sealed class ReaderSanitizer : IReaderSanitizer
         }
 
         return null;
+    }
+
+    private static string? UriHost(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var parsed) ? parsed.Host : null;
     }
 
     private static string EscapeAttribute(string value)

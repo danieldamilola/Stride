@@ -21,6 +21,18 @@ Thumbs.db
 
 ## Update signing keys (secret - do not commit)
 tools/signing/
+
+## Key and certificate exports. These are what the update signer produces, so a stray
+## export would otherwise land in the repo untracked but not ignored.
+*.pfx
+*.p12
+*.pem
+*.key
+*.keystore
+*.jks
+.env
+.env.*
+!.env.example
 Desktop.ini
 .DS_Store
 

@@ -58,8 +58,10 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                if (window.__T) {
-                    window.chrome.webview.postMessage(window.__T + 'download-request:' + downloadUrl);
+                if (window.__STRIDE_WALLHAVEN) {
+                    // No token. The host authorises this by checking the message source origin
+                    // against its allowlist, so nothing secret has to be exposed to the page.
+                    window.chrome.webview.postMessage('wallhaven-download:' + downloadUrl);
                 } else {
                     window.open(downloadUrl, '_blank');
                 }
