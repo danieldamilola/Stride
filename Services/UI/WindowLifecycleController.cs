@@ -110,8 +110,10 @@ public sealed class WindowLifecycleController
                     tab.IsPinned = entry.IsPinned;
                     _ = _engine.LoadFaviconAsync(tab);
                 }
-                _engine.SwitchTo(_engine.Tabs[0]);
-                await _engine.ActivateAsync(_engine.Tabs[0]);
+                var activeIndex = SessionStore.ResolveActiveIndex(session);
+                if (activeIndex >= _engine.Tabs.Count) activeIndex = 0;
+                _engine.SwitchTo(_engine.Tabs[activeIndex]);
+                await _engine.ActivateAsync(_engine.Tabs[activeIndex]);
                 restored = true;
             }
         }
@@ -207,7 +209,7 @@ public sealed class WindowLifecycleController
             {
                 var tabs = _engine.Tabs
                     .Where(t => !InternalUrls.IsInternal(t.Url))
-                    .Select(t => (t.Url, t.Title, t.IsPinned));
+                    .Select(t => (t.Url, t.Title, t.IsPinned, t == _engine.ActiveTab));
                 _sessionStore.Save(tabs);
             }
 

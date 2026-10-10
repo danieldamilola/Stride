@@ -61,8 +61,6 @@ public sealed class SettingsPage
                 ["SIDEBAR_RIGHT"] = settings.IsSidebarOnRight ? " selected" : "",
                 ["ADDR_LEFT"] = settings.AddressBarOnLeft ? " selected" : "",
                 ["ADDR_RIGHT"] = settings.AddressBarOnLeft ? "" : " selected",
-                ["TAB_FULL"] = settings.ShowTabNames ? " selected" : "",
-                ["TAB_COMPACT"] = settings.ShowTabNames ? "" : " selected",
                 ["CHK_ADAPTIVE_TINT"] = Chk(settings.AdaptiveToolbarTint),
                 ["CHK_BACKARROW"] = Chk(settings.ShowBackArrow),
                 ["CHK_FWDARROW"] = Chk(settings.ShowForwardArrow),

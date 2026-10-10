@@ -99,7 +99,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _autoCheckForUpdates = true;
 
     [ObservableProperty]
-    private bool _useFloatingCommandBar = true;
+    private bool _useFloatingCommandBar = false;
 
     [ObservableProperty]
     private bool _isSidebarPinned;
@@ -130,7 +130,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _adaptiveToolbarTint = true;
 
     [ObservableProperty]
-    private bool _addressBarOnLeft;
+    private bool _addressBarOnLeft = true;
 
     [ObservableProperty]
     private string _newTabBackground = "";

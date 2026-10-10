@@ -23,6 +23,7 @@ public static class ShortcutDefaults
         new("GoBack",            "Navigation", "Go back",              "Navigate back",                     "Alt+Left"),
         new("GoForward",         "Navigation", "Go forward",           "Navigate forward",                  "Alt+Right"),
         new("Reload",            "Navigation", "Reload",               "Reload current page",               "Ctrl+R"),
+        new("HardReload",        "Navigation", "Reload without cache", "Reload the page without cached resources", "Ctrl+F5"),
 
         // ── View ──
         new("ZoomIn",            "View",       "Zoom in",              "Increase page zoom",                "Ctrl+="),

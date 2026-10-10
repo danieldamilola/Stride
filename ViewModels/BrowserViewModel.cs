@@ -1,5 +1,3 @@
-using System.Net.Http;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,9 +16,10 @@ namespace StrideBrowser.ViewModels;
 /// </summary>
 public sealed partial class BrowserViewModel : ObservableObject
 {
-    private static readonly HttpClient _http = new();
     private CancellationTokenSource? _suggestionCts;
     private readonly NavigationService _navigation;
+    private readonly ISuggestionProvider _suggestionProvider;
+    private readonly FaviconLoader _faviconLoader;
 
     public BrowserSettings Settings { get; }
 
@@ -28,7 +27,7 @@ public sealed partial class BrowserViewModel : ObservableObject
     private string _addressText = "";
 
     [ObservableProperty]
-    private System.Collections.ObjectModel.ObservableCollection<string> _suggestions = new();
+    private System.Collections.ObjectModel.ObservableCollection<SuggestionItem> _suggestions = new();
 
     [ObservableProperty]
     private int _selectedSuggestionIndex = -1;
@@ -36,9 +35,44 @@ public sealed partial class BrowserViewModel : ObservableObject
     [ObservableProperty]
     private bool _showSuggestions;
 
+    /// <summary>True while the floating command bar panel is open.</summary>
+    [ObservableProperty]
+    private bool _isFloatingBarOpen;
+
+    /// <summary>
+    /// Drives the standard toolbar popup. Stays shut while the floating panel
+    /// is open so the two dropdowns never bleed into each other. The setter
+    /// exists because Popup.IsOpen binds two way: the popup writes back false
+    /// when it auto closes, which forwards to ShowSuggestions like before.
+    /// </summary>
+    public bool StandardPopupOpen
+    {
+        get => ShowSuggestions && !IsFloatingBarOpen;
+        set { if (!value && ShowSuggestions) ShowSuggestions = false; }
+    }
+
+    partial void OnShowSuggestionsChanged(bool value) => OnPropertyChanged(nameof(StandardPopupOpen));
+    partial void OnIsFloatingBarOpenChanged(bool value) => OnPropertyChanged(nameof(StandardPopupOpen));
+
+    /// <summary>Set while the box text comes from a programmatic write, not typing.</summary>
+    public bool SuppressSuggestionRefresh { get; set; }
+
+    /// <summary>True while a suggestion row owns the box through the arrow keys.</summary>
+    public bool IsRowHighlighted => SelectedSuggestionIndex >= 0;
+
+    private string _typedQuery = "";
+
     /// <summary>True while the active tab is navigating - drives the address bar loading cues.</summary>
     [ObservableProperty]
     private bool _isLoading;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GoBackCommand))]
+    private bool _canGoBack;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GoForwardCommand))]
+    private bool _canGoForward;
 
     [ObservableProperty]
     private bool _hasActiveDownloads;
@@ -84,10 +118,12 @@ public sealed partial class BrowserViewModel : ObservableObject
     private readonly UpdateService _updateService;
     private bool _isInstalling;
 
-    public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore, Engine.TabEngine engine, IReaderService readerService, ReaderViewModel readerViewModel, UpdateService updateService)
+    public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore, Engine.TabEngine engine, IReaderService readerService, ReaderViewModel readerViewModel, UpdateService updateService, ISuggestionProvider suggestions, FaviconLoader faviconLoader)
     {
         Settings = settings;
         _navigation = navigation;
+        _suggestionProvider = suggestions;
+        _faviconLoader = faviconLoader;
         _engine = engine;
         _readerService = readerService;
         _readerViewModel = readerViewModel;
@@ -207,7 +243,65 @@ public sealed partial class BrowserViewModel : ObservableObject
     /// <summary>Updates the address bar from the active tab's state.</summary>
     public void SyncAddressBar(BrowserTab tab)
     {
-        AddressText = InternalUrls.IsInternal(tab.Url) ? "" : tab.Url;
+        SyncNavigationState();
+        CurrentPageUrl = tab.Url;
+        AddressText = NavigationService.ToDisplayText(tab.Url, tab.Title);
+        NoteAddressDisplayed(AddressText);
+    }
+
+    public void SyncNavigationState()
+    {
+        IsLoading = _engine.ActiveTab?.IsLoading ?? false;
+        var core = _engine.GetCoreWebView2();
+        CanGoBack = core?.CanGoBack ?? false;
+        CanGoForward = core?.CanGoForward ?? false;
+    }
+
+    /// <summary>Full URL of the active page. The box shows its domain until focused.</summary>
+    public string CurrentPageUrl { get; private set; } = "";
+
+    private bool _boxEditedSinceDisplay;
+    private string _lastDisplayedText = "";
+
+    /// <summary>Call on real typing so Enter can tell typed text from display text.</summary>
+    public void MarkAddressEdited() => _boxEditedSinceDisplay = true;
+
+    /// <summary>Records a programmatic box update as the unedited baseline.</summary>
+    public void NoteAddressDisplayed(string text)
+    {
+        _lastDisplayedText = text?.Trim() ?? "";
+        _boxEditedSinceDisplay = false;
+    }
+
+    /// <summary>Records a navigation and shows its domain in the box.</summary>
+    public void ShowNavigatedUrl(string url)
+    {
+        CurrentPageUrl = url;
+        SuppressSuggestionRefresh = true;
+        AddressText = NavigationService.ToDisplayDomain(url);
+        NoteAddressDisplayed(AddressText);
+    }
+
+    /// <summary>Reveals the full URL in the box for editing or copying.</summary>
+    public void RevealFullUrl()
+    {
+        if (string.IsNullOrEmpty(CurrentPageUrl) || InternalUrls.IsInternal(CurrentPageUrl)) return;
+        SuppressSuggestionRefresh = true;
+        AddressText = CurrentPageUrl;
+        NoteAddressDisplayed(AddressText);
+    }
+
+    /// <summary>
+    /// Resolves box input for Enter: untouched display text reloads the page,
+    /// anything the user typed resolves like fresh input. Compares against a
+    /// snapshot because binding keeps AddressText identical to the box.
+    /// </summary>
+    public string ResolveBarInput(string? boxText)
+    {
+        var typed = boxText?.Trim() ?? "";
+        if (NavigationService.ShouldReload(typed, _lastDisplayedText, _boxEditedSinceDisplay, CurrentPageUrl))
+            return CurrentPageUrl;
+        return ResolveInput(typed);
     }
 
     public async Task UpdateSuggestionsAsync(string query)
@@ -223,71 +317,124 @@ public sealed partial class BrowserViewModel : ObservableObject
             return;
         }
 
+        _typedQuery = query;
+
         try
         {
-            var results = new List<string>();
-            var lowerQuery = query.ToLowerInvariant();
-            
-            // 1. Instantly show local shortcuts
-            foreach (var shortcut in Settings.NewTabShortcuts)
-            {
-                if (shortcut.Name.ToLowerInvariant().Contains(lowerQuery) || 
-                    shortcut.Url.ToLowerInvariant().Contains(lowerQuery))
-                {
-                    results.Add(shortcut.Url);
-                }
-            }
-            
+            // Phase 1: local history and shortcuts render instantly so the
+            // dropdown opens without waiting on the network.
             Suggestions.Clear();
-            foreach (var r in results.Take(8))
+            foreach (var r in _suggestionProvider.GetLocalSuggestions(query))
                 Suggestions.Add(r);
-            
+
             SelectedSuggestionIndex = -1;
             ShowSuggestions = Suggestions.Count > 0;
 
-            // 2. Debounce and fetch web suggestions
-            await Task.Delay(150, token); 
-            
-            var url = $"https://duckduckgo.com/ac/?q={Uri.EscapeDataString(query)}";
-            var response = await _http.GetStringAsync(url, token);
-            
-            if (token.IsCancellationRequested) return;
+            // Icons resolve in the background from the favicon cache; rows
+            // show their type icon until the site icon lands.
+            _ = LoadRowFaviconsAsync(token);
 
-            // [{ "phrase": "..." }, ...]
-            using var doc = JsonDocument.Parse(response);
-            
-            foreach (var element in doc.RootElement.EnumerateArray())
+            // Phase 2: web phrases append when they arrive. No clearing here,
+            // so the list never flickers or rebuilds under the cursor.
+            foreach (var item in await _suggestionProvider.GetWebSuggestionsAsync(query, token))
             {
-                if (element.TryGetProperty("phrase", out var phrase))
-                {
-                    var p = phrase.GetString();
-                    if (!string.IsNullOrEmpty(p) && !results.Contains(p))
-                        results.Add(p);
-                }
+                if (token.IsCancellationRequested) return;
+                // A late response must not repopulate the list under a query the
+                // user has already moved past, or the ghost reappears on its own.
+                if (query != _typedQuery) return;
+                if (Suggestions.Count >= SuggestionProvider.MaxSuggestions) break;
+                if (!Suggestions.Any(r => string.Equals(r.DisplayText, item.DisplayText, StringComparison.OrdinalIgnoreCase)))
+                    Suggestions.Add(item);
             }
 
             if (!token.IsCancellationRequested)
-            {
-                Suggestions.Clear();
-                foreach (var r in results.Take(8))
-                    Suggestions.Add(r);
-
-                SelectedSuggestionIndex = -1;
                 ShowSuggestions = Suggestions.Count > 0;
-            }
         }
         catch (OperationCanceledException) { /* Ignoring cancellation */ }
         catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"UpdateSuggestionsAsync error: {ex}"); }
     }
 
-    [RelayCommand]
+    /// <summary>
+    /// Shuts the dropdown and drops any suggestion fetch still running. Enter has
+    /// to call this rather than setting the flag alone: a fetch started when the
+    /// user typed can land after the navigation and reopen the list.
+    /// </summary>
+    public void CloseSuggestions()
+    {
+        _suggestionCts?.Cancel();
+        _suggestionCts = null;
+        ShowSuggestions = false;
+    }
+
+    /// <summary>
+    /// Resolves site icons for rows that have a URL, newest rows first.
+    /// Skips rows that already have one and stops when superseded.
+    /// </summary>
+    private async Task LoadRowFaviconsAsync(CancellationToken token)
+    {
+        try
+        {
+            foreach (var row in Suggestions.ToList())
+            {
+                if (token.IsCancellationRequested) return;
+                if (row.Favicon is not null || string.IsNullOrEmpty(row.Url)) continue;
+                var icon = await _faviconLoader.LoadAsync(row.Url);
+                if (token.IsCancellationRequested) return;
+                if (icon is not null && Suggestions.Contains(row))
+                    row.Favicon = icon;
+            }
+        }
+        catch (OperationCanceledException) { /* Ignoring cancellation */ }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"LoadRowFaviconsAsync error: {ex}"); }
+    }
+    /// <summary>
+    /// Moves the suggestion highlight and fills the box with the highlighted
+    /// row, like standard browser autocomplete. Returns false when there is
+    /// nothing to move to. Up from the top row restores the typed text.
+    /// </summary>
+    public bool MoveSuggestionHighlight(int delta)
+    {
+        if (!ShowSuggestions || Suggestions.Count == 0) return false;
+
+        var next = SelectedSuggestionIndex + delta;
+        if (next < -1 || next >= Suggestions.Count) return false;
+
+        if (SelectedSuggestionIndex == -1 && delta != 0)
+            _typedQuery = AddressText;
+
+        SelectedSuggestionIndex = next;
+        SuppressSuggestionRefresh = true;
+        AddressText = next == -1 ? _typedQuery : Suggestions[next].DisplayText;
+        return true;
+    }
+
+    /// <summary>Restores the typed text and clears the highlight.</summary>
+    public void RestoreTypedQuery()
+    {
+        SelectedSuggestionIndex = -1;
+        SuppressSuggestionRefresh = true;
+        AddressText = _typedQuery;
+        NoteAddressDisplayed(AddressText);
+    }
+
+    /// <summary>Navigation target of the highlighted row, or null.</summary>
+    public string? TakeHighlightedInput() =>
+        SelectedSuggestionIndex >= 0 && SelectedSuggestionIndex < Suggestions.Count
+            ? Suggestions[SelectedSuggestionIndex].NavigateTarget
+            : null;
+
+    [RelayCommand(CanExecute = nameof(CanGoBack))]
     private void GoBack() => _engine.GoBack();
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanGoForward))]
     private void GoForward() => _engine.GoForward();
 
     [RelayCommand]
-    private void Refresh() => _engine.Reload();
+    private void Refresh()
+    {
+        if (IsLoading) _engine.StopLoading();
+        else _engine.Reload();
+    }
 
     [RelayCommand]
     private async Task ToggleReader() => await _readerViewModel.ToggleAsync();

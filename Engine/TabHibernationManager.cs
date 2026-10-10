@@ -164,6 +164,14 @@ public sealed class TabHibernationManager
         }
     }
 
+    public static BrowserTab[] GetManualHibernateTargets(IEnumerable<BrowserTab> tabs, BrowserTab contextTab)
+    {
+        var snapshot = tabs.ToArray();
+        if (!snapshot.Contains(contextTab)) return [];
+        return snapshot.Where(tab => !tab.IsActive && !tab.IsHibernated &&
+            (contextTab.IsActive || tab == contextTab)).ToArray();
+    }
+
     /// <summary>Hibernates a single tab by tearing down its WebView.</summary>
     public void HibernateTab(BrowserTab tab)
     {

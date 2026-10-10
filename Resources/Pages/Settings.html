@@ -1021,16 +1021,7 @@
                   <input type="color" id="accentPicker" value="{{ACCENT_COLOR}}" style="width: 36px; height: 36px; border: none; background: transparent; cursor: pointer; padding: 0;" oninput="setAccent(this.value)" />
                 </div>
               </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Force dark mode on websites</div>
-                  <div class="setting-desc">Apply dark theme to all pages</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_DARK}} onchange="s('darkMode', this)" />
-                </div>
               </div>
-            </div>
 
             <div class="section-header" style="margin-top:20px;">Layout</div>
             <div class="card">
@@ -1050,20 +1041,8 @@
                 </div>
                 <div class="setting-control">
                   <select class="select" onchange="s('addressBarOnLeft', this)">
-                    <option value="false" {{ADDR_RIGHT}}>Right (Default)</option>
-                    <option value="true" {{ADDR_LEFT}}>Left</option>
-                  </select>
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Tab Style</div>
-                  <div class="setting-desc">Show full names for all tabs or compact mode</div>
-                </div>
-                <div class="setting-control">
-                  <select class="select" onchange="s('showTabNames', this)">
-                    <option value="false" {{TAB_COMPACT}}>Compact (Icons Only)</option>
-                    <option value="true" {{TAB_FULL}}>Full Names</option>
+                    <option value="false" {{ADDR_RIGHT}}>Right</option>
+                    <option value="true" {{ADDR_LEFT}}>Left (Default)</option>
                   </select>
                 </div>
               </div>
@@ -1244,6 +1223,18 @@
           <!-- ════════ EXTENSIONS ════════ -->
           <div class="section" id="section-extensions">
             <div class="section-header">Extensions</div>
+
+            <div class="card">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Force dark mode on websites</div>
+                  <div class="setting-desc">Apply dark theme to all pages</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_DARK}} onchange="s('darkMode', this)" />
+                </div>
+              </div>
+            </div>
 
             <div class="subsection-label">Ad &amp; Tracker Blocking</div>
             <div class="card">

@@ -10,6 +10,7 @@ namespace StrideBrowser.Converters;
 /// crowded strip degrades to favicons instead of clipping text. A parameter
 /// sets the threshold in pixels and a leading ! inverts the result, so the
 /// favicon close overlay can reappear exactly when the end button hides.
+/// 48 matches <see cref="StrideBrowser.Services.UI.TabShrinkPanel.MinNamedTabWidth"/>.
 /// </summary>
 public sealed class TabWidthToVisibilityConverter : IValueConverter
 {

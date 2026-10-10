@@ -3,11 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:StrideBrowser.Controls"
         xmlns:conv="clr-namespace:StrideBrowser.Converters"
+        xmlns:models="clr-namespace:StrideBrowser.Models"
         xmlns:ui="clr-namespace:StrideBrowser.Services.UI"
         Title="Stride"
         Icon="pack://application:,,,/icons/stride.ico"
         Width="1280" Height="800"
-        MinWidth="600" MinHeight="400"
+        MinWidth="760" MinHeight="480"
         WindowStyle="None"
         Background="{DynamicResource BaseBrush}"
         WindowStartupLocation="CenterScreen"
@@ -17,6 +18,7 @@
         <conv:TabOpacityConverter x:Key="TabOpacityConverter"/>
         <conv:TabWidthToVisibilityConverter x:Key="TabWidthToVisibilityConverter"/>
         <conv:TabCloseVisibilityConverter x:Key="TabCloseVisibilityConverter"/>
+        <conv:TabCloseOpacityConverter x:Key="TabCloseOpacityConverter"/>
         <Style x:Key="SuggestionItemStyle" TargetType="ListBoxItem">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -33,24 +35,17 @@
                                 Padding="10,7,12,7">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="3"/>
-                                    <ColumnDefinition Width="10"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border x:Name="AccentBar" Grid.Column="0" Background="{DynamicResource Accent}" CornerRadius="2" Opacity="0"/>
-                                <Path x:Name="SearchArrow" Grid.Column="1" Data="{StaticResource IconClock}" Stroke="{DynamicResource TextMuted}" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="10" Height="10" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <ContentPresenter Grid.Column="2" VerticalAlignment="Center"/>
+                                <ContentPresenter Grid.Column="0" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="ItemBorder" Property="Background" Value="#0EFFFFFF"/>
-                                <Setter TargetName="SearchArrow" Property="Stroke" Value="{DynamicResource TextSecondary}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AccentWash}"/>
-                                <Setter TargetName="AccentBar" Property="Opacity" Value="1"/>
-                                <Setter TargetName="SearchArrow" Property="Stroke" Value="{DynamicResource Accent}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -59,7 +54,68 @@
         </Style>
 
         <DataTemplate x:Key="SuggestionItemTemplate">
-            <TextBlock Text="{Binding}" FontFamily="Segoe UI Variable, Segoe UI" FontSize="13" Foreground="#C8C4BF" VerticalAlignment="Center" TextTrimming="None"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,8,0">
+                    <Path Stroke="{DynamicResource TextMuted}" StrokeThickness="1.3"
+                           StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                           Width="12" Height="12" Stretch="Uniform"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Data="{StaticResource IconGlobe}">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                            <Condition Binding="{Binding Kind}" Value="{x:Static models:SuggestionKind.History}"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Setter Property="Data" Value="{StaticResource IconClock}"/>
+                                    </MultiDataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                            <Condition Binding="{Binding Kind}" Value="{x:Static models:SuggestionKind.Shortcut}"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Setter Property="Data" Value="{StaticResource IconGlobe}"/>
+                                    </MultiDataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                            <Condition Binding="{Binding Kind}" Value="{x:Static models:SuggestionKind.Search}"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Setter Property="Data" Value="{StaticResource IconSearch}"/>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+                    <Image Source="{Binding Favicon}" Width="14" Height="14"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Favicon}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+                </Grid>
+                <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontFamily="Segoe UI Variable, Segoe UI" FontSize="13" Foreground="#C8C4BF" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Grid.Column="2" Text="{Binding Suffix}" FontFamily="Segoe UI Variable, Segoe UI" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="180"/>
+            </Grid>
         </DataTemplate>
         <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <!--  FAVICON PILL TAB â€” The Stride signature element       -->
@@ -67,18 +123,40 @@
         <!--  Inactive: favicon circle only, 70% opacity            -->
         <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <DataTemplate x:Key="TabItemTemplate">
-            <Grid Height="28" Cursor="Hand" Background="Transparent"
-                  MouseRightButtonUp="TabItem_RightClick" Tag="{Binding}"
-                  ToolTip="{Binding Title}">
+            <Grid Height="31" Cursor="Hand" Background="Transparent" Tag="{Binding}">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=48}" Value="Collapsed">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Width" Value="16"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="20"/>    <!-- Favicon + hover close overlay -->
-                    <ColumnDefinition Width="*"/>     <!-- Title takes leftover, never pushes close out -->
-                    <ColumnDefinition Width="Auto"/>  <!-- Close pill (active only) -->
+                    <ColumnDefinition Width="Auto"/>   <!-- Favicon slot -->
+                    <ColumnDefinition Width="Auto"/>   <!-- Audio indicator -->
+                    <ColumnDefinition Width="*"/>      <!-- Title -->
+                    <ColumnDefinition Width="Auto"/>   <!-- Close Button (hover only) -->
                 </Grid.ColumnDefinitions>
-                <!-- Pin indicator removed in favor of pill background -->
-                <!-- Favicon â€” 20Ã-20 area with 16Ã-16 icon -->
-                <Grid Grid.Column="0" Width="20" Height="20" VerticalAlignment="Center">
-                    <!-- Default Stride icon — hidden when site favicon loads, shares same dim as favicon -->
+
+                <!-- Favicon — centered 16x16 icon slot -->
+                <Grid Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Grid>
+                        <Grid.Visibility>
+                            <MultiBinding Converter="{StaticResource TabCloseVisibilityConverter}" ConverterParameter="NarrowInverse">
+                                <Binding Path="IsPinned"/>
+                                <Binding Path="IsMouseOver" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                                <Binding Path="IsSelected" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                            </MultiBinding>
+                        </Grid.Visibility>
+                    <!-- Default Stride icon — hidden when site favicon loads -->
                     <Image Source="{Binding DataContext.FallbackIconUri, RelativeSource={RelativeSource AncestorType=Window}}"
                            Width="14" Height="14"
                            RenderOptions.BitmapScalingMode="HighQuality"
@@ -91,6 +169,27 @@
                                     <DataTrigger Binding="{Binding Favicon}" Value="{x:Null}">
                                         <Setter Property="Visibility" Value="Visible"/>
                                     </DataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                            <Condition Binding="{Binding Url}" Value="{x:Static models:InternalUrls.Downloads}"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </MultiDataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                            <Condition Binding="{Binding Url}" Value="{x:Static models:InternalUrls.History}"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </MultiDataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                            <Condition Binding="{Binding Url}" Value="{x:Static models:InternalUrls.Settings}"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </MultiDataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Image.Style>
@@ -107,9 +206,75 @@
                             </MultiBinding>
                         </Image.Opacity>
                     </Image>
-                    <!-- Actual favicon -->
+                    <!-- Internal page icon: Downloads -->
+                    <Path Data="{StaticResource IconDownload}"
+                          Stroke="{DynamicResource TextMuted}"
+                          StrokeThickness="1.4" Width="14" Height="14"
+                          Stretch="Uniform"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                            <Condition Binding="{Binding Url}" Value="{x:Static models:InternalUrls.Downloads}"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+                    <!-- Internal page icon: History -->
+                    <Path Data="{StaticResource IconClock}"
+                          Stroke="{DynamicResource TextMuted}"
+                          StrokeThickness="1.4" Width="14" Height="14"
+                          Stretch="Uniform"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                            <Condition Binding="{Binding Url}" Value="{x:Static models:InternalUrls.History}"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+                    <!-- Internal page icon: Settings -->
+                    <Path Data="{StaticResource IconSettings}"
+                          Stroke="{DynamicResource TextMuted}"
+                          StrokeThickness="1.4" Width="14" Height="14"
+                          Stretch="Uniform"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                            <Condition Binding="{Binding Url}" Value="{x:Static models:InternalUrls.Settings}"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+                    <!-- Site Favicon -->
                     <Image Source="{Binding Favicon}"
-                           Width="16" Height="16"
+                           Width="16" Height="16" Stretch="Uniform"
                            RenderOptions.BitmapScalingMode="HighQuality"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center" x:Name="FaviconImage">
@@ -126,99 +291,92 @@
                             </MultiBinding>
                         </Image.Opacity>
                     </Image>
-                    <!-- INACTIVE close: overlay on favicon, hover tab to show, hidden when selected -->
-                    <Button Click="CloseTab_Click" Tag="{Binding}"
-                            ToolTip="Close tab"
-                            Width="12" Height="12"
-                            HorizontalAlignment="Right" VerticalAlignment="Top"
-                            Margin="0,-2,-2,0" Cursor="Hand">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Opacity" Value="0"/>
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="Transparent" CornerRadius="3" Padding="1">
-                                                <ContentPresenter HorizontalAlignment="Center"
-                                                                  VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                                <Style.Triggers>
-                                    <!-- Fade in when hovering the TAB (ListBoxItem), not just favicon -->
-                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                        <DataTrigger.EnterActions>
-                                            <BeginStoryboard>
-                                                <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                                     To="1" Duration="0:0:0.08">
-                                                        <DoubleAnimation.EasingFunction>
-                                                            <QuadraticEase EasingMode="EaseOut"/>
-                                                        </DoubleAnimation.EasingFunction>
-                                                    </DoubleAnimation>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </DataTrigger.EnterActions>
-                                        <DataTrigger.ExitActions>
-                                            <BeginStoryboard>
-                                                <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                                     To="0" Duration="0:0:0.08"/>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </DataTrigger.ExitActions>
-                                    </DataTrigger>
-                                    <!-- Hide completely when tab is selected (active uses pill close) -->
-                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                    </DataTrigger>
-                                    <!-- Full Names: close lives at the card end, not on the icon -->
-                                    <DataTrigger Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                    </DataTrigger>
-                                    <!-- Crowded strip: overlay returns on the favicon top right -->
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"/>
-                                            <Condition Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=!44}" Value="Visible"/>
-                                        </MultiDataTrigger.Conditions>
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </MultiDataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                        <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextPrimary}"
-                              StrokeThickness="1.2" Width="5" Height="5" Stretch="Uniform"
+                    </Grid>
+                    <Button Click="CloseTab_Click" Tag="{Binding}" ToolTip="Close tab"
+                            Style="{DynamicResource IconBtn}" Width="16" Height="16" Padding="0">
+                        <Button.Visibility>
+                            <MultiBinding Converter="{StaticResource TabCloseVisibilityConverter}" ConverterParameter="Narrow">
+                                <Binding Path="IsPinned"/>
+                                <Binding Path="IsMouseOver" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                                <Binding Path="IsSelected" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                            </MultiBinding>
+                        </Button.Visibility>
+                        <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextMuted}"
+                              StrokeThickness="1.2" Width="7" Height="7" Stretch="Uniform"
                               StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                     </Button>
                 </Grid>
-                <!-- Title â€” visible only when tab is selected -->
-                <TextBlock Grid.Column="1" Text="{Binding Title}"
+
+                <!-- Tab title: 6px pre-title padding, clean typography -->
+                <Button Grid.Column="1" Click="TabAudio_Click" Tag="{Binding}"
+                        Width="24" Height="24" Padding="4" Margin="4,0,0,0" VerticalAlignment="Center">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource IconBtn}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="ToolTip" Value="Mute tab"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasAudioIndicator}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=48}" Value="Collapsed">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                    <Setter Property="ToolTip" Value="Unmute tab"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <Path Stroke="{DynamicResource TextMuted}" StrokeThickness="1.2"
+                          Width="12" Height="12" Stretch="Uniform">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Data" Value="M 2 6 L 5 6 L 9 2 L 9 14 L 5 10 L 2 10 Z M 12 4 C 15 6 15 10 12 12"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                        <Setter Property="Data" Value="M 2 6 L 5 6 L 9 2 L 9 14 L 5 10 L 2 10 Z M 11 5 L 15 11 M 15 5 L 11 11"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+                </Button>
+                <TextBlock Grid.Column="2" Text="{Binding Title}"
                            Foreground="{DynamicResource TextPrimary}"
                            FontSize="12" FontFamily="{DynamicResource UIFont}"
                            FontWeight="Normal"
                            VerticalAlignment="Center"
                            TextTrimming="None"
-                           Margin="6,0,0,0"
+                           ClipToBounds="True"
+                           Margin="6,0,4,0"
                            x:Name="TabTitle">
+                    <!-- Long titles soften out instead of ending in dots -->
+                    <TextBlock.OpacityMask>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#FFFFFFFF" Offset="0.78"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </TextBlock.OpacityMask>
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Setter Property="Opacity" Value="0.5"/>
+                            <Setter Property="Opacity" Value="0.65"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible"/>
                                     <Setter Property="Opacity" Value="1.0"/>
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                                <!-- Crowded strip: collapse to favicon once the tab nears icon width -->
-                                <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=64}" Value="Collapsed">
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="False"/>
+                                        <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </MultiDataTrigger>
+                                <!-- In crowded tab strip, hide title when width drops below threshold -->
+                                <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=48}" Value="Collapsed">
                                     <Setter Property="Visibility" Value="Collapsed"/>
                                 </DataTrigger>
                                 <!-- Pinned tabs never show title -->
@@ -229,20 +387,27 @@
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
-                <!-- ACTIVE close: end of pill, always visible when selected -->
-                <Button Grid.Column="2" Click="CloseTab_Click" Tag="{Binding}"
+
+                <!-- Close button: Helium hover-only, 4px rounded-rectangle highlight -->
+                <Button Grid.Column="3" Click="CloseTab_Click" Tag="{Binding}"
                         ToolTip="Close tab"
-                        Width="14" Height="14" Margin="6,0,2,0"
+                        Width="24" Height="24" Margin="0"
                         VerticalAlignment="Center" Cursor="Hand">
                     <Button.Visibility>
                         <MultiBinding Converter="{StaticResource TabCloseVisibilityConverter}">
-                            <Binding Path="IsSelected" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
-                            <Binding Path="DataContext.Settings.ShowTabNames" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
-                            <Binding Path="IsMouseOver" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
                             <Binding Path="IsPinned"/>
+                            <Binding Path="IsMouseOver" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                            <Binding Path="IsActive"/>
                         </MultiBinding>
                     </Button.Visibility>
+                    <Button.Opacity>
+                        <MultiBinding Converter="{StaticResource TabCloseOpacityConverter}">
+                            <Binding Path="IsMouseOver" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                            <Binding Path="IsActive"/>
+                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ListBoxItem}"/>
+                        </MultiBinding>
+                    </Button.Opacity>
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="Transparent"/>
@@ -252,13 +417,13 @@
                                 <Setter.Value>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="Bd" Background="Transparent"
-                                                CornerRadius="4" Padding="2">
+                                                CornerRadius="4" Padding="3,1">
                                             <ContentPresenter HorizontalAlignment="Center"
                                                               VerticalAlignment="Center"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#14FFFFFF"/>
+                                                <Setter TargetName="Bd" Property="Background" Value="#1AFFFFFF"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -267,7 +432,7 @@
                         </Style>
                     </Button.Style>
                     <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextMuted}"
-                          StrokeThickness="1" Width="6" Height="6" Stretch="Uniform"
+                          StrokeThickness="1.2" Width="7" Height="7" Stretch="Uniform"
                           StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                 </Button>
             </Grid>
@@ -288,12 +453,26 @@
             <!--  This IS the toolbar. No separate address bar.        -->
             <!--  Stride signature: compact, warm, minimal.            -->
             <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-            <Border x:Name="Toolbar" DockPanel.Dock="Top" Height="40"
+            <Border x:Name="Toolbar" DockPanel.Dock="Top"
                     Background="{DynamicResource SidebarBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="0"
                     MouseLeftButtonDown="TitleBar_MouseDown">
-                <Grid x:Name="ToolbarRow" Margin="10,0,0,0">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Height" Value="38"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=760}" Value="Collapsed">
+                                <Setter Property="Height" Value="76"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid x:Name="ToolbarRow" Margin="6,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="38"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>    <!-- Nav buttons -->
                         <ColumnDefinition Width="*"/>       <!-- DockPanel for Tabs + Address Bar -->
@@ -301,12 +480,12 @@
                         <ColumnDefinition Width="Auto"/>    <!-- Window controls -->
                     </Grid.ColumnDefinitions>
 
-                    <!-- Navigation: â† â†’ â†» -->
+                    <!-- Navigation: ← → ↻ -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal"
-                                VerticalAlignment="Center" Margin="0,0,4,0">
+                                VerticalAlignment="Center" Margin="0,0,2,0">
                         <Button Command="{Binding GoBackCommand}" Style="{DynamicResource IconBtn}"
                                 Visibility="{Binding Settings.ShowBackArrow, Converter={StaticResource BoolToVis}}"
-                                Width="26" Height="26" ToolTip="Back (Alt+Left)">
+                                Width="28" Height="28" Margin="0,0,3,0" ToolTip="Back (Alt+Left)">
                             <Path Data="{StaticResource IconBack}"
                                   Stroke="{DynamicResource TextSecondary}"
                                   StrokeThickness="1.4" Width="10" Height="10"
@@ -315,25 +494,65 @@
                         </Button>
                         <Button Command="{Binding GoForwardCommand}" Style="{DynamicResource IconBtn}"
                                 Visibility="{Binding Settings.ShowForwardArrow, Converter={StaticResource BoolToVis}}"
-                                Width="26" Height="26" ToolTip="Forward (Alt+Right)">
+                                Width="28" Height="28" Margin="0,0,3,0" ToolTip="Forward (Alt+Right)">
                             <Path Data="{StaticResource IconForward}"
                                   Stroke="{DynamicResource TextSecondary}"
                                   StrokeThickness="1.4" Width="10" Height="10"
                                   Stretch="Uniform" StrokeStartLineCap="Round"
                                   StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                         </Button>
-                        <Button Command="{Binding RefreshCommand}" Style="{DynamicResource IconBtn}"
+                        <Button x:Name="RefreshButton" Command="{Binding RefreshCommand}" Style="{DynamicResource IconBtn}"
                                 Visibility="{Binding Settings.ShowRefreshButton, Converter={StaticResource BoolToVis}}"
-                                Width="26" Height="26" ToolTip="Refresh (F5)">
-                            <Path Data="{StaticResource IconRefresh}"
-                                  Fill="{DynamicResource TextSecondary}"
+                                Width="28" Height="28">
+                            <Button.ToolTip>
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Refresh (F5)"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                                    <Setter Property="Text" Value="Stop loading (Esc)"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Button.ToolTip>
+                            <Path
                                   Width="12" Height="12"
-                                  Stretch="Uniform"/>
+                                  Stretch="Uniform">
+                                <Path.Style>
+                                    <Style TargetType="Path">
+                                        <Setter Property="Data" Value="{StaticResource IconRefresh}"/>
+                                        <Setter Property="Fill" Value="{DynamicResource TextSecondary}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                                <Setter Property="Data" Value="{StaticResource IconClose}"/>
+                                                <Setter Property="Fill" Value="{x:Null}"/>
+                                                <Setter Property="Stroke" Value="{DynamicResource TextSecondary}"/>
+                                                <Setter Property="StrokeThickness" Value="1.4"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
                         </Button>
                     </StackPanel>
 
-                    <DockPanel Grid.Column="1" LastChildFill="True">
-                        <!-- URL domain and New Tab (+) Grouping -->
+                    <DockPanel x:Name="ToolbarCenter" LastChildFill="True" Height="38">
+                        <DockPanel.Style>
+                            <Style TargetType="DockPanel">
+                                <Setter Property="Grid.Column" Value="1"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=760}" Value="Collapsed">
+                                        <Setter Property="Grid.Column" Value="0"/>
+                                        <Setter Property="Grid.ColumnSpan" Value="3"/>
+                                        <Setter Property="Grid.Row" Value="1"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DockPanel.Style>
+                        <!-- URL domain grouping -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <StackPanel.Style>
                                 <Style TargetType="StackPanel">
@@ -348,7 +567,7 @@
                             
                             <!-- URL domain - bare text, no background. Minimal. -->
                             <StackPanel Orientation="Horizontal"
-                                        VerticalAlignment="Center" Margin="4,0,8,0"
+                                        VerticalAlignment="Center" Margin="0,0,6,0"
                                         Cursor="Hand"
                                         ToolTip="Click to edit URL (Ctrl+L)">
                                 <Path x:Name="SecurityIcon"
@@ -368,8 +587,11 @@
                                            MouseLeftButtonDown="UrlLabel_Click"
                                            Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource BoolToVis}}"/>
                                 <Border x:Name="StandardAddressBarBorder"
-                                        Padding="6,4"
-                                        Width="240"
+                                        Padding="8,0"
+                                        Width="200"
+                                        Height="28"
+                                        Margin="0,0"
+                                        HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
                                         Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource InverseBoolToVis}, FallbackValue=Collapsed}">
                                     <Border.Style>
@@ -377,12 +599,12 @@
                                             <Setter Property="Background" Value="#0DFFFFFF"/>
                                             <Setter Property="BorderBrush" Value="#1AFFFFFF"/>
                                             <Setter Property="BorderThickness" Value="1"/>
-                                            <Setter Property="CornerRadius" Value="8"/>
+                                            <Setter Property="CornerRadius" Value="6"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ElementName=StandardSuggestionsPopup, Path=IsOpen}" Value="True">
                                                     <Setter Property="Background" Value="#111111"/>
                                                     <Setter Property="BorderBrush" Value="#2A2A2E"/>
-                                                    <Setter Property="CornerRadius" Value="8,8,0,0"/>
+                                                    <Setter Property="CornerRadius" Value="6,6,0,0"/>
                                                     <Setter Property="BorderThickness" Value="1,1,1,0"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -397,9 +619,9 @@
                                               Grid.Column="0"
                                               Data="{StaticResource IconLock}"
                                               Stroke="{DynamicResource TextMuted}"
-                                              StrokeThickness="1" Width="10" Height="10"
+                                              StrokeThickness="1.2" Width="12" Height="12"
                                               Stretch="Uniform" VerticalAlignment="Center"
-                                              Margin="4,0,6,0"/>
+                                              Margin="0,0,7,0"/>
                                         <TextBox x:Name="StandardAddressBar"
                                                  Grid.Column="1"
                                                  Background="Transparent"
@@ -410,15 +632,16 @@
                                                  CaretBrush="{DynamicResource TextPrimary}"
                                                  Text="{Binding AddressText, UpdateSourceTrigger=PropertyChanged}"
                                                  TextChanged="StandardAddressBar_TextChanged"
+                                                 PreviewMouseDown="StandardAddressBar_PreviewMouseDown"
                                                  KeyDown="StandardAddressBar_KeyDown"
                                                  GotKeyboardFocus="StandardAddressBar_GotKeyboardFocus"
                                                  LostFocus="StandardAddressBar_LostFocus"/>
                                     </Grid>
                                 </Border>
-                                <Popup x:Name="StandardSuggestionsPopup"
-                                       PlacementTarget="{Binding ElementName=StandardAddressBarBorder}"
-                                       Placement="Bottom"
-                                       IsOpen="{Binding ShowSuggestions}"
+                                 <Popup x:Name="StandardSuggestionsPopup"
+                                        PlacementTarget="{Binding ElementName=StandardAddressBarBorder}"
+                                        Placement="Bottom"
+                                        IsOpen="{Binding StandardPopupOpen}"
                                        StaysOpen="False"
                                        AllowsTransparency="True"
                                        Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource InverseBoolToVis}}"
@@ -426,7 +649,7 @@
                                     <Border Background="#111111"
                                             BorderBrush="#2A2A2E" 
                                             BorderThickness="1,0,1,1"
-                                            CornerRadius="0,0,8,8"
+                                            CornerRadius="0,0,6,6"
                                             Width="{Binding ElementName=StandardAddressBarBorder, Path=ActualWidth}"
                                             Padding="4,4,4,4">
                                         <ListBox x:Name="StandardSuggestionsList"
@@ -445,19 +668,10 @@
                                     </Border>
                                 </Popup>
                             </StackPanel>
-
-                            <!-- Action buttons: + New Tab -->
-                            <Button Click="NewTab_Click" Style="{DynamicResource IconBtn}"
-                                    Width="26" Height="26" ToolTip="New Tab (Ctrl+T)" Margin="0,0,4,0">
-                                <Path Data="{StaticResource IconPlus}"
-                                      Stroke="{DynamicResource TextSecondary}"
-                                      StrokeThickness="1.4" Width="10" Height="10"
-                                      Stretch="Uniform" StrokeStartLineCap="Round"
-                                      StrokeEndLineCap="Round"/>
-                            </Button>
                         </StackPanel>
                         
                         <!-- Horizontal tab strip â€” favicon pills -->
+                        <ui:TabStripLayout>
                         <ListBox x:Name="TabList"
                                  Style="{DynamicResource FaviconTabListStyle}"
                                  SelectionChanged="TabList_SelectionChanged"
@@ -466,28 +680,37 @@
                                  ScrollViewer.PanningMode="HorizontalOnly"
                                  ScrollViewer.CanContentScroll="False"
                                  Background="Transparent" BorderThickness="0"
-                                 Margin="4,0,4,0"
+                                 Margin="0"
+                                 UseLayoutRounding="True" SnapsToDevicePixels="True"
                                  VerticalAlignment="Center"
                                  PreviewMouseWheel="TabList_PreviewMouseWheel"
-                                 PreviewMouseLeftButtonDown="TabList_PreviewMouseLeftButtonDown"
-                                 PreviewMouseMove="TabList_PreviewMouseMove"
-                                 DragOver="TabList_DragOver"
-                                 Drop="TabList_Drop"
-                                 AllowDrop="True"
                                  ItemTemplate="{StaticResource TabItemTemplate}">
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <ui:TabShrinkPanel/>
+                                    <ui:TabShrinkPanel
+                                        ViewportWidth="{Binding AvailableTabWidth, RelativeSource={RelativeSource AncestorType=ui:TabStripLayout}}"
+                                        ShowTabNames="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
                                 </ItemsPanelTemplate>
                             </ListBox.ItemsPanel>
                         </ListBox>
+                        <!-- New Tab (+) sits at the back of the last tab -->
+                        <Button x:Name="NewTabButton" Click="NewTab_Click" Style="{DynamicResource IconBtn}"
+                                DockPanel.Dock="Left" VerticalAlignment="Center"
+                                Width="28" Height="28" ToolTip="New Tab (Ctrl+T)" Margin="4,0,6,0">
+                            <Path Data="{StaticResource IconPlus}"
+                                  Stroke="{DynamicResource TextSecondary}"
+                                  StrokeThickness="1.4" Width="10" Height="10"
+                                  Stretch="Uniform" StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"/>
+                        </Button>
+                        </ui:TabStripLayout>
                     </DockPanel>
 
                     <!-- Action buttons: Downloads, Settings -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal"
-                                VerticalAlignment="Center" Margin="0,0,4,0">
-                        <!-- â”€â”€â”€â”€ Downloads Button â”€â”€â”€â”€ -->
-                        <Grid Width="26" Height="26" Margin="4,0" Cursor="Hand" ToolTip="Downloads (Ctrl+J)"
+                                VerticalAlignment="Center" Margin="0,0,6,0">
+                        <!-- ──── Downloads Button ──── -->
+                        <Grid Width="28" Height="28" Margin="0,0,3,0" Cursor="Hand" ToolTip="Downloads (Ctrl+J)"
                               Visibility="{Binding Settings.ShowDownloadsIcon, Converter={StaticResource BoolToVis}}">
                             <Ellipse Width="24" Height="24" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" 
                                      Visibility="{Binding HasActiveDownloads, Converter={StaticResource BoolToVis}}" />
@@ -500,21 +723,22 @@
                                     <RotateTransform Angle="-90"/>
                                 </Ellipse.RenderTransform>
                             </Ellipse>
-                            <Button Click="Downloads_Click" Style="{DynamicResource IconBtn}" Width="26" Height="26" FocusVisualStyle="{x:Null}">
+                            <Button Click="Downloads_Click" Style="{DynamicResource IconBtn}" Width="28" Height="28" FocusVisualStyle="{x:Null}">
                                 <Path Data="{StaticResource IconDownload}" 
                                       Stroke="{DynamicResource TextSecondary}" Fill="Transparent"
                                       StrokeThickness="1.4" Width="12" Height="12" 
                                       Stretch="Uniform" StrokeStartLineCap="Round" StrokeLineJoin="Round" />
                             </Button>
                         </Grid>
-                        <Grid Visibility="{Binding Settings.ShowReaderIcon, Converter={StaticResource BoolToVis}}">
+                        <Grid Visibility="{Binding Settings.ShowReaderIcon, Converter={StaticResource BoolToVis}}"
+                              Margin="0,0,3,0">
                             <Button x:Name="ReaderButton" Command="{Binding ToggleReaderCommand}" Style="{DynamicResource IconBtn}"
-                                    Width="26" Height="26" ToolTip="Reader view (Ctrl+Shift+R)" Margin="4,0">
+                                    Width="28" Height="28" ToolTip="Reader view (Ctrl+Shift+R)">
                                 <TextBlock Text="Aa" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" HorizontalAlignment="Center" />
                             </Button>
                         </Grid>
                         <!-- ──────────── Update Button ──────────── -->
-                        <Grid Width="26" Height="26" Margin="4,0" Cursor="Hand" 
+                        <Grid Width="28" Height="28" Margin="0,0,3,0" Cursor="Hand"
                               Visibility="{Binding ShowUpdateIcon, Converter={StaticResource BoolToVis}}">
                               
                             <Grid.ToolTip>
@@ -569,7 +793,7 @@
                                 </Ellipse.Style>
                             </Ellipse>
 
-                            <Button Command="{Binding HandleUpdateClickCommand}" Style="{DynamicResource IconBtn}" Width="26" Height="26" FocusVisualStyle="{x:Null}">
+                            <Button Command="{Binding HandleUpdateClickCommand}" Style="{DynamicResource IconBtn}" Width="28" Height="28" FocusVisualStyle="{x:Null}">
                                 <Grid>
                                     <!-- Gear -->
                                     <Path Data="{StaticResource IconSettings}" 
@@ -603,7 +827,7 @@
 
                         <Grid Visibility="{Binding Settings.ShowSettingsIcon, Converter={StaticResource BoolToVis}}">
                             <Button Click="Settings_Click" Style="{DynamicResource IconBtn}"
-                                    ToolTip="Settings (Ctrl+,)" Width="26" Height="26" Margin="4,0" Cursor="Hand" FocusVisualStyle="{x:Null}">
+                                    ToolTip="Settings (Ctrl+,)" Width="28" Height="28" Cursor="Hand" FocusVisualStyle="{x:Null}">
                                 <Path Data="{StaticResource IconSettings}" 
                                       Stroke="{DynamicResource TextSecondary}" Fill="Transparent"
                                       StrokeThickness="1.4" Width="14" Height="14" 
@@ -612,25 +836,25 @@
                         </Grid>
                     </StackPanel>
 
-                    <!-- Window controls: â€” â-¡ Ã- -->
+                    <!-- Window controls: — □ ✕ -->
                     <StackPanel Grid.Column="3" Orientation="Horizontal"
                                 VerticalAlignment="Stretch">
                         <Button Click="Minimize_Click" Style="{DynamicResource TitleBtn}"
-                                Width="42" Height="40">
+                                Width="42" Height="38">
                             <Path Data="{StaticResource IconMinimize}"
                                   Stroke="{DynamicResource TextSecondary}"
                                   StrokeThickness="1" Width="10" Height="1"
                                   Stretch="Fill"/>
                         </Button>
                         <Button Click="Maximize_Click" Style="{DynamicResource TitleBtn}"
-                                Width="42" Height="40">
+                                Width="42" Height="38">
                             <Path Data="{StaticResource IconMaximize}"
                                   Stroke="{DynamicResource TextSecondary}"
                                   StrokeThickness="1" Width="10" Height="10"
                                   Stretch="Uniform" Fill="Transparent"/>
                         </Button>
                         <Button Click="Close_Click" Style="{DynamicResource CloseTitleBtn}"
-                                Width="42" Height="40">
+                                Width="42" Height="38">
                             <Path Data="{StaticResource IconClose}"
                                   Stroke="{DynamicResource TextSecondary}"
                                   StrokeThickness="1.2" Width="10" Height="10"
@@ -738,78 +962,9 @@
                              ScrollViewer.VerticalScrollBarVisibility="Hidden"
                              KeyboardNavigation.DirectionalNavigation="Cycle"
                              FocusVisualStyle="{x:Null}"
-                             PreviewMouseLeftButtonUp="SuggestionsList_MouseUp">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Padding" Value="0"/>
-                                <Setter Property="Margin" Value="0"/>
-                                <Setter Property="Cursor" Value="Hand"/>
-                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ListBoxItem">
-                                            <Border x:Name="ItemBorder"
-                                                    Background="Transparent"
-                                                    CornerRadius="4"
-                                                    Padding="10,7,12,7">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="3"/>
-                                                        <ColumnDefinition Width="10"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <!-- Accent indicator bar (only shown when selected) -->
-                                                    <Border x:Name="AccentBar"
-                                                            Grid.Column="0"
-                                                            Background="{DynamicResource Accent}"
-                                                            CornerRadius="2"
-                                                            Opacity="0"/>
-                                                    <!-- Icon area -->
-                                                    <Path x:Name="SearchArrow"
-                                                          Grid.Column="1"
-                                                          Data="{StaticResource IconClock}"
-                                                          Stroke="{DynamicResource TextMuted}"
-                                                          StrokeThickness="1.3"
-                                                          StrokeStartLineCap="Round"
-                                                          StrokeEndLineCap="Round"
-                                                          StrokeLineJoin="Round"
-                                                          Width="10" Height="10"
-                                                          Stretch="Uniform"
-                                                          VerticalAlignment="Center"
-                                                          Margin="0,0,8,0"/>
-                                                    <!-- Text -->
-                                                    <ContentPresenter Grid.Column="2"
-                                                                      VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="ItemBorder" Property="Background" Value="#0EFFFFFF"/>
-                                                    <Setter TargetName="SearchArrow" Property="Stroke" Value="{DynamicResource TextSecondary}"/>
-                                                </Trigger>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AccentWash}"/>
-                                                    <Setter TargetName="AccentBar" Property="Opacity" Value="1"/>
-                                                    <Setter TargetName="SearchArrow" Property="Stroke" Value="{DynamicResource Accent}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding}"
-                                           FontFamily="Segoe UI Variable, Segoe UI"
-                                           FontSize="13"
-                                           Foreground="#C8C4BF"
-                                           VerticalAlignment="Center"
-                                           TextTrimming="None"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
+                              PreviewMouseLeftButtonUp="SuggestionsList_MouseUp"
+                              ItemContainerStyle="{StaticResource SuggestionItemStyle}"
+                              ItemTemplate="{StaticResource SuggestionItemTemplate}">
                     </ListBox>
                 </Grid>
             </Border>

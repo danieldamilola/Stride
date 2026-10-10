@@ -36,11 +36,27 @@ public sealed class SessionStore : ISessionStore
         }
     }
 
-    public void Save(IEnumerable<(string Url, string Title, bool IsPinned)> tabs)
+    /// <summary>
+    /// Index of the tab to activate on restore: the saved active entry,
+    /// clamped into range. Falls back to the first tab when none is marked
+    /// (e.g. sessions written before the active tab was persisted).
+    /// Pure logic, covered by unit tests.
+    /// </summary>
+    public static int ResolveActiveIndex(IReadOnlyList<SessionEntry> entries)
+    {
+        if (entries.Count == 0) return 0;
+        for (var i = 0; i < entries.Count; i++)
+        {
+            if (entries[i].IsActive) return i;
+        }
+        return 0;
+    }
+
+    public void Save(IEnumerable<(string Url, string Title, bool IsPinned, bool IsActive)> tabs)
     {
         try
         {
-            var entries = tabs.Select(t => new SessionEntry(t.Url, t.Title, t.IsPinned)).ToList();
+            var entries = tabs.Select(t => new SessionEntry(t.Url, t.Title, t.IsPinned, t.IsActive)).ToList();
             var dir = Path.GetDirectoryName(FilePath)!;
             Directory.CreateDirectory(dir);
             var json = JsonSerializer.Serialize(entries, JsonOpts);

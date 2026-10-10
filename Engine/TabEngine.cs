@@ -477,6 +477,27 @@ public sealed class TabEngine : IDisposable
         GetActiveCore()?.Reload();
     }
 
+    public void StopLoading() => GetActiveCore()?.Stop();
+
+    public async Task HardReloadAsync()
+    {
+        var core = GetActiveCore();
+        if (core != null) await core.CallDevToolsProtocolMethodAsync("Page.reload", "{\"ignoreCache\":true}");
+    }
+
+    public void SetTabMuted(BrowserTab tab, bool muted)
+    {
+        tab.IsMuted = muted;
+        var core = GetCoreForTab(tab.Id);
+        if (core != null) core.IsMuted = muted;
+    }
+
+    public void HibernateTab(BrowserTab tab)
+    {
+        if (tab.IsActive || tab.IsHibernated) return;
+        _hibernationManager.HibernateTab(tab);
+    }
+
     public async Task FindInPageAsync()
     {
         if (ActiveTab is not null && _webViews.TryGetValue(ActiveTab.Id, out var wv) && wv.CoreWebView2 is not null)
@@ -985,6 +1006,10 @@ public sealed class TabEngine : IDisposable
     private void WireNavigationEvents(dynamic wv, BrowserTab tab)
     {
         CoreWebView2 core = wv.CoreWebView2;
+        core.HistoryChanged += (_, _) =>
+        {
+            if (_webViews.ContainsKey(tab.Id)) UpdateTabFromWebView(wv, tab, recordHistory: false);
+        };
         core.NavigationStarting += (_, e) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
@@ -1139,6 +1164,15 @@ public sealed class TabEngine : IDisposable
                     _dispatcher.Invoke(() => { tab.Favicon = t.Result; TabStateChanged?.Invoke(tab); });
             }, TaskContinuationOptions.OnlyOnRanToCompletion);
         };
+        core.IsMuted = tab.IsMuted;
+        core.IsDocumentPlayingAudioChanged += (_, _) =>
+        {
+            if (_webViews.ContainsKey(tab.Id)) tab.IsAudioPlaying = core.IsDocumentPlayingAudio;
+        };
+        core.IsMutedChanged += (_, _) =>
+        {
+            if (_webViews.ContainsKey(tab.Id)) tab.IsMuted = core.IsMuted;
+        };
     }
 
     public event Action<bool>? FullScreenChanged;
@@ -1196,7 +1230,7 @@ public sealed class TabEngine : IDisposable
         _webViews.Clear();
     }
 
-    private void UpdateTabFromWebView(dynamic wv, BrowserTab tab)
+    private void UpdateTabFromWebView(dynamic wv, BrowserTab tab, bool recordHistory = true)
     {
         string source = (string)wv.Source?.ToString() ?? "";
         if (InternalUrls.IsDataOrBlank(source))
@@ -1215,7 +1249,7 @@ public sealed class TabEngine : IDisposable
         }, TaskContinuationOptions.OnlyOnRanToCompletion);
         TabStateChanged?.Invoke(tab);
 
-        _historyStore.Add(source, tab.Title);
+        if (recordHistory) _historyStore.Add(source, tab.Title);
     }
 
     private static void HandleInternalPageTitles(BrowserTab tab)
@@ -1381,6 +1415,8 @@ public sealed class TabEngine : IDisposable
         _webViewHost!.Children.Remove((FrameworkElement)wv);
         try { wv.Dispose(); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
         _webViews.Remove(tabId);
+        var tab = Tabs.FirstOrDefault(t => t.Id == tabId);
+        if (tab != null) tab.IsAudioPlaying = false;
     }
 
     public void Shutdown()
