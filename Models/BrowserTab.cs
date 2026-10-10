@@ -48,6 +48,16 @@ public sealed partial class BrowserTab : ObservableObject
     [ObservableProperty]
     private bool _isLoading;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAudioIndicator))]
+    private bool _isAudioPlaying;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAudioIndicator))]
+    private bool _isMuted;
+
+    public bool HasAudioIndicator => IsAudioPlaying || IsMuted;
+
     /// <summary>Last time this tab was the active tab (for LRU hibernation).</summary>
     public DateTime LastActiveTime { get; set; } = DateTime.UtcNow;
 

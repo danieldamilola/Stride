@@ -6,25 +6,47 @@ using System.Windows.Data;
 namespace StrideBrowser.Converters;
 
 /// <summary>
-/// Decides the tab end close button visibility from hover, selection, tab style,
-/// container width, and pin state. One binding replaces a fragile trigger
-/// stack: the button only ever shows while hovering its tab. Pinned never,
-/// crowded yields to the favicon overlay, otherwise the hovered active tab and
-/// every hovered wide Full Names tab get the end button.
+/// Reserves the end close button's space on wide tabs and reveals it on hover.
+/// Narrow tabs replace the favicon with a close button on hover.
+/// Pinned tabs keep their favicon and have no close button.
 /// </summary>
 public sealed class TabCloseVisibilityConverter : IMultiValueConverter
 {
-    public double NarrowThreshold { get; set; } = 44.0;
+    /// <summary>Width below which a card drops its end close button for a favicon overlay.</summary>
+    public const double NarrowTabWidth = 56.0;
+
+    public double NarrowThreshold { get; set; } = NarrowTabWidth;
 
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        if (values.Length < 5) return Visibility.Collapsed;
-        if (values[4] is bool pinned && pinned) return Visibility.Collapsed;
+        if (parameter is string mode && (mode == "Narrow" || mode == "NarrowInverse"))
+        {
+            // A favicon card shows the cross only once it is selected, so the
+            // close never appears from a stray hover on a crowded tab.
+            var show = values.Length >= 4 && values[0] is false && values[3] is true
+                && values[2] is double narrowWidth && narrowWidth < NarrowThreshold;
+            return show == (mode == "Narrow") ? Visibility.Visible : Visibility.Collapsed;
+        }
+        if (string.Equals(parameter as string, "Swap", StringComparison.OrdinalIgnoreCase))
+            return ShouldSwap(values) ? Visibility.Visible : Visibility.Collapsed;
+        if (string.Equals(parameter as string, "SwapInverse", StringComparison.OrdinalIgnoreCase))
+            return ShouldSwap(values) ? Visibility.Collapsed : Visibility.Visible;
+
+        if (values.Length < 3) return Visibility.Collapsed;
+        if (values[0] is bool pinned && pinned) return Visibility.Collapsed;
         if (values[2] is double width && width < NarrowThreshold) return Visibility.Collapsed;
-        if (values[3] is not bool hovered || !hovered) return Visibility.Collapsed;
-        if (values[0] is bool selected && selected) return Visibility.Visible;
-        if (values[1] is bool fullNames && fullNames) return Visibility.Visible;
-        return Visibility.Collapsed;
+        // The slot stays visible even when the cross is not drawn, so the end of
+        // every wide card is clickable before the cross fades in. Opacity does
+        // the appearing, not Visibility.
+        return Visibility.Visible;
+    }
+
+    private static bool ShouldSwap(object[] values)
+    {
+        if (values.Length < 3) return false;
+        if (values[2] is bool pinned && pinned) return false;
+        return values[0] is bool selected && selected
+            && values[1] is bool hovered && hovered;
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) =>

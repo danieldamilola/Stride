@@ -9,14 +9,13 @@ using System.Windows.Media.Imaging;
 namespace StrideBrowser.Services.UI;
 
 /// <summary>
-/// Drag feedback for tab reorder, modeled on Zen's drag image: a floating pill
-/// built from the tab's favicon and title that follows the cursor while the
-/// strip slides the remaining tabs out of the way underneath it.
+/// Renders the dragged tab at its actual size and keeps the pointer's grip position.
 /// </summary>
 public sealed class TabDragAdorner : Adorner
 {
     private readonly ImageSource? _favicon;
     private readonly string _title;
+    private readonly bool _isPinned;
     private readonly double _ghostWidth;
     private readonly double _ghostHeight;
     private readonly Brush _plate;
@@ -24,20 +23,29 @@ public sealed class TabDragAdorner : Adorner
     private readonly double _pixelsPerDip;
     private Point _mouse;
 
-    public TabDragAdorner(UIElement adornedElement, ImageSource? favicon, string title, double height)
+    public TabDragAdorner(UIElement adornedElement, ImageSource? favicon, string title, double height, bool isPinned = false)
         : base(adornedElement)
     {
         _favicon = favicon;
-        _title = Shorten(title, 28);
+        _isPinned = isPinned;
+        _title = isPinned ? string.Empty : Shorten(title, 28);
         IsHitTestVisible = false;
         _typeface = new Typeface("Segoe UI");
         _pixelsPerDip = VisualTreeHelper.GetDpi(adornedElement).PixelsPerDip;
         _plate = new SolidColorBrush(Color.FromRgb(0x2A, 0x2A, 0x2E));
         _plate.Freeze();
 
-        var text = Measure(_title, 12);
-        _ghostWidth = Math.Min(220, 12 + 20 + 6 + text.Width + 12);
-        _ghostHeight = Math.Max(20, height);
+        if (isPinned)
+        {
+            _ghostWidth = 32;
+            _ghostHeight = 31;
+        }
+        else
+        {
+            var text = Measure(_title, 12);
+            _ghostWidth = Math.Min(TabShrinkPanel.MaxTabWidth, 6 + 16 + 6 + text.Width + 12);
+            _ghostHeight = 31;
+        }
     }
 
     public void Update(Point mouse)
@@ -50,16 +58,26 @@ public sealed class TabDragAdorner : Adorner
     {
         var top = Math.Max(0, (AdornedElement.RenderSize.Height - _ghostHeight) / 2);
         var rect = new Rect(_mouse.X - _ghostWidth / 2, top, _ghostWidth, _ghostHeight);
-        dc.DrawRoundedRectangle(_plate, null, rect, 9, 9);
-        var iconRect = new Rect(rect.X + 10, top + (_ghostHeight - 16) / 2, 16, 16);
-        if (_favicon is not null)
-            dc.DrawImage(_favicon, iconRect);
-        var text = new FormattedText(_title, CultureInfo.CurrentUICulture,
-            FlowDirection.LeftToRight, _typeface, 12,
-            Brushes.White, _pixelsPerDip);
-        text.MaxTextWidth = Math.Max(0, rect.Width - 12 - 20 - 6 - 10);
-        text.Trimming = TextTrimming.None;
-        dc.DrawText(text, new Point(iconRect.Right + 6, top + (_ghostHeight - text.Height) / 2));
+        dc.DrawRoundedRectangle(_plate, null, rect, 8, 8);
+
+        if (_isPinned)
+        {
+            var iconRect = new Rect(rect.X + (_ghostWidth - 16) / 2, top + (_ghostHeight - 16) / 2, 16, 16);
+            if (_favicon is not null)
+                dc.DrawImage(_favicon, iconRect);
+        }
+        else
+        {
+            var iconRect = new Rect(rect.X + 6, top + (_ghostHeight - 16) / 2, 16, 16);
+            if (_favicon is not null)
+                dc.DrawImage(_favicon, iconRect);
+            var text = new FormattedText(_title, CultureInfo.CurrentUICulture,
+                FlowDirection.LeftToRight, _typeface, 12,
+                Brushes.White, _pixelsPerDip);
+            text.MaxTextWidth = Math.Max(0, rect.Width - 6 - 16 - 6 - 10);
+            text.Trimming = TextTrimming.CharacterEllipsis;
+            dc.DrawText(text, new Point(iconRect.Right + 6, top + (_ghostHeight - text.Height) / 2));
+        }
     }
 
     private FormattedText Measure(string text, double size) =>
@@ -77,7 +95,7 @@ public sealed class TabDragAdorner : Adorner
     /// cursor point: moving right, the card's leading right edge decides; moving
     /// left, its leading left edge decides. Pure logic, covered by unit tests.
     /// </summary>
-    public static int ComputeShiftedIndex(IReadOnlyList<double> centers, int oldIndex, double x, double lastX, double halfWidth)
+    public static int ComputeShiftedIndex(IReadOnlyList<double> centers, int oldIndex, double x, double lastX, double halfWidth, int minSlot = 0, int maxSlot = -1)
     {
         if (centers.Count == 0) return 0;
         int slot;
@@ -95,7 +113,9 @@ public sealed class TabDragAdorner : Adorner
             while (i < centers.Count && centers[i] < edge) i++;
             slot = i;
         }
-        return Math.Clamp(slot, 0, centers.Count - 1);
+        var hi = maxSlot >= 0 ? Math.Min(maxSlot, centers.Count - 1) : centers.Count - 1;
+        var lo = Math.Clamp(minSlot, 0, hi);
+        return Math.Clamp(slot, lo, hi);
     }
 
     /// <summary>Loads the fallback Stride mark used when a tab has no favicon. Dark by default.</summary>

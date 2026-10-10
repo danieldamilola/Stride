@@ -118,7 +118,9 @@ public static class Composition
             var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
             var readerViewModel = sp.GetRequiredService<ViewModels.Reader.ReaderViewModel>();
             var updateService = sp.GetRequiredService<UpdateService>();
-            return new BrowserViewModel(settings, navigation, downloadStore, engine, readerService, readerViewModel, updateService);
+            var suggestions = sp.GetRequiredService<ISuggestionProvider>();
+            var faviconLoader = sp.GetRequiredService<FaviconLoader>();
+            return new BrowserViewModel(settings, navigation, downloadStore, engine, readerService, readerViewModel, updateService, suggestions, faviconLoader);
         });
         services.AddSingleton<ViewModels.Reader.ReaderViewModel>(sp =>
         {

@@ -31,6 +31,10 @@ Desktop.ini
 design-system/
 nul
 
+## Throwaway investigation output
+scratch/
+tools/ToolbarProbe/
+
 Output/
 publish/
 

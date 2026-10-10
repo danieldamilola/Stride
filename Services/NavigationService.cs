@@ -43,6 +43,54 @@ public sealed class NavigationService
         return string.Format(template, Uri.EscapeDataString(query));
     }
 
+    /// <summary>
+    /// True when Enter should reload the current page: the user typed nothing
+    /// new and the box still shows the recorded display text.
+    /// </summary>
+    public static bool ShouldReload(string typed, string lastDisplayed, bool edited, string currentUrl) =>
+        !edited && !string.IsNullOrEmpty(currentUrl) &&
+        string.Equals(typed?.Trim() ?? "", lastDisplayed?.Trim() ?? "", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Full address bar text: the bare domain for web pages, the friendly
+    /// page name for internal pages, empty for blanks. Falls back to the tab
+    /// title for internal pages without a mapped name.
+    /// </summary>
+    public static string ToDisplayText(string? url, string fallbackTitle = "")
+    {
+        if (string.IsNullOrWhiteSpace(url)) return fallbackTitle;
+        if (InternalUrls.IsDataOrBlank(url)) return "";
+        if (InternalUrls.IsInternal(url)) return FriendlyInternalName(url, fallbackTitle);
+        return ToDisplayDomain(url);
+    }
+
+    private static string FriendlyInternalName(string url, string fallbackTitle) => url switch
+    {
+        InternalUrls.NewTab => "Search",
+        InternalUrls.Settings => "Settings",
+        InternalUrls.OneTab => "OneTab",
+        InternalUrls.History => "History",
+        InternalUrls.Downloads => "Downloads",
+        InternalUrls.Focus => "Focus Locked",
+        InternalUrls.Health => "Health",
+        _ => fallbackTitle
+    };
+
+    /// <summary>
+    /// Shortens a URL for address bar display: bare domain without a leading
+    /// www, like standard browsers. Internal pages and blanks show empty.
+    /// Anything without a usable host shows as-is.
+    /// </summary>
+    public static string ToDisplayDomain(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url) || InternalUrls.IsInternal(url)) return "";
+        var text = url.Trim();
+        if (!Uri.TryCreate(text, UriKind.Absolute, out var uri)) return text;
+        var host = uri.Host;
+        if (host.StartsWith("www.", StringComparison.OrdinalIgnoreCase)) host = host[4..];
+        return string.IsNullOrEmpty(host) ? text : host;
+    }
+
     /// <summary>Returns the names of all supported search engines.</summary>
     public static IReadOnlyList<string> AvailableSearchEngines => SearchEngines.Keys.ToList();
 

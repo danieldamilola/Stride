@@ -29,6 +29,9 @@ public partial class MainWindow : Window
 {
     private readonly BrowserViewModel _vm;
     private readonly TabEngine _engine;
+    private readonly TabStripController _tabStripController;
+    private readonly ToolbarDropController _toolbarDropController;
+    private readonly ToolbarNavigationController _toolbarNavigationController;
     private readonly IOneTabStore _oneTabStore;
     private readonly ISettingsStore _settingsStore;
     private readonly ISessionStore _sessionStore;
@@ -67,6 +70,15 @@ public partial class MainWindow : Window
 
         _engine = services.GetRequiredService<TabEngine>();
         _engine.AttachHost(WebViewHost);
+        _tabStripController = new TabStripController(TabList, _engine, Dispatcher, FocusAddressBar);
+        _toolbarDropController = new ToolbarDropController(TabList, StandardAddressBarBorder, NewTabButton,
+            (input, target) => _tabStripController.OpenDroppedInputAsync(
+                Uri.TryCreate(input, UriKind.Absolute, out var uri) && uri.IsFile ? uri.AbsoluteUri : _vm.ResolveInput(input), target),
+            () => _engine.ActiveTab, _tabStripController.ActivateTabAsync);
+        Closed += (_, _) => _tabStripController.Dispose();
+        Closed += (_, _) => _toolbarDropController.Dispose();
+        _toolbarNavigationController = new ToolbarNavigationController(RefreshButton, _engine);
+        Closed += (_, _) => _toolbarNavigationController.Dispose();
 
         var linkPreviewController = services.GetRequiredService<Services.UI.LinkPreviewWindowController>();
         linkPreviewController.Attach(this);
@@ -124,11 +136,7 @@ public partial class MainWindow : Window
         {
             OnMouseHWheel = delta =>
             {
-                var scrollViewer = GetScrollViewer(TabList);
-                if (scrollViewer != null)
-                {
-                    scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + (delta * 0.5));
-                }
+                if (TabList.IsMouseOver) _tabStripController.ScrollWheel(-delta);
             }
         };
         _chromeManager.Initialize();
@@ -238,8 +246,10 @@ public partial class MainWindow : Window
                     tab.IsPinned = entry.IsPinned;
                     _ = _engine.LoadFaviconAsync(tab);
                 }
-                _engine.SwitchTo(_engine.Tabs[0]);
-                await _engine.ActivateAsync(_engine.Tabs[0]);
+                var activeIndex = SessionStore.ResolveActiveIndex(session);
+                if (activeIndex >= _engine.Tabs.Count) activeIndex = 0;
+                _engine.SwitchTo(_engine.Tabs[activeIndex]);
+                await _engine.ActivateAsync(_engine.Tabs[activeIndex]);
                 restored = true;
             }
         }
@@ -264,7 +274,9 @@ public partial class MainWindow : Window
         {
             if (tab.IsActive)
             {
-                _vm.SyncAddressBar(tab);
+                _vm.SyncNavigationState();
+                if (TabList.SelectedItem != tab || (!StandardAddressBar.IsKeyboardFocusWithin && !_isCommandBarOpen))
+                    _vm.SyncAddressBar(tab);
                 UpdateSecurityIcon(tab.Url);
                 UpdateUrlLabel(tab);
                 UpdateToolbarTint(tab);
@@ -292,6 +304,7 @@ public partial class MainWindow : Window
             if (tab.IsActive)
             {
                 _vm.IsLoading = isLoading;
+                _vm.SyncNavigationState();
                 if (isLoading)
                 {
                     LoadingBar.Visibility = Visibility.Visible;
@@ -482,159 +495,18 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Drives the shrink panel from code: Full Names shares the strip width
-    /// across tabs, Compact stacks natural sizes. Code driven because template
-    /// bindings resolve unreliably for items panels.
+    /// Recalculates tab widths and keeps the active tab visible after a setting change.
     /// </summary>
-    private void ApplyTabShrink()
-    {
-        try
-        {
-            var shrink = _vm.Settings.ShowTabNames;
-            var panel = FindVisualChild<TabShrinkPanel>(TabList);
-            if (panel is not null)
-                TabShrinkPanel.SetShrinkEnabled(panel, shrink);
-            // A scrolling strip measures content with infinite width, which can
-            // never shrink. Full Names disables strip scrolling so the panel
-            // measures against the real viewport and every tab stays visible.
-            var scrollViewer = GetScrollViewer(TabList);
-            if (scrollViewer is not null)
-                scrollViewer.HorizontalScrollBarVisibility = shrink
-                    ? ScrollBarVisibility.Disabled
-                    : ScrollBarVisibility.Hidden;
-            foreach (var item in TabList.Items)
-            {
-                if (TabList.ItemContainerGenerator.ContainerFromItem(item) is ListBoxItem container)
-                    container.ClearValue(UIElement.RenderTransformProperty);
-            }
-        }
-        catch (Exception ex) { Trace.WriteLine($"ApplyTabShrink failed: {ex.Message}"); }
-    }
+    private void ApplyTabShrink() => _tabStripController.ApplyLayout();
 
-    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
-    {
-        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
-        {
-            var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is T match) return match;
-            var nested = FindVisualChild<T>(child);
-            if (nested is not null) return nested;
-        }
-        return null;
-    }
+    private void TabList_PreviewMouseWheel(object sender, MouseWheelEventArgs e) =>
+        _tabStripController.OnPreviewMouseWheel(sender, e);
 
-    // ───────────────────── Tab Events ─────────────────────
-
-    private void TabList_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
-    {
-        var scrollViewer = GetScrollViewer(TabList);
-        if (scrollViewer != null)
-        {
-            // Use e.Delta to support smooth precision trackpad scrolling
-            // e.Delta is typically 120 for a mouse wheel notch, and smaller values for trackpads.
-            scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - (e.Delta * 0.5));
-            e.Handled = true;
-        }
-    }
-
-    private ScrollViewer? GetScrollViewer(DependencyObject depObj)
-    {
-        if (depObj is ScrollViewer sv) return sv;
-        for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(depObj); i++)
-        {
-            var child = System.Windows.Media.VisualTreeHelper.GetChild(depObj, i);
-            var result = GetScrollViewer(child);
-            if (result != null) return result;
-        }
-        return null;
-    }
-
-    private void EnsureTabVisible(BrowserTab tab)
-    {
-        Dispatcher.BeginInvoke(new Action(() =>
-        {
-            try
-            {
-                var sv = GetScrollViewer(TabList);
-                if (sv == null) return;
-
-                var container = TabList.ItemContainerGenerator.ContainerFromItem(tab) as FrameworkElement;
-                if (container == null)
-                {
-                    TabList.ScrollIntoView(tab);
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        try
-                        {
-                            var c2 = TabList.ItemContainerGenerator.ContainerFromItem(tab) as FrameworkElement;
-                            if (c2 != null)
-                                AnimateTabIntoView(sv, c2);
-                            else
-                                TabList.ScrollIntoView(tab);
-                        }
-                        catch (Exception ex) { Trace.WriteLine($"EnsureTabVisible retry failed: {ex}"); }
-                    }), System.Windows.Threading.DispatcherPriority.Loaded);
-                    return;
-                }
-
-                AnimateTabIntoView(sv, container);
-            }
-            catch (Exception ex) { Trace.WriteLine($"EnsureTabVisible failed: {ex}"); }
-        }), System.Windows.Threading.DispatcherPriority.Loaded);
-    }
-
-    private void AnimateTabIntoView(ScrollViewer sv, FrameworkElement container)
-    {
-        try
-        {
-            var transform = container.TransformToAncestor(sv);
-            var rect = transform.TransformBounds(new Rect(0, 0, container.ActualWidth, container.ActualHeight));
-
-            double targetOffset = sv.HorizontalOffset;
-            const double padding = 4;
-
-            if (rect.Left < padding)
-                targetOffset += rect.Left - padding;
-            else if (rect.Right > sv.ViewportWidth - padding)
-                targetOffset += rect.Right - sv.ViewportWidth + padding;
-
-            targetOffset = Math.Max(0, Math.Min(targetOffset, sv.ExtentWidth - sv.ViewportWidth));
-            if (Math.Abs(targetOffset - sv.HorizontalOffset) < 0.5) return;
-
-            var animation = new DoubleAnimation
-            {
-                From = sv.HorizontalOffset,
-                To = targetOffset,
-                Duration = TimeSpan.FromMilliseconds(200),
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
-            };
-
-            var dummy = new System.Windows.Controls.Border { Tag = sv };
-            dummy.SetValue(ScrollViewerHelper.HorizontalOffsetProperty, sv.HorizontalOffset);
-            dummy.BeginAnimation(ScrollViewerHelper.HorizontalOffsetProperty, animation);
-        }
-        catch
-        {
-            container.BringIntoView();
-        }
-    }
-
-    private static class ScrollViewerHelper
-    {
-        public static readonly DependencyProperty HorizontalOffsetProperty =
-            DependencyProperty.RegisterAttached("HorizontalOffset", typeof(double), typeof(ScrollViewerHelper),
-                new PropertyMetadata(0.0, OnOffsetChanged));
-
-        private static void OnOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (d is System.Windows.Controls.Border border && border.Tag is ScrollViewer sv)
-                sv.ScrollToHorizontalOffset((double)e.NewValue);
-        }
-    }
+    private void EnsureTabVisible(BrowserTab tab) => _tabStripController.EnsureVisible(tab);
 
     private async void TabList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isUpdatingSelection) return;
+        if (_isUpdatingSelection || _tabStripController.IsUpdatingSelection) return;
 
         var listBox = (ListBox)sender;
         if (listBox.SelectedItem is not BrowserTab tab || tab == _engine.ActiveTab) return;
@@ -645,6 +517,11 @@ public partial class MainWindow : Window
             _engine.SwitchTo(tab);
         }
         finally { _isUpdatingSelection = false; }
+
+        // Landing on a new tab focuses the bar with everything selected,
+        // so typing starts instantly. Queued after activation below.
+        if (tab.Url == InternalUrls.NewTab)
+            Dispatcher.BeginInvoke(new Action(FocusAddressBar), System.Windows.Threading.DispatcherPriority.Loaded);
 
         Dispatcher.InvokeAsync(async () =>
         {
@@ -676,11 +553,8 @@ public partial class MainWindow : Window
 
     private void CloseTab_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button b && b.Tag is BrowserTab tab)
-        {
-            if (tab.IsPinned) return;
-            _engine.CloseTab(tab);
-        }
+        if (sender is Button { Tag: BrowserTab tab }) _tabStripController.CloseTab(tab);
+        e.Handled = true;
     }
 
     private async void Downloads_Click(object sender, RoutedEventArgs e)
@@ -688,59 +562,10 @@ public partial class MainWindow : Window
         await OpenDownloadsTab();
     }
 
-    private void TabItem_RightClick(object sender, MouseButtonEventArgs e)
+
+    private void TabAudio_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Grid grid || grid.Tag is not BrowserTab tab) return;
-
-        var menu = new ContextMenu();
-
-        var pinItem = new MenuItem
-        {
-            Header = tab.IsPinned ? "Unpin Tab" : "Pin Tab",
-        };
-        pinItem.Click += (_, _) => 
-        {
-            tab.IsPinned = !tab.IsPinned;
-            if (tab.IsPinned)
-            {
-                var index = _engine.Tabs.IndexOf(tab);
-                if (index > 0)
-                {
-                    _engine.Tabs.Move(index, 0);
-                }
-            }
-        };
-        menu.Items.Add(pinItem);
-
-        var dupeItem = new MenuItem
-        {
-            Header = "Duplicate Tab",
-        };
-        dupeItem.Click += async (_, _) =>
-        {
-            try
-            {
-                var newTab = _engine.CreateTab(tab.Url);
-                _engine.SwitchTo(newTab);
-                await _engine.ActivateAsync(newTab);
-            }
-            catch (Exception ex) { Trace.WriteLine($"Duplicate tab error: {ex.Message}"); }
-        };
-        menu.Items.Add(dupeItem);
-
-        if (!tab.IsPinned)
-        {
-            menu.Items.Add(new Separator());
-            var closeItem = new MenuItem
-            {
-                Header = "Close Tab",
-            };
-            closeItem.Click += (_, _) => _engine.CloseTab(tab);
-            menu.Items.Add(closeItem);
-        }
-
-        grid.ContextMenu = menu;
-        menu.IsOpen = true;
+        if (sender is Button { Tag: BrowserTab tab }) _engine.SetTabMuted(tab, !tab.IsMuted);
         e.Handled = true;
     }
 
@@ -752,7 +577,8 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.Escape)
         {
-            _vm.ShowSuggestions = false;
+            _vm.RestoreTypedQuery();
+            _vm.CloseSuggestions();
             HideCommandBar();
             e.Handled = true;
             return;
@@ -760,16 +586,14 @@ public partial class MainWindow : Window
 
         if (e.Key == Key.Down && _vm.ShowSuggestions)
         {
-            if (_vm.SelectedSuggestionIndex < _vm.Suggestions.Count - 1)
-                _vm.SelectedSuggestionIndex++;
+            _vm.MoveSuggestionHighlight(1);
             e.Handled = true;
             return;
         }
 
         if (e.Key == Key.Up && _vm.ShowSuggestions)
         {
-            if (_vm.SelectedSuggestionIndex > 0)
-                _vm.SelectedSuggestionIndex--;
+            _vm.MoveSuggestionHighlight(-1);
             e.Handled = true;
             return;
         }
@@ -778,16 +602,8 @@ public partial class MainWindow : Window
         e.Handled = true;
 
         // If a suggestion is selected, use it; otherwise use typed text
-        string? input;
-        if (_vm.ShowSuggestions && _vm.SelectedSuggestionIndex >= 0
-            && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
-        {
-            input = _vm.Suggestions[_vm.SelectedSuggestionIndex];
-        }
-        else
-        {
-            input = (sender as System.Windows.Controls.TextBox)?.Text?.Trim() ?? _vm.AddressText?.Trim();
-        }
+        var input = _vm.TakeHighlightedInput()
+            ?? _vm.ResolveBarInput((sender as System.Windows.Controls.TextBox)?.Text);
 
         if (string.IsNullOrEmpty(input)) return;
 
@@ -795,7 +611,7 @@ public partial class MainWindow : Window
         if (_engine.ActiveTab is { } tab)
         {
             tab.Url = url;
-            _vm.AddressText = url;
+            _vm.ShowNavigatedUrl(url);
             _engine.Navigate(tab, url);
         }
 
@@ -815,6 +631,16 @@ public partial class MainWindow : Window
         {
             Keyboard.Focus(AddressBar);
             AddressBar.SelectAll();
+            e.Handled = true;
+        }
+    }
+
+    private void StandardAddressBar_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!StandardAddressBar.IsKeyboardFocusWithin)
+        {
+            Keyboard.Focus(StandardAddressBar);
+            StandardAddressBar.SelectAll();
             e.Handled = true;
         }
     }
@@ -841,6 +667,7 @@ public partial class MainWindow : Window
             {
                 StandardAddressBar.Text = "";
             }
+            _vm.NoteAddressDisplayed(StandardAddressBar.Text);
             StandardAddressBar.SelectAll();
         }
     }
@@ -849,6 +676,7 @@ public partial class MainWindow : Window
     {
         if (_isCommandBarOpen) return;
         _isCommandBarOpen = true;
+        _vm.IsFloatingBarOpen = true;
 
         // Pre-fill with current URL
         if (_engine.ActiveTab is { } activeTab && !string.IsNullOrEmpty(activeTab.Url)
@@ -860,6 +688,7 @@ public partial class MainWindow : Window
         {
             _vm.AddressText = "";
         }
+        _vm.NoteAddressDisplayed(_vm.AddressText);
 
         CommandBarGrid.Visibility = Visibility.Visible;
 
@@ -888,6 +717,7 @@ public partial class MainWindow : Window
     {
         if (!_isCommandBarOpen) return;
         _isCommandBarOpen = false;
+        _vm.IsFloatingBarOpen = false;
 
         _vm.ShowSuggestions = false;
         _vm.Suggestions.Clear();
@@ -923,25 +753,36 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.Escape)
         {
-            _vm.ShowSuggestions = false;
+            _vm.RestoreTypedQuery();
+            _vm.CloseSuggestions();
             UpdateUrlLabel(_engine.ActiveTab);
             WebViewHost.Focus();
             e.Handled = true;
             return;
         }
 
+        // The arrow keys can move the highlight into the list, which puts a
+        // suggestion in the box that the user never typed. A delete must hand
+        // the typed query back rather than start eating the suggestion.
+        if (e.Key is Key.Back or Key.Delete && _vm.IsRowHighlighted)
+        {
+            _vm.RestoreTypedQuery();
+            _vm.ShowSuggestions = true;
+            StandardAddressBar.Select(StandardAddressBar.Text.Length, 0);
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key == Key.Down && _vm.ShowSuggestions)
         {
-            if (_vm.SelectedSuggestionIndex < _vm.Suggestions.Count - 1)
-                _vm.SelectedSuggestionIndex++;
+            _vm.MoveSuggestionHighlight(1);
             e.Handled = true;
             return;
         }
 
         if (e.Key == Key.Up && _vm.ShowSuggestions)
         {
-            if (_vm.SelectedSuggestionIndex > 0)
-                _vm.SelectedSuggestionIndex--;
+            _vm.MoveSuggestionHighlight(-1);
             e.Handled = true;
             return;
         }
@@ -949,15 +790,7 @@ public partial class MainWindow : Window
         if (e.Key != Key.Enter) return;
         e.Handled = true;
 
-        string? input;
-        if (_vm.ShowSuggestions && _vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
-        {
-            input = _vm.Suggestions[_vm.SelectedSuggestionIndex];
-        }
-        else
-        {
-            input = StandardAddressBar.Text?.Trim();
-        }
+        var input = _vm.TakeHighlightedInput() ?? _vm.ResolveBarInput(StandardAddressBar.Text);
 
         if (string.IsNullOrEmpty(input)) return;
 
@@ -965,16 +798,17 @@ public partial class MainWindow : Window
         if (_engine.ActiveTab is { } tab)
         {
             tab.Url = url;
-            _vm.AddressText = url;
+            _vm.ShowNavigatedUrl(url);
             _engine.Navigate(tab, url);
         }
         
-        _vm.ShowSuggestions = false;
+        _vm.CloseSuggestions();
         WebViewHost.Focus();
     }
 
     private void StandardAddressBar_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
+        _vm.RevealFullUrl();
         StandardAddressBar.Dispatcher.InvokeAsync(() => StandardAddressBar.SelectAll());
     }
 
@@ -985,22 +819,25 @@ public partial class MainWindow : Window
 
     private void StandardAddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (sender is TextBox tb && tb.IsKeyboardFocusWithin)
-            _ = _vm.UpdateSuggestionsAsync(tb.Text);
+        if (sender is not TextBox tb || !tb.IsKeyboardFocusWithin) return;
+        if (_vm.SuppressSuggestionRefresh) { _vm.SuppressSuggestionRefresh = false; return; }
+        _vm.MarkAddressEdited();
+        _ = _vm.UpdateSuggestionsAsync(tb.Text);
     }
 
     private void StandardSuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (_vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
+        var input = _vm.TakeHighlightedInput();
+        if (input is not null)
         {
-            var url = _vm.ResolveInput(_vm.Suggestions[_vm.SelectedSuggestionIndex]);
+            var url = _vm.ResolveInput(input);
             if (_engine.ActiveTab is { } tab)
             {
                 tab.Url = url;
-                _vm.AddressText = url;
+                _vm.ShowNavigatedUrl(url);
                 _engine.Navigate(tab, url);
             }
-            _vm.ShowSuggestions = false;
+            _vm.CloseSuggestions();
             WebViewHost.Focus();
         }
     }
@@ -1018,23 +855,25 @@ public partial class MainWindow : Window
 
     private void AddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (sender is TextBox tb && tb.IsKeyboardFocusWithin)
-            _ = _vm.UpdateSuggestionsAsync(tb.Text);
+        if (sender is not TextBox tb || !tb.IsKeyboardFocusWithin) return;
+        if (_vm.SuppressSuggestionRefresh) { _vm.SuppressSuggestionRefresh = false; return; }
+        _vm.MarkAddressEdited();
+        _ = _vm.UpdateSuggestionsAsync(tb.Text);
     }
 
     private void SuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (_vm.SelectedSuggestionIndex >= 0 && _vm.SelectedSuggestionIndex < _vm.Suggestions.Count)
+        var input = _vm.TakeHighlightedInput();
+        if (input is not null)
         {
-            var input = _vm.Suggestions[_vm.SelectedSuggestionIndex];
             var url = _vm.ResolveInput(input);
             if (_engine.ActiveTab is { } tab)
             {
                 tab.Url = url;
-                _vm.AddressText = url;
+                _vm.ShowNavigatedUrl(url);
                 _engine.Navigate(tab, url);
             }
-            _vm.ShowSuggestions = false;
+            _vm.CloseSuggestions();
             HideCommandBar();
         }
     }
@@ -1045,7 +884,7 @@ public partial class MainWindow : Window
         
         if (!StandardAddressBar.IsKeyboardFocusWithin)
         {
-            StandardAddressBar.Text = tab.Url;
+            StandardAddressBar.Text = NavigationService.ToDisplayText(tab.Url, tab.Title);
         }
 
         if (string.IsNullOrEmpty(tab.Url) || InternalUrls.IsInternal(tab.Url))
@@ -1351,10 +1190,41 @@ public partial class MainWindow : Window
 
     // ──── Keyboard shortcuts ────
 
+    /// <summary>True while the dropdown is open and an address box holds logical focus.</summary>
+    private bool IsAddressBoxLogicallyFocused()
+    {
+        var focused = FocusManager.GetFocusedElement(this);
+        return ReferenceEquals(focused, StandardAddressBar) || ReferenceEquals(focused, AddressBar);
+    }
+
     private async void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         try
         {
+            if (e.Key == Key.Escape && _tabStripController.CancelDrag())
+            {
+                e.Handled = true;
+                return;
+            }
+            if (e.Key == Key.Escape && _vm.IsLoading && !_vm.ShowSuggestions && !_isCommandBarOpen)
+            {
+                _engine.StopLoading();
+            }
+            // Suggestion navigation lives here, not only on the address boxes:
+            // arrow keys have been observed dying between the window tunnel and
+            // the box when keyboard focus is lost, so the window drives the
+            // highlight whenever the dropdown is open and an address box holds
+            // logical focus. Handling here also stops a double move below.
+            if ((e.Key == Key.Down || e.Key == Key.Up) && _vm.ShowSuggestions && IsAddressBoxLogicallyFocused())
+            {
+                var target = ReferenceEquals(FocusManager.GetFocusedElement(this), AddressBar) ? AddressBar : StandardAddressBar;
+                if (!target.IsKeyboardFocusWithin)
+                    target.Focus();
+                _vm.MoveSuggestionHighlight(e.Key == Key.Down ? 1 : -1);
+                e.Handled = true;
+                return;
+            }
+
             if (_shortcuts is not null)
             {
                 var modifiers = Keyboard.Modifiers;
@@ -1440,230 +1310,6 @@ public partial class MainWindow : Window
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
     // ───────────────────── Tab Drag & Drop ─────────────────────
-
-    private Point _dragStartPoint;
-    private bool _isDragging;
-    private TabDragAdorner? _dragAdorner;
-    private AdornerLayer? _dragLayer;
-    private ListBoxItem? _dragContainer;
-    private double _dragWidth;
-    private double _dragLastX;
-
-    private void TabList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        _dragStartPoint = e.GetPosition(null);
-        _isDragging = false;
-    }
-
-    private void TabList_PreviewMouseMove(object sender, MouseEventArgs e)
-    {
-        if (e.LeftButton != MouseButtonState.Pressed || _isDragging) return;
-
-        var pos = e.GetPosition(null);
-        var diff = _dragStartPoint - pos;
-        if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
-            Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
-        {
-            var listBox = sender as ListBox;
-            if (listBox?.SelectedItem is BrowserTab tab)
-            {
-                _isDragging = true;
-                try
-                {
-                    BeginTabDragVisual(listBox, tab);
-                    DragDrop.DoDragDrop(listBox, tab, DragDropEffects.Move);
-                }
-                finally
-                {
-                    EndTabDragVisual();
-                    _isDragging = false;
-                }
-            }
-        }
-    }
-
-    private void BeginTabDragVisual(ListBox listBox, BrowserTab tab)
-    {
-        try
-        {
-            _dragContainer = listBox.ItemContainerGenerator.ContainerFromItem(tab) as ListBoxItem;
-            _dragLayer = AdornerLayer.GetAdornerLayer(listBox);
-            if (_dragLayer is null)
-            {
-                Trace.WriteLine("[DEBUG-tabdrag] begin with null layer");
-                return;
-            }
-            if (_dragContainer is not null)
-            {
-                _dragWidth = _dragContainer.RenderSize.Width;
-                _dragLastX = _dragContainer.TransformToAncestor(listBox).Transform(new Point(0, 0)).X
-                    + _dragWidth / 2;
-                _dragContainer.ClearValue(VisibilityProperty);
-                _dragContainer.Visibility = Visibility.Hidden;
-            }
-            _dragAdorner = new TabDragAdorner(listBox, tab.Favicon ?? TabDragAdorner.DefaultIcon(_appIconLight), tab.Title ?? "", _dragContainer?.RenderSize.Height ?? 28);
-            _dragLayer.Add(_dragAdorner);
-        }
-        catch (Exception ex) { Trace.WriteLine($"Tab drag visual failed: {ex.Message}"); }
-    }
-
-    private void EndTabDragVisual()
-    {
-        try
-        {
-            if (_dragAdorner is not null && _dragLayer is not null)
-                _dragLayer.Remove(_dragAdorner);
-            _dragContainer?.ClearValue(VisibilityProperty);
-            foreach (var item in TabList.Items)
-            {
-                if (TabList.ItemContainerGenerator.ContainerFromItem(item) is ListBoxItem container)
-                    container.ClearValue(UIElement.RenderTransformProperty);
-            }
-        }
-        catch (Exception ex) { Trace.WriteLine($"Tab drag cleanup failed: {ex.Message}"); }
-        finally
-        {
-            _dragAdorner = null;
-            _dragLayer = null;
-            _dragContainer = null;
-        }
-    }
-
-    private void TabList_DragOver(object sender, DragEventArgs e)
-    {
-        if (e.Data.GetData(typeof(BrowserTab)) is not BrowserTab draggedTab || sender is not ListBox listBox) return;
-        e.Effects = DragDropEffects.Move;
-        e.Handled = true;
-
-        try
-        {
-            var pos = e.GetPosition(listBox);
-            if (_dragAdorner is not null)
-                _dragAdorner.Update(pos);
-            else
-                Trace.WriteLine("[DEBUG-tabdrag] over with null adorner");
-            AutoScrollStrip(listBox, pos.X);
-
-            // Live slide: the model stays put, in-between tabs shift aside
-            // animated, the drop commits. No transparency anywhere.
-            var oldIndex = _engine.Tabs.IndexOf(draggedTab);
-            if (oldIndex < 0) return;
-            var finalIndex = ShiftedIndex(listBox, oldIndex, pos.X);
-            _dragLastX = pos.X;
-            if (finalIndex >= 0)
-                ApplyDragShift(listBox, oldIndex, finalIndex);
-        }
-        catch (Exception ex) { Trace.WriteLine($"[DEBUG-tabdrag] over failed: {ex.Message}"); }
-    }
-
-    /// <summary>
-    /// Target slot for the dragged tab at a horizontal cursor position, measured
-    /// over all tabs including the hidden dragged one, compensating for its slot.
-    /// Returns -1 when the layout is not ready to measure.
-    /// </summary>
-    private int ShiftedIndex(ListBox listBox, int oldIndex, double x)
-    {
-        var centers = new List<double>();
-        foreach (var item in _engine.Tabs)
-        {
-            if (listBox.ItemContainerGenerator.ContainerFromItem(item) is not ListBoxItem container)
-                return -1;
-            centers.Add(container.TransformToAncestor(listBox).Transform(new Point(0, 0)).X
-                + container.RenderSize.Width / 2);
-        }
-        return TabDragAdorner.ComputeShiftedIndex(centers, oldIndex, x, _dragLastX, _dragWidth / 2);
-    }
-
-    /// <summary>Slides in-between tabs aside by the dragged tab width, animated.</summary>
-    private void ApplyDragShift(ListBox listBox, int oldIndex, int finalIndex)
-    {
-        for (var i = 0; i < _engine.Tabs.Count; i++)
-        {
-            if (listBox.ItemContainerGenerator.ContainerFromItem(_engine.Tabs[i]) is not ListBoxItem container)
-                continue;
-            double shift = 0;
-            if (finalIndex > oldIndex && i > oldIndex && i <= finalIndex) shift = -_dragWidth;
-            else if (finalIndex < oldIndex && i >= finalIndex && i < oldIndex) shift = _dragWidth;
-            AnimateX(container, shift);
-        }
-    }
-
-    private static void AnimateX(UIElement element, double to)
-    {
-        try
-        {
-            var transform = element.RenderTransform as TranslateTransform;
-            if (transform is null)
-            {
-                transform = new TranslateTransform();
-                element.RenderTransform = transform;
-            }
-            var animation = new DoubleAnimation(to, new Duration(TimeSpan.FromMilliseconds(120)))
-            {
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },
-                FillBehavior = FillBehavior.HoldEnd
-            };
-            transform.BeginAnimation(TranslateTransform.XProperty, animation);
-        }
-        catch (Exception ex) { Trace.WriteLine($"Tab shift animation failed: {ex.Message}"); }
-    }
-
-    /// <summary>Nudges an overflowing strip while the cursor sits in its edge zones.</summary>
-    private void AutoScrollStrip(ListBox listBox, double x)
-    {
-        var scrollViewer = GetScrollViewer(listBox);
-        if (scrollViewer is null || scrollViewer.ScrollableWidth <= 0) return;
-        const double edge = 32;
-        if (x < edge)
-            scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - 24);
-        else if (x > listBox.RenderSize.Width - edge)
-            scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + 24);
-    }
-
-    private void TabList_Drop(object sender, DragEventArgs e)
-    {
-        if (e.Data.GetData(typeof(BrowserTab)) is not BrowserTab droppedTab) return;
-
-        var listBox = sender as ListBox;
-        if (listBox is null) return;
-
-        var oldIndex = _engine.Tabs.IndexOf(droppedTab);
-        if (oldIndex < 0) return;
-
-        // Commit the visually shifted slot. Transforms are cleared by the
-        // drag cleanup running after DoDragDrop returns.
-        var finalIndex = ShiftedIndex(listBox, oldIndex, e.GetPosition(listBox).X);
-        if (finalIndex >= 0)
-        {
-            MoveTab(droppedTab, finalIndex);
-            return;
-        }
-
-        var targetElement = e.OriginalSource as FrameworkElement;
-        while (targetElement != null && targetElement != listBox)
-        {
-            if (targetElement.DataContext is BrowserTab targetTab && targetTab != droppedTab)
-            {
-                MoveTab(droppedTab, _engine.Tabs.IndexOf(targetTab));
-                return;
-            }
-            targetElement = VisualTreeHelper.GetParent(targetElement) as FrameworkElement;
-        }
-
-        // Dropped on empty strip space: move to the end.
-        MoveTab(droppedTab, _engine.Tabs.Count - 1);
-    }
-
-    private void MoveTab(BrowserTab droppedTab, int newIndex)
-    {
-        var oldIndex = _engine.Tabs.IndexOf(droppedTab);
-        if (oldIndex < 0 || newIndex < 0 || oldIndex == newIndex) return;
-        _isUpdatingSelection = true;
-        try { _engine.Tabs.Move(oldIndex, newIndex); }
-        finally { _isUpdatingSelection = false; }
-    }
-
-    // ───────────────────── Zoom Indicator ─────────────────────
 
     private void ZoomIndicator_Click(object sender, MouseButtonEventArgs e)
     {
@@ -1765,7 +1411,7 @@ public partial class MainWindow : Window
             {
                 var tabs = _engine.Tabs
                     .Where(t => !InternalUrls.IsInternal(t.Url))
-                    .Select(t => (t.Url, t.Title, t.IsPinned));
+                    .Select(t => (t.Url, t.Title, t.IsPinned, t == _engine.ActiveTab));
                 _sessionStore.Save(tabs);
             }
 

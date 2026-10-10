@@ -275,91 +275,77 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <ScrollViewer Focusable="False" Padding="0" BorderThickness="0"
+                                      HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                      VerticalScrollBarVisibility="Disabled"
+                                      CanContentScroll="False">
+                            <ItemsPresenter/>
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Setter Property="ItemContainerStyle">
                 <Setter.Value>
                     <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Margin" Value="1,0"/>
+                        <Setter Property="Padding" Value="6,0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="ClipToBounds" Value="True"/>
+                        <Setter Property="Height" Value="31"/>
+                        <Setter Property="AutomationProperties.Name" Value="{Binding Title}"/>
+                        <Setter Property="ToolTip">
+                            <Setter.Value>
+                                <ToolTip DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                    <StackPanel MaxWidth="300">
+                                        <TextBlock Text="{Binding Title}" FontSize="12" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Url}" FontSize="11" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </ToolTip>
+                            </Setter.Value>
+                        </Setter>
                         <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="Opacity" Value="0.7"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                         <Setter Property="VerticalContentAlignment" Value="Center"/>
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">
                                     <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                            CornerRadius="8" Padding="4,2">
-                                        <ContentPresenter VerticalAlignment="Center"/>
+                                            CornerRadius="8" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="Bd" Property="Background"
-                                                    Value="#0DFFFFFF"/>
+                                                    Value="{DynamicResource SurfaceHoverBrush}"/>
                                         </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Bd" Property="Background"
+                                                    Value="{DynamicResource AccentWash}"/>
+                                        </Trigger>
+                                        <MultiTrigger>
+                                            <MultiTrigger.Conditions>
+                                                <Condition Property="IsSelected" Value="True"/>
+                                                <Condition Property="IsMouseOver" Value="True"/>
+                                            </MultiTrigger.Conditions>
+                                            <Setter TargetName="Bd" Property="Background"
+                                                    Value="{DynamicResource AccentWash}"/>
+                                        </MultiTrigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>
                         <Style.Triggers>
-                            <!-- Pinned tab: subtle persistent circular background wash -->
+                            <!-- Pinned tab: subtle persistent squarcle background wash, centered 32x31 card -->
                             <DataTrigger Binding="{Binding IsPinned}" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+                                <Setter Property="Background" Value="#0DFFFFFF"/>
+                                <Setter Property="Width" Value="32"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
                             </DataTrigger>
-                            <!-- Tab hover: 100ms ease-out opacity -->
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                             To="1" Duration="0:0:0.1">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <QuadraticEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                             To="0.7" Duration="0:0:0.1">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <QuadraticEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
-                            </Trigger>
-                            <!-- Tab select: 200ms ease-in-out pill expand -->
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource AccentWash}"/>
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                             To="1" Duration="0:0:0.2">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <QuadraticEase EasingMode="EaseInOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                             To="0.7" Duration="0:0:0.2">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <QuadraticEase EasingMode="EaseInOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
-                            </Trigger>
                         </Style.Triggers>
                     </Style>
                 </Setter.Value>
@@ -471,6 +457,10 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{StaticResource SurfaceHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.35"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

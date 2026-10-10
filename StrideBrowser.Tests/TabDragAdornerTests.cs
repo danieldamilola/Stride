@@ -37,4 +37,26 @@ public sealed class TabDragAdornerTests
 
         Assert.Equal(expected, TabDragAdorner.ComputeShiftedIndex(centers, 2, x, lastX, 14));
     }
+
+    [Fact]
+    public void ComputeShiftedIndex_PinnedTabClampedToPinnedRange()
+    {
+        // 5 tabs: index 0 and 1 are pinned, 2..4 are unpinned.
+        var centers = new List<double> { 16, 48, 150, 300, 450 };
+
+        // Dragging pinned tab 0 far right: cannot exceed slot 1.
+        var slot = TabDragAdorner.ComputeShiftedIndex(centers, 0, 400.0, 350.0, 16, minSlot: 0, maxSlot: 1);
+        Assert.Equal(1, slot);
+    }
+
+    [Fact]
+    public void ComputeShiftedIndex_UnpinnedTabClampedToUnpinnedRange()
+    {
+        // 5 tabs: index 0 and 1 are pinned, 2..4 are unpinned.
+        var centers = new List<double> { 16, 48, 150, 300, 450 };
+
+        // Dragging unpinned tab 3 far left: cannot enter pinned region (cannot go below slot 2).
+        var slot = TabDragAdorner.ComputeShiftedIndex(centers, 3, 10.0, 20.0, 95, minSlot: 2, maxSlot: 4);
+        Assert.Equal(2, slot);
+    }
 }

@@ -52,6 +52,7 @@ public sealed class KeyboardShortcutMap
         };
         _actions["SaveAllTabs"] = async () => { await actions.SaveAllTabs(); return true; };
         _actions["Reload"] = () => { engine.Reload(); return Task.FromResult(true); };
+        _actions["HardReload"] = async () => { await engine.HardReloadAsync(); return true; };
         _actions["GoBack"] = () => { engine.GoBack(); return Task.FromResult(true); };
         _actions["GoForward"] = () => { engine.GoForward(); return Task.FromResult(true); };
         _actions["ToggleFullscreen"] = async () => { await actions.ToggleFullscreen(); return true; };
@@ -105,6 +106,8 @@ public sealed class KeyboardShortcutMap
             if (TryParseCombo(combo, out var mods, out var key))
             {
                 entries.Add(new ShortcutEntry(mods, key, def.Name, action));
+                if (def.Name == "Reload" && combo == def.DefaultCombo)
+                    entries.Add(new ShortcutEntry(ModifierKeys.None, Key.F5, "ReloadF5", action));
 
                 // Add numpad duplicates for zoom shortcuts
                 if (def.Name == "ZoomIn" && key == Key.OemPlus)

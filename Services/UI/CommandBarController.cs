@@ -74,11 +74,13 @@ public sealed class CommandBarController
     {
         if (_isCommandBarOpen) return;
         _isCommandBarOpen = true;
+        _vm.IsFloatingBarOpen = true;
 
         if (_engine.ActiveTab is { } activeTab && !string.IsNullOrEmpty(activeTab.Url) && !InternalUrls.IsInternal(activeTab.Url))
             _vm.AddressText = activeTab.Url;
         else
             _vm.AddressText = "";
+        _vm.NoteAddressDisplayed(_vm.AddressText);
 
         _commandBarGrid.Visibility = Visibility.Visible;
 
@@ -103,8 +105,9 @@ public sealed class CommandBarController
     {
         if (!_isCommandBarOpen) return;
         _isCommandBarOpen = false;
+        _vm.IsFloatingBarOpen = false;
 
-        _vm.ShowSuggestions = false;
+        _vm.CloseSuggestions();
         _vm.Suggestions.Clear();
 
         var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(80)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
@@ -126,8 +129,10 @@ public sealed class CommandBarController
 
     public void HandleAddressTextChanged(TextBox? tb)
     {
-        if (tb is not null && tb.IsKeyboardFocusWithin)
-            _ = _vm.UpdateSuggestionsAsync(tb.Text);
+        if (tb is null || !tb.IsKeyboardFocusWithin) return;
+        if (_vm.SuppressSuggestionRefresh) { _vm.SuppressSuggestionRefresh = false; return; }
+        _vm.MarkAddressEdited();
+        _ = _vm.UpdateSuggestionsAsync(tb.Text);
     }
 
     public void NavigateToSuggestion(string input)
@@ -139,7 +144,7 @@ public sealed class CommandBarController
             _vm.AddressText = url;
             _engine.Navigate(tab, url);
         }
-        _vm.ShowSuggestions = false;
+        _vm.CloseSuggestions();
     }
 
     public void UpdateUrlLabel(BrowserTab tab)
