@@ -63,11 +63,11 @@ public sealed class InternalPages
         ApplyTheme(_error.Render(url, errorMessage, accentColor, accentRgb));
 
     /// <summary>Returns the focus block page HTML.</summary>
-    public string FocusPage() => Helpers.ResourceLoader.Load("Resources.Pages.Focus.html");
+    public string FocusPage() => ApplyTheme(Helpers.ResourceLoader.Load("Resources.Pages.Focus.html"));
 
     /// <summary>Returns the health page HTML.</summary>
     public string HealthPage(string currentVersion, ExtensionManager.ExtensionHealth health, string ipcToken) =>
-        _health.Render(currentVersion, health, ipcToken);
+        ApplyTheme(_health.Render(currentVersion, health, ipcToken));
 
     /// <summary>Converts a hex color like #7fb89a to an RGB triplet like 127,184,154.</summary>
     public static string HexToRgb(string hex)

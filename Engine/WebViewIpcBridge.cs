@@ -162,6 +162,103 @@ public sealed class WebViewIpcBridge
         catch (Exception ex) { Trace.WriteLine($"PostMessageToActiveTab failed: {ex.Message}"); }
     }
 
+    /// <summary>
+    /// A theme colour is either empty, meaning "use the default", or a <c>#rrggbb</c> literal.
+    /// Nothing else is accepted, because the value is applied to the toolbar tint and written
+    /// into the UI without further encoding.
+    /// </summary>
+    public static bool IsThemeColorValue(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return true;
+        if (value.Length != 7 || value[0] != '#') return false;
+        for (int i = 1; i < value.Length; i++)
+            if (!Uri.IsHexDigit(value[i])) return false;
+        return true;
+    }
+
+    /// <summary>
+    /// Origins whose web messages bypass the per-session IPC token.
+    /// <para>
+    /// Only <c>local.assets</c> qualifies. That origin is mapped to the application's own
+    /// read-only <c>Resources\Pages</c> folder, which ships with the binary and holds the
+    /// bundled internal page templates.
+    /// </para>
+    /// <para>
+    /// <c>user.assets</c> must never appear here. It is mapped to
+    /// <c>%APPDATA%\Stride\Backgrounds</c>, a user-writable folder the Settings page
+    /// opens in Explorer for the user to drop wallpaper images into. Any HTML file
+    /// landing there becomes a document on a real HTTPS origin with <c>window.chrome.webview</c>
+    /// available, so treating it as trusted hands unauthenticated callers the whole
+    /// privileged route table (<c>install-update:</c>, <c>download-request:</c>,
+    /// <c>download-open:</c>, <c>open:</c>, every <c>setting:</c> key) with no secret.
+    /// The same reasoning already keeps the temp directory unmapped; see
+    /// <see cref="WebViewFactory"/>. Backgrounds are only ever consumed as image URLs,
+    /// so requiring the token costs nothing.
+    /// </para>
+    /// </summary>
+    public static bool IsTrustedAssetOrigin(string? source)
+    {
+        if (string.IsNullOrEmpty(source)) return false;
+        if (!Uri.TryCreate(source, UriKind.Absolute, out var uri)) return false;
+        if (uri.Scheme is not ("http" or "https")) return false;
+        return string.Equals(uri.Host, "local.assets", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// True when a web message came from the tab's top-level document rather than a frame
+    /// inside it.
+    /// <para>
+    /// Both the theme colour and a link preview should describe the page the user is looking
+    /// at. A cross-origin iframe posts into the same bridge, so without this an ad iframe could
+    /// repaint the toolbar or force a preview.
+    /// </para>
+    /// <para>
+    /// Compared against CoreWebView2.Source, read live at message time. The tab's own Url
+    /// property is only refreshed on NavigationCompleted, so it is still the previous page's
+    /// address when a content script fires on document creation. Fragment and query are
+    /// ignored because neither changes which document is showing.
+    /// </para>
+    /// <para>
+    /// Fails open when either side cannot be parsed. The value is shape-checked and carries no
+    /// privilege, so an unreadable URL is not worth breaking the feature over.
+    /// </para>
+    /// </summary>
+    public static bool IsSameTopLevelDocument(string? source, string? topLevelSource)
+    {
+        if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(topLevelSource)) return true;
+        if (!Uri.TryCreate(source, UriKind.Absolute, out var from)) return true;
+        if (!Uri.TryCreate(topLevelSource, UriKind.Absolute, out var top)) return true;
+
+        return string.Equals(from.Scheme, top.Scheme, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(from.Host, top.Host, StringComparison.OrdinalIgnoreCase)
+            && from.Port == top.Port
+            && string.Equals(from.AbsolutePath.TrimEnd('/'), top.AbsolutePath.TrimEnd('/'), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Reads CoreWebView2.Source, which is null while the control is torn down.
+    /// </summary>
+    private static string? TopLevelSource(CoreWebView2 core)
+    {
+        try { return core.Source; }
+        catch (Exception ex) { Trace.WriteLine($"TopLevelSource read failed: {ex.Message}"); return null; }
+    }
+
+    /// <summary>Hosts allowed to request a wallpaper download through the bridge.</summary>
+    private static readonly string[] WallhavenHosts = { "wallhaven.cc", "www.wallhaven.cc" };
+
+    /// <summary>
+    /// True when a web message came from wallhaven.cc or its www form. The check is on the
+    /// exact host, so a lookalike such as wallhaven.cc.evil.test does not match.
+    /// </summary>
+    public static bool IsWallhavenSource(string? source)
+    {
+        if (string.IsNullOrEmpty(source)) return false;
+        if (!Uri.TryCreate(source, UriKind.Absolute, out var uri)) return false;
+        if (uri.Scheme is not ("http" or "https")) return false;
+        return Array.Exists(WallhavenHosts, h => string.Equals(uri.Host, h, StringComparison.OrdinalIgnoreCase));
+    }
+
     private void WireWebMessageReceived(CoreWebView2 core, BrowserTab tab)
     {
         core.WebMessageReceived += (_, e) =>
@@ -171,24 +268,25 @@ public sealed class WebViewIpcBridge
             var msg = e.TryGetWebMessageAsString();
             if (string.IsNullOrEmpty(msg)) return;
 
-            bool isTrustedLocalAsset = false;
-            try
-            {
-                if (e.Source.StartsWith("http://local.assets/", StringComparison.OrdinalIgnoreCase) ||
-                    e.Source.StartsWith("https://local.assets/", StringComparison.OrdinalIgnoreCase) ||
-                    e.Source.StartsWith("https://user.assets/", StringComparison.OrdinalIgnoreCase))
-                {
-                    isTrustedLocalAsset = true;
-                }
-            }
-            catch (Exception ex) { Trace.WriteLine(ex); }
+            bool isTrustedLocalAsset = IsTrustedAssetOrigin(e.Source);
 
-            // THEME_COLOR and LINK_PREVIEW are emitted by injected content scripts
-            // which embed the per-session token, so a bearer check keeps arbitrary
-            // pages from spoofing the tab theme or spamming link-preview requests.
-            if (msg.StartsWith(_ipcToken + ":THEME_COLOR:", StringComparison.Ordinal))
+            // THEME_COLOR is emitted by the injected theme-color script with no token. It is
+            // not a privileged message: the value is derived from the page's own computed
+            // styles, so the page could send it unauthenticated anyway. Publishing the session
+            // token to that script only widened the set of origins able to read it. The value
+            // is shape-checked because it is applied to UI.
+            if (msg.StartsWith("THEME_COLOR:", StringComparison.Ordinal))
             {
-                var colorStr = msg.Substring((_ipcToken + ":THEME_COLOR:").Length);
+                var colorStr = msg.Substring("THEME_COLOR:".Length);
+                if (!IsThemeColorValue(colorStr))
+                {
+                    Trace.WriteLine($"Ignoring malformed THEME_COLOR from {e.Source}");
+                    return;
+                }
+                // The sender must be the tab's own top-level document. A cross-origin iframe
+                // on the page posts to the same bridge, so without this an ad iframe could
+                // repaint the toolbar. NavigationCompleted re-frames the value anyway.
+                if (!IsSameTopLevelDocument(e.Source, TopLevelSource(core))) return;
                 _dispatcher.InvokeAsync(() =>
                 {
                     tab.ThemeColor = colorStr;
@@ -197,11 +295,31 @@ public sealed class WebViewIpcBridge
                 return;
             }
 
-            if (msg.StartsWith(_ipcToken + ":LINK_PREVIEW_PEEK:", StringComparison.Ordinal))
+            // The wallhaven download button posts this from a page on wallhaven.cc. Authorisation is by
+            // message source origin, not by a token, because the old scheme published the
+            // session token as a global on those origins. Any script on wallhaven.cc could read
+            // it and drive every privileged route; this way only this one route is reachable,
+            // and only from that site.
+            if (msg.StartsWith("wallhaven-download:", StringComparison.Ordinal))
+            {
+                if (!IsWallhavenSource(e.Source)) return;
+                if (!IsSameTopLevelDocument(e.Source, TopLevelSource(core))) return;
+                var wallhavenUrl = msg.Substring("wallhaven-download:".Length);
+                _dispatcher.Invoke(() => WebMessageReceived?.Invoke(
+                    WebMessagePrefix.DownloadRequest + wallhavenUrl));
+                return;
+            }
+
+            // LINK_PREVIEW_PEEK arrives without the session token. It carries no privilege of its own:
+            // it asks the host to consider showing a preview, and LinkPreviewService runs the
+            // URL through LinkPreviewPolicy before anything is fetched or rendered. The token
+            // used to guard it only proved the sender had read the injected script, which the
+            // page itself is the source of.
+            if (msg.StartsWith("LINK_PREVIEW_PEEK:", StringComparison.Ordinal))
             {
                 if (!_settings.LinkPreviewEnabled) return;
 
-                var json = msg.Substring((_ipcToken + ":LINK_PREVIEW_PEEK:").Length);
+                var json = msg.Substring("LINK_PREVIEW_PEEK:".Length);
                 try
                 {
                     using var doc = System.Text.Json.JsonDocument.Parse(json);
@@ -237,9 +355,17 @@ public sealed class WebViewIpcBridge
                 return;
             }
 
+            // A web message from a subframe never carries the privileged intent of the page the user is
+            // on. Refusing frames early also keeps a cross-origin iframe from reaching the
+            // internal-page routes if it ever guessed the session token.
+            if (!IsSameTopLevelDocument(e.Source, TopLevelSource(core))) return;
+
             if (!isTrustedLocalAsset)
             {
-                // SECURITY: Internal pages loaded via NavigateToString (origin = about:blank) embed a per-session secret token
+                // SECURITY: Internal pages loaded via NavigateToString (origin = about:blank)
+                // embed a per-session secret token. The token stays in the binary and in those
+                // templates. It is no longer substituted into any script injected into a remote
+                // page, so a site that can read its own injected source has nothing to read.
                 if (!msg.StartsWith(_ipcToken + ":", StringComparison.Ordinal))
                 {
                     return;

@@ -23,16 +23,43 @@ public sealed class ExtensionManager
     private const string UBlockDownloadUrl =
         $"https://github.com/gorhill/uBlock/releases/download/{UBlockVersion}/uBlock0_{UBlockVersion}.chromium.zip";
 
+    /// <summary>
+    /// The trust anchor for the uBlock archive. Every zip is checked against this constant
+    /// before a single byte of it is extracted, whether it came from the install directory or
+    /// straight off GitHub.
+    /// <para>
+    /// Trust On First Use is not sufficient here. The old implementation wrote the hash of
+    /// whatever it found into %LocalAppData%\StrideBrowser and returned success on first run,
+    /// so anything able to write to the install directory or to that file before the first
+    /// launch chose its own trust anchor and got loaded with full page access on every site.
+    /// The stored hash is now only used to report drift after the fact.
+    /// </para>
+    /// </summary>
+    private const string ExpectedUBlockSha256 = "22C62BC0F35ED0C5E95D1FC831A829AF199C7CA6FDB4F841BE034C25719CE911";
 
+    /// <summary>Ceilings for the archive, set well above the real 1.73.0 numbers (778 entries, 15.5 MB).</summary>
+    private const int MaxArchiveEntries = 5000;
+    private const long MaxArchiveUncompressedBytes = 64L * 1024 * 1024;
+    private const long MaxSingleEntryBytes = 16L * 1024 * 1024;
+    private const long MaxDownloadBytes = 16L * 1024 * 1024;
 
-    /// <summary>Path to the stored SHA-256 hash for TOFU (Trust On First Use) verification.</summary>
+    /// <summary>Path to a locally recorded SHA-256, kept only to surface unexpected drift.</summary>
     private static readonly string HashFilePath = AppPaths.UBlockHashFile + "." + UBlockVersion;
+
+    /// <summary>
+    /// SHA-256 the uBlock zip must match before it is extracted, kept in one place so
+    /// bumping <see cref="UBlockVersion"/> forces a deliberate update here.
+    /// Exposed for tests.
+    /// </summary>
+    internal static string ExpectedHash => ExpectedUBlockSha256;
 
     private static readonly HttpClient Http = CreateHttpClient();
 
     private static HttpClient CreateHttpClient()
     {
         var c = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        // Refuse to buffer an oversized response in memory before it reaches disk.
+        c.MaxResponseContentBufferSize = MaxDownloadBytes;
         if (!c.DefaultRequestHeaders.Contains("User-Agent"))
             c.DefaultRequestHeaders.Add("User-Agent", "StrideBrowser-ExtensionManager");
         return c;
@@ -189,7 +216,7 @@ public sealed class ExtensionManager
 
             try
             {
-                if (File.Exists(localZipPath) && await VerifyTofuHashAsync(localZipPath))
+                if (File.Exists(localZipPath) && await VerifyHashAsync(localZipPath))
                 {
                     zipToExtract = localZipPath;
                     Trace.WriteLine("ExtensionManager: using bundled local zip.");
@@ -203,10 +230,45 @@ public sealed class ExtensionManager
 
                     tempDownloadPath = Path.Combine(Path.GetTempPath(), $"uBlock0_{UBlockVersion}_{Guid.NewGuid():N}.zip");
                     Trace.WriteLine($"ExtensionManager: downloading uBlock from {UBlockDownloadUrl} to {tempDownloadPath}");
-                    var data = await Http.GetByteArrayAsync(UBlockDownloadUrl);
-                    await File.WriteAllBytesAsync(tempDownloadPath, data);
 
-                    if (!await VerifyTofuHashAsync(tempDownloadPath))
+                    // Stream straight to disk under a hard byte cap. The previous code called
+                    // GetByteArrayAsync, which buffers the whole response in the managed heap
+                    // before any check runs.
+                    using (var response = await Http.GetAsync(UBlockDownloadUrl, HttpCompletionOption.ResponseHeadersRead))
+                    {
+                        response.EnsureSuccessStatusCode();
+
+                        var declared = response.Content.Headers.ContentLength ?? -1L;
+                        if (declared > MaxDownloadBytes)
+                        {
+                            Trace.WriteLine($"ExtensionManager: download declares {declared} bytes, over the {MaxDownloadBytes} cap. Aborting.");
+                            tempDownloadPath = null;
+                            return null;
+                        }
+
+                        await using var content = await response.Content.ReadAsStreamAsync();
+                        await using (var file = new FileStream(tempDownloadPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                        {
+                            var buffer = new byte[81920];
+                            long written = 0;
+                            int read;
+                            while ((read = await content.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                            {
+                                written += read;
+                                if (written > MaxDownloadBytes)
+                                {
+                                    Trace.WriteLine($"ExtensionManager: download passed the {MaxDownloadBytes} cap. Aborting.");
+                                    await file.DisposeAsync();
+                                    try { File.Delete(tempDownloadPath); } catch { }
+                                    tempDownloadPath = null;
+                                    return null;
+                                }
+                                await file.WriteAsync(buffer, 0, read);
+                            }
+                        }
+                    }
+
+                    if (!await VerifyHashAsync(tempDownloadPath))
                     {
                         Trace.WriteLine("ExtensionManager: downloaded zip hash mismatch, aborting.");
                         try { File.Delete(tempDownloadPath); } catch { }
@@ -215,6 +277,13 @@ public sealed class ExtensionManager
                     }
 
                     zipToExtract = tempDownloadPath;
+                }
+
+                if (zipToExtract is not null && !IsArchiveWithinLimits(zipToExtract, out var limitReason))
+                {
+                    Trace.WriteLine($"ExtensionManager: archive rejected before extraction, {limitReason}.");
+                    zipToExtract = null;
+                    return null;
                 }
 
                 if (Directory.Exists(targetDir))
@@ -310,6 +379,15 @@ public sealed class ExtensionManager
         }
     }
 
+    /// <summary>
+    /// Locates the directory holding the extension's manifest.
+    /// <para>
+    /// Bounded rather than an unbounded recursive walk. The root is a single version folder
+    /// this class created, so the manifest is at the root or one level down; the depth cap
+    /// keeps a pathological tree from stalling extension init, and enumeration order stays
+    /// deterministic because levels are walked in order.
+    /// </para>
+    /// </summary>
     private static string? FindManifestDirectory(string rootDir)
     {
         if (!Directory.Exists(rootDir))
@@ -318,16 +396,27 @@ public sealed class ExtensionManager
         if (File.Exists(Path.Combine(rootDir, "manifest.json")))
             return rootDir;
 
-        foreach (var dir in Directory.EnumerateDirectories(rootDir, "*", SearchOption.AllDirectories))
+        foreach (var level1 in Directory.EnumerateDirectories(rootDir))
         {
-            if (File.Exists(Path.Combine(dir, "manifest.json")))
-                return dir;
+            if (File.Exists(Path.Combine(level1, "manifest.json")))
+                return level1;
+
+            foreach (var level2 in Directory.EnumerateDirectories(level1))
+            {
+                if (File.Exists(Path.Combine(level2, "manifest.json")))
+                    return level2;
+            }
         }
 
         return null;
     }
 
-    private async Task<bool> VerifyTofuHashAsync(string zipPath)
+    /// <summary>
+    /// Verifies an archive against <see cref="ExpectedUBlockSha256"/>. This is the trust
+    /// decision; the file on disk at <see cref="HashFilePath"/> is a record only and never
+    /// influences the outcome.
+    /// </summary>
+    private async Task<bool> VerifyHashAsync(string zipPath)
     {
         if (!File.Exists(zipPath))
         {
@@ -346,23 +435,104 @@ public sealed class ExtensionManager
             return false;
         }
 
-        if (File.Exists(HashFilePath))
+        if (!string.Equals(actualHash, ExpectedUBlockSha256, StringComparison.OrdinalIgnoreCase))
         {
-            var storedHash = (await File.ReadAllTextAsync(HashFilePath)).Trim();
-            if (!string.Equals(actualHash, storedHash, StringComparison.OrdinalIgnoreCase))
-            {
-                Trace.WriteLine($"ExtensionManager: SHA-256 mismatch. Expected={storedHash}, Actual={actualHash}");
-                return false;
-            }
-            Trace.WriteLine("ExtensionManager: SHA-256 hash verified.");
-        }
-        else
-        {
-            try { await File.WriteAllTextAsync(HashFilePath, actualHash); } catch (Exception ex) { Trace.WriteLine($"Failed to store hash: {ex.Message}"); }
-            Trace.WriteLine($"ExtensionManager: first download, stored SHA-256={actualHash}");
+            Trace.WriteLine($"ExtensionManager: SHA-256 mismatch against the pinned value. Expected={ExpectedUBlockSha256}, Actual={actualHash}");
+            return false;
         }
 
+        try
+        {
+            // Record the verified hash so a later run can report an unexpected change.
+            var previous = File.Exists(HashFilePath) ? (await File.ReadAllTextAsync(HashFilePath)).Trim() : null;
+            if (!string.Equals(previous, actualHash, StringComparison.OrdinalIgnoreCase))
+                await File.WriteAllTextAsync(HashFilePath, actualHash);
+        }
+        catch (Exception ex) { Trace.WriteLine($"ExtensionManager: could not record hash: {ex.Message}"); }
+
+        Trace.WriteLine("ExtensionManager: SHA-256 matches the pinned value.");
         return true;
+    }
+
+    /// <summary>
+    /// Screens the archive before extraction. A small zip can declare an enormous output, so
+    /// the entry count, the total declared size, and the largest single entry are all bounded.
+    /// </summary>
+    internal static bool IsArchiveWithinLimits(ReadOnlySpan<byte> archive, out string reason)
+    {
+        reason = "";
+        try
+        {
+            using var buffer = new MemoryStream(archive.ToArray(), writable: false);
+            using var zip = new ZipArchive(buffer, ZipArchiveMode.Read);
+
+            if (zip.Entries.Count > MaxArchiveEntries)
+            {
+                reason = $"entry count {zip.Entries.Count} exceeds {MaxArchiveEntries}";
+                return false;
+            }
+
+            long total = 0;
+            foreach (var entry in zip.Entries)
+            {
+                if (entry.Length > MaxSingleEntryBytes)
+                {
+                    reason = $"entry '{entry.FullName}' declares {entry.Length} bytes";
+                    return false;
+                }
+                total += entry.Length;
+                if (total > MaxArchiveUncompressedBytes)
+                {
+                    reason = $"declared output exceeds {MaxArchiveUncompressedBytes} bytes";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            reason = ex.Message;
+            return false;
+        }
+    }
+
+    internal static bool IsArchiveWithinLimits(string zipPath, out string reason)
+    {
+        reason = "";
+        try
+        {
+            using var zip = ZipFile.OpenRead(zipPath);
+            var entries = zip.Entries;
+            if (entries.Count > MaxArchiveEntries)
+            {
+                reason = $"entry count {entries.Count} exceeds {MaxArchiveEntries}";
+                return false;
+            }
+
+            long total = 0;
+            foreach (var entry in entries)
+            {
+                if (entry.Length > MaxSingleEntryBytes)
+                {
+                    reason = $"entry '{entry.FullName}' declares {entry.Length} bytes";
+                    return false;
+                }
+                total += entry.Length;
+                if (total > MaxArchiveUncompressedBytes)
+                {
+                    reason = $"declared output exceeds {MaxArchiveUncompressedBytes} bytes";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            reason = ex.Message;
+            return false;
+        }
     }
 
     private void CleanupOldVersions()
@@ -370,17 +540,65 @@ public sealed class ExtensionManager
         try
         {
             if (!Directory.Exists(ExtensionsDir)) return;
+            // Only directories that look exactly like a previous uBlock version are removed. The
+            // wildcard is uBlock0_*, so a folder a user added keeps its name and is skipped.
+            // A user extension nested inside one of these would still be swept, so confirm the
+            // folder holds a uBlock manifest before deleting. Old version folders always hold
+            // extracted files, so the delete must recurse.
             foreach (var dir in Directory.EnumerateDirectories(ExtensionsDir, "uBlock0_*"))
             {
                 var name = Path.GetFileName(dir);
                 if (!string.Equals(name, $"uBlock0_{UBlockVersion}", StringComparison.OrdinalIgnoreCase))
                 {
+                    if (!LooksLikeUBlockVersionDir(dir))
+                    {
+                        Trace.WriteLine($"ExtensionManager: skipping {name}, not a uBlock version folder.");
+                        continue;
+                    }
                     Trace.WriteLine($"ExtensionManager: removing old version {name}");
-                    try { Directory.Delete(dir, true); } catch (Exception ex) { Trace.WriteLine($"Failed to delete old version {name}: {ex.Message}"); }
+                    try { Directory.Delete(dir, recursive: true); } catch (Exception ex) { Trace.WriteLine($"Failed to delete old version {name}: {ex.Message}"); }
                 }
             }
         }
         catch (Exception ex) { Trace.WriteLine($"CleanupOldVersions failed: {ex.Message}"); }
+    }
+
+    private static bool LooksLikeUBlockVersionDir(string dir)
+    {
+        try
+        {
+            var rootManifest = Path.Combine(dir, "manifest.json");
+            if (IsUBlockManifest(rootManifest)) return true;
+            foreach (var level1 in Directory.EnumerateDirectories(dir))
+            {
+                if (IsUBlockManifest(Path.Combine(level1, "manifest.json"))) return true;
+            }
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsUBlockManifest(string manifestPath)
+    {
+        try
+        {
+            if (!File.Exists(manifestPath)) return false;
+            var json = File.ReadAllText(manifestPath);
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("name", out var name))
+            {
+                var value = name.GetString();
+                return string.Equals(value, "uBlock Origin", StringComparison.OrdinalIgnoreCase);
+            }
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static async Task<string> ComputeFileHashAsync(string filePath)
