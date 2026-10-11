@@ -137,6 +137,14 @@ public sealed class TabHibernationManager
             Trace.WriteLine($"TrySuspendAsync failed for tab {tabId}: {ex.Message}");
         }
 
+        if (success && tab is not null && (tab.IsActive || _getTabs?.Invoke().Contains(tab) != true))
+        {
+            try { core.Resume(); }
+            catch (Exception ex) { Trace.WriteLine($"Resume after tab transfer failed: {ex.Message}"); }
+            tab.IsSleeping = false;
+            return;
+        }
+
         if (success && tab != null && !tab.IsActive && !tab.IsHibernated && _settings.TabSleepEnabled && generation == _suspensionGeneration)
             tab.IsSleeping = true;
     }

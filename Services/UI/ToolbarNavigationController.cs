@@ -29,6 +29,8 @@ public sealed class ToolbarNavigationController : IDisposable
             catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Reload without cache failed: {ex}"); }
         };
         menu.Items.Add(reload);
+        // Reload and Reload without cache are one action at two intensities, so a
+        // separator between them would imply two unrelated groups. Leave them joined.
         menu.Items.Add(hardReload);
         _reload.ContextMenu = menu;
         menu.IsOpen = true;

@@ -359,5 +359,49 @@ public class ContextMenuPlanBuilderTests
             Assert.IsNotType<ContextMenuItemSpec.Separator>(last);
         }
     }
+
+    [Fact]
+    public void Plan_NeverStartsWithSeparator()
+    {
+        foreach (var ctx in AllContexts())
+            Assert.IsNotType<ContextMenuItemSpec.Separator>(ContextMenuPlanBuilder.Build(ctx, "").Items[0]);
+    }
+
+    [Fact]
+    public void Plan_NeverHasConsecutiveSeparators()
+    {
+        foreach (var ctx in AllContexts())
+        {
+            var items = ContextMenuPlanBuilder.Build(ctx, "").Items;
+            for (var i = 1; i < items.Count; i++)
+            {
+                var previousIsSeparator = items[i - 1] is ContextMenuItemSpec.Separator;
+                var currentIsSeparator = items[i] is ContextMenuItemSpec.Separator;
+                Assert.False(previousIsSeparator && currentIsSeparator);
+            }
+        }
+    }
+
+    /// <summary>
+    /// A separator marks a change of kind, so a plain page should divide text actions from
+    /// page actions and page actions from developer actions, not break up every pair.
+    /// </summary>
+    [Fact]
+    public void Plan_PlainPage_UsesTwoSeparators()
+    {
+        var items = ContextMenuPlanBuilder.Build(PageContext(), "").Items;
+        Assert.Equal(2, items.Count(i => i is ContextMenuItemSpec.Separator));
+    }
+
+    private static ContextMenuContext[] AllContexts() =>
+    [
+        PageContext(),
+        PageContext() with { HasLink = true },
+        PageContext() with { MediaKind = ContextMenuMediaKind.Image },
+        PageContext() with { IsEditable = true },
+        PageContext() with { HasSelection = true, SelectionText = "x" },
+        PageContext() with { HasLink = true, MediaKind = ContextMenuMediaKind.Image },
+        PageContext() with { HasLink = true, HasSelection = true, SelectionText = "x" },
+    ];
 }
 

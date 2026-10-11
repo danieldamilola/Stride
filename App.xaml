@@ -467,15 +467,16 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style TargetType="{x:Type Separator}" x:Key="{x:Static MenuItem.SeparatorStyleKey}">
+        <!-- ContextMenu hosts Separators in its own popup. Neither an implicit style here nor
+             the MenuItem.SeparatorStyleKey key is honoured there, so separators are built
+             with an explicit brush and template at the call sites instead. -->
+        <Style TargetType="Separator">
             <Setter Property="Height" Value="1"/>
-            <Setter Property="Margin" Value="4,4"/>
-            <Setter Property="Background" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="Margin" Value="10,5"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Separator">
-                        <Border Height="1" Background="{TemplateBinding Background}"
-                                Margin="{TemplateBinding Margin}"/>
+                        <Border Height="1" BorderThickness="1" BorderBrush="{StaticResource SeparatorLineBrush}"/>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

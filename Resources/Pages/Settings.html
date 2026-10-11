@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>Settings - Stride</title>
     <style>
-      :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
+      :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; --danger: {{DANGER}}; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
 
       body {
@@ -850,7 +850,7 @@
       .warn-dot {
           width: 6px; height: 6px;
           border-radius: 50%;
-          background: #e53935;
+          background: var(--danger);
           margin-left: auto;
       }
 
@@ -870,7 +870,7 @@
           align-items: center;
           gap: 8px;
       }
-      .focus-warning-banner svg { width: 16px; height: 16px; color: #e53935; flex-shrink: 0; }
+      .focus-warning-banner svg { width: 16px; height: 16px; color: var(--danger); flex-shrink: 0; }
       
       .sidebar { width: 220px; min-width: 220px; }
 </style>
@@ -1453,7 +1453,7 @@
                   >{{FOCUS_DOMAINS}}</textarea>
                   <div style="display: flex; gap: 10px; justify-content: flex-end">
                     <button class="action-btn" onclick="saveFocusDomains()">Save Domains</button>
-                    <button class="action-btn" style="background: #e53935; color: white; border-color: #e53935" onclick="lockFocus()">LOCK PERMANENTLY</button>
+                    <button class="action-btn" style="background: var(--danger); color: #ffffff; border-color: var(--danger)" onclick="lockFocus()">LOCK PERMANENTLY</button>
                   </div>
                 </div>
                 <div id="focusLockedSection" style="display: {{FOCUS_LOCKED_DISPLAY}}; text-align: center; padding: 20px 0;">
@@ -1571,16 +1571,31 @@
             <div class="card" style="margin-top: 16px">
               <div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label" style="color: #e53935">Reset all settings</div>
+                  <div class="setting-label" style="color: var(--danger)">Reset all settings</div>
                   <div class="setting-desc">Restore all settings to their default values</div>
                 </div>
                 <div class="setting-control">
-                  <button class="action-btn danger" style="color: #e53935; border-color: #e53935" onclick="if(confirm('Reset all settings to defaults? This cannot be undone.')) window.chrome.webview.postMessage(__T + 'reset-settings')">Reset to defaults</button>
+                  <button class="action-btn danger" style="color: var(--danger); border-color: var(--danger)" onclick="if(confirm('Reset all settings to defaults? This cannot be undone.')) window.chrome.webview.postMessage(__T + 'reset-settings')">Reset to defaults</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top: 16px">
+              <div class="setting-row" style="align-items: flex-start">
+                <div class="setting-info">
+                  <div class="setting-label">Copyright 2026 The Stride Authors. All rights reserved.</div>
+                  <div class="setting-desc" style="margin-top: 6px">
+                    Stride is made possible by the
+                    <a href="https://learn.microsoft.com/microsoft-edge/webview2/" target="_blank" rel="noreferrer" style="color: var(--text-main)">Microsoft Edge WebView2</a>
+                    open source project and other
+                    <a href="https://github.com/danieldamilola/Stride/blob/main/THIRD-PARTY-NOTICES.md" target="_blank" rel="noreferrer" style="color: var(--text-main)">open source software</a>.
+                  </div>
                 </div>
               </div>
             </div>
 
             <script>
+              let currentDownloadUrl = '';
               let currentDownloadUrl = '';
               if (window.chrome && window.chrome.webview) {
                   window.chrome.webview.addEventListener('message', function(event) {

@@ -33,6 +33,9 @@ public sealed class TabStripController : IDisposable
     /// <summary>Prevents re-entrant tab selection changes when programmatically updating the ListBox selection.</summary>
     public bool IsUpdatingSelection { get; set; }
 
+    /// <summary>The drag behavior this controller owns, so the window can hand it a transfer target.</summary>
+    public TabStripDragDropBehavior Drag => _drag;
+
     public TabStripController(
         ListBox tabList,
         TabEngine engine,
@@ -365,9 +368,14 @@ public sealed class TabStripController : IDisposable
         };
         menu.Items.Add(hibernateItem);
 
+        // Copy is not a tab action, so it gets its own section.
+        var copyItem = new MenuItem { Header = "Copy tab URL" };
+        copyItem.Click += (_, _) => Clipboard.SetText(tab.Url);
+        menu.Items.Add(copyItem);
+
         if (!tab.IsPinned)
         {
-            menu.Items.Add(new Separator());
+            menu.Items.Add(MenuSeparator.Create());
             var closeItem = new MenuItem
             {
                 Header = "Close Tab",
@@ -376,10 +384,7 @@ public sealed class TabStripController : IDisposable
             menu.Items.Add(closeItem);
         }
 
-        var copyItem = new MenuItem { Header = "Copy tab URL" };
-        copyItem.Click += (_, _) => Clipboard.SetText(tab.Url);
-        menu.Items.Add(copyItem);
-        menu.Items.Add(new Separator());
+        menu.Items.Add(MenuSeparator.Create());
         var restoreItem = new MenuItem { Header = "Reopen closed tab", InputGestureText = "Ctrl+Shift+T" };
         restoreItem.Click += async (_, _) =>
         {

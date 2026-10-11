@@ -48,6 +48,12 @@ public sealed class ReaderService : IReaderService
 
     public ReaderOptions Options => _options;
 
+    public void TransferSessionTo(ReaderService destination, Guid tabId)
+    {
+        if (_sessions.Remove(tabId, out var session)) destination._sessions[tabId] = session;
+        if (_articleCache.Remove(tabId, out var article)) destination._articleCache[tabId] = article;
+    }
+
     public event EventHandler<Guid>? SessionChanged;
 
     public async Task<bool> CanEnterReaderAsync(Guid tabId)

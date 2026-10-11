@@ -64,15 +64,12 @@ public static class ContextMenuPlanBuilder
         // ── Page-level globals ──
 
         items.Add(Cmd("find-in-page", "Find in page", "Ctrl+F"));
-        items.Add(Sep());
 
         // Always show reader toggle to match toolbar button behavior (availability is evaluated on click)
         items.Add(Cmd("toggle-reader",
             ctx.IsInReader ? "Exit reader view" : "Enter reader view", "Ctrl+Shift+R"));
-        items.Add(Sep());
 
         items.Add(Cmd("launch-tc-lens", "T&C Lens", "Alt+T"));
-        items.Add(Sep());
 
         items.Add(Cmd("print", "Print", "Ctrl+P"));
         items.Add(Sep());

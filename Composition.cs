@@ -15,7 +15,7 @@ namespace StrideBrowser;
 public static class Composition
 {
     /// <summary>Builds and returns the configured service provider.</summary>
-    public static ServiceProvider BuildServiceProvider()
+    public static ServiceProvider BuildServiceProvider(Action<IServiceCollection>? configure = null)
     {
         var services = new ServiceCollection();
 
@@ -43,6 +43,8 @@ public static class Composition
         services.AddSingleton<IDownloadStore>(sp => sp.GetRequiredService<DownloadStore>());
         services.AddSingleton<SessionStore>();
         services.AddSingleton<ISessionStore>(sp => sp.GetRequiredService<SessionStore>());
+        services.AddSingleton<ClosedTabStore>();
+        services.AddSingleton<IClosedTabStore>(sp => sp.GetRequiredService<ClosedTabStore>());
         services.AddSingleton<ExtensionManager>();
         services.AddSingleton(sp => new InternalPages(sp.GetRequiredService<ThemeManager>()));
         services.AddSingleton<YouTubeEnhancer>();
@@ -51,29 +53,29 @@ public static class Composition
         services.AddSingleton<Engine.ContentScriptInjector>();
         services.AddSingleton<CustomDownloadManager>();
         services.AddSingleton<UpdateService>();
-        services.AddSingleton<TabHibernationManager>();
+        services.AddScoped<TabHibernationManager>();
         services.AddSingleton<NavigationPolicyEngine>();
         services.AddSingleton<Services.CommandLine.ICommandLineUrlParser, Services.CommandLine.CommandLineUrlParser>();
         services.AddSingleton<Services.Startup.IShellIntegrationService, Services.Startup.ShellIntegrationService>();
-        services.AddSingleton<Services.Startup.StartupCoordinator>();
+        services.AddScoped<Services.Startup.StartupCoordinator>();
         services.AddSingleton<Services.Startup.UpdaterRecoveryService>();
 
         // Reader mode - scaffold: interfaces registered, real bodies in step 2
         services.AddSingleton<Services.Reader.IReaderSanitizer, Services.Reader.ReaderSanitizer>();
-        services.AddSingleton<Services.Reader.IReaderExtractor, Services.Reader.ReaderExtractor>();
+        services.AddScoped<Services.Reader.IReaderExtractor, Services.Reader.ReaderExtractor>();
         services.AddSingleton<Services.Reader.IReaderTemplateRenderer, Services.Reader.ReaderTemplateRenderer>();
-        services.AddSingleton<Services.Reader.IReaderService, Services.Reader.ReaderService>();
+        services.AddScoped<Services.Reader.IReaderService, Services.Reader.ReaderService>();
 
         // Link preview - Alt plus click, on demand, sleep not hibernate
         services.AddSingleton<Services.LinkPreview.ILinkPreviewPolicy, Services.LinkPreview.LinkPreviewPolicy>();
         services.AddSingleton<Services.LinkPreview.ILinkPreviewDownloadSuppressor, Services.LinkPreview.LinkPreviewDownloadSuppressor>();
-        services.AddSingleton<Services.LinkPreview.LinkPreviewService>();
-        services.AddSingleton<Services.LinkPreview.ILinkPreviewService>(sp => sp.GetRequiredService<Services.LinkPreview.LinkPreviewService>());
-        services.AddSingleton<ViewModels.LinkPreview.LinkPreviewViewModel>();
-        services.AddSingleton<Services.UI.LinkPreviewWindowController>();
+        services.AddScoped<Services.LinkPreview.LinkPreviewService>();
+        services.AddScoped<Services.LinkPreview.ILinkPreviewService>(sp => sp.GetRequiredService<Services.LinkPreview.LinkPreviewService>());
+        services.AddScoped<ViewModels.LinkPreview.LinkPreviewViewModel>();
+        services.AddScoped<Services.UI.LinkPreviewWindowController>();
 
         // Engine dependencies record
-        services.AddSingleton(sp => new EngineDependencies
+        services.AddScoped(sp => new EngineDependencies
         {
             ExtensionManager = sp.GetRequiredService<ExtensionManager>(),
             YouTubeUnhook = sp.GetRequiredService<YouTubeUnhook>(),
@@ -90,26 +92,28 @@ public static class Composition
             HibernationManager = sp.GetRequiredService<TabHibernationManager>(),
             NavigationPolicyEngine = sp.GetRequiredService<NavigationPolicyEngine>(),
             ThemeManager = sp.GetRequiredService<ThemeManager>(),
-            DownloadSuppressor = sp.GetRequiredService<Services.LinkPreview.ILinkPreviewDownloadSuppressor>()
+            DownloadSuppressor = sp.GetRequiredService<Services.LinkPreview.ILinkPreviewDownloadSuppressor>(),
+            ClosedTabStore = sp.GetRequiredService<IClosedTabStore>(),
+            Session = sp.GetRequiredService<BrowserSession>()
         });
-        services.AddSingleton<TabEngine>();
+        services.AddScoped<TabEngine>();
         
         // Message Handlers
-        services.AddSingleton<IWebMessageHandler, CoreMessageHandler>();
-        services.AddSingleton<IWebMessageHandler, SettingsMessageHandler>();
-        services.AddSingleton<IWebMessageHandler, OneTabMessageHandler>();
-        services.AddSingleton<IWebMessageHandler, HistoryMessageHandler>();
-        services.AddSingleton<IWebMessageHandler, ShortcutMessageHandler>();
-        services.AddSingleton<IWebMessageHandler, DownloadMessageHandler>();
-        services.AddSingleton<IWebMessageHandler, OnboardingMessageHandler>();
-        services.AddSingleton<IWebMessageHandler, TCLensMessageHandler>();
+        services.AddScoped<IWebMessageHandler, CoreMessageHandler>();
+        services.AddScoped<IWebMessageHandler, SettingsMessageHandler>();
+        services.AddScoped<IWebMessageHandler, OneTabMessageHandler>();
+        services.AddScoped<IWebMessageHandler, HistoryMessageHandler>();
+        services.AddScoped<IWebMessageHandler, ShortcutMessageHandler>();
+        services.AddScoped<IWebMessageHandler, DownloadMessageHandler>();
+        services.AddScoped<IWebMessageHandler, OnboardingMessageHandler>();
+        services.AddScoped<IWebMessageHandler, TCLensMessageHandler>();
 
-        services.AddSingleton<WebMessageRouter>();
+        services.AddScoped<WebMessageRouter>();
         services.AddSingleton<TCLensTransferService>();
-        services.AddSingleton<Services.UI.TCLensLauncher>();
+        services.AddScoped<Services.UI.TCLensLauncher>();
 
         // ViewModel and Views
-        services.AddSingleton<BrowserViewModel>(sp =>
+        services.AddScoped<BrowserViewModel>(sp =>
         {
             var settings = sp.GetRequiredService<BrowserSettings>();
             var navigation = sp.GetRequiredService<NavigationService>();
@@ -122,19 +126,28 @@ public static class Composition
             var faviconLoader = sp.GetRequiredService<FaviconLoader>();
             return new BrowserViewModel(settings, navigation, downloadStore, engine, readerService, readerViewModel, updateService, suggestions, faviconLoader);
         });
-        services.AddSingleton<ViewModels.Reader.ReaderViewModel>(sp =>
+        services.AddScoped<ViewModels.Reader.ReaderViewModel>(sp =>
         {
             var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
             var engine = sp.GetRequiredService<TabEngine>();
             return new ViewModels.Reader.ReaderViewModel(readerService, () => engine.ActiveTab?.Id);
         });
-        services.AddTransient<MainWindow>();
+        services.AddScoped<MainWindow>();
+        services.AddScoped<Services.UI.BrowserWindowContext>();
+        services.AddSingleton<BrowserSession>();
+        services.AddSingleton<Services.UI.BrowserWindowManager>();
 
+        configure?.Invoke(services);
         var sp = services.BuildServiceProvider();
         
         // Eagerly resolve ThemeManager so it can apply the initial theme
         sp.GetRequiredService<ThemeManager>();
 
+        return sp;
+    }
+
+    public static void WireWindowServices(IServiceProvider sp)
+    {
         // Wire ReaderService cleanup on tab close and single-WebView reader guard
         var tabEngine = sp.GetRequiredService<TabEngine>();
         var readerService = sp.GetRequiredService<Services.Reader.IReaderService>();
@@ -159,6 +172,5 @@ public static class Composition
         linkPreviewService.OriginShouldSleep += tabId => { _ = tabEngine.SuspendForPreviewAsync(tabId); };
         linkPreviewService.OriginShouldResume += tabId => tabEngine.ResumeFromPreview(tabId);
         
-        return sp;
     }
 }

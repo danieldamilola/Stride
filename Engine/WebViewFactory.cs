@@ -22,27 +22,36 @@ public sealed class WebViewFactory
     private readonly InternalPages _pages;
     private readonly ExtensionManager _extensionManager;
     private readonly string _ipcToken;
+    private readonly string _dataDirectory;
     private bool _extensionsLoaded;
     private int _extensionsInitStarted;
 
     public CoreWebView2Environment? Environment { get; private set; }
 
+    /// <summary>
+    /// The installed Edge WebView2 runtime version, captured once the environment exists.
+    /// The WebView2 SDK package version baked into this assembly says nothing about which
+    /// runtime the user actually has, and the two can differ by a wide margin.
+    /// </summary>
+    public static string RuntimeVersion { get; private set; } = "";
+
     /// <summary>Fires when the WebView2 browser process exits (engine decides what to do).</summary>
     public event Action? BrowserProcessExited;
 
-    public WebViewFactory(BrowserSettings settings, ThemeManager themeManager, InternalPages pages, ExtensionManager extensionManager, string ipcToken)
+    public WebViewFactory(BrowserSettings settings, ThemeManager themeManager, InternalPages pages, ExtensionManager extensionManager, string ipcToken, string? dataDirectory = null)
     {
         _settings = settings;
         _themeManager = themeManager;
         _pages = pages;
         _extensionManager = extensionManager;
         _ipcToken = ipcToken;
+        _dataDirectory = dataDirectory ?? Helpers.AppPaths.WebView2Dir;
     }
 
     /// <summary>Must be called once at startup to create the WebView2 environment.</summary>
     public async Task InitializeAsync()
     {
-        var dataDir = Helpers.AppPaths.WebView2Dir;
+        var dataDir = _dataDirectory;
 
         var options = new CoreWebView2EnvironmentOptions
         {
@@ -53,6 +62,9 @@ public sealed class WebViewFactory
                 (!_settings.HardwareAccelerationEnabled ? " --disable-gpu" : ""),
         };
         Environment = await CoreWebView2Environment.CreateAsync(null, dataDir, options);
+
+        try { RuntimeVersion = Environment.BrowserVersionString ?? ""; }
+        catch (Exception ex) { Trace.WriteLine($"WebView2 runtime version unavailable: {ex.Message}"); }
 
         if (_settings.AdBlockEnabled)
         {

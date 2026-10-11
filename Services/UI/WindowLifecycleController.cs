@@ -178,6 +178,7 @@ public sealed class WindowLifecycleController
         {
             StrideBrowser.Helpers.AppPaths.HistoryFile,
             StrideBrowser.Helpers.AppPaths.SessionFile,
+            StrideBrowser.Helpers.AppPaths.ClosedTabsFile,
             StrideBrowser.Helpers.AppPaths.DownloadsFile,
             StrideBrowser.Helpers.AppPaths.OneTabFile,
             StrideBrowser.Helpers.AppPaths.LogFile,
@@ -215,6 +216,11 @@ public sealed class WindowLifecycleController
 
             if (_vm.Settings.ClearDataOnExit)
             {
+                // The recently-closed stack lives on disk so Ctrl+Shift+T survives a
+                // restart, so it has to be dropped too or a cleared profile could still
+                // hand back tabs the user asked to erase.
+                _engine.ClearClosedTabHistory();
+
                 // The WebView2 profile holds cookies, cache, and site data.
                 try
                 {
