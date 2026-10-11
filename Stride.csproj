@@ -9,7 +9,7 @@
     <RootNamespace>StrideBrowser</RootNamespace>
     <AssemblyName>Stride</AssemblyName>
     <ApplicationIcon>icons\stride.ico</ApplicationIcon>
-    <Version>1.2.2</Version>
+    <Version>0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

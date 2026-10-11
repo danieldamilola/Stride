@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Text;
+using System.Windows;
+using System.Windows.Media;
 using StrideBrowser.Models;
 using StrideBrowser.Services.Input;
 
@@ -71,8 +73,13 @@ public sealed class SettingsPage
                 ["CHK_USE_FLOATING_BAR"] = Chk(settings.UseFloatingCommandBar),
                 ["CHK_AUTO_CHECK_FOR_UPDATES"] = Chk(settings.AutoCheckForUpdates),
                 ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.1.3",
-                ["WEBVIEW2_VERSION"] = typeof(Microsoft.Web.WebView2.Core.CoreWebView2).Assembly.GetName().Version?.ToString(3) ?? "1.0.4181",
+                // Prefer the installed runtime version; the SDK assembly version is only a fallback
+                // for when the WebView2 environment has not finished initialising.
+                ["WEBVIEW2_VERSION"] = Engine.WebViewFactory.RuntimeVersion is { Length: > 0 } runtime
+                    ? runtime
+                    : typeof(Microsoft.Web.WebView2.Core.CoreWebView2).Assembly.GetName().Version?.ToString(3) ?? "1.0.4181",
                 ["DOTNET_VERSION"] = System.Environment.Version.ToString(2),
+                ["DANGER"] = DangerHex(),
                 ["ACCENT_COLOR"] = settings.AccentColor,
                 ["ACCENT"] = settings.AccentColor,
                 ["ACCENT_RGB"] = HexToRgb(settings.AccentColor),
@@ -207,5 +214,16 @@ public sealed class SettingsPage
         }
         catch (FormatException) { return "127,184,154"; }
         catch (OverflowException) { return "127,184,154"; }
+    }
+
+    /// <summary>
+    /// The active theme's danger colour as CSS hex, so the page follows a theme switch
+    /// instead of carrying its own hardcoded red.
+    /// </summary>
+    private static string DangerHex()
+    {
+        if (Application.Current?.TryFindResource("DangerBrush") is SolidColorBrush { Color: var c })
+            return $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+        return "#C4453A";
     }
 }

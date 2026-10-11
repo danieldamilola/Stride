@@ -9,6 +9,7 @@ using StrideBrowser.Helpers;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.Services.ContextMenus;
+using StrideBrowser.Services.UI;
 
 namespace StrideBrowser.Engine;
 
@@ -39,6 +40,7 @@ public sealed partial class TabEngine : IDisposable
     private readonly WebViewIpcBridge _ipcBridge;
 
     private readonly LinkedList<(string url, string title)> _closedTabs = new();
+    private readonly IClosedTabStore? _closedTabStore;
 
     private readonly SemaphoreSlim _activationGate = new(1, 1); // Serialize WebView2 creation
     private CancellationTokenSource? _activationCts;
@@ -127,6 +129,16 @@ public sealed partial class TabEngine : IDisposable
         _navigationPolicyEngine = deps.NavigationPolicyEngine;
         _themeManager = deps.ThemeManager;
         _dispatcher = Application.Current.Dispatcher;
+        _closedTabStore = deps.ClosedTabStore;
+
+        // Reopen-closed-tab has to survive a restart. With session restore off there is no
+        // session file to fall back on, so a purely in-memory stack strands the user with
+        // no way back to tabs they closed.
+        if (_closedTabStore is not null)
+        {
+            foreach (var entry in _closedTabStore.Load().TakeLast(MaxClosedTabs))
+                _closedTabs.AddLast((entry.Url, entry.Title));
+        }
 
         _webViewFactory = new WebViewFactory(_settings, _themeManager, _pages, _extensionManager, _ipcToken, deps.Session.WebViewDataDirectory);
         _ipcBridge = new WebViewIpcBridge(
@@ -222,6 +234,7 @@ public sealed partial class TabEngine : IDisposable
         _closedTabs.AddLast((tab.Url, tab.Title));
         if (_closedTabs.Count > MaxClosedTabs)
             _closedTabs.RemoveFirst();
+        PersistClosedTabs();
 
         Tabs.Remove(tab);
         DisposeWebView(tab);
@@ -236,9 +249,24 @@ public sealed partial class TabEngine : IDisposable
         if (_closedTabs.Count == 0) return null;
         var last = _closedTabs.Last!.Value;
         _closedTabs.RemoveLast();
+        PersistClosedTabs();
         var tab = CreateTab(last.url, blockDuplicates: false);
         tab.Title = last.title;
         return tab;
+    }
+
+    /// <summary>Writes the recently-closed stack so it survives a restart.</summary>
+    private void PersistClosedTabs()
+    {
+        try { _closedTabStore?.Save(_closedTabs.Select(t => new ClosedTabEntry(t.url, t.title))); }
+        catch (Exception ex) { Trace.WriteLine($"PersistClosedTabs failed: {ex.Message}"); }
+    }
+
+    /// <summary>Drops the persisted stack, used when the user clears data on exit.</summary>
+    public void ClearClosedTabHistory()
+    {
+        _closedTabs.Clear();
+        (_closedTabStore as ClosedTabStore)?.Clear();
     }
 
     public List<(string url, string title)> SendAllToOneTab()
@@ -750,7 +778,7 @@ public sealed partial class TabEngine : IDisposable
                             Template = (System.Windows.Controls.ControlTemplate)System.Windows.Application.Current.Resources["ContextMenuNavRowTemplate"]
                         };
                         cm.Items.Add(navItem);
-                        cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
+                        cm.Items.Add(MenuSeparator.Create());
                     }
 
                     foreach (var item in plan.Items)
@@ -758,7 +786,7 @@ public sealed partial class TabEngine : IDisposable
                         switch (item)
                         {
                             case ContextMenuItemSpec.Separator:
-                                cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
+                                cm.Items.Add(MenuSeparator.Create());
                                 break;
                             case ContextMenuItemSpec.Command command:
                             {

@@ -27,4 +27,10 @@ public sealed record EngineDependencies
     public required NavigationPolicyEngine NavigationPolicyEngine { get; init; }
     public required ThemeManager ThemeManager { get; init; }
     public required ILinkPreviewDownloadSuppressor DownloadSuppressor { get; init; }
+
+    /// <summary>
+    /// Optional so headless harnesses can construct an engine without file persistence.
+    /// When null the recently-closed stack stays in memory only.
+    /// </summary>
+    public IClosedTabStore? ClosedTabStore { get; init; }
 }

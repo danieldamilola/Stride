@@ -43,6 +43,8 @@ public static class Composition
         services.AddSingleton<IDownloadStore>(sp => sp.GetRequiredService<DownloadStore>());
         services.AddSingleton<SessionStore>();
         services.AddSingleton<ISessionStore>(sp => sp.GetRequiredService<SessionStore>());
+        services.AddSingleton<ClosedTabStore>();
+        services.AddSingleton<IClosedTabStore>(sp => sp.GetRequiredService<ClosedTabStore>());
         services.AddSingleton<ExtensionManager>();
         services.AddSingleton(sp => new InternalPages(sp.GetRequiredService<ThemeManager>()));
         services.AddSingleton<YouTubeEnhancer>();
@@ -91,6 +93,7 @@ public static class Composition
             NavigationPolicyEngine = sp.GetRequiredService<NavigationPolicyEngine>(),
             ThemeManager = sp.GetRequiredService<ThemeManager>(),
             DownloadSuppressor = sp.GetRequiredService<Services.LinkPreview.ILinkPreviewDownloadSuppressor>(),
+            ClosedTabStore = sp.GetRequiredService<IClosedTabStore>(),
             Session = sp.GetRequiredService<BrowserSession>()
         });
         services.AddScoped<TabEngine>();

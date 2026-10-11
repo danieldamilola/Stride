@@ -1,28 +1,37 @@
-## .NET
+## .NET build output
 bin/
 obj/
 **/bin/
 **/obj/
+TestResults/
 *.user
 *.suo
 *.cache
-*.dll
 *.pdb
+*.dll
 *.exe
+*.binlog
 
 ## IDE
 .vs/
 .idea/
+.vscode/
 *.swp
 *~
 
 ## OS
 Thumbs.db
-
-## Update signing keys (secret - do not commit)
-tools/signing/
+ehthumbs.db
 Desktop.ini
 .DS_Store
+._*
+
+## Secrets (never commit)
+.env
+.env.*
+tools/signing/
+*.key
+*.pem
 
 ## Agents
 .agents/
@@ -35,15 +44,14 @@ nul
 scratch/
 tools/ToolbarProbe/
 
+## Build and packaging output
 Output/
 publish/
+Releases/
 
-## Logs (written to %LocalAppData%\StrideBrowser at runtime - never repo-local)
+## Runtime logs (written to %LocalAppData%\StrideBrowser at runtime, never repo-local)
 *.log
-crash.log
-trace.log
 ipc_log.txt
 
-Releases/*.zip
+## Downloaded extensions
 Resources/Extensions/*.zip
-Releases/

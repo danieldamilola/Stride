@@ -6,6 +6,7 @@
     <Color x:Key="SurfaceColor">#1A1A1E</Color>
     <Color x:Key="SurfaceHoverColor">#252528</Color>
     <Color x:Key="BorderColor">#2A2A2E</Color>
+    <Color x:Key="SeparatorLineColor">#3C3C42</Color>
     <Color x:Key="AccentColor">#7fb89a</Color>
     <Color x:Key="AccentWashColor">#187fb89a</Color>
     <Color x:Key="TextPrimaryColor">#E8E4DF</Color>
@@ -22,6 +23,7 @@
     <SolidColorBrush x:Key="SurfaceBrush"      Color="{StaticResource SurfaceColor}"/>
     <SolidColorBrush x:Key="SurfaceHoverBrush" Color="{StaticResource SurfaceHoverColor}"/>
     <SolidColorBrush x:Key="BorderBrush"       Color="{StaticResource BorderColor}"/>
+    <SolidColorBrush x:Key="SeparatorLineBrush" Color="{StaticResource SeparatorLineColor}"/>
     <SolidColorBrush x:Key="Accent"            Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="AccentWash"        Color="{StaticResource AccentWashColor}"/>
     <SolidColorBrush x:Key="TextPrimary"       Color="{StaticResource TextPrimaryColor}"/>

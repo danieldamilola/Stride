@@ -28,6 +28,13 @@ public sealed class WebViewFactory
 
     public CoreWebView2Environment? Environment { get; private set; }
 
+    /// <summary>
+    /// The installed Edge WebView2 runtime version, captured once the environment exists.
+    /// The WebView2 SDK package version baked into this assembly says nothing about which
+    /// runtime the user actually has, and the two can differ by a wide margin.
+    /// </summary>
+    public static string RuntimeVersion { get; private set; } = "";
+
     /// <summary>Fires when the WebView2 browser process exits (engine decides what to do).</summary>
     public event Action? BrowserProcessExited;
 
@@ -55,6 +62,9 @@ public sealed class WebViewFactory
                 (!_settings.HardwareAccelerationEnabled ? " --disable-gpu" : ""),
         };
         Environment = await CoreWebView2Environment.CreateAsync(null, dataDir, options);
+
+        try { RuntimeVersion = Environment.BrowserVersionString ?? ""; }
+        catch (Exception ex) { Trace.WriteLine($"WebView2 runtime version unavailable: {ex.Message}"); }
 
         if (_settings.AdBlockEnabled)
         {
