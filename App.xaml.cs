@@ -75,7 +75,8 @@ public partial class App : Application
         CheckForPreviousCrash();
 
         // Create and show MainWindow via DI
-        var window = _serviceProvider.GetRequiredService<MainWindow>();
+        ShutdownMode = ShutdownMode.OnLastWindowClose;
+        var window = _serviceProvider.GetRequiredService<Services.UI.BrowserWindowManager>().CreateWindow(restoreStartupSession: true);
         window.Show();
     }
 

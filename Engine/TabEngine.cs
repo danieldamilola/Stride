@@ -16,7 +16,7 @@ namespace StrideBrowser.Engine;
 /// Manages the full tab lifecycle: creation, switching, hibernation, and disposal.
 /// Owns all WebView2 instances. The single deepest module in the browser.
 /// </summary>
-public sealed class TabEngine : IDisposable
+public sealed partial class TabEngine : IDisposable
 {
     private Panel? _webViewHost;
     private readonly ExtensionManager _extensionManager;
@@ -48,7 +48,16 @@ public sealed class TabEngine : IDisposable
     // Per-session random token embedded in every internal page. IPC messages that
     // don't include this token are rejected - this replaces the origin-based check
     // which broke when internal pages ran on about:blank.
-    private readonly string _ipcToken = Guid.NewGuid().ToString("N");
+    private readonly string _ipcToken;
+    private readonly Dictionary<Guid, WebViewSubscriptions> _subscriptions = new();
+    /// <summary>
+    /// The window handle each live WebView was built in. WebView2 binds a control to the
+    /// window it was created in, so a tab that has been torn off still depends on that
+    /// window even though it now lives somewhere else.
+    /// </summary>
+    private readonly Dictionary<Guid, IntPtr> _controlHosts = new();
+    private readonly HashSet<Guid> _creatingTabs = new();
+    private Task? _initialization;
 
     /// <summary>The per-session token embedded in internal pages. Used to frame host-to-page messages.</summary>
     public string IpcToken => _ipcToken;
@@ -95,11 +104,13 @@ public sealed class TabEngine : IDisposable
     public Func<Task>? LaunchTCLensAsync { get; set; }
 
     private readonly Services.CustomDownloadManager _customDownloadManager;
-    private readonly Dictionary<string, Microsoft.Web.WebView2.Core.CoreWebView2DownloadOperation> _activeNativeDownloads = new();
+    private readonly Dictionary<string, Microsoft.Web.WebView2.Core.CoreWebView2DownloadOperation> _activeNativeDownloads;
 
     /// <summary>Initializes a new instance of the TabEngine.</summary>
     public TabEngine(EngineDependencies deps)
     {
+        _ipcToken = deps.Session.IpcToken;
+        _activeNativeDownloads = deps.Session.NativeDownloads;
         _extensionManager = deps.ExtensionManager;
         _youtubeUnhook = deps.YouTubeUnhook;
         _youtubeEnhancer = deps.YouTubeEnhancer;
@@ -117,7 +128,7 @@ public sealed class TabEngine : IDisposable
         _themeManager = deps.ThemeManager;
         _dispatcher = Application.Current.Dispatcher;
 
-        _webViewFactory = new WebViewFactory(_settings, _themeManager, _pages, _extensionManager, _ipcToken);
+        _webViewFactory = new WebViewFactory(_settings, _themeManager, _pages, _extensionManager, _ipcToken, deps.Session.WebViewDataDirectory);
         _ipcBridge = new WebViewIpcBridge(
             _dispatcher,
             _settings,
@@ -143,19 +154,7 @@ public sealed class TabEngine : IDisposable
         );
         _hibernationManager.SetPreviewOriginCheck(id => _previewOriginTabId == id);
 
-        foreach (var item in _downloadStore.Items)
-        {
-            // No-op: WebView2 handles download resume natively;
-            // no need to attach custom resume handlers.
-        }
 
-        _downloadStore.Items.CollectionChanged += (s, e) =>
-        {
-            if (e.NewItems != null)
-            {
-                // No-op: no custom resume handler needed.
-            }
-        };
     }
 
     public void AttachHost(Panel webViewHost)
@@ -164,10 +163,12 @@ public sealed class TabEngine : IDisposable
     }
 
 /// <summary>Must be called once at startup to create the WebView2 environment.</summary>
-    public async Task InitializeAsync()
+    public Task InitializeAsync() => _initialization ??= InitializeCoreAsync();
+
+    private async Task InitializeCoreAsync()
     {
         await _webViewFactory.InitializeAsync();
-        _webViewFactory.BrowserProcessExited += () => _dispatcher.Invoke(HandleBrowserProcessDeath);
+        _webViewFactory.BrowserProcessExited += OnBrowserProcessExited;
     }
 
     // ──── Tab Lifecycle ────
@@ -269,6 +270,7 @@ public sealed class TabEngine : IDisposable
 
     public void SwitchTo(BrowserTab tab)
     {
+        if (_disposed || !Tabs.Contains(tab)) return;
         foreach (var t in Tabs) t.IsActive = false;
         tab.IsActive = true;
         ActiveTab = tab;
@@ -279,7 +281,7 @@ public sealed class TabEngine : IDisposable
     /// <summary>Activates a tab's WebView2 - creates one if needed, shows it, hides others.</summary>
     public async Task ActivateAsync(BrowserTab tab)
     {
-        if (_webViewFactory.Environment is null) return;
+        if (_disposed || !Tabs.Contains(tab) || _webViewFactory.Environment is null) return;
 
         // Cancel any in-flight activation so rapid clicks don't queue up
         _activationCts?.Cancel();
@@ -312,7 +314,7 @@ public sealed class TabEngine : IDisposable
 
         try
         {
-            if (cts.IsCancellationRequested) return;
+            if (cts.IsCancellationRequested || _disposed || !Tabs.Contains(tab)) return;
 
             if (!_webViews.ContainsKey(tab.Id) || tab.IsHibernated)
                 await CreateWebViewForTab(tab);
@@ -329,7 +331,7 @@ public sealed class TabEngine : IDisposable
             _activationGate.Release();
         }
 
-        if (cts.IsCancellationRequested) return;
+        if (cts.IsCancellationRequested || _disposed || !Tabs.Contains(tab)) return;
 
         ShowOnlyActiveWebView(tab);
         tab.LastActiveTime = DateTime.UtcNow;
@@ -623,6 +625,9 @@ public sealed class TabEngine : IDisposable
     /// <summary>Creates a WebView2 control for a tab and wires its events.</summary>
     private async Task CreateWebViewForTab(BrowserTab tab)
     {
+        _creatingTabs.Add(tab.Id);
+        try
+        {
         var isInternal = tab.Url?.StartsWith("internal://") ?? true;
 
         dynamic wv = _webViewFactory.CreateWebViewControl(isInternal);
@@ -635,7 +640,7 @@ public sealed class TabEngine : IDisposable
             if (_settings.AdBlockEnabled)
                 AdBlockFilter.Apply(wv.CoreWebView2);
 
-            WireInlinedContextMenu(wv.CoreWebView2, tab);
+            if (_disposed || !Tabs.Contains(tab)) throw new OperationCanceledException();
             _webViewFactory.ConfigureCoreWebView(wv.CoreWebView2);
         }
         catch
@@ -645,10 +650,8 @@ public sealed class TabEngine : IDisposable
             throw;
         }
 
-        WireNavigationEvents(wv, tab);
-        WireTitleAndSourceEvents(wv, tab);
-        _ipcBridge.Wire(wv, tab);
-        HandleProcessFailure(wv, tab);
+        WireTabEvents(wv, tab);
+        _ipcBridge.WireLifetimeEvents(wv, tab);
 
         // Network-level ad blocking - block known ad URLs before they load
         // Note: We now rely entirely on the native uBlock Origin extension (ExtensionManager)
@@ -658,16 +661,26 @@ public sealed class TabEngine : IDisposable
 
         await _contentScriptInjector.InjectAsync(wv.CoreWebView2, _settings, _ipcToken);
 
+        if (_disposed || !Tabs.Contains(tab))
+        {
+            UnwireTabEvents(tab.Id);
+            _webViewHost!.Children.Remove((FrameworkElement)wv);
+            wv.Dispose();
+            return;
+        }
         _webViews[tab.Id] = wv;
+        _controlHosts[tab.Id] = WebView2WindowBinding.HandleOf(Window.GetWindow((FrameworkElement)wv));
         tab.IsHibernated = false;
         tab.IsSleeping = false;
 
         _webViewFactory.NavigateInitialUrl(wv, tab);
+        }
+        finally { _creatingTabs.Remove(tab.Id); }
     }
 
-    private void WireInlinedContextMenu(CoreWebView2 core, BrowserTab tab)
+    private void WireInlinedContextMenu(CoreWebView2 core, BrowserTab tab, WebViewSubscriptions subscriptions)
     {
-        core.ContextMenuRequested += (object? sender, CoreWebView2ContextMenuRequestedEventArgs args) =>
+        EventHandler<CoreWebView2ContextMenuRequestedEventArgs> onContextMenuRequested = (object? sender, CoreWebView2ContextMenuRequestedEventArgs args) =>
         {
             // LinkUri, SourceUri and SelectionText throw COMException when read
             // without their Has* flag being set, so guard every string read.
@@ -779,6 +792,8 @@ public sealed class TabEngine : IDisposable
                 }
             });
         };
+        core.ContextMenuRequested += onContextMenuRequested;
+        subscriptions.Add(() => core.ContextMenuRequested -= onContextMenuRequested);
     }
 
     private void ExecuteContextMenuCommand(CoreWebView2 core, ContextMenuItemSpec.Command command)
@@ -1003,14 +1018,16 @@ public sealed class TabEngine : IDisposable
 
     // ──── WebView Event Wiring ────
 
-    private void WireNavigationEvents(dynamic wv, BrowserTab tab)
+    private void WireNavigationEvents(dynamic wv, BrowserTab tab, WebViewSubscriptions subscriptions)
     {
         CoreWebView2 core = wv.CoreWebView2;
-        core.HistoryChanged += (_, _) =>
+        EventHandler<object> onHistoryChanged = (_, _) =>
         {
             if (_webViews.ContainsKey(tab.Id)) UpdateTabFromWebView(wv, tab, recordHistory: false);
         };
-        core.NavigationStarting += (_, e) =>
+        core.HistoryChanged += onHistoryChanged;
+        subscriptions.Add(() => core.HistoryChanged -= onHistoryChanged);
+        EventHandler<CoreWebView2NavigationStartingEventArgs> onNavigationStarting = (_, e) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
 
@@ -1072,8 +1089,10 @@ public sealed class TabEngine : IDisposable
                 LoadingStateChanged?.Invoke(tab, true);
             });
         };
+        core.NavigationStarting += onNavigationStarting;
+        subscriptions.Add(() => core.NavigationStarting -= onNavigationStarting);
 
-        core.NavigationCompleted += (_, e) =>
+        EventHandler<CoreWebView2NavigationCompletedEventArgs> onNavigationCompleted = (_, e) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
             _ = _dispatcher.InvokeAsync(() =>
@@ -1112,6 +1131,8 @@ public sealed class TabEngine : IDisposable
                 catch (Exception ex) { Trace.WriteLine($"NavigationCompleted error: {ex.Message}"); }
             });
         };
+        core.NavigationCompleted += onNavigationCompleted;
+        subscriptions.Add(() => core.NavigationCompleted -= onNavigationCompleted);
     }
 
     private void ApplyNavigationBackground(dynamic wv, string? url)
@@ -1122,10 +1143,10 @@ public sealed class TabEngine : IDisposable
         else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp3) comp3.DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? WebViewFactory.DarkBackground : System.Drawing.Color.White);
     }
 
-    private void WireTitleAndSourceEvents(dynamic wv, BrowserTab tab)
+    private void WireTitleAndSourceEvents(dynamic wv, BrowserTab tab, WebViewSubscriptions subscriptions)
     {
         CoreWebView2 core = wv.CoreWebView2;
-        core.DocumentTitleChanged += (_, _) =>
+        EventHandler<object> onDocumentTitleChanged = (_, _) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
             _dispatcher.Invoke(() =>
@@ -1136,8 +1157,10 @@ public sealed class TabEngine : IDisposable
                     tab.Title = wv.CoreWebView2.DocumentTitle;
             });
         };
+        core.DocumentTitleChanged += onDocumentTitleChanged;
+        subscriptions.Add(() => core.DocumentTitleChanged -= onDocumentTitleChanged);
 
-        core.SourceChanged += (_, _) =>
+        EventHandler<CoreWebView2SourceChangedEventArgs> onSourceChanged = (_, _) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
             _dispatcher.Invoke(() =>
@@ -1151,10 +1174,12 @@ public sealed class TabEngine : IDisposable
                 }
             });
         };
+        core.SourceChanged += onSourceChanged;
+        subscriptions.Add(() => core.SourceChanged -= onSourceChanged);
 
         // Use WebView2's native favicon API (like Chrome/Firefox)
         // instead of relying solely on a 3rd-party service
-        core.FaviconChanged += (_, _) =>
+        EventHandler<object> onFaviconChanged = (_, _) =>
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
             string source = (string)wv.Source?.ToString() ?? "";
@@ -1164,15 +1189,22 @@ public sealed class TabEngine : IDisposable
                     _dispatcher.Invoke(() => { tab.Favicon = t.Result; TabStateChanged?.Invoke(tab); });
             }, TaskContinuationOptions.OnlyOnRanToCompletion);
         };
+core.FaviconChanged += onFaviconChanged;
+        subscriptions.Add(() => core.FaviconChanged -= onFaviconChanged);
+
         core.IsMuted = tab.IsMuted;
-        core.IsDocumentPlayingAudioChanged += (_, _) =>
+        EventHandler<object> onPlayingAudioChanged = (_, _) =>
         {
             if (_webViews.ContainsKey(tab.Id)) tab.IsAudioPlaying = core.IsDocumentPlayingAudio;
         };
-        core.IsMutedChanged += (_, _) =>
+        core.IsDocumentPlayingAudioChanged += onPlayingAudioChanged;
+        subscriptions.Add(() => core.IsDocumentPlayingAudioChanged -= onPlayingAudioChanged);
+        EventHandler<object> onMutedChanged = (_, _) =>
         {
             if (_webViews.ContainsKey(tab.Id)) tab.IsMuted = core.IsMuted;
         };
+        core.IsMutedChanged += onMutedChanged;
+        subscriptions.Add(() => core.IsMutedChanged -= onMutedChanged);
     }
 
     public event Action<bool>? FullScreenChanged;
@@ -1180,10 +1212,10 @@ public sealed class TabEngine : IDisposable
 
 
     /// <summary>Wires process failure handling for a tab WebView and marks crashed tabs hibernated.</summary>
-    private void HandleProcessFailure(dynamic wv, BrowserTab tab)
+    private void HandleProcessFailure(dynamic wv, BrowserTab tab, WebViewSubscriptions subscriptions)
     {
         CoreWebView2 core = wv.CoreWebView2;
-        core.ProcessFailed += (_, e) =>
+        EventHandler<CoreWebView2ProcessFailedEventArgs> onProcessFailed = (_, e) =>
         {
             try { Trace.WriteLine($"ProcessFailed kind={e.ProcessFailedKind} tab={tab.Title}"); Trace.Flush(); }
             catch { }
@@ -1209,6 +1241,8 @@ public sealed class TabEngine : IDisposable
                 catch (Exception ex) { Trace.WriteLine($"ProcessFailed handler error: {ex.Message}"); }
             });
         };
+        core.ProcessFailed += onProcessFailed;
+        subscriptions.Add(() => core.ProcessFailed -= onProcessFailed);
     }
 
     /// <summary>Handles browser process crash by hibernating all tabs and clearing sleeping state.</summary>
@@ -1222,12 +1256,7 @@ public sealed class TabEngine : IDisposable
             t.IsSleeping = false;
             t.IsLoading = false;
         }
-        foreach (var (_, wv) in _webViews)
-        {
-            _webViewHost!.Children.Remove((FrameworkElement)wv);
-            try { wv.Dispose(); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
-        }
-        _webViews.Clear();
+        foreach (var id in _webViews.Keys.ToArray()) TeardownWebView(id);
     }
 
     private void UpdateTabFromWebView(dynamic wv, BrowserTab tab, bool recordHistory = true)
@@ -1412,33 +1441,51 @@ public sealed class TabEngine : IDisposable
     private void TeardownWebView(Guid tabId)
     {
         if (!_webViews.TryGetValue(tabId, out var wv)) return;
+        UnwireTabEvents(tabId);
         _webViewHost!.Children.Remove((FrameworkElement)wv);
         try { wv.Dispose(); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
         _webViews.Remove(tabId);
+_controlHosts.Remove(tabId);
         var tab = Tabs.FirstOrDefault(t => t.Id == tabId);
         if (tab != null) tab.IsAudioPlaying = false;
     }
 
-    public void Shutdown()
+    /// <summary>
+    /// Rebuilds the WebView of every tab whose control was built in a window that is about
+    /// to disappear. A torn-off tab keeps its page across a window close only when the SDK
+    /// can follow the control to its new window; when it cannot, the control dies with the
+    /// old window, so the tab is rebuilt and reloads instead of going blank.
+    /// </summary>
+    public async Task RecycleTabsHostedBy(IntPtr deadWindow)
     {
-        _hibernationManager.Detach();
-        _activationCts?.Cancel();
-        _activationCts?.Dispose();
-        _webViewHost!.Children.Clear();
-        foreach (var (_, wv) in _webViews)
+        if (_disposed || deadWindow == IntPtr.Zero) return;
+        var affected = _webViews.Keys
+            .Where(id => _controlHosts.GetValueOrDefault(id) == deadWindow && Tabs.Any(t => t.Id == id))
+            .ToArray();
+        foreach (var id in affected)
         {
-            try { wv.Dispose(); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+            var tab = Tabs.FirstOrDefault(t => t.Id == id);
+            if (tab is null) continue;
+            TeardownWebView(id);
+            tab.IsHibernated = true;
+            tab.IsSleeping = false;
         }
-        _webViews.Clear();
-        _activationGate.Dispose();
+        if (affected.Length == 0) return;
+        if (ActiveTab is { } active && affected.Contains(active.Id))
+            await ActivateAsync(active);
     }
+
+    private void OnBrowserProcessExited() => _dispatcher.Invoke(HandleBrowserProcessDeath);
+
+    public void Shutdown() => Dispose();
 
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
-        Shutdown();
+        _webViewFactory.BrowserProcessExited -= OnBrowserProcessExited;
+        _hibernationManager.Detach();
+        _activationCts?.Cancel();
+        foreach (var id in _webViews.Keys.ToArray()) TeardownWebView(id);
     }
 }
-
-

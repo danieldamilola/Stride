@@ -67,11 +67,11 @@ public sealed class WebViewIpcBridge
         _downloadSuppressor = downloadSuppressor;
     }
 
-    public void Wire(dynamic wv, BrowserTab tab)
+    internal void Wire(dynamic wv, BrowserTab tab, WebViewSubscriptions subscriptions)
     {
         CoreWebView2 core = wv.CoreWebView2;
         TryDetachHostWindowClose((object)wv, (object)core);
-        core.ContainsFullScreenElementChanged += (_, _) =>
+        EventHandler<object> onContainsFullScreenElementChanged = (_, _) =>
         {
             if (!_isTabAlive(tab.Id)) return;
             _dispatcher.InvokeAsync(() =>
@@ -79,18 +79,27 @@ public sealed class WebViewIpcBridge
                 FullScreenChanged?.Invoke(core.ContainsFullScreenElement);
             });
         };
-        WireWebMessageReceived(core, tab);
+        core.ContainsFullScreenElementChanged += onContainsFullScreenElementChanged;
+        subscriptions.Add(() => core.ContainsFullScreenElementChanged -= onContainsFullScreenElementChanged);
+        WireWebMessageReceived(core, tab, subscriptions);
 
-        Handlers.TabDownloadHandler.Wire(core, _dispatcher, _downloadStore, _activeNativeDownloads, _downloadSuppressor);
 
-        WireNewWindowRequested(core, tab);
+        WireNewWindowRequested(core, tab, subscriptions);
 
-        core.WindowCloseRequested += (_, _) =>
+        EventHandler<object> onWindowCloseRequested = (_, _) =>
         {
             _dispatcher.Invoke(() => _closeTab(tab));
         };
+        core.WindowCloseRequested += onWindowCloseRequested;
+        subscriptions.Add(() => core.WindowCloseRequested -= onWindowCloseRequested);
 
-        Handlers.TabDialogHandler.Wire(core, _dispatcher, _settings);
+    }
+
+    public void WireLifetimeEvents(dynamic wv, BrowserTab tab)
+    {
+        CoreWebView2 core = wv.CoreWebView2;
+        Handlers.TabDownloadHandler.Wire(core, _dispatcher, _downloadStore, _activeNativeDownloads, _downloadSuppressor);
+        Handlers.TabDialogHandler.Wire(core, _dispatcher, _settings, () => Window.GetWindow((FrameworkElement)wv));
     }
 
     /// <summary>
@@ -162,9 +171,9 @@ public sealed class WebViewIpcBridge
         catch (Exception ex) { Trace.WriteLine($"PostMessageToActiveTab failed: {ex.Message}"); }
     }
 
-    private void WireWebMessageReceived(CoreWebView2 core, BrowserTab tab)
+    private void WireWebMessageReceived(CoreWebView2 core, BrowserTab tab, WebViewSubscriptions subscriptions)
     {
-        core.WebMessageReceived += (_, e) =>
+        EventHandler<CoreWebView2WebMessageReceivedEventArgs> onWebMessageReceived = (_, e) =>
         {
             if (!_isTabAlive(tab.Id)) return;
 
@@ -253,11 +262,13 @@ public sealed class WebViewIpcBridge
                 _dispatcher.Invoke(() => WebMessageReceived?.Invoke(msg));
             }
         };
+        core.WebMessageReceived += onWebMessageReceived;
+        subscriptions.Add(() => core.WebMessageReceived -= onWebMessageReceived);
     }
 
-    private void WireNewWindowRequested(CoreWebView2 core, BrowserTab tab)
+    private void WireNewWindowRequested(CoreWebView2 core, BrowserTab tab, WebViewSubscriptions subscriptions)
     {
-        core.NewWindowRequested += (_, e) =>
+        EventHandler<CoreWebView2NewWindowRequestedEventArgs> onNewWindowRequested = (_, e) =>
         {
             // Treat as popup if it requests specific dimensions or isn't explicitly user-initiated (e.g. OAuth flows)
             if (e.WindowFeatures.HasPosition || e.WindowFeatures.HasSize || !e.IsUserInitiated)
@@ -303,5 +314,7 @@ public sealed class WebViewIpcBridge
                 }
             });
         };
+        core.NewWindowRequested += onNewWindowRequested;
+        subscriptions.Add(() => core.NewWindowRequested -= onNewWindowRequested);
     }
 }

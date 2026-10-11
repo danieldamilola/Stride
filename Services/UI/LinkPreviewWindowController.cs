@@ -6,7 +6,7 @@ using StrideBrowser.ViewModels.LinkPreview;
 
 namespace StrideBrowser.Services.UI;
 
-public sealed class LinkPreviewWindowController
+public sealed class LinkPreviewWindowController : IDisposable
 {
     private readonly LinkPreviewViewModel _viewModel;
     private readonly Services.LinkPreview.ILinkPreviewService _service;
@@ -40,6 +40,22 @@ public sealed class LinkPreviewWindowController
         _engine.TabClosed += OnTabClosed;
         if (_viewModel.IsVisible)
             Show();
+    }
+
+    public void Dispose()
+    {
+        _settings.PropertyChanged -= OnSettingsPropertyChanged;
+        _viewModel.PropertyChanged -= OnViewModelChanged;
+        _engine.ActiveTabChanged -= OnActiveTabChanged;
+        _engine.TabClosed -= OnTabClosed;
+        if (_owner is not null)
+        {
+            _owner.SizeChanged -= OnOwnerBoundsChanged;
+            _owner.LocationChanged -= OnOwnerBoundsChanged;
+        }
+        _window?.Close();
+        _window = null;
+        _owner = null;
     }
 
     private void OnOwnerBoundsChanged(object? sender, EventArgs e)

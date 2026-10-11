@@ -27,6 +27,9 @@ namespace StrideBrowser;
 /// </summary>
 public partial class MainWindow : Window
 {
+    private readonly IServiceProvider _services;
+    private readonly BrowserWindowManager _windows;
+    private readonly BrowserWindowContext _windowContext;
     private readonly BrowserViewModel _vm;
     private readonly TabEngine _engine;
     private readonly TabStripController _tabStripController;
@@ -61,6 +64,9 @@ public partial class MainWindow : Window
 
         _fullscreenController = new Services.UI.FullscreenController(this, Toolbar);
 
+        _services = services;
+        _windows = services.GetRequiredService<BrowserWindowManager>();
+        _windowContext = services.GetRequiredService<BrowserWindowContext>();
         _vm = vm;
         _settingsStore = services.GetRequiredService<ISettingsStore>();
         _oneTabStore = services.GetRequiredService<IOneTabStore>();
@@ -70,7 +76,7 @@ public partial class MainWindow : Window
 
         _engine = services.GetRequiredService<TabEngine>();
         _engine.AttachHost(WebViewHost);
-        _tabStripController = new TabStripController(TabList, _engine, Dispatcher, FocusAddressBar);
+_tabStripController = new TabStripController(TabList, _engine, Dispatcher, FocusAddressBar);
         _toolbarDropController = new ToolbarDropController(TabList, StandardAddressBarBorder, NewTabButton,
             (input, target) => _tabStripController.OpenDroppedInputAsync(
                 Uri.TryCreate(input, UriKind.Absolute, out var uri) && uri.IsFile ? uri.AbsoluteUri : _vm.ResolveInput(input), target),
@@ -79,6 +85,8 @@ public partial class MainWindow : Window
         Closed += (_, _) => _toolbarDropController.Dispose();
         _toolbarNavigationController = new ToolbarNavigationController(RefreshButton, _engine);
         Closed += (_, _) => _toolbarNavigationController.Dispose();
+        _windows.Register(this, _engine, TabList, services);
+        _tabStripController.Drag.Transfer = new Services.UI.TabTransferHost(_engine, _windows);
 
         var linkPreviewController = services.GetRequiredService<Services.UI.LinkPreviewWindowController>();
         linkPreviewController.Attach(this);
@@ -100,7 +108,7 @@ public partial class MainWindow : Window
         _router = services.GetRequiredService<WebMessageRouter>();
         _router.SettingChanged += OnSettingChanged;
         var themeManager = services.GetRequiredService<ThemeManager>();
-        themeManager.ThemeChanged += () =>
+        Action onThemeChanged = () =>
         {
             var themeStr = themeManager.GetThemeString();
             var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
@@ -114,6 +122,8 @@ public partial class MainWindow : Window
             _engine.ApplyAppThemeToWebViews();
             ApplyAppIcon();
         };
+        themeManager.ThemeChanged += onThemeChanged;
+        Closed += (_, _) => themeManager.ThemeChanged -= onThemeChanged;
 
         DataContext = _vm;
 
@@ -151,45 +161,39 @@ public partial class MainWindow : Window
         try
         {
             await _engine.InitializeAsync();
+            if (_windowContext.IsClosing) return;
 
             _shortcuts = BuildShortcutMap();
             _shortcuts.RebuildBindings(_vm.Settings.CustomShortcuts);
 
-            await RestoreSessionOrCreateTab();
+            if (_windowContext.RestoreStartupSession) await RestoreSessionOrCreateTab();
             SyncTabsBinding();
             ApplyAppIcon();
-            _vm.Settings.PropertyChanged += (_, args) =>
+            System.ComponentModel.PropertyChangedEventHandler onSettingsChanged = (_, args) =>
             {
                 if (args.PropertyName == nameof(BrowserSettings.ShowTabNames))
                     ApplyTabShrink();
             };
+            _vm.Settings.PropertyChanged += onSettingsChanged;
+            Closed += (_, _) => _vm.Settings.PropertyChanged -= onSettingsChanged;
             Dispatcher.BeginInvoke(new Action(ApplyTabShrink),
                 System.Windows.Threading.DispatcherPriority.Loaded);
 
-            var startupCoordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
-            await startupCoordinator.HandleCommandLineAndReleaseNotesAsync(Environment.GetCommandLineArgs().Skip(1).ToArray());
-
-            SingleInstanceManager.InstanceMessageReceived += OnInstanceMessageReceived;
-
-            if (!DefaultBrowserRegistrar.IsRegistered())
-                DefaultBrowserRegistrar.Register();
+            if (_windowContext.RestoreStartupSession)
+            {
+                var startupCoordinator = _services.GetRequiredService<Services.Startup.StartupCoordinator>();
+                await startupCoordinator.HandleCommandLineAndReleaseNotesAsync(Environment.GetCommandLineArgs().Skip(1).ToArray());
+                if (!DefaultBrowserRegistrar.IsRegistered()) DefaultBrowserRegistrar.Register();
+            }
+            _windowContext.Ready.TrySetResult();
 
 
         }
         catch (Exception ex)
         {
+            _windowContext.Ready.TrySetException(ex);
             Trace.WriteLine($"OnWindowLoaded failed: {ex}");
         }
-    }
-
-    private void OnInstanceMessageReceived(string[] args)
-    {
-        Dispatcher.InvokeAsync(async () =>
-        {
-            var coordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
-            await coordinator.HandleCommandLineArgsAsync(args);
-            _chromeManager?.BringToFront();
-        });
     }
 
     private KeyboardShortcutMap BuildShortcutMap()
@@ -272,6 +276,7 @@ public partial class MainWindow : Window
 
         _engine.TabStateChanged += async tab =>
         {
+            if (!_engine.Tabs.Contains(tab)) return;
             if (tab.IsActive)
             {
                 _vm.SyncNavigationState();
@@ -301,6 +306,7 @@ public partial class MainWindow : Window
 
         _engine.LoadingStateChanged += (tab, isLoading) =>
         {
+            if (!_engine.Tabs.Contains(tab)) return;
             if (tab.IsActive)
             {
                 _vm.IsLoading = isLoading;
@@ -482,7 +488,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var themeManager = ((App)Application.Current).Services.GetRequiredService<ThemeManager>();
+            var themeManager = _services.GetRequiredService<ThemeManager>();
             _appIconLight = !themeManager.IsCurrentlyDark();
             Icon = new BitmapImage(new Uri(_appIconLight
                 ? "pack://application:,,,/icons/stride-light.ico"
@@ -1120,7 +1126,7 @@ public partial class MainWindow : Window
 
         if (key == "appTheme")
         {
-            var tm = ((App)Application.Current).Services.GetRequiredService<ThemeManager>();
+            var tm = _services.GetRequiredService<ThemeManager>();
             var themeStr = tm.GetThemeString();
             var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
             foreach (var tab in _engine.Tabs)
@@ -1392,56 +1398,10 @@ public partial class MainWindow : Window
 
     // ───────────────────── Cleanup ─────────────────────
 
-    private bool _isShuttingDown;
-
-    protected override async void OnClosing(System.ComponentModel.CancelEventArgs e)
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
-        if (_isShuttingDown)
-        {
-            base.OnClosing(e);
-            return;
-        }
-
-        e.Cancel = true;
-        _isShuttingDown = true;
-
-        try
-        {
-            if (_vm.Settings.RestoreSessionOnStartup)
-            {
-                var tabs = _engine.Tabs
-                    .Where(t => !InternalUrls.IsInternal(t.Url))
-                    .Select(t => (t.Url, t.Title, t.IsPinned, t == _engine.ActiveTab));
-                _sessionStore.Save(tabs);
-            }
-
-            if (_vm.Settings.ClearDataOnExit)
-            {
-                try
-                {
-                    var profile = _engine.GetCoreWebView2()?.Profile;
-                    if (profile is not null)
-                    {
-                        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                        await profile.ClearBrowsingDataAsync().WaitAsync(cts.Token);
-                    }
-                }
-                catch { /* Timeout or disposal — best-effort cleanup */ }
-            }
-
-            _settingsStore.Save(_vm.Settings);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"OnClosing save failed: {ex}");
-        }
-        finally
-        {
-            try { _engine.Shutdown(); }
-            catch (Exception ex) { Trace.WriteLine($"Engine shutdown failed: {ex}"); }
-
-            Application.Current.Dispatcher.InvokeAsync(() => Close(), System.Windows.Threading.DispatcherPriority.Normal);
-        }
+        _windows.Close(this, e);
+        base.OnClosing(e);
     }
 
     private Storyboard? _loadingStoryboard;

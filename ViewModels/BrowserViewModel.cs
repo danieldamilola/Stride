@@ -14,7 +14,7 @@ namespace StrideBrowser.ViewModels;
 /// Thin coordinator between the UI and the engine/services.
 /// Contains NO business logic - only UI state and command routing.
 /// </summary>
-public sealed partial class BrowserViewModel : ObservableObject
+public sealed partial class BrowserViewModel : ObservableObject, IDisposable
 {
     private CancellationTokenSource? _suggestionCts;
     private readonly NavigationService _navigation;
@@ -117,6 +117,7 @@ public sealed partial class BrowserViewModel : ObservableObject
     private readonly ReaderViewModel _readerViewModel;
     private readonly UpdateService _updateService;
     private bool _isInstalling;
+    private Action? _unsubscribe;
 
     public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore, Engine.TabEngine engine, IReaderService readerService, ReaderViewModel readerViewModel, UpdateService updateService, ISuggestionProvider suggestions, FaviconLoader faviconLoader)
     {
@@ -129,7 +130,7 @@ public sealed partial class BrowserViewModel : ObservableObject
         _readerViewModel = readerViewModel;
         _updateService = updateService;
 
-        _updateService.UpdateAvailable += (s, e) =>
+        EventHandler onUpdateAvailable = (s, e) =>
         {
             App.Current.Dispatcher.Invoke(() =>
             {
@@ -137,8 +138,9 @@ public sealed partial class BrowserViewModel : ObservableObject
                 UpdateVersion = _updateService.LatestVersion ?? "";
             });
         };
+        _updateService.UpdateAvailable += onUpdateAvailable;
 
-        _updateService.DownloadProgressChanged += (s, progress) =>
+        EventHandler<double> onDownloadProgressChanged = (s, progress) =>
         {
             App.Current.Dispatcher.Invoke(() =>
             {
@@ -146,8 +148,9 @@ public sealed partial class BrowserViewModel : ObservableObject
                 UpdateProgress = progress / 100.0;
             });
         };
+        _updateService.DownloadProgressChanged += onDownloadProgressChanged;
 
-        _updateService.DownloadCompleted += (s, e) =>
+        EventHandler onDownloadCompleted = (s, e) =>
         {
             App.Current.Dispatcher.Invoke(() =>
             {
@@ -155,8 +158,9 @@ public sealed partial class BrowserViewModel : ObservableObject
                 UpdateState = UpdateState.ReadyToInstall;
             });
         };
+        _updateService.DownloadCompleted += onDownloadCompleted;
 
-        _updateService.UpdateFailed += (s, e) =>
+        EventHandler<string> onUpdateFailed = (s, e) =>
         {
             App.Current.Dispatcher.Invoke(() =>
             {
@@ -165,8 +169,9 @@ public sealed partial class BrowserViewModel : ObservableObject
                 UpdateProgress = 0;
             });
         };
+        _updateService.UpdateFailed += onUpdateFailed;
 
-        downloadStore.Items.CollectionChanged += (s, e) =>
+        System.Collections.Specialized.NotifyCollectionChangedEventHandler onDownloadsChanged = (s, e) =>
         {
             if (e.NewItems != null)
             {
@@ -179,6 +184,16 @@ public sealed partial class BrowserViewModel : ObservableObject
                     item.PropertyChanged -= OnDownloadItemChanged;
             }
             UpdateDownloadProgress(downloadStore.Items);
+        };
+        downloadStore.Items.CollectionChanged += onDownloadsChanged;
+        _unsubscribe = () =>
+        {
+            _updateService.UpdateAvailable -= onUpdateAvailable;
+            _updateService.DownloadProgressChanged -= onDownloadProgressChanged;
+            _updateService.DownloadCompleted -= onDownloadCompleted;
+            _updateService.UpdateFailed -= onUpdateFailed;
+            downloadStore.Items.CollectionChanged -= onDownloadsChanged;
+            foreach (var item in downloadStore.Items) item.PropertyChanged -= OnDownloadItemChanged;
         };
 
         foreach (var item in downloadStore.Items)
@@ -193,6 +208,13 @@ public sealed partial class BrowserViewModel : ObservableObject
                 UpdateDownloadProgress(downloadStore.Items);
             }
         }
+    }
+
+    public void Dispose()
+    {
+        _unsubscribe?.Invoke();
+        _unsubscribe = null;
+        _suggestionCts?.Cancel();
     }
 
     private void UpdateDownloadProgress(IEnumerable<DownloadItem> items)

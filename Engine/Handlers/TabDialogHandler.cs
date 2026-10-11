@@ -10,14 +10,15 @@ public static class TabDialogHandler
     public static void Wire(
         CoreWebView2 core, 
         Dispatcher dispatcher, 
-        BrowserSettings settings)
+        BrowserSettings settings,
+        Func<System.Windows.Window?>? getOwner = null)
     {
         core.ScriptDialogOpening += (_, e) =>
         {
             var deferral = e.GetDeferral();
             dispatcher.InvokeAsync(() =>
             {
-                ShowScriptDialog(e);
+                ShowScriptDialog(e, getOwner?.Invoke());
                 deferral.Complete();
             });
         };
@@ -27,19 +28,19 @@ public static class TabDialogHandler
             var deferral = e.GetDeferral();
             dispatcher.InvokeAsync(() =>
             {
-                ShowPermissionDialog(e);
+                ShowPermissionDialog(e, getOwner?.Invoke());
                 deferral.Complete();
             });
         };
     }
 
-    private static void ShowScriptDialog(CoreWebView2ScriptDialogOpeningEventArgs e)
+    private static void ShowScriptDialog(CoreWebView2ScriptDialogOpeningEventArgs e, System.Windows.Window? owner)
     {
         var host = Uri.TryCreate(e.Uri, UriKind.Absolute, out var uri) ? uri.Host : "";
 
         var dialog = new BaseBrowserDialogWindow
         {
-            Owner = System.Windows.Application.Current.MainWindow,
+            Owner = owner ?? System.Windows.Application.Current.MainWindow,
             DialogTitle = string.IsNullOrEmpty(host) ? "This page says" : $"{host} says",
             DialogMessage = e.Message
         };
@@ -78,7 +79,7 @@ public static class TabDialogHandler
         }
     }
 
-    private static void ShowPermissionDialog(CoreWebView2PermissionRequestedEventArgs e)
+    private static void ShowPermissionDialog(CoreWebView2PermissionRequestedEventArgs e, System.Windows.Window? owner)
     {
         var host = Uri.TryCreate(e.Uri, UriKind.Absolute, out var uri) ? uri.Host : "";
 
@@ -96,7 +97,7 @@ public static class TabDialogHandler
 
         var dialog = new BaseBrowserDialogWindow
         {
-            Owner = System.Windows.Application.Current.MainWindow,
+            Owner = owner ?? System.Windows.Application.Current.MainWindow,
             DialogTitle = string.IsNullOrEmpty(host) ? "This site" : host,
             DialogMessage = $"Wants to {permissionName}.",
             CancelVisibility = System.Windows.Visibility.Visible,

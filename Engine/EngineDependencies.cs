@@ -10,6 +10,7 @@ namespace StrideBrowser.Engine;
 /// </summary>
 public sealed record EngineDependencies
 {
+    public BrowserSession Session { get; init; } = new();
     public required ExtensionManager ExtensionManager { get; init; }
     public required YouTubeUnhook YouTubeUnhook { get; init; }
     public required YouTubeEnhancer YouTubeEnhancer { get; init; }
