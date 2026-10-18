@@ -22,6 +22,13 @@
     <SolidColorBrush x:Key="SurfaceBrush"      Color="{StaticResource SurfaceColor}"/>
     <SolidColorBrush x:Key="SurfaceHoverBrush" Color="{StaticResource SurfaceHoverColor}"/>
     <SolidColorBrush x:Key="BorderBrush"       Color="{StaticResource BorderColor}"/>
+    <!-- Suggestion popup palette. Owned by the theme, not the window, because the
+         address field repaints itself from the popup surface while suggestions are
+         open. One hard coded dark surface left the light theme with a dark field
+         and dark popup. Values are the previous window defaults unchanged. -->
+    <SolidColorBrush x:Key="SuggestionPopupBackground" Color="#111111"/>
+    <SolidColorBrush x:Key="SuggestionPopupBorder"    Color="{StaticResource BorderColor}"/>
+    <SolidColorBrush x:Key="SuggestionHoverBackground" Color="#0EFFFFFF"/>
     <SolidColorBrush x:Key="Accent"            Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="AccentWash"        Color="{StaticResource AccentWashColor}"/>
     <SolidColorBrush x:Key="TextPrimary"       Color="{StaticResource TextPrimaryColor}"/>

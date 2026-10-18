@@ -8,17 +8,32 @@
         Title="Stride"
         Icon="pack://application:,,,/icons/stride.ico"
         Width="1280" Height="800"
-        MinWidth="760" MinHeight="480"
+        MinWidth="{x:Static ui:ToolbarLayoutMetrics.MinWindowWidth}" MinHeight="480"
         WindowStyle="None"
+        ResizeMode="CanResize"
         Background="{DynamicResource BaseBrush}"
         WindowStartupLocation="CenterScreen"
         PreviewKeyDown="Window_PreviewKeyDown">
 
         <Window.Resources>
         <conv:TabOpacityConverter x:Key="TabOpacityConverter"/>
+        <conv:AddressFieldMaxWidthConverter x:Key="AddressFieldMaxWidthConverter"/>
+        <conv:ToolbarActionVisibilityConverter x:Key="ToolbarActionVisibilityConverter"/>
         <conv:TabWidthToVisibilityConverter x:Key="TabWidthToVisibilityConverter"/>
         <conv:TabCloseVisibilityConverter x:Key="TabCloseVisibilityConverter"/>
         <conv:TabCloseOpacityConverter x:Key="TabCloseOpacityConverter"/>
+        <!-- Per-window adaptive tint defaults. The tint adapter overrides these
+             in Toolbar.Resources on light site colors. They stay dark here so the
+             neutral toolbar renders exactly as before when tint is off.
+             The three suggestion keys are deliberately absent: they live in the
+             theme dictionaries, because one hard coded popup surface cannot serve
+             both themes. The field borrows the popup surface while suggestions are
+             open, so a popup only value that ignores the theme also made the field
+             unreadable. -->
+        <SolidColorBrush x:Key="AddressFieldBackground" Color="#0DFFFFFF"/>
+        <SolidColorBrush x:Key="AddressFieldBorder" Color="#1AFFFFFF"/>
+        <SolidColorBrush x:Key="PinnedTabBackground" Color="#0DFFFFFF"/>
+        <SolidColorBrush x:Key="TabCloseHoverBackground" Color="#1AFFFFFF"/>
         <Style x:Key="SuggestionItemStyle" TargetType="ListBoxItem">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -42,7 +57,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#0EFFFFFF"/>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource SuggestionHoverBackground}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AccentWash}"/>
@@ -113,7 +128,7 @@
                         </Image.Style>
                     </Image>
                 </Grid>
-                <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontFamily="Segoe UI Variable, Segoe UI" FontSize="13" Foreground="#C8C4BF" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontFamily="Segoe UI Variable, Segoe UI" FontSize="13" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                 <TextBlock Grid.Column="2" Text="{Binding Suffix}" FontFamily="Segoe UI Variable, Segoe UI" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="180"/>
             </Grid>
         </DataTemplate>
@@ -123,7 +138,7 @@
         <!--  Inactive: favicon circle only, 70% opacity            -->
         <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <DataTemplate x:Key="TabItemTemplate">
-            <Grid Height="31" Cursor="Hand" Background="Transparent" Tag="{Binding}">
+            <Grid Height="28" Cursor="Hand" Background="Transparent" Tag="{Binding}">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="HorizontalAlignment" Value="Stretch"/>
@@ -368,14 +383,7 @@
                                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                                     <Setter Property="Opacity" Value="1.0"/>
                                 </DataTrigger>
-                                <MultiDataTrigger>
-                                    <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=Window}}" Value="False"/>
-                                        <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="False"/>
-                                    </MultiDataTrigger.Conditions>
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </MultiDataTrigger>
-                                <!-- In crowded tab strip, hide title when width drops below threshold -->
+                                <!-- Title hides only when the card is genuinely too narrow -->
                                 <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=48}" Value="Collapsed">
                                     <Setter Property="Visibility" Value="Collapsed"/>
                                 </DataTrigger>
@@ -423,7 +431,7 @@
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#1AFFFFFF"/>
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TabCloseHoverBackground}"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -454,24 +462,14 @@
             <!--  Stride signature: compact, warm, minimal.            -->
             <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
             <Border x:Name="Toolbar" DockPanel.Dock="Top"
+                    Height="38"
                     Background="{DynamicResource SidebarBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="0"
                     MouseLeftButtonDown="TitleBar_MouseDown">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Height" Value="38"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=760}" Value="Collapsed">
-                                <Setter Property="Height" Value="76"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
                 <Grid x:Name="ToolbarRow" Margin="6,0,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="38"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>    <!-- Nav buttons -->
@@ -539,19 +537,7 @@
                         </Button>
                     </StackPanel>
 
-                    <DockPanel x:Name="ToolbarCenter" LastChildFill="True" Height="38">
-                        <DockPanel.Style>
-                            <Style TargetType="DockPanel">
-                                <Setter Property="Grid.Column" Value="1"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource TabWidthToVisibilityConverter}, ConverterParameter=760}" Value="Collapsed">
-                                        <Setter Property="Grid.Column" Value="0"/>
-                                        <Setter Property="Grid.ColumnSpan" Value="3"/>
-                                        <Setter Property="Grid.Row" Value="1"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DockPanel.Style>
+                    <DockPanel x:Name="ToolbarCenter" Grid.Column="1" LastChildFill="True" Height="38">
                         <!-- URL domain grouping -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <StackPanel.Style>
@@ -565,47 +551,36 @@
                                 </Style>
                             </StackPanel.Style>
                             
-                            <!-- URL domain - bare text, no background. Minimal. -->
+                            <!-- Standard address field: 28 DIP tall, 6 DIP radius, 200 DIP wide.
+                                 As the window narrows the field gives width back to the tab
+                                 strip instead of squeezing it, down to a 100 DIP floor, which is
+                                 what the window minimum is derived from. No outline in any
+                                 state, focused or with suggestions open: the filled surface is
+                                 the whole field. Shows the bare domain until focused, then the
+                                 full URL. -->
                             <StackPanel Orientation="Horizontal"
                                         VerticalAlignment="Center" Margin="0,0,6,0"
                                         Cursor="Hand"
                                         ToolTip="Click to edit URL (Ctrl+L)">
-                                <Path x:Name="SecurityIcon"
-                                      Data="{StaticResource IconGlobe}"
-                                      Stroke="{DynamicResource TextMuted}"
-                                      StrokeThickness="1" Width="10" Height="10"
-                                      Stretch="Uniform" VerticalAlignment="Center"
-                                      Margin="0,0,5,0"
-                                      Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource BoolToVis}}"/>
-                                <TextBlock x:Name="UrlLabel"
-                                           Text="New Tab"
-                                           Foreground="{DynamicResource TextMuted}"
-                                           FontSize="11.5" FontFamily="{DynamicResource UIFont}"
-                                           VerticalAlignment="Center"
-                                           TextTrimming="None"
-                                           MaxWidth="200"
-                                           MouseLeftButtonDown="UrlLabel_Click"
-                                           Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource BoolToVis}}"/>
                                 <Border x:Name="StandardAddressBarBorder"
                                         Padding="8,0"
                                         Width="200"
+                                        MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddressFieldMaxWidthConverter}}"
                                         Height="28"
                                         Margin="0,0"
                                         HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource InverseBoolToVis}, FallbackValue=Collapsed}">
+                                        VerticalAlignment="Center">
                                     <Border.Style>
                                         <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#0DFFFFFF"/>
-                                            <Setter Property="BorderBrush" Value="#1AFFFFFF"/>
-                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Setter Property="Background" Value="{DynamicResource AddressFieldBackground}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource AddressFieldBorder}"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
                                             <Setter Property="CornerRadius" Value="6"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ElementName=StandardSuggestionsPopup, Path=IsOpen}" Value="True">
-                                                    <Setter Property="Background" Value="#111111"/>
-                                                    <Setter Property="BorderBrush" Value="#2A2A2E"/>
+                                                    <Setter Property="Background" Value="{DynamicResource SuggestionPopupBackground}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource SuggestionPopupBorder}"/>
                                                     <Setter Property="CornerRadius" Value="6,6,0,0"/>
-                                                    <Setter Property="BorderThickness" Value="1,1,1,0"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -635,19 +610,71 @@
                                                  PreviewMouseDown="StandardAddressBar_PreviewMouseDown"
                                                  KeyDown="StandardAddressBar_KeyDown"
                                                  GotKeyboardFocus="StandardAddressBar_GotKeyboardFocus"
-                                                 LostFocus="StandardAddressBar_LostFocus"/>
+                                                 LostFocus="StandardAddressBar_LostFocus">
+                                            <!-- Own template so the empty-input hint
+                                                 paints inside the field's own clip and
+                                                 sits on the field's text origin. The 2 DIP
+                                                 left on the hint is measured, not assumed:
+                                                 the stock ScrollViewer content host keeps a
+                                                 fixed 2 DIP inset on its left, so glyphs in
+                                                 the box start 2 DIP in from the box edge.
+                                                 Rendering the hint's own string inside the
+                                                 box and shifting the hint by that gap moved
+                                                 its first inked column onto the box's.
+                                                 ClipToBounds keeps the rest of the hint
+                                                 inside the field at narrow widths. The hint
+                                                 keys on empty text only, so it stays while
+                                                 the field is focused and empty and clears
+                                                 as soon as anything is typed. -->
+                                            <TextBox.Template>
+                                                <ControlTemplate TargetType="TextBox">
+                                                    <Grid ClipToBounds="True">
+                                                        <ScrollViewer x:Name="PART_ContentHost"
+                                                                      Margin="{TemplateBinding Padding}"
+                                                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                                      Focusable="False"
+                                                                      HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                                                      VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"/>
+                                                        <TextBlock x:Name="AddressHint"
+                                                                   Margin="2,0,0,0"
+                                                                   VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                                   IsHitTestVisible="False"
+                                                                   Text="Search the web or type a URL"
+                                                                   Foreground="{DynamicResource TextMuted}"
+                                                                   FontSize="{TemplateBinding FontSize}"
+                                                                   FontFamily="{TemplateBinding FontFamily}">
+                                                            <!-- Default hidden in a style, not as a
+                                                                 local value, so the template trigger
+                                                                 below can still show it. A local
+                                                                 Visibility would outrank the trigger and
+                                                                 the hint would never appear. -->
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </Grid>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="Text" Value="">
+                                                            <Setter TargetName="AddressHint" Property="Visibility" Value="Visible"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </TextBox.Template>
+                                        </TextBox>
                                     </Grid>
                                 </Border>
                                  <Popup x:Name="StandardSuggestionsPopup"
                                         PlacementTarget="{Binding ElementName=StandardAddressBarBorder}"
                                         Placement="Bottom"
                                         IsOpen="{Binding StandardPopupOpen}"
-                                       StaysOpen="False"
-                                       AllowsTransparency="True"
-                                       Visibility="{Binding Settings.UseFloatingCommandBar, Converter={StaticResource InverseBoolToVis}}"
-                                       VerticalOffset="0">
-                                    <Border Background="#111111"
-                                            BorderBrush="#2A2A2E" 
+                                        StaysOpen="False"
+                                        AllowsTransparency="True"
+                                        VerticalOffset="0">
+                                    <Border x:Name="StandardSuggestionsPopupBorder"
+                                            Background="{DynamicResource SuggestionPopupBackground}"
+                                            BorderBrush="{DynamicResource SuggestionPopupBorder}"
                                             BorderThickness="1,0,1,1"
                                             CornerRadius="0,0,6,6"
                                             Width="{Binding ElementName=StandardAddressBarBorder, Path=ActualWidth}"
@@ -688,8 +715,7 @@
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <ui:TabShrinkPanel
-                                        ViewportWidth="{Binding AvailableTabWidth, RelativeSource={RelativeSource AncestorType=ui:TabStripLayout}}"
-                                        ShowTabNames="{Binding DataContext.Settings.ShowTabNames, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                                        ViewportWidth="{Binding AvailableTabWidth, RelativeSource={RelativeSource AncestorType=ui:TabStripLayout}}"/>
                                 </ItemsPanelTemplate>
                             </ListBox.ItemsPanel>
                         </ListBox>
@@ -706,12 +732,25 @@
                         </ui:TabStripLayout>
                     </DockPanel>
 
-                    <!-- Action buttons: Downloads, Settings -->
+                    <!-- Action buttons. As the window narrows the optional buttons fold into the
+                         overflow button, then the overflow button goes, then the settings button,
+                         and their commands stay on their shortcuts. The trailing margin sits on
+                         the settings button, so the action cluster costs the row nothing once it
+                         is gone. -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal"
-                                VerticalAlignment="Center" Margin="0,0,6,0">
+                                VerticalAlignment="Center">
                         <!-- ──── Downloads Button ──── -->
-                        <Grid Width="28" Height="28" Margin="0,0,3,0" Cursor="Hand" ToolTip="Downloads (Ctrl+J)"
-                              Visibility="{Binding Settings.ShowDownloadsIcon, Converter={StaticResource BoolToVis}}">
+                        <Grid Width="28" Height="28" Margin="0,0,3,0" Cursor="Hand" ToolTip="Downloads (Ctrl+J)">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="{Binding Settings.ShowDownloadsIcon, Converter={StaticResource BoolToVis}}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ToolbarActionVisibilityConverter}, ConverterParameter=Optional}" Value="Collapsed">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
                             <Ellipse Width="24" Height="24" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" 
                                      Visibility="{Binding HasActiveDownloads, Converter={StaticResource BoolToVis}}" />
                             <Ellipse Width="24" Height="24" Stroke="#10B981" StrokeThickness="2" 
@@ -730,16 +769,34 @@
                                       Stretch="Uniform" StrokeStartLineCap="Round" StrokeLineJoin="Round" />
                             </Button>
                         </Grid>
-                        <Grid Visibility="{Binding Settings.ShowReaderIcon, Converter={StaticResource BoolToVis}}"
-                              Margin="0,0,3,0">
+                        <Grid Margin="0,0,3,0">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="{Binding Settings.ShowReaderIcon, Converter={StaticResource BoolToVis}}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ToolbarActionVisibilityConverter}, ConverterParameter=Optional}" Value="Collapsed">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
                             <Button x:Name="ReaderButton" Command="{Binding ToggleReaderCommand}" Style="{DynamicResource IconBtn}"
                                     Width="28" Height="28" ToolTip="Reader view (Ctrl+Shift+R)">
                                 <TextBlock Text="Aa" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" HorizontalAlignment="Center" />
                             </Button>
                         </Grid>
                         <!-- ──────────── Update Button ──────────── -->
-                        <Grid Width="28" Height="28" Margin="0,0,3,0" Cursor="Hand"
-                              Visibility="{Binding ShowUpdateIcon, Converter={StaticResource BoolToVis}}">
+                        <Grid Width="28" Height="28" Margin="0,0,3,0" Cursor="Hand">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="{Binding ShowUpdateIcon, Converter={StaticResource BoolToVis}}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ToolbarActionVisibilityConverter}, ConverterParameter=Optional}" Value="Collapsed">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
                               
                             <Grid.ToolTip>
                                 <ToolTip>
@@ -825,7 +882,51 @@
                             </Grid>
                         </Grid>
 
-                        <Grid Visibility="{Binding Settings.ShowSettingsIcon, Converter={StaticResource BoolToVis}}">
+                        <!-- Overflow button: the optional buttons fold in here, and the same
+                             commands open from its menu. -->
+                        <Grid Margin="0,0,3,0">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ToolbarActionVisibilityConverter}, ConverterParameter=Overflow}" Value="Visible">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Button x:Name="ToolbarOverflowButton" Click="ToolbarOverflow_Click" Style="{DynamicResource IconBtn}"
+                                    Width="28" Height="28" Cursor="Hand" ToolTip="More toolbar actions" FocusVisualStyle="{x:Null}">
+                                <Grid Width="12" Height="12">
+                                    <Ellipse Width="2.6" Height="2.6" Fill="{DynamicResource TextSecondary}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                    <Ellipse Width="2.6" Height="2.6" Fill="{DynamicResource TextSecondary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Ellipse Width="2.6" Height="2.6" Fill="{DynamicResource TextSecondary}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Button.ContextMenu>
+                                    <!-- The menu is raised by the button, so it reads its data
+                                         context from the button it is placed against. -->
+                                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                        <MenuItem Header="Downloads" InputGestureText="Ctrl+J" Click="Downloads_Click"/>
+                                        <MenuItem Header="Reader view" InputGestureText="Ctrl+Shift+R" Command="{Binding ToggleReaderCommand}"/>
+                                        <MenuItem Header="Check for updates" Command="{Binding HandleUpdateClickCommand}"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </Button>
+                        </Grid>
+
+                        <!-- Settings button: the action control that keeps its place longest, and
+                             the one that carries the trailing margin the cluster ends with. -->
+                        <Grid Margin="0,0,6,0">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="{Binding Settings.ShowSettingsIcon, Converter={StaticResource BoolToVis}}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ToolbarActionVisibilityConverter}, ConverterParameter=Settings}" Value="Collapsed">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
                             <Button Click="Settings_Click" Style="{DynamicResource IconBtn}"
                                     ToolTip="Settings (Ctrl+,)" Width="28" Height="28" Cursor="Hand" FocusVisualStyle="{x:Null}">
                                 <Path Data="{StaticResource IconSettings}" 
@@ -869,8 +970,19 @@
             <!--  CONTENT â€” Full width. No sidebar. Just web content.  -->
             <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
             <Border x:Name="ContentArea"
-                    Background="{DynamicResource BaseBrush}"
                     ClipToBounds="True">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="{DynamicResource BaseBrush}"/>
+                        <Style.Triggers>
+                            <!-- The frame surface behind the gap matches the toolbar. With the
+                                 rounded frame off it stays the content base, exactly as before. -->
+                            <DataTrigger Binding="{Binding Settings.RoundedWebContentFrameEnabled}" Value="True">
+                                <Setter Property="Background" Value="{Binding Background, ElementName=Toolbar}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <Grid>
                     <!-- Loading bar â€” 1.5px amber glow sweep, transparent track -->
                     <Border x:Name="LoadingBar" Height="1.5" VerticalAlignment="Top"
@@ -888,7 +1000,27 @@
                         </Border>
                     </Border>
                     <!-- WebView2 host. Reader mode reuses the tab's own WebView2 with IsScriptEnabled toggled, no second instance. -->
-                    <Grid x:Name="WebViewHost" Background="{DynamicResource BaseBrush}"/>
+                    <Grid x:Name="WebViewHost">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Background" Value="{DynamicResource BaseBrush}"/>
+                                <Style.Triggers>
+                                    <!-- Revealed in the four corners the page host clips away,
+                                         so it matches the frame surface, not the page base. -->
+                                    <DataTrigger Binding="{Binding Settings.RoundedWebContentFrameEnabled}" Value="True">
+                                        <Setter Property="Background" Value="{Binding Background, ElementName=Toolbar}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                    </Grid>
+                    <!-- Rounded frame outline. It sits outside the clipped page host, never
+                         takes input, and the controller fills its geometry in from the one
+                         shared frame geometry when the frame is on. The paint is transparent:
+                         the rounded corner comes from the region on the page host, and a
+                         painted stroke on top of it reads as a second inner border. -->
+                    <Border x:Name="ContentFrameOutline" IsHitTestVisible="False" Visibility="Collapsed"
+                            BorderBrush="Transparent"/>
                     <!-- Reader fallback overlay. Shows sanitized article as plain text without waiting for WebView navigation, so the UI never hangs. -->
                     <Border x:Name="ReaderFallbackOverlay" Visibility="Collapsed" Background="{DynamicResource BaseBrush}" Panel.ZIndex="4">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="24">
@@ -908,67 +1040,6 @@
         <Border x:Name="LinkPreviewDim" Visibility="Collapsed" Background="#B8000000" Panel.ZIndex="90"
                 MouseLeftButtonDown="LinkPreviewDim_Click"/>
 
-        <Grid x:Name="CommandBarGrid" Visibility="Collapsed" Panel.ZIndex="100">
-            <!-- Backdrop dim â€” 50% black to clearly show floating panel -->
-            <Border Background="#80000000"
-                    MouseLeftButtonDown="CommandBarBackdrop_Click"/>
-            <!-- Centered command bar â€” clearly lighter than the dim backdrop -->
-            <Border x:Name="CommandBarPanel"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
-                    Margin="0,80,0,0"
-                    Width="540"
-                    Background="#2C2C32"
-                    BorderBrush="#444449"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="4">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="40" ShadowDepth="8"
-                                      Opacity="0.6" Color="Black"/>
-                </Border.Effect>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBox x:Name="AddressBar"
-                             Grid.Row="0"
-                             Style="{DynamicResource CommandBarInputStyle}"
-                             Text="{Binding AddressText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             KeyDown="AddressBar_KeyDown"
-                             GotFocus="AddressBar_GotFocus"
-                             LostFocus="AddressBar_LostFocus"
-                             PreviewMouseLeftButtonDown="AddressBar_PreviewMouseDown"
-                             TextChanged="AddressBar_TextChanged"/>
-
-                    <!-- Suggestions Dropdown -->
-                    <!-- Hairline separator above suggestions -->
-                    <Border Grid.Row="1"
-                            Visibility="{Binding ShowSuggestions, Converter={StaticResource BoolToVis}}"
-                            BorderBrush="#2A2A2E" BorderThickness="0,1,0,0"
-                            Margin="8,4,8,0"/>
-
-                    <ListBox x:Name="SuggestionsList"
-                             Grid.Row="1"
-                             ItemsSource="{Binding Suggestions}"
-                             SelectedIndex="{Binding SelectedSuggestionIndex, Mode=TwoWay}"
-                             Visibility="{Binding ShowSuggestions, Converter={StaticResource BoolToVis}}"
-                             Background="Transparent"
-                             BorderThickness="0"
-                             Padding="4,4,4,4"
-                             MaxHeight="280"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             ScrollViewer.VerticalScrollBarVisibility="Hidden"
-                             KeyboardNavigation.DirectionalNavigation="Cycle"
-                             FocusVisualStyle="{x:Null}"
-                              PreviewMouseLeftButtonUp="SuggestionsList_MouseUp"
-                              ItemContainerStyle="{StaticResource SuggestionItemStyle}"
-                              ItemTemplate="{StaticResource SuggestionItemTemplate}">
-                    </ListBox>
-                </Grid>
-            </Border>
-        </Grid>
     </Grid>
 </Window>
 

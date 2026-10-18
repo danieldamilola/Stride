@@ -10,9 +10,30 @@ namespace StrideBrowser.Services;
 
 public static class SingleInstanceManager
 {
-    private const string MutexName = "StrideBrowser_SingleInstanceMutex_v1";
-    private const string PipeName = "StrideBrowser_SingleInstancePipe_v1";
-    
+    private const string MutexNameBase = "StrideBrowser_SingleInstanceMutex_v1";
+    private const string PipeNameBase = "StrideBrowser_SingleInstancePipe_v1";
+
+    /// <summary>
+    /// When the data tree has been relocated by STRIDE_DATA_DIR the instance
+    /// names get a suffix derived from that directory, so a relocated run does
+    /// not grab the installed browser's mutex and does not forward its command
+    /// line into the installed browser's pipe. With no relocation the suffix is
+    /// empty and the names are byte for byte what they always were.
+    /// </summary>
+    public static string ScopeSuffix { get; } = ComputeScopeSuffix();
+
+    public static string MutexName => MutexNameBase + ScopeSuffix;
+    public static string PipeName => PipeNameBase + ScopeSuffix;
+
+    private static string ComputeScopeSuffix()
+    {
+        if (!Helpers.AppPaths.IsIsolatedProfile) return "";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(
+            Helpers.AppPaths.DataDirectory.TrimEnd(System.IO.Path.DirectorySeparatorChar).ToUpperInvariant());
+        var hash = System.Security.Cryptography.SHA256.HashData(bytes);
+        return "_" + Convert.ToHexString(hash)[..12].ToLowerInvariant();
+    }
+
     private static Mutex? _mutex;
     private static CancellationTokenSource? _cts;
     private static bool _ownsMutex;
@@ -32,6 +53,7 @@ public static class SingleInstanceManager
 
         if (isFirstInstance)
         {
+            System.Diagnostics.Trace.WriteLine($"SingleInstance primary, mutex={MutexName} pipe={PipeName} isolated={Helpers.AppPaths.IsIsolatedProfile}");
             // We are the primary instance. Start listening for subsequent instances.
             _cts = new CancellationTokenSource();
             Task.Run(() => StartServerAsync(_cts.Token));

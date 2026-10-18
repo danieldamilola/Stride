@@ -1,3 +1,4 @@
+using System.Text.Json;
 using StrideBrowser.Models;
 using Xunit;
 
@@ -17,9 +18,42 @@ public sealed class BrowserSettingsDefaultsTests
     }
 
     [Fact]
-    public void FloatingCommandBar_StartsOff()
+    public void AdaptiveTint_StaysOn()
     {
-        // The floating bar breaks two finger trackpad swipe, so it is opt in.
-        Assert.False(new BrowserSettings().UseFloatingCommandBar);
+        Assert.True(new BrowserSettings().AdaptiveToolbarTint);
+    }
+
+    [Fact]
+    public void RoundedWebContentFrame_StaysOn()
+    {
+        Assert.True(new BrowserSettings().RoundedWebContentFrameEnabled);
+    }
+
+    [Fact]
+    public void RoundedWebContentFrame_ResetTurnsItBackOn()
+    {
+        var settings = new BrowserSettings { RoundedWebContentFrameEnabled = false };
+
+        settings.ResetToDefaults();
+
+        Assert.True(settings.RoundedWebContentFrameEnabled);
+    }
+
+    [Fact]
+    public void RoundedWebContentFrame_MissingFromSavedJson_KeepsTheDefault()
+    {
+        // A settings.json written before the frame existed has no key for it. The
+        // deserializer runs the property initializer and only overwrites keys that
+        // are present, so an existing profile still gets the frame.
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
+
+        var loaded = JsonSerializer.Deserialize<BrowserSettings>("""{"adaptiveToolbarTint":false}""", options);
+
+        Assert.NotNull(loaded);
+        Assert.True(loaded!.RoundedWebContentFrameEnabled);
     }
 }

@@ -293,7 +293,7 @@
                         <Setter Property="Padding" Value="6,0"/>
                         <Setter Property="Margin" Value="0"/>
                         <Setter Property="ClipToBounds" Value="True"/>
-                        <Setter Property="Height" Value="31"/>
+                        <Setter Property="Height" Value="28"/>
                         <Setter Property="AutomationProperties.Name" Value="{Binding Title}"/>
                         <Setter Property="ToolTip">
                             <Setter.Value>
@@ -341,60 +341,13 @@
                         <Style.Triggers>
                             <!-- Pinned tab: subtle persistent squarcle background wash, centered 32x31 card -->
                             <DataTrigger Binding="{Binding IsPinned}" Value="True">
-                                <Setter Property="Background" Value="#0DFFFFFF"/>
+                                <Setter Property="Background" Value="{DynamicResource PinnedTabBackground}"/>
                                 <Setter Property="Width" Value="32"/>
                                 <Setter Property="Padding" Value="0"/>
                                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  COMMAND BAR INPUT - Floating URL/search bar           -->
-        <!--  Large, clean, centered. 13px Inter. No border.        -->
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <Style x:Key="CommandBarInputStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="SelectionBrush" Value="#44FFFFFF"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontFamily" Value="{StaticResource UIFont}"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="6" Padding="12,10">
-                            <Grid>
-                                <ScrollViewer x:Name="PART_ContentHost"
-                                              VerticalAlignment="Center"
-                                              Focusable="False"/>
-                                <TextBlock x:Name="Placeholder"
-                                           Text="Search or enter URL"
-                                           Foreground="{StaticResource TextMuted}"
-                                           FontSize="14"
-                                           FontFamily="{StaticResource UIFont}"
-                                           VerticalAlignment="Center"
-                                           IsHitTestVisible="False"
-                                           Visibility="Collapsed"/>
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <MultiTrigger>
-                                <MultiTrigger.Conditions>
-                                    <Condition Property="Text" Value=""/>
-                                    <Condition Property="IsFocused" Value="False"/>
-                                </MultiTrigger.Conditions>
-                                <Setter TargetName="Placeholder" Property="Visibility" Value="Visible"/>
-                            </MultiTrigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>

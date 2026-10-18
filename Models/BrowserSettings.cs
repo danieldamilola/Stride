@@ -99,9 +99,6 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _autoCheckForUpdates = true;
 
     [ObservableProperty]
-    private bool _useFloatingCommandBar = false;
-
-    [ObservableProperty]
     private bool _isSidebarPinned;
 
     [ObservableProperty]
@@ -128,6 +125,16 @@ public sealed partial class BrowserSettings : ObservableObject
     /// <summary>When on, the toolbar follows the active site theme color.</summary>
     [ObservableProperty]
     private bool _adaptiveToolbarTint = true;
+
+    /// <summary>
+    /// When on, the web content sits inside a compact rounded frame: a short gap from
+    /// the window edge, a thin outline, and the page itself clipped at the corners.
+    /// Off removes the frame and restores the earlier resize inset, so a resizable
+    /// normal window holds the content a few DIPs in from the sides and bottom rather
+    /// than flush.
+    /// </summary>
+    [ObservableProperty]
+    private bool _roundedWebContentFrameEnabled = true;
 
     [ObservableProperty]
     private bool _addressBarOnLeft = true;
@@ -294,7 +301,6 @@ public sealed partial class BrowserSettings : ObservableObject
         TabSleepDimEnabled = d.TabSleepDimEnabled;
         TabHibernationDimEnabled = d.TabHibernationDimEnabled;
         AutoCheckForUpdates = d.AutoCheckForUpdates;
-        UseFloatingCommandBar = d.UseFloatingCommandBar;
         IsSidebarPinned = d.IsSidebarPinned;
         ShowSettingsIcon = d.ShowSettingsIcon;
         ShowDownloadsIcon = d.ShowDownloadsIcon;
@@ -304,6 +310,7 @@ public sealed partial class BrowserSettings : ObservableObject
         ShowRefreshButton = d.ShowRefreshButton;
         ShowTabNames = d.ShowTabNames;
         AdaptiveToolbarTint = d.AdaptiveToolbarTint;
+        RoundedWebContentFrameEnabled = d.RoundedWebContentFrameEnabled;
         AddressBarOnLeft = d.AddressBarOnLeft;
         NewTabBackground = d.NewTabBackground;
         NewTabShortcuts = new List<ShortcutItem>(d.NewTabShortcuts);

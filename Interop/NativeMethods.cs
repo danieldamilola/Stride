@@ -137,6 +137,33 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool IsIconic(IntPtr hWnd);
 
+    // ── Rounded web content frame ──
+    // The page host is an HwndHost child window owned by this process. Clipping
+    // that window with a region is the only way to round the real web page, since
+    // WPF cannot clip a child HWND and the renderer's own window belongs to the
+    // WebView2 process. CreateRoundRectRgn and DeleteObject live in gdi32;
+    // SetWindowRgn lives in user32. On success the system owns the region, so the
+    // caller must not delete it.
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    internal static extern IntPtr CreateRoundRectRgn(int nLeftRect, int nTopRect, int nRightRect, int nBottomRect,
+        int nWidthEllipse, int nHeightEllipse);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern int SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool bRedraw);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    internal static extern bool DeleteObject(IntPtr hObject);
+
+    [DllImport("user32.dll")]
+    internal static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+    [DllImport("user32.dll")]
+    internal static extern uint GetDpiForWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
     // ── Shell icon refresh ──
     // Sent after install or update so the Start menu and taskbar drop cached
     // bitmaps for Stride.exe and read the new icon without a manual clear.

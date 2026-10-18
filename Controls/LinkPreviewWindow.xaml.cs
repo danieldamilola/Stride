@@ -44,8 +44,9 @@ public partial class LinkPreviewWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
-            UrlText.Text = url;
-            TitleText.Text = string.IsNullOrWhiteSpace(title) ? url : title;
+            var displayUrl = Services.NavigationService.FormatDisplayUrl(url);
+            UrlText.Text = displayUrl;
+            TitleText.Text = string.IsNullOrWhiteSpace(title) ? displayUrl : title;
         });
     }
 

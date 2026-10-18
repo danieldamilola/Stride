@@ -39,6 +39,16 @@ public static class ResourceLoader
     }
 
     /// <summary>
+    /// Opens an embedded resource as a stream, for binary assets such as icons.
+    /// </summary>
+    public static Stream OpenStream(string resourceName)
+    {
+        var fullName = $"{Prefix}.{resourceName}";
+        return Asm.GetManifestResourceStream(fullName)
+            ?? throw new FileNotFoundException($"Embedded resource not found: {fullName}");
+    }
+
+    /// <summary>
     /// Tries to load an embedded resource. Returns null if not found.
     /// </summary>
     public static string? TryLoad(string resourceName)

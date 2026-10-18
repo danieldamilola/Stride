@@ -14,7 +14,7 @@ namespace StrideBrowser.ViewModels;
 /// Thin coordinator between the UI and the engine/services.
 /// Contains NO business logic - only UI state and command routing.
 /// </summary>
-public sealed partial class BrowserViewModel : ObservableObject
+public sealed partial class BrowserViewModel : ObservableObject, IDisposable
 {
     private CancellationTokenSource? _suggestionCts;
     private readonly NavigationService _navigation;
@@ -35,24 +35,17 @@ public sealed partial class BrowserViewModel : ObservableObject
     [ObservableProperty]
     private bool _showSuggestions;
 
-    /// <summary>True while the floating command bar panel is open.</summary>
-    [ObservableProperty]
-    private bool _isFloatingBarOpen;
-
     /// <summary>
-    /// Drives the standard toolbar popup. Stays shut while the floating panel
-    /// is open so the two dropdowns never bleed into each other. The setter
-    /// exists because Popup.IsOpen binds two way: the popup writes back false
-    /// when it auto closes, which forwards to ShowSuggestions like before.
+    /// Drives the toolbar suggestion popup. The popup binds two way and
+    /// writes back false on auto close, which forwards to ShowSuggestions.
     /// </summary>
     public bool StandardPopupOpen
     {
-        get => ShowSuggestions && !IsFloatingBarOpen;
+        get => ShowSuggestions;
         set { if (!value && ShowSuggestions) ShowSuggestions = false; }
     }
 
     partial void OnShowSuggestionsChanged(bool value) => OnPropertyChanged(nameof(StandardPopupOpen));
-    partial void OnIsFloatingBarOpenChanged(bool value) => OnPropertyChanged(nameof(StandardPopupOpen));
 
     /// <summary>Set while the box text comes from a programmatic write, not typing.</summary>
     public bool SuppressSuggestionRefresh { get; set; }
@@ -117,6 +110,7 @@ public sealed partial class BrowserViewModel : ObservableObject
     private readonly ReaderViewModel _readerViewModel;
     private readonly UpdateService _updateService;
     private bool _isInstalling;
+    private Action? _unsubscribe;
 
     public BrowserViewModel(BrowserSettings settings, NavigationService navigation, IDownloadStore downloadStore, Engine.TabEngine engine, IReaderService readerService, ReaderViewModel readerViewModel, UpdateService updateService, ISuggestionProvider suggestions, FaviconLoader faviconLoader)
     {
@@ -129,7 +123,7 @@ public sealed partial class BrowserViewModel : ObservableObject
         _readerViewModel = readerViewModel;
         _updateService = updateService;
 
-        _updateService.UpdateAvailable += (s, e) =>
+        EventHandler onUpdateAvailable = (s, e) =>
         {
             App.Current.Dispatcher.Invoke(() =>
             {
@@ -137,8 +131,9 @@ public sealed partial class BrowserViewModel : ObservableObject
                 UpdateVersion = _updateService.LatestVersion ?? "";
             });
         };
+        _updateService.UpdateAvailable += onUpdateAvailable;
 
-        _updateService.DownloadProgressChanged += (s, progress) =>
+        EventHandler<double> onDownloadProgressChanged = (s, progress) =>
         {
             App.Current.Dispatcher.Invoke(() =>
             {
@@ -146,8 +141,9 @@ public sealed partial class BrowserViewModel : ObservableObject
                 UpdateProgress = progress / 100.0;
             });
         };
+        _updateService.DownloadProgressChanged += onDownloadProgressChanged;
 
-        _updateService.DownloadCompleted += (s, e) =>
+        EventHandler onDownloadCompleted = (s, e) =>
         {
             App.Current.Dispatcher.Invoke(() =>
             {
@@ -155,8 +151,9 @@ public sealed partial class BrowserViewModel : ObservableObject
                 UpdateState = UpdateState.ReadyToInstall;
             });
         };
+        _updateService.DownloadCompleted += onDownloadCompleted;
 
-        _updateService.UpdateFailed += (s, e) =>
+        EventHandler<string> onUpdateFailed = (s, e) =>
         {
             App.Current.Dispatcher.Invoke(() =>
             {
@@ -165,8 +162,9 @@ public sealed partial class BrowserViewModel : ObservableObject
                 UpdateProgress = 0;
             });
         };
+        _updateService.UpdateFailed += onUpdateFailed;
 
-        downloadStore.Items.CollectionChanged += (s, e) =>
+        System.Collections.Specialized.NotifyCollectionChangedEventHandler onDownloadsChanged = (s, e) =>
         {
             if (e.NewItems != null)
             {
@@ -181,6 +179,19 @@ public sealed partial class BrowserViewModel : ObservableObject
             UpdateDownloadProgress(downloadStore.Items);
         };
 
+        // One view model per window, but the update service and the download store are
+        // singletons that outlive every window. Without this a closed window would keep
+        // its handlers alive and keep writing into a view model nothing is showing.
+        _unsubscribe = () =>
+        {
+            _updateService.UpdateAvailable -= onUpdateAvailable;
+            _updateService.DownloadProgressChanged -= onDownloadProgressChanged;
+            _updateService.DownloadCompleted -= onDownloadCompleted;
+            _updateService.UpdateFailed -= onUpdateFailed;
+            downloadStore.Items.CollectionChanged -= onDownloadsChanged;
+            foreach (var item in downloadStore.Items) item.PropertyChanged -= OnDownloadItemChanged;
+        };
+
         foreach (var item in downloadStore.Items)
             item.PropertyChanged += OnDownloadItemChanged;
             
@@ -193,6 +204,13 @@ public sealed partial class BrowserViewModel : ObservableObject
                 UpdateDownloadProgress(downloadStore.Items);
             }
         }
+    }
+
+    public void Dispose()
+    {
+        _unsubscribe?.Invoke();
+        _unsubscribe = null;
+        _suggestionCts?.Cancel();
     }
 
     private void UpdateDownloadProgress(IEnumerable<DownloadItem> items)
@@ -266,6 +284,9 @@ public sealed partial class BrowserViewModel : ObservableObject
     /// <summary>Call on real typing so Enter can tell typed text from display text.</summary>
     public void MarkAddressEdited() => _boxEditedSinceDisplay = true;
 
+    /// <summary>True when the box holds user typed input over the display text.</summary>
+    public bool IsAddressEditedSinceDisplay => _boxEditedSinceDisplay;
+
     /// <summary>Records a programmatic box update as the unedited baseline.</summary>
     public void NoteAddressDisplayed(string text)
     {
@@ -287,7 +308,7 @@ public sealed partial class BrowserViewModel : ObservableObject
     {
         if (string.IsNullOrEmpty(CurrentPageUrl) || InternalUrls.IsInternal(CurrentPageUrl)) return;
         SuppressSuggestionRefresh = true;
-        AddressText = CurrentPageUrl;
+        AddressText = NavigationService.FormatDisplayUrl(CurrentPageUrl);
         NoteAddressDisplayed(AddressText);
     }
 

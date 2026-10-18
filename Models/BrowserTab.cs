@@ -61,6 +61,9 @@ public sealed partial class BrowserTab : ObservableObject
     /// <summary>Last time this tab was the active tab (for LRU hibernation).</summary>
     public DateTime LastActiveTime { get; set; } = DateTime.UtcNow;
 
+    /// <summary>Active verified internal document identity. Null when tab hosts external content.</summary>
+    public Engine.InternalDocumentIdentity? ActiveInternalDocument { get; set; }
+
     public BrowserTab() { }
 
     public BrowserTab(string url)

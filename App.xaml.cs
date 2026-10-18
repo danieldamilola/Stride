@@ -50,14 +50,14 @@ public partial class App : Application
         // Build DI container
         _serviceProvider = Composition.BuildServiceProvider();
 
-        // Eagerly ensure uBlock folder exists so updater reposition survives even if first WebView init races
-        // This mirrors Helium ComponentLoader::AddUBlock at browser start and does not need a WebView
-        var extensionManager = _serviceProvider.GetRequiredService<ExtensionManager>();
-        _ = Task.Run(async () =>
-        {
-            try { await extensionManager.EnsureUBlockDownloadedAsync(); }
-            catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Eager uBlock ensure failed: {ex.Message}"); }
-        });
+        // uBlock is not prepared here. An earlier revision fired a background
+        // EnsureUBlockDownloadedAsync from startup so the folder would exist before
+        // the first WebView, which meant two writers against the same folder: this one
+        // and the one inside the extension startup coordinator, which can rewrite
+        // assets.json while the platform has that folder registered. One coordinator
+        // owns preparation and install per profile now. It runs on a pool thread
+        // before the first external navigation, and its result is read back from the
+        // profile rather than assumed, so nothing is lost by not guessing here.
 
         // Check for updates silently if enabled
         var settingsStore = _serviceProvider.GetRequiredService<ISettingsStore>();
@@ -74,8 +74,11 @@ public partial class App : Application
 
         CheckForPreviousCrash();
 
-        // Create and show MainWindow via DI
-        var window = _serviceProvider.GetRequiredService<MainWindow>();
+        // Create and show MainWindow via DI. The manager owns every window's scope, and
+        // this one is the startup window: it restores the session and owns the command
+        // line. Windows torn off later get a scope of their own with no restore.
+        ShutdownMode = ShutdownMode.OnLastWindowClose;
+        var window = _serviceProvider.GetRequiredService<Services.UI.BrowserWindowManager>().CreateWindow(restoreStartupSession: true);
         window.Show();
     }
 

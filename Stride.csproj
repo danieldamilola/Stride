@@ -30,6 +30,13 @@
     <Compile Remove="StrideBrowser.Tests\**" />
     <Compile Remove="src\**" />
     <Compile Remove="tools\**" />
+    <!-- Page items need the same exclusions as Compile. The WPF default glob is
+         **/*.xaml, so any harness under tools\ that keeps its own App.xaml or a copied
+         theme was compiled into the app and collided with the real one: CS0111 on
+         InitializeComponent and CS0102 on _contentLoaded, for the whole solution. -->
+    <Page Remove="StrideBrowser.Tests\**" />
+    <Page Remove="src\**" />
+    <Page Remove="tools\**" />
     <EmbeddedResource Remove="StrideBrowser.Tests\**" />
     <EmbeddedResource Remove="src\**" />
     <EmbeddedResource Remove="tools\**" />
@@ -45,6 +52,8 @@
     <EmbeddedResource Include="Resources\Reader\*.html" />
     <EmbeddedResource Include="Resources\Reader\*.css" />
     <EmbeddedResource Include="Resources\Reader\*.js" />
+    <!-- App icon for the Settings about card -->
+    <EmbeddedResource Include="icons\stride-browser-128x128.png" />
   </ItemGroup>
 
 

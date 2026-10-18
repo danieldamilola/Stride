@@ -24,7 +24,7 @@ public class SuggestionProviderTests
         public List<HistoryEntry> Search(string query) =>
             _entries.Where(e => (e.Url?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
                                 (e.Title?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
-        public void Clear() => _entries.Clear();
+        public bool Clear() { _entries.Clear(); return true; }
         public List<HistoryEntry> GetFrequentSites(int count = 8) => _entries.Take(count).ToList();
     }
 

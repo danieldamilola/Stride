@@ -126,6 +126,40 @@
           overflow: hidden;
       }
 
+      /* ── About card: app identity, build info, credits ── */
+      .about-identity {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 14px 16px;
+      }
+      .about-logo {
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
+          flex-shrink: 0;
+      }
+      .about-status {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          background: var(--bg-hover);
+      }
+      .about-status-icon {
+          width: 18px;
+          height: 18px;
+          flex-shrink: 0;
+          color: var(--accent);
+      }
+      .about-credits {
+          padding: 12px 16px;
+          font-size: 12px;
+          line-height: 1.7;
+          color: var(--text-muted);
+          background: var(--bg-hover);
+      }
+
       /* ── Setting row ── */
       .setting-row {
           display: flex;
@@ -947,6 +981,15 @@
               </div>
               <div class="setting-row">
                 <div class="setting-info">
+                  <div class="setting-label">Search suggestions</div>
+                  <div class="setting-desc">Send address bar queries to DuckDuckGo to show search suggestions</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_SEARCH_SUGGESTIONS}} onchange="s('searchSuggestions', this)" />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
                   <div class="setting-label">Default zoom</div>
                 </div>
                 <div class="setting-control">
@@ -1027,15 +1070,6 @@
             <div class="card">
               <div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Floating Command Bar <span class="restart-tag">Restart</span></div>
-                  <div class="setting-desc">When on, search floats beautifully mid-screen (breaks 2-finger trackpad swipe). When off, uses standard address bar.</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_USE_FLOATING_BAR}} onchange="s('useFloatingBar', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
                   <div class="setting-label">Address Bar Position</div>
                   <div class="setting-desc">Move the address bar and new tab button</div>
                 </div>
@@ -1053,6 +1087,15 @@
                 </div>
                 <div class="setting-control">
                   <input type="checkbox" class="toggle" {{CHK_ADAPTIVE_TINT}} onchange="s('adaptiveTint', this)" />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Rounded Web Content Frame</div>
+                  <div class="setting-desc">Show a rounded frame around web contents</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_ROUNDED_FRAME}} onchange="s('roundedFrame', this)" />
                 </div>
               </div>
             </div>
@@ -1139,6 +1182,15 @@
                 </div>
                 <div class="setting-control">
                   <input type="checkbox" class="toggle" {{CHK_CLEAR}} onchange="s('clearOnExit', this)" />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Favicon network fallback</div>
+                  <div class="setting-desc">Fetch missing site icons using DuckDuckGo icon proxy. Visited domains are sent to DuckDuckGo.</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_FAVICON_PROXY}} onchange="s('faviconProxy', this)" />
                 </div>
               </div>
             </div>
@@ -1236,12 +1288,12 @@
               </div>
             </div>
 
-            <div class="subsection-label">Ad &amp; Tracker Blocking</div>
+            <div class="subsection-label">uBlock Origin</div>
             <div class="card">
               <div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Native ad &amp; tracker blocking</div>
-                  <div class="setting-desc">Block ads and trackers natively</div>
+                  <div class="setting-label">uBlock Origin</div>
+                  <div class="setting-desc">Block ads and trackers</div>
                 </div>
                 <div class="setting-control">
                   <input type="checkbox" class="toggle" {{CHK_ADBLOCK}} onchange="s('adBlock', this)" />
@@ -1253,27 +1305,28 @@
 
             <details class="collapsible" data-collapsible="enhancer">
               <summary>
-                <span class="collapsible-summary-label">YouTube Enhancer</span>
+                <span class="collapsible-summary-label">YouTube Enhancer <span class="restart-tag" style="color:var(--text-dim);background:rgba(255,255,255,0.06)">Unavailable</span></span>
                 <span class="collapsible-summary-meta">
                   <span class="collapsible-count" data-count-for="enhancer"></span>
                   <svg class="collapsible-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </span>
               </summary>
               <div class="card">
-              <div class="setting-row">
+              <div class="setting-row" style="opacity: 0.6;">
                 <div class="setting-info">
                   <div class="setting-label">Enable YouTube Enhancer</div>
+                  <div class="setting-desc">Enhancer script is currently parked and unavailable.</div>
                 </div>
                 <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_YT_ENHANCER}} onchange="s('ytEnhancerEnabled', this)" />
+                  <input type="checkbox" class="toggle" {{CHK_YT_ENHANCER}} disabled onchange="s('ytEnhancerEnabled', this)" />
                 </div>
               </div>
-              <div class="setting-row">
+              <div class="setting-row" style="opacity: 0.6;">
                 <div class="setting-info">
                   <div class="setting-label">Default quality</div>
                 </div>
                 <div class="setting-control">
-                  <select class="select" onchange="s('ytQuality', this)">
+                  <select class="select" disabled onchange="s('ytQuality', this)">
                     <option value="auto" {{YT_QUALITY_AUTO}}>Auto</option>
                     <option value="highest" {{YT_QUALITY_HIGHEST}}>Highest available</option>
                     <option value="lowest" {{YT_QUALITY_LOWEST}}>Lowest available</option>
@@ -1288,37 +1341,37 @@
                   </select>
                 </div>
               </div>
-              <div class="setting-row">
+              <div class="setting-row" style="opacity: 0.6;">
                 <div class="setting-info">
                   <div class="setting-label">Default playback speed</div>
                 </div>
                 <div class="setting-control">
-                  <input type="number" class="input-number" value="{{YT_SPEED}}" min="0.25" max="3" step="0.25" onchange="s('ytSpeed', this)" />
+                  <input type="number" class="input-number" value="{{YT_SPEED}}" min="0.25" max="3" step="0.25" disabled onchange="s('ytSpeed', this)" />
                 </div>
               </div>
-              <div class="setting-row">
+              <div class="setting-row" style="opacity: 0.6;">
                 <div class="setting-info">
                   <div class="setting-label">Disable autoplay</div>
                   <div class="setting-desc">Stop videos from auto-playing next</div>
                 </div>
                 <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_YT_AUTOPLAY}} onchange="s('ytAutoplay', this)" />
+                  <input type="checkbox" class="toggle" {{CHK_YT_AUTOPLAY}} disabled onchange="s('ytAutoplay', this)" />
                 </div>
               </div>
-              <div class="setting-row">
+              <div class="setting-row" style="opacity: 0.6;">
                 <div class="setting-info">
                   <div class="setting-label">Pause on tab switch</div>
                 </div>
                 <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_YT_PAUSE}} onchange="s('ytPauseTab', this)" />
+                  <input type="checkbox" class="toggle" {{CHK_YT_PAUSE}} disabled onchange="s('ytPauseTab', this)" />
                 </div>
               </div>
-              <div class="setting-row">
+              <div class="setting-row" style="opacity: 0.6;">
                 <div class="setting-info">
                   <div class="setting-label">Loop video</div>
                 </div>
                 <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_YT_LOOP}} onchange="s('ytLoop', this)" />
+                  <input type="checkbox" class="toggle" {{CHK_YT_LOOP}} disabled onchange="s('ytLoop', this)" />
                 </div>
               </div>
               </div>
@@ -1470,52 +1523,36 @@
 
           <!-- ════════ SYSTEM ════════ -->
           <div class="section" id="section-system">
-            <div class="section-header">Installed Extensions & Core Libraries</div>
-            <div class="card">
-              <div class="setting-row">
+            <div class="section-header">About Stride</div>
+
+            <div class="card" style="padding:0; overflow:hidden;">
+              <!-- Identity row -->
+              <div class="about-identity">
+                <img class="about-logo" src="{{APP_ICON}}" alt="" />
+                <div class="setting-label" style="font-size:15px;">Stride</div>
+              </div>
+
+              <!-- Build and runtime info -->
+              <div class="about-status">
+                <svg class="about-status-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                  <path d="M12 11.2v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <circle cx="12" cy="7.7" r="1.15" fill="currentColor"/>
+                </svg>
                 <div class="setting-info">
-                  <div class="setting-label">Stride Browser</div>
-                  <div class="setting-desc">Primary application build</div>
-                </div>
-                <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
-                  v{{CURRENT_VERSION}}
+                  <div class="setting-label">Version {{CURRENT_VERSION}}</div>
+                  <div class="setting-desc">WebView2 SDK {{WEBVIEW2_VERSION}}, .NET {{DOTNET_VERSION}}</div>
                 </div>
               </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Microsoft Edge WebView2</div>
-                  <div class="setting-desc">Chromium rendering engine runtime</div>
-                </div>
-                <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
-                  v{{WEBVIEW2_VERSION}}
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">.NET Runtime</div>
-                  <div class="setting-desc">Application framework runtime</div>
-                </div>
-                <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
-                  v{{DOTNET_VERSION}}
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">T&C Lens AI</div>
-                  <div class="setting-desc">Embedded extension for Terms & Conditions analysis</div>
-                </div>
-                <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
-                  v1.0.0
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">CommunityToolkit MVVM</div>
-                  <div class="setting-desc">MVVM architectural toolkit</div>
-                </div>
-                <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
-                  v8.3.2
-                </div>
+
+              <!-- Credits -->
+              <div class="about-credits">
+                Copyright 2026 The Stride Authors. All rights reserved.
+                <br />
+                Stride is made possible by the
+                <a href="https://learn.microsoft.com/microsoft-edge/webview2/" target="_blank" rel="noreferrer" style="color:var(--text-main)">Microsoft Edge WebView2</a>
+                open source project and other
+                <a href="https://github.com/danieldamilola/Stride/blob/main/THIRD-PARTY-NOTICES.md" target="_blank" rel="noreferrer" style="color:var(--text-main)">open source software</a>.
               </div>
             </div>
 

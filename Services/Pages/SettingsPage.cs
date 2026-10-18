@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using System.Text;
 using StrideBrowser.Models;
 using StrideBrowser.Services.Input;
@@ -48,6 +49,8 @@ public sealed class SettingsPage
                 ["CHK_SMARTSCREEN"] = Chk(settings.SmartScreenEnabled),
                 ["CHK_ADBLOCK"] = Chk(settings.AdBlockEnabled),
                 ["CHK_CLEAR"] = Chk(settings.ClearDataOnExit),
+                ["CHK_SEARCH_SUGGESTIONS"] = Chk(settings.SearchSuggestionsEnabled),
+                ["CHK_FAVICON_PROXY"] = Chk(settings.FaviconProxyEnabled),
                 ["CHK_DUPES"] = Chk(settings.BlockDuplicateTabs),
                 ["CHK_TAB_HIBERNATION"] = Chk(settings.TabHibernationEnabled),
                 ["CHK_TAB_SLEEP"] = Chk(settings.TabSleepEnabled),
@@ -62,17 +65,21 @@ public sealed class SettingsPage
                 ["ADDR_LEFT"] = settings.AddressBarOnLeft ? " selected" : "",
                 ["ADDR_RIGHT"] = settings.AddressBarOnLeft ? "" : " selected",
                 ["CHK_ADAPTIVE_TINT"] = Chk(settings.AdaptiveToolbarTint),
+                ["CHK_ROUNDED_FRAME"] = Chk(settings.RoundedWebContentFrameEnabled),
                 ["CHK_BACKARROW"] = Chk(settings.ShowBackArrow),
                 ["CHK_FWDARROW"] = Chk(settings.ShowForwardArrow),
                 ["CHK_REFRESH"] = Chk(settings.ShowRefreshButton),
                 ["CHK_DOWNLOADS"] = Chk(settings.ShowDownloadsIcon),
                 ["CHK_SETTINGSICON"] = Chk(settings.ShowSettingsIcon),
                 ["CHK_READERICON"] = Chk(settings.ShowReaderIcon),
-                ["CHK_USE_FLOATING_BAR"] = Chk(settings.UseFloatingCommandBar),
                 ["CHK_AUTO_CHECK_FOR_UPDATES"] = Chk(settings.AutoCheckForUpdates),
-                ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.1.3",
-                ["WEBVIEW2_VERSION"] = typeof(Microsoft.Web.WebView2.Core.CoreWebView2).Assembly.GetName().Version?.ToString(3) ?? "1.0.4181",
+                ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "unknown",
+                // The WebView2 SDK assembly version, labelled "SDK" in the About card because the
+                // installed browser runtime version is not exposed here. "unknown", never a literal,
+                // when even the SDK assembly version cannot be read.
+                ["WEBVIEW2_VERSION"] = typeof(Microsoft.Web.WebView2.Core.CoreWebView2).Assembly.GetName().Version?.ToString(3) ?? "unknown",
                 ["DOTNET_VERSION"] = System.Environment.Version.ToString(2),
+                ["APP_ICON"] = AppIconDataUri(),
                 ["ACCENT_COLOR"] = settings.AccentColor,
                 ["ACCENT"] = settings.AccentColor,
                 ["ACCENT_RGB"] = HexToRgb(settings.AccentColor),
@@ -207,5 +214,26 @@ public sealed class SettingsPage
         }
         catch (FormatException) { return "127,184,154"; }
         catch (OverflowException) { return "127,184,154"; }
+    }
+
+    /// <summary>
+    /// The app icon as a data URI for the about card. Embedded as a resource so the page
+    /// has no dependency on files sitting next to the executable. Returns an empty string
+    /// so the card still renders when the resource is missing.
+    /// </summary>
+    private static string AppIconDataUri()
+    {
+        try
+        {
+            using var stream = Helpers.ResourceLoader.OpenStream("icons.stride-browser-128x128.png");
+            using var memory = new MemoryStream();
+            stream.CopyTo(memory);
+            return "data:image/png;base64," + Convert.ToBase64String(memory.ToArray());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Trace.WriteLine($"App icon unavailable: {ex.Message}");
+            return "";
+        }
     }
 }

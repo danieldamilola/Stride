@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
@@ -35,7 +35,7 @@ public sealed class NavigationPolicyEngine
         bool isFocusLocked,
         bool forceHttps)
     {
-        if (TryHandleCustomProtocol(e, tab, dispatcher, closeTab)) return true;
+        if (TryHandleCustomProtocol(e, wv, tab, dispatcher, closeTab)) return true;
         if (isFocusLocked && TryHandleFocusLock(e, tab, dispatcher, navigateToFocus)) return true;
         if (forceHttps && TryUpgradeToHttps(e, wv, dispatcher)) return true;
         return false;
@@ -107,6 +107,7 @@ public sealed class NavigationPolicyEngine
 
     private bool TryHandleCustomProtocol(
         CoreWebView2NavigationStartingEventArgs e,
+        dynamic wv,
         BrowserTab tab,
         Dispatcher dispatcher,
         Action<BrowserTab> closeTab)
@@ -120,10 +121,14 @@ public sealed class NavigationPolicyEngine
         {
             // SECURITY: confirm before handing off to an external app - unprompted
             // protocol-handler invocation is a known RCE vector for some installed apps.
-            var displayUrl = uriForCustom.Length > 100 ? uriForCustom.Substring(0, 97) + "..." : uriForCustom;
+            var formatted = Services.NavigationService.FormatDisplayUrl(uriForCustom);
+            var displayUrl = formatted.Length > 100 ? formatted.Substring(0, 97) + "..." : formatted;
+
+            var owner = ResolveOwnerWindow(wv);
+
             var dialog = new BaseBrowserDialogWindow
             {
-                Owner = System.Windows.Application.Current.MainWindow,
+                Owner = owner,
                 DialogTitle = "Open External App",
                 DialogMessage = $"This page wants to open an external application to handle this link:\n\n{displayUrl}\n\nOnly continue if you trust this site.",
                 CancelVisibility = System.Windows.Visibility.Visible,
@@ -181,6 +186,18 @@ public sealed class NavigationPolicyEngine
             catch (Exception ex) { Trace.WriteLine(ex); }
         });
         return true;
+    }
+
+    public static System.Windows.Window? ResolveOwnerWindow(dynamic? wv)
+    {
+        if (wv is System.Windows.FrameworkElement fe)
+        {
+            var window = System.Windows.Window.GetWindow(fe);
+            if (window != null)
+                return window;
+        }
+
+        return System.Windows.Application.Current?.MainWindow;
     }
 }
 

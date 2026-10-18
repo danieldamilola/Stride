@@ -41,19 +41,13 @@
     }
     refreshConfig();
 
-    // Live reload: re-read config and re-apply without re-registering
-    // observers or listeners, which would stack on every settings change.
-    if (window.__STRIDE_UNHOOK_LOADED) {
-        refreshConfig();
-        // Re-inject in case YouTube's SPA or another injected script (Dark
-        // Reader rewrites <head>) removed the stylesheet. Without this,
-        // applyClasses would add classes that have no rules behind them.
-        injectStyleSheet();
-        applyClasses();
-        runJsActions();
-        return;
-    }
-    window.__STRIDE_UNHOOK_LOADED = true;
+    // Whether this document already has the script. Decided here, acted on below.
+    // It has to be decided after CSS and FEATURES are assigned, not before:
+    // var is hoisted but unassigned, so running the re-injection path above those
+    // definitions called applyClasses with FEATURES undefined and threw a TypeError
+    // on every settings change, and handed injectStyleSheet an undefined stylesheet
+    // whenever the style node had been removed.
+    var isReinjection = !!window.__STRIDE_UNHOOK_LOADED;
 
     // ── Static CSS - all rules pre-written, gated by html.stride-unhook-* classes ──
     var CSS = [
@@ -267,6 +261,23 @@
 
     // ─ Shorts Redirect: REMOVED with the rest of the Shorts feature ─
 
+    // ── Re-injection ─────────────────────────────────────────────────
+    // Everything above is assigned by the time this runs, which is the whole point
+    // of the split. The path re-reads the config and re-applies without registering
+    // a second set of listeners or observers, which would stack on every settings
+    // change and make the page slower for no visible benefit.
+    if (isReinjection) {
+        refreshConfig();
+        // Re-inject in case YouTube's SPA or another injected script (Dark
+        // Reader rewrites <head>) removed the stylesheet. Without this,
+        // applyClasses would add classes that have no rules behind them.
+        injectStyleSheet();
+        applyClasses();
+        runJsActions();
+        return;
+    }
+    window.__STRIDE_UNHOOK_LOADED = true;
+
     // ── JS-only actions (can't be done with CSS) ─────────────────────
     function runJsActions() {
         // "More from YouTube" section - match by section links first, since the
@@ -300,7 +311,14 @@
             var enhancerHandles = ytCfg && ytCfg.enabled && ytCfg.disableAuto;
             if (!enhancerHandles) {
                 var btn = document.querySelector('.ytp-autonav-toggle-button');
-                if (btn && btn.getAttribute('aria-checked') === 'true') {
+                // One click per button, not one per call. YouTube applies the
+                // click asynchronously, so aria-checked still reads "true" for a
+                // moment after we clicked it and every later runJsActions would
+                // click again and turn autoplay-next back on. The flag sits on the
+                // node, so a button the player has since replaced is eligible
+                // again while the one we already acted on is left alone.
+                if (btn && btn.getAttribute('aria-checked') === 'true' && !btn.__strideAutonavClicked) {
+                    btn.__strideAutonavClicked = true;
                     btn.click();
                 }
             }
@@ -362,20 +380,31 @@
                     }
                 }
             }
-            if (needsJsHides) runJsActions();
+            if (needsJsHides) {
+                // Re-read first. These listeners were registered once and close over
+                // cfg, so without this they would keep applying whatever the settings
+                // were when the document loaded and would undo a setting the user
+                // has since turned off.
+                refreshConfig();
+                runJsActions();
+            }
         });
         observer.observe(app, { childList: true, subtree: true });
     }
 
     // ── SPA Navigation ───────────────────────────────────────────────
+    // Each handler re-reads the config for the same reason as the observer.
     window.addEventListener('yt-navigate-finish', function() {
+        refreshConfig();
         applyClasses();
         runJsActions();
     });
     window.addEventListener('yt-page-data-updated', function() {
+        refreshConfig();
         runJsActions();
     });
     window.addEventListener('yt-navigate-start', function() {
+        refreshConfig();
         applyClasses();
     });
 

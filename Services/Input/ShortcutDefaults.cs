@@ -18,7 +18,7 @@ public static class ShortcutDefaults
         new("CycleTabBackward",  "Tabs",       "Previous tab",         "Switch to previous tab",            "Ctrl+Shift+Tab"),
 
         // ── Navigation ──
-        new("FocusAddressBar",   "Navigation", "Address bar",          "Focus the command bar",             "Ctrl+L"),
+        new("FocusAddressBar",   "Navigation", "Address bar",          "Focus the address bar",           "Ctrl+L"),
         new("TCLens",            "Extensions", "Analyze this page with T&C Lens", "Analyze this page with T&C Lens", "Alt+T"),
         new("GoBack",            "Navigation", "Go back",              "Navigate back",                     "Alt+Left"),
         new("GoForward",         "Navigation", "Go forward",           "Navigate forward",                  "Alt+Right"),

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using StrideBrowser.Models;
@@ -7,54 +9,52 @@ using StrideBrowser.Models;
 namespace StrideBrowser.Services.UI;
 
 /// <summary>
-/// Animates the toolbar background color based on the current tab's theme color.
-/// Adapts foreground text resources to ensure contrast.
+/// Paints the toolbar chrome from the active tab theme color, scoped to one
+/// window. The toolbar background animates toward the resolved site color.
+/// When that color is light, text, hover, address field, popup and tab card
+/// resources are overridden on the toolbar element so every control inside
+/// this window follows. Dark colors remove the overrides so everything falls
+/// back to the window and app theme. Nothing is written to app-wide
+/// resources, so a second window keeps its own tint.
 /// </summary>
 public sealed class ToolbarTintAdapter
 {
-    private readonly FrameworkElement _toolbar;
+    private readonly Border _toolbar;
+    private readonly Border _addressField;
+    private readonly Border _popup;
     private string _currentThemeColorHex = "";
+    private bool _refreshForced;
 
-    public ToolbarTintAdapter(FrameworkElement toolbar)
+    private static readonly string[] TintKeys =
+    [
+        "TextPrimary", "TextSecondary", "TextMuted", "SurfaceHoverBrush",
+        "AddressFieldBackground", "AddressFieldBorder",
+        "SuggestionPopupBackground", "SuggestionPopupBorder",
+        "SuggestionHoverBackground", "PinnedTabBackground", "TabCloseHoverBackground"
+    ];
+
+    public ToolbarTintAdapter(Border toolbar, Border addressField, Border popup)
     {
         _toolbar = toolbar;
+        _addressField = addressField;
+        _popup = popup;
     }
 
-    public void UpdateTint(BrowserTab tab)
+    public void Reset()
     {
-        var hex = tab.ThemeColor ?? "";
-        if (hex == _currentThemeColorHex) return;
+        _currentThemeColorHex = "";
+        _refreshForced = true;
+    }
+
+    public void UpdateTint(BrowserTab tab, bool adaptiveEnabled)
+    {
+        var hex = adaptiveEnabled ? tab.ThemeColor ?? "" : "";
+        if (hex == _currentThemeColorHex && !_refreshForced) return;
         _currentThemeColorHex = hex;
+        _refreshForced = false;
 
         var baseColor = (Color)_toolbar.FindResource("SidebarColor");
-        Color targetColor;
-
-        if (!string.IsNullOrEmpty(hex))
-        {
-            try
-            {
-                targetColor = (Color)ColorConverter.ConvertFromString(hex);
-                // Reject pure/near white. This prevents the toolbar from turning blindingly white 
-                // when Dark Reader is active but the site's meta theme-color tag still says #FFFFFF.
-                if (targetColor.R > 245 && targetColor.G > 245 && targetColor.B > 245)
-                {
-                    targetColor = Color.FromRgb(0x11, 0x11, 0x11);
-                }
-                // Reject strong green colors (e.g. jiji.ng) because they clash with the dark theme
-                else if (targetColor.G > 120 && targetColor.G > targetColor.R + 40 && targetColor.G > targetColor.B + 40)
-                {
-                    targetColor = Color.FromRgb(0x11, 0x11, 0x11);
-                }
-            }
-            catch
-            {
-                targetColor = baseColor;
-            }
-        }
-        else
-        {
-            targetColor = baseColor;
-        }
+        var targetColor = ToolbarTintResolver.ResolveTargetColor(hex, baseColor);
 
         var anim = new ColorAnimation
         {
@@ -63,55 +63,41 @@ public sealed class ToolbarTintAdapter
             EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
         };
 
-        // FrameworkElement doesn't expose Background, so we check if it's a Control or Panel
-        SolidColorBrush? brush = null;
-        if (_toolbar is System.Windows.Controls.Control control)
+        var brush = _toolbar.Background as SolidColorBrush;
+        if (brush is null || brush.IsFrozen)
         {
-            brush = control.Background as SolidColorBrush;
-            if (brush is null || brush.IsFrozen)
-            {
-                brush = new SolidColorBrush(baseColor);
-                control.Background = brush;
-            }
+            brush = new SolidColorBrush(baseColor);
+            _toolbar.Background = brush;
         }
-        else if (_toolbar is System.Windows.Controls.Panel panel)
-        {
-            brush = panel.Background as SolidColorBrush;
-            if (brush is null || brush.IsFrozen)
-            {
-                brush = new SolidColorBrush(baseColor);
-                panel.Background = brush;
-            }
-        }
-        else if (_toolbar is System.Windows.Controls.Border border)
-        {
-            brush = border.Background as SolidColorBrush;
-            if (brush is null || brush.IsFrozen)
-            {
-                brush = new SolidColorBrush(baseColor);
-                border.Background = brush;
-            }
-        }
+        brush.BeginAnimation(SolidColorBrush.ColorProperty, anim);
 
-        if (brush != null)
-        {
-            brush.BeginAnimation(SolidColorBrush.ColorProperty, anim);
-        }
-
-        // Dynamic Contrast: If the toolbar adapts to a light color, switch icons/text to dark
-        var luminance = (0.299 * targetColor.R + 0.587 * targetColor.G + 0.114 * targetColor.B) / 255.0;
-        if (luminance > 0.5)
-        {
-            _toolbar.Resources["TextPrimary"] = new SolidColorBrush(Color.FromRgb(30, 30, 34));
-            _toolbar.Resources["TextSecondary"] = new SolidColorBrush(Color.FromRgb(70, 70, 74));
-            _toolbar.Resources["TextMuted"] = new SolidColorBrush(Color.FromRgb(100, 100, 104));
-        }
+        if (ToolbarTintResolver.IsLight(targetColor))
+            ApplyLightOverrides();
         else
-        {
-            // Dark background -> remove local overrides so they fall back to global App.xaml theme
-            _toolbar.Resources.Remove("TextPrimary");
-            _toolbar.Resources.Remove("TextSecondary");
-            _toolbar.Resources.Remove("TextMuted");
-        }
+            ClearOverrides();
     }
+
+    private void ApplyLightOverrides()
+    {
+        Set("TextPrimary", Color.FromRgb(30, 30, 34));
+        Set("TextSecondary", Color.FromRgb(70, 70, 74));
+        Set("TextMuted", Color.FromRgb(100, 100, 104));
+        Set("SurfaceHoverBrush", Color.FromArgb(0x14, 0, 0, 0));
+        Set("AddressFieldBackground", Color.FromArgb(0x0D, 0, 0, 0));
+        Set("AddressFieldBorder", Color.FromArgb(0x1F, 0, 0, 0));
+        Set("SuggestionPopupBackground", Color.FromRgb(0xF4, 0xF4, 0xF6));
+        Set("SuggestionPopupBorder", Color.FromRgb(0xD8, 0xD8, 0xDC));
+        Set("SuggestionHoverBackground", Color.FromArgb(0x0F, 0, 0, 0));
+        Set("PinnedTabBackground", Color.FromArgb(0x0A, 0, 0, 0));
+        Set("TabCloseHoverBackground", Color.FromArgb(0x14, 0, 0, 0));
+    }
+
+    private void ClearOverrides()
+    {
+        foreach (var key in TintKeys)
+            _toolbar.Resources.Remove(key);
+    }
+
+    private void Set(string key, Color color) =>
+        _toolbar.Resources[key] = new SolidColorBrush(color);
 }

@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using StrideBrowser.Models;
@@ -21,28 +23,49 @@ public sealed class WebViewFactory
     private readonly ThemeManager _themeManager;
     private readonly InternalPages _pages;
     private readonly ExtensionManager _extensionManager;
+    private readonly ExtensionStartupCoordinator _extensionStartup;
+    private readonly Dispatcher _uiDispatcher;
     private readonly string _ipcToken;
-    private bool _extensionsLoaded;
-    private int _extensionsInitStarted;
+    private readonly string _dataDirectory;
+    private readonly string _profileKey;
+    private readonly string _ownerId = Guid.NewGuid().ToString("N");
 
     public CoreWebView2Environment? Environment { get; private set; }
 
     /// <summary>Fires when the WebView2 browser process exits (engine decides what to do).</summary>
     public event Action? BrowserProcessExited;
 
-    public WebViewFactory(BrowserSettings settings, ThemeManager themeManager, InternalPages pages, ExtensionManager extensionManager, string ipcToken)
+    public WebViewFactory(
+        BrowserSettings settings,
+        ThemeManager themeManager,
+        InternalPages pages,
+        ExtensionManager extensionManager,
+        ExtensionStartupCoordinator extensionStartup,
+        string ipcToken,
+        string? dataDirectory = null)
     {
         _settings = settings;
         _themeManager = themeManager;
         _pages = pages;
         _extensionManager = extensionManager;
+        _extensionStartup = extensionStartup;
         _ipcToken = ipcToken;
+        _dataDirectory = dataDirectory ?? Helpers.AppPaths.WebView2Dir;
+        // Every window in the process shares one WebView2 user data folder, and that
+        // folder is the profile the extension registration lives in. Keying the
+        // coordinator on it is what makes two windows share one registration instead
+        // of each keeping its own per window flag over the same profile.
+        _profileKey = ExtensionStartupCoordinator.ProfileKeyFor(_dataDirectory);
+        _uiDispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
     }
+
+    /// <summary>The profile key this window's extensions are registered under.</summary>
+    public string ExtensionProfileKey => _profileKey;
 
     /// <summary>Must be called once at startup to create the WebView2 environment.</summary>
     public async Task InitializeAsync()
     {
-        var dataDir = Helpers.AppPaths.WebView2Dir;
+        var dataDir = _dataDirectory;
 
         var options = new CoreWebView2EnvironmentOptions
         {
@@ -54,11 +77,10 @@ public sealed class WebViewFactory
         };
         Environment = await CoreWebView2Environment.CreateAsync(null, dataDir, options);
 
-        if (_settings.AdBlockEnabled)
-        {
-            // Initializes the background adblock list (does not block startup, finishes in background if downloading)
-            _ = AdBlockFilter.InitializeAsync();
-        }
+        // AdBlockEnabled is consumed by ExtensionManager, which enables or disables the
+        // uBlock Origin extension. The browser side keeps no blocklist of its own: the
+        // AdBlockFilter that used to be initialized here downloaded a domain list at
+        // startup and, from Apply, answered matching requests with an empty 200.
 
         // Handle browser process exit at the environment level
         Environment.BrowserProcessExited += (_, e) =>
@@ -78,6 +100,17 @@ public sealed class WebViewFactory
     ///   Note: this flag is read at environment creation, so toggling requires a restart.
     /// - ForceDarkMode uses Chromium's native WebContentsForceDark engine.
     ///   Also read at environment creation - toggling requires a restart.
+    /// - Autoplay policy is deliberately left at the WebView2 default.
+    ///   An earlier revision added --autoplay-policy=no-user-gesture-required here.
+    ///   It was retracted. The evidence behind it was a loopback probe page, not
+    ///   the reported YouTube symptom, and Chrome's own autoplay policy
+    ///   (developer.chrome.com/blog/autoplay/) deliberately blocks unmuted
+    ///   autoplay until a site is engaged; the flag disables that policy entirely
+    ///   and Chrome documents it as a developer testing switch. Microsoft lists
+    ///   it as a settable flag, which is not a product recommendation. Removing
+    ///   it restores the default policy for the product. Do not re-add it as a
+    ///   blanket policy change without a reproduction of the actual symptom on a
+    ///   real watch page.
     /// </summary>
     public static string BuildBrowserArguments(bool smartScreenEnabled, bool forceDarkMode = false)
     {
@@ -102,17 +135,22 @@ public sealed class WebViewFactory
         return args;
     }
 
+    /// <summary>
+    /// Creates the WPF control for a tab.
+    ///
+    /// The renderer type is fixed to the HwndHost based WebView2. That is the
+    /// control this baseline actually used in production: the floating command
+    /// bar setting that used to switch to WebView2CompositionControl defaulted
+    /// to false, so every normal run created this control. The setting is gone,
+    /// and with it the only caller that could ask for the composition control.
+    ///
+    /// Starts Collapsed, not Hidden. HwndHost ignores Hidden and keeps the child
+    /// HWND alive and rendering behind the visible tab, so a background tab would
+    /// keep burning CPU and a newly created tab would present a stale frame.
+    /// TabEngine.ShowOnlyActiveWebView decides the visible state.
+    /// </summary>
     public dynamic CreateWebViewControl(bool isInternal)
     {
-        if (_settings.UseFloatingCommandBar)
-        {
-            return new Microsoft.Web.WebView2.Wpf.WebView2CompositionControl
-            {
-                DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
-                Visibility = System.Windows.Visibility.Hidden
-            };
-        }
-
         return new Microsoft.Web.WebView2.Wpf.WebView2
         {
             DefaultBackgroundColor = isInternal ? System.Drawing.Color.Transparent : (_settings.ForceDarkMode ? DarkBackground : System.Drawing.Color.White),
@@ -144,47 +182,101 @@ public sealed class WebViewFactory
         try { core.Settings.IsSwipeNavigationEnabled = true; } catch (Exception ex) { Trace.WriteLine(ex); }
     }
 
-    public void TryInitializeExtensions(dynamic wv)
+    /// <summary>
+    /// Waits until the profile this control belongs to holds the requested native
+    /// extension state, or reports an honest failure.
+    ///
+    /// The work itself is shared per profile by <see cref="ExtensionStartupCoordinator"/>,
+    /// so a second window on the same profile waits on the registration the first one
+    /// started rather than registering again. Two isolated profiles stay independent
+    /// because their keys differ.
+    /// </summary>
+    public async Task<ExtensionStartupResult> EnsureExtensionsReadyAsync(
+        dynamic wv,
+        bool? desiredEnabled = null,
+        CancellationToken cancellationToken = default)
     {
-        if (_extensionsLoaded) return;
-        // Only one in-flight init attempt. The flag resets on failure so a later
-        // tab can retry if the first WebView was torn down before loading finished.
-        if (Interlocked.Exchange(ref _extensionsInitStarted, 1) == 1) return;
+        var desired = desiredEnabled ?? _settings.AdBlockEnabled;
+        var core = SafeCore(wv);
+        if (core is null)
+            return ExtensionStartupResult.NoCore(
+                _profileKey, desired, "the tab has no live core to run the profile calls on");
 
-        _ = Task.Run(async () =>
+        var result = await ApplyPreferenceAsync(core, desired, cancellationToken);
+        Trace.WriteLine(
+            $"WebViewFactory: extension gate profile={_profileKey} native={NativeProfileOf(core)} owner={_ownerId} " +
+            $"requested={desired} -> {result}");
+        return result;
+    }
+
+    /// <summary>
+    /// The same gate for a core the caller already holds, which is what a settings
+    /// toggle uses: the user turned the preference on or off and the profile has to
+    /// follow now, with no reload and no remove and add again.
+    /// </summary>
+    public Task<ExtensionStartupResult> ApplyPreferenceAsync(
+        CoreWebView2 core,
+        bool desiredEnabled,
+        CancellationToken cancellationToken = default)
+    {
+        var request = new ExtensionStartupRequest(
+            _profileKey, desiredEnabled, _ownerId, BuildReconciler(core), NativeProfileOf(core));
+        return _extensionStartup.EnsureReadyAsync(request, null, cancellationToken);
+    }
+
+    /// <summary>
+    /// The profile the control actually talks to, when the platform will say. The user
+    /// data folder is the key the run is serialized on, because that is what the
+    /// environments in one process share. This is what keeps a cached answer from
+    /// being handed to a different profile inside the same folder.
+    /// </summary>
+    private static string? NativeProfileOf(CoreWebView2 core)
+    {
+        try { return core.Profile.ProfilePath; }
+        catch (Exception ex)
         {
-            try
-            {
-                // MUST dispatch to UI thread!
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
-                {
-                    CoreWebView2 core = wv.CoreWebView2;
-                    await _extensionManager.InitializeAsync(core, _settings);
-                    // Only mark as loaded if we actually have a folder or AdBlock is off
-                    // This allows retry on next tab if network failed during first load
-                    var health = _extensionManager.GetHealth();
-                    if (health.HasFolder || !_settings.AdBlockEnabled)
-                        _extensionsLoaded = true;
-                    else
-                        Trace.WriteLine("Extension init incomplete, will retry on next tab");
-                });
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"Extension init failed: {ex.Message}");
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _extensionsInitStarted, 0);
-            }
-        });
+            Trace.WriteLine($"WebViewFactory: native profile path unavailable: {ex.Message}");
+            return null;
+        }
     }
 
-    public void ResetExtensionInitForRetry()
+    /// <summary>
+    /// Binds one core's WebView2 calls into a delegate the coordinator can await.
+    ///
+    /// The calls have to happen on the thread that owns the control, which is not
+    /// necessarily the thread the coordinator was called from, so the delegate
+    /// marshals. Dispatcher.InvokeAsync on an async lambda returns
+    /// DispatcherOperation&lt;Task&lt;T&gt;&gt;, so awaiting its Task directly would
+    /// wait only for the call to be queued. Unwrap is what makes the wait cover the
+    /// registration itself.
+    /// </summary>
+    private ExtensionReconcileCore BuildReconciler(CoreWebView2 core)
     {
-        _extensionsLoaded = false;
-        Interlocked.Exchange(ref _extensionsInitStarted, 0);
+        return async (desiredEnabled, cancellationToken) =>
+        {
+            var operation = _uiDispatcher.InvokeAsync(
+                async () => await _extensionManager.ReconcileAsync(core, desiredEnabled),
+                DispatcherPriority.Normal,
+                cancellationToken);
+            return await operation.Task.Unwrap();
+        };
     }
+
+    private static CoreWebView2? SafeCore(dynamic wv)
+    {
+        try { return wv?.CoreWebView2 as CoreWebView2; }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"WebViewFactory: core not available: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Stage timings from the last disk preparation, so a caller can report where
+    /// startup time went without a profiler.
+    /// </summary>
+    public ExtensionManager.PreparationTimings LastExtensionPreparation => _extensionManager.LastPreparation;
 
     public void NavigateInitialUrl(dynamic wv, BrowserTab tab)
     {
@@ -200,11 +292,20 @@ public sealed class WebViewFactory
         // NewTab is served as HTML string so there's no real URL to navigate to.
         if (tab.Url == InternalUrls.NewTab || string.IsNullOrEmpty(tab.Url))
         {
+            tab.ActiveInternalDocument = new InternalDocumentIdentity(tab.Id, TabEngine.InternalPageKind.NewTab, _ipcToken, 1);
             try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom)); } catch (Exception ex) { Trace.WriteLine(ex); }
             return;
         }
 
         try { wv.CoreWebView2.Navigate(tab.Url); }
-        catch (ArgumentException) { try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom)); } catch (Exception ex) { Trace.WriteLine(ex); } }
+        catch (ArgumentException)
+        {
+            try
+            {
+                tab.ActiveInternalDocument = new InternalDocumentIdentity(tab.Id, TabEngine.InternalPageKind.NewTab, _ipcToken, 1);
+                wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom));
+            }
+            catch (Exception ex) { Trace.WriteLine(ex); }
+        }
     }
 }

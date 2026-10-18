@@ -33,6 +33,9 @@ public sealed class TabStripController : IDisposable
     /// <summary>Prevents re-entrant tab selection changes when programmatically updating the ListBox selection.</summary>
     public bool IsUpdatingSelection { get; set; }
 
+    /// <summary>The drag behavior this controller owns, so the window can hand it a transfer target.</summary>
+    public TabStripDragDropBehavior Drag => _drag;
+
     public TabStripController(
         ListBox tabList,
         TabEngine engine,

@@ -151,35 +151,24 @@
         <li><span class="dot" style="background:var(--accent)"></span><span><strong>Light by design.</strong> <span>Tab hibernation and sleep keep RAM and CPU low as your session grows.</span></span></li>
         <li><span class="dot" style="background:var(--accent)"></span><span><strong>uBlock Origin built in.</strong> <span>Ad and tracker blocking from the very first page load.</span></span></li>
         <li><span class="dot" style="background:var(--accent)"></span><span><strong>Focus mode.</strong> <span>A hard lock that keeps you off distraction sites when you need to work.</span></span></li>
-        <li><span class="dot" style="background:var(--accent)"></span><span><strong>YouTube tools.</strong> <span>Quality control, speed presets, and hide anything you don't want to see.</span></span></li>
+        <li><span class="dot" style="background:var(--accent)"></span><span><strong>YouTube Unhook.</strong> <span>Hide feeds, comments, recommendations and distractions for focused video watching.</span></span></li>
       </ul>
     </section>
 
     <!-- Step 2 · Address bar -->
     <section class="step" data-step="1">
       <p class="eyebrow">Address bar</p>
-      <h2>How do you want to navigate?</h2>
-      <p class="sub">Stride has two address bar modes. You can switch between them later in Settings. This just picks your starting point.</p>
+      <h2>Navigate from the toolbar.</h2>
+      <p class="sub">Stride keeps one address bar, inline in the toolbar. It shows the bare domain until you click it. Toggle it with <kbd>Ctrl+L</kbd>.</p>
       <div class="addr-grid">
-        <button class="addr-card" data-floating="true" id="addrFloating">
-          <div class="addr-preview">
-            <div style="position:absolute;top:8px;left:12px;display:flex;gap:4px">
-              <div style="height:18px;width:72px;border-radius:6px;display:flex;align-items:center;gap:4px;padding:0 6px;background:#1e1c18"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></span><span style="height:5px;flex:1;border-radius:999px;background:rgba(255,255,255,0.1)"></span></div>
-              <div style="height:18px;width:14px;border-radius:6px;background:#1a1815"></div>
-            </div>
-            <div style="width:160px;height:26px;border-radius:999px;display:flex;align-items:center;padding:0 10px;gap:6px;background:#1e1c18;border:1px solid rgba(127,184,154,0.25);box-shadow:0 4px 16px rgba(0,0,0,0.3)"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent)"></span><span style="height:5px;flex:1;border-radius:999px;background:#3a3630"></span></div>
-          </div>
-          <div class="addr-body"><div class="addr-title">Floating command bar</div><div class="addr-desc">Centered overlay on top of the page. Toggle it with <kbd>Ctrl+L</kbd>. Feels like a launcher.</div></div>
-        </button>
-        <button class="addr-card" data-floating="false" id="addrStandard">
+        <div class="addr-card on" id="addrStandard" style="border-color:var(--accent);background:color-mix(in srgb, var(--accent) 4%, #161512)">
           <div class="addr-preview" style="flex-direction:column;justify-content:flex-start;gap:8px;padding-top:12px">
             <div style="display:flex;align-items:center;gap:6px;width:100%"><span style="display:flex;gap:4px"><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span></span><span style="flex:1;height:22px;border-radius:6px;display:flex;align-items:center;padding:0 8px;gap:6px;background:#1e1c18;border:1px solid #2a2824"><span style="width:6px;height:6px;border-radius:50%;background:#3a3630"></span><span style="height:5px;flex:1;border-radius:999px;background:rgba(255,255,255,0.1)"></span></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span></div>
             <div style="flex:1;width:100%;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05)"></div>
           </div>
           <div class="addr-body"><div class="addr-title">Standard address bar</div><div class="addr-desc">Inline in the toolbar. Classic browser feel. Can be positioned left or right of the tab strip.</div></div>
-        </button>
+        </div>
       </div>
-      <p style="font-size:11px;color:#3a3630;margin-top:14px">Note: switching modes requires a restart.</p>
     </section>
 
     <!-- Step 3 · Privacy -->
@@ -300,7 +289,7 @@
   // dataEl holds Stride settings snapshot when hosted; fallback to localStorage for standalone preview
   const LS_KEY = 'stride.onboarding.figma';
   const ls = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch(e) { return {}; }})();
-  const S = Object.assign({ theme: 'dark', accent: '#7fb89a', floatingBar: true, adBlock: true, smartScreen: true, httpsForce: true, clearOnExit: false, hibernate: true, engine: 'ddg', importFrom: 'chrome', importHistory: true, importBookmarks: true, setDefault: true }, initial, ls);
+  const S = Object.assign({ theme: 'dark', accent: '#7fb89a', adBlock: true, smartScreen: true, httpsForce: true, clearOnExit: false, hibernate: true, engine: 'ddg', importFrom: 'chrome', importHistory: true, importBookmarks: true, setDefault: true }, initial, ls);
   const save = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e) {} };
   const post = (msg) => { if (window.chrome?.webview) window.chrome.webview.postMessage(__T + msg); };
   const postSetting = (k, v) => post('setting:' + k + ':' + v);
@@ -349,22 +338,6 @@
     // standalone fallback
     if (!window.chrome?.webview) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#6b6560;font-family:DM Sans,sans-serif">Done. In Stride this opens a new tab.</div>'; }
   });
-
-  // Address bar cards
-  const floatCard = document.getElementById('addrFloating');
-  const stdCard = document.getElementById('addrStandard');
-  function syncAddr() {
-    const on = !!S.floatingBar;
-    floatCard.classList.toggle('on', on);
-    stdCard.classList.toggle('on', !on);
-    floatCard.style.borderColor = on ? S.accent : '#2a2824';
-    floatCard.style.background = on ? S.accent + '08' : '#161512';
-    stdCard.style.borderColor = !on ? S.accent : '#2a2824';
-    stdCard.style.background = !on ? S.accent + '08' : '#161512';
-  }
-  floatCard.addEventListener('click', () => { S.floatingBar = true; save(); postSetting('useFloatingBar','true'); syncAddr(); });
-  stdCard.addEventListener('click', () => { S.floatingBar = false; save(); postSetting('useFloatingBar','false'); syncAddr(); });
-  syncAddr();
 
   // Toggles
   document.querySelectorAll('input.toggle[data-k]').forEach(el => {

@@ -11,12 +11,11 @@ namespace StrideBrowser.Services;
 public sealed class YouTubeUnhook
 {
     /// <summary>
-    /// Returns a JS string that seeds the unhook config into localStorage,
+    /// Returns a JS string that writes the unhook config into localStorage,
     /// sets window.__STRIDE_UNHOOK for the running document, then runs the
     /// unhook script. Returns empty string if unhook is disabled.
-    /// <paramref name="forceConfig"/> overwrites the persisted config for live
-    /// reload; initial injection only seeds it so live changes survive
-    /// navigation instead of being reverted by the registered bootstrap.
+    /// <paramref name="forceConfig"/> additionally points the running document at the
+    /// new config, so a live settings change takes effect without a navigation.
     /// </summary>
     public string GetScript(BrowserSettings s, bool forceConfig = false)
     {
@@ -56,12 +55,16 @@ public sealed class YouTubeUnhook
         var json = JsonSerializer.Serialize(configObj);
 
         // Config persists in the page's localStorage so live-reloaded values
-        // survive SPA navigations. Initial injection only seeds it.
-        var seed = forceConfig ? "" : "if (!localStorage.getItem('__stride_unhook')) ";
+        // survive SPA navigations, which never re-run this script. A new document
+        // always gets the settings the browser currently holds rather than whatever
+        // was left behind: a settings change made while no YouTube tab was open has
+        // no page to re-inject into, and seeding only when the key is missing would
+        // carry the old preferences into every later visit.
         var configLine =
-            "try { " + seed + "localStorage.setItem('__stride_unhook', '" + json + "'); } catch (e) {}";
+            "try { localStorage.setItem('__stride_unhook', '" + json + "'); } catch (e) {}";
 
-        // Live reload also points the running document at the new config.
+        // Live reload also points the running document at the new config, so the
+        // running instance reads the new values without waiting for a navigation.
         if (forceConfig)
             configLine += " window.__STRIDE_UNHOOK = " + json + ";";
 

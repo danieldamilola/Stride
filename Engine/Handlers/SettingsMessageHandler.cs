@@ -65,7 +65,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
     }
 
     /// <summary>Resets all settings to defaults and reloads the settings page.</summary>
-    private Task HandleResetSettings()
+    private async Task HandleResetSettings()
     {
         var keepOnboarding = _settings.HasCompletedOnboarding;
         _settings.ResetToDefaults();
@@ -73,10 +73,12 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         _settingsStore.Save(_settings);
         SettingChanged?.Invoke("reset", "true");
 
+        // A reset puts ad blocking back to its default. The profile has to follow now,
+        // because the next page load is the first one that would notice otherwise.
+        await _engine.ApplyAdBlockPreferenceAsync(_settings.AdBlockEnabled);
+
         if (_engine.ActiveTab?.Url == InternalUrls.Settings)
             _engine.NavigateToSettings(_engine.ActiveTab, _settings);
-
-        return Task.CompletedTask;
     }
 
     /// <summary>Opens the user backgrounds folder in the file explorer.</summary>
@@ -132,6 +134,13 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         if (key == "tabSleep" && value == "false")
             _hibernationManager.ClearSleepingState();
 
+        // uBlock is a native extension, so the preference has to reach the profile
+        // now rather than at the next page load. The coordinator enables or disables
+        // the registered extension in place, with no reload and no remove and add
+        // again, and keeps this newest value if a registration is still running.
+        if (key == "adBlock")
+            await _engine.ApplyAdBlockPreferenceAsync(_settings.AdBlockEnabled);
+
         // Live-reload: re-inject unhook script into YouTube tabs when settings change
         if (key.StartsWith("unhook", StringComparison.Ordinal))
             await _engine.ReInjectUnhookAsync();
@@ -149,7 +158,6 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
 
         ["restoreSession"] = (s, v) => s.RestoreSessionOnStartup = v == "true",
 
-        ["useFloatingBar"] = (s, v) => s.UseFloatingCommandBar = v == "true",
         ["hwAccel"] = (s, v) => s.HardwareAccelerationEnabled = v == "true",
         ["darkMode"] = (s, v) => s.ForceDarkMode = v == "true",
         ["forceHttps"] = (s, v) => s.ForceHttps = v == "true",
@@ -169,6 +177,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         ["addressBarOnLeft"] = (s, v) => s.AddressBarOnLeft = v == "true",
         ["showTabNames"] = (s, v) => s.ShowTabNames = v == "true",
         ["adaptiveTint"] = (s, v) => s.AdaptiveToolbarTint = v == "true",
+        ["roundedFrame"] = (s, v) => s.RoundedWebContentFrameEnabled = v == "true",
         ["showBackArrow"] = (s, v) => s.ShowBackArrow = v == "true",
         ["showForwardArrow"] = (s, v) => s.ShowForwardArrow = v == "true",
         ["showRefreshButton"] = (s, v) => s.ShowRefreshButton = v == "true",
