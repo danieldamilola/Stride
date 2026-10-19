@@ -1187,10 +1187,22 @@
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Favicon network fallback</div>
-                  <div class="setting-desc">Fetch missing site icons using DuckDuckGo icon proxy. Visited domains are sent to DuckDuckGo.</div>
+                  <div class="setting-desc">Off by default. When on, Stride may send a site's hostname to DuckDuckGo's icon service while loading a page icon. Local and private hostnames are refused. History and suggestion rows only use cached icons.</div>
                 </div>
                 <div class="setting-control">
                   <input type="checkbox" class="toggle" {{CHK_FAVICON_PROXY}} onchange="s('faviconProxy', this)" />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Tracking prevention</div>
+                  <div class="setting-desc">Blocks cross-site trackers in the engine, alongside uBlock Origin. Strict blocks more, and Microsoft warns it can make some sites behave unexpectedly. Balanced is the default.</div>
+                </div>
+                <div class="setting-control">
+                  <select class="select" onchange="s('trackingPrevention', this)">
+                    <option value="balanced"{{TRACKING_BALANCED}}>Balanced</option>
+                    <option value="strict"{{TRACKING_STRICT}}>Strict</option>
+                  </select>
                 </div>
               </div>
             </div>

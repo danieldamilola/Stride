@@ -35,6 +35,31 @@ public class YouTubeUnhookScriptTests
         return JsonDocument.Parse(json).RootElement.Clone();
     }
 
+    /// <summary>
+    /// The config the generated script hands the document when the page refuses the
+    /// write. It is a bare JS object literal, so it ends at the brace that closes the
+    /// value rather than at a quote.
+    /// </summary>
+    private static JsonElement FallbackConfigFrom(string script)
+    {
+        const string marker = "window.__STRIDE_UNHOOK = ";
+        var start = script.IndexOf(marker, StringComparison.Ordinal);
+        Assert.True(start >= 0, "the generated script has no fallback for a refused write");
+
+        var braceStart = start + marker.Length;
+        Assert.Equal('{', script[braceStart]);
+
+        var depth = 0;
+        for (var i = braceStart; i < script.Length; i++)
+        {
+            if (script[i] == '{') depth++;
+            else if (script[i] == '}' && --depth == 0)
+                return JsonDocument.Parse(script[braceStart..(i + 1)]).RootElement.Clone();
+        }
+
+        throw new Xunit.Sdk.XunitException("the fallback config object is not closed");
+    }
+
     [Fact]
     public void Disabled_ReturnsNoScriptAtAll()
     {
@@ -97,21 +122,23 @@ public class YouTubeUnhookScriptTests
     }
 
     /// <summary>
-    /// The initial path deliberately leaves the running document alone. Only a live
-    /// settings change points the already loaded page at the new values.
+    /// A page that refuses the write still has to be handed the settings, so the
+    /// fallback has to carry the config rather than something else or nothing.
     /// </summary>
     [Fact]
-    public void InitialInjection_DoesNotPointTheRunningDocumentAtTheConfig()
+    public void RefusedStorage_FallsBackToTheConfigItWouldHaveStored()
     {
-        Assert.DoesNotContain(
-            "window.__STRIDE_UNHOOK =",
-            new YouTubeUnhook().GetScript(new BrowserSettings(), forceConfig: false),
-            StringComparison.Ordinal);
+        var unhook = new YouTubeUnhook();
+        var settings = new BrowserSettings { UnhookHideComments = false };
 
-        Assert.Contains(
-            "window.__STRIDE_UNHOOK =",
-            new YouTubeUnhook().GetScript(new BrowserSettings(), forceConfig: true),
-            StringComparison.Ordinal);
+        var stored = ConfigFrom(unhook.GetScript(settings));
+        var fallback = FallbackConfigFrom(unhook.GetScript(settings));
+
+        Assert.Equal(
+            JsonSerializer.Serialize(stored),
+            JsonSerializer.Serialize(fallback));
+        Assert.False(fallback.GetProperty("comments").GetBoolean());
+        Assert.True(fallback.GetProperty("sidebar").GetBoolean());
     }
 
     [Fact]

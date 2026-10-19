@@ -51,6 +51,8 @@ public sealed class SettingsPage
                 ["CHK_CLEAR"] = Chk(settings.ClearDataOnExit),
                 ["CHK_SEARCH_SUGGESTIONS"] = Chk(settings.SearchSuggestionsEnabled),
                 ["CHK_FAVICON_PROXY"] = Chk(settings.FaviconProxyEnabled),
+                ["TRACKING_BALANCED"] = SelStr(settings.TrackingPreventionMode.ToString(), "Balanced"),
+                ["TRACKING_STRICT"] = SelStr(settings.TrackingPreventionMode.ToString(), "Strict"),
                 ["CHK_DUPES"] = Chk(settings.BlockDuplicateTabs),
                 ["CHK_TAB_HIBERNATION"] = Chk(settings.TabHibernationEnabled),
                 ["CHK_TAB_SLEEP"] = Chk(settings.TabSleepEnabled),

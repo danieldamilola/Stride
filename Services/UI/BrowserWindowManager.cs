@@ -205,12 +205,60 @@ public sealed class BrowserWindowManager
         entry.Engine.ActiveTab?.Id.ToString(),
         entry.Closing);
 
-    public async void Close(Window window, CancelEventArgs e)
+    /// <summary>
+    /// The WPF closing entry for a window. <see cref="Window.OnClosing(CancelEventArgs)"/>
+    /// reads <c>e.Cancel</c> the moment this returns, so the cancel and the closing mark
+    /// are set here, before anything is awaited. Everything else runs on
+    /// <see cref="CloseAsync"/>, which the event cannot wait for and which never lets a
+    /// fault reach the dispatcher.
+    /// </summary>
+    public void Close(Window window, CancelEventArgs e)
     {
         var entry = _windows.FirstOrDefault(w => w.Window == window);
         if (entry is null || entry.Closing) return;
         e.Cancel = true;
         entry.Closing = true;
+        _ = CloseAsync(entry, window);
+    }
+
+    /// <summary>
+    /// Runs what a close owes and then closes the window for real. Starts only after
+    /// <see cref="Close"/> has cancelled the close and marked the entry, so from here on
+    /// a fault cannot be recovered by the user pressing close again: the entry is already
+    /// marked closing and a second close returns without touching it.
+    /// </summary>
+    private async Task CloseAsync(Entry entry, Window window)
+    {
+        await RunCloseSteps(
+            ("window shutdown writes", () => WriteShutdownAsync(entry)),
+            ("tab recycle after window close", () => RecycleHostsAsync(entry, window)),
+            ("engine shutdown", () => { entry.Engine.Shutdown(); return Task.CompletedTask; }));
+        // The final close is scheduled on the window's own dispatcher. Scheduling it can
+        // itself fault when the dispatcher is already going away; that is traced rather than
+        // left to escape as an unobserved fault. Whether the window then actually closes is
+        // WPF behaviour this project does not exercise.
+        try { _ = window.Dispatcher.BeginInvoke(window.Close); }
+        catch (Exception ex) { Trace.WriteLine($"Scheduling the final close failed: {ex}"); }
+    }
+
+    /// <summary>
+    /// Runs the steps of a close in order, reporting a fault in one of them rather than
+    /// letting it escape, so that every later step still runs and the close reaches the
+    /// point where its final close is scheduled. A step that throws used to skip the rest,
+    /// which left the window on screen with its close already cancelled and no way left to
+    /// shut it, and handed the fault to the dispatcher as an unhandled exception.
+    /// </summary>
+    public static async Task RunCloseSteps(params (string What, Func<Task> Step)[] steps)
+    {
+        foreach (var (what, step) in steps)
+        {
+            try { await step(); }
+            catch (Exception ex) { Trace.WriteLine($"{what} failed: {ex}"); }
+        }
+    }
+
+    private async Task WriteShutdownAsync(Entry entry)
+    {
         var context = entry.Services.GetRequiredService<BrowserWindowContext>();
         context.IsClosing = true;
         // Anything waiting to dock into this window must stop waiting, or it waits
@@ -228,11 +276,10 @@ public sealed class BrowserWindowManager
         var registry = _windows.ToArray();
         var snapshot = SnapshotOf(entry);
 
-        ShutdownWriteResult result;
         try
         {
             var cohort = SessionSnapshot.Cohort(registry.Select(SnapshotOf).ToArray(), snapshot.Name);
-            result = await new WindowShutdownWrites
+            var result = await new WindowShutdownWrites
             {
                 WriteSnapshot = settings.RestoreSessionOnStartup && !settings.ClearDataOnExit,
                 ClearBrowsingData = lastWindow && settings.ClearDataOnExit,
@@ -253,23 +300,47 @@ public sealed class BrowserWindowManager
         }
         catch (Exception ex)
         {
-            // Nothing here may keep the window alive. The window still has to shut down.
+            // The writes are reported rather than retried. The window still has to shut down.
             Trace.WriteLine($"Window shutdown planning failed: {ex}");
-            result = new ShutdownWriteResult(false, false, false, false);
         }
-        finally
+    }
+
+    /// <summary>
+    /// Hands the tabs this window was still hosting back to the windows that took them,
+    /// and drops the link preview. A torn-off tab keeps its control, and that control
+    /// dies with the window it was built in, so those tabs are rebuilt before the window
+    /// goes away. One window failing to rebuild its tabs does not stop the others.
+    /// Preview dismissal and tab recycling are isolated so a fault in either does not
+    /// skip the other.
+    /// </summary>
+    private async Task RecycleHostsAsync(Entry entry, Window window)
+    {
+        var handle = WebView2WindowBinding.HandleOf(window);
+        var survivors = _windows
+            .Where(w => w != entry && !w.Closing)
+            .Select(w => (Func<Task>)(() => w.Engine.RecycleTabsHostedBy(handle)))
+            .ToArray();
+        await RecycleHostsCoreAsync(entry.Services.GetRequiredService<ILinkPreviewService>(), survivors);
+    }
+
+    /// <summary>
+    /// The recycle half of a close, run for real by <see cref="RecycleHostsAsync"/>. The
+    /// link preview is dismissed first and each surviving window's tabs are rebuilt after,
+    /// each in isolation, so a fault in the preview or in one survivor does not skip the
+    /// rest. Kept separate so the isolation is measured against the code the close path
+    /// runs rather than a copy of it.
+    /// </summary>
+    public static async Task RecycleHostsCoreAsync(ILinkPreviewService linkPreview, IReadOnlyList<Func<Task>> recycleSurvivors)
+    {
+        // Dismiss link preview. Isolated so a fault here does not skip tab recycling.
+        try { linkPreview.Dismiss(); }
+        catch (Exception ex) { Trace.WriteLine($"Link preview dismiss failed: {ex}"); }
+
+        // Recycle tabs in surviving windows. Each window's recycle is isolated.
+        foreach (var recycle in recycleSurvivors)
         {
-            entry.Services.GetRequiredService<ILinkPreviewService>().Dismiss();
-            // A tab that was torn out keeps its control, and that control dies with the
-            // window it was built in. Rebuild those tabs before the window goes away.
-            var handle = WebView2WindowBinding.HandleOf(window);
-            foreach (var other in _windows.Where(w => w != entry && !w.Closing).ToArray())
-            {
-                try { await other.Engine.RecycleTabsHostedBy(handle); }
-                catch (Exception ex) { Trace.WriteLine($"Tab recycle after window close failed: {ex.Message}"); }
-            }
-            entry.Engine.Shutdown();
-            _ = window.Dispatcher.BeginInvoke(window.Close);
+            try { await recycle(); }
+            catch (Exception ex) { Trace.WriteLine($"Tab recycle after window close failed: {ex.Message}"); }
         }
     }
 }

@@ -61,6 +61,12 @@ public sealed class SettingsStore : ISettingsStore
             // would NRE in the settings page, new tab page, and shortcut handlers.
             loaded.NewTabShortcuts ??= new();
             loaded.CustomShortcuts ??= new();
+
+            // One-time repairs for files an older build wrote. The result is saved, so a
+            // repair runs once and a later choice the user makes is not undone on the
+            // next start.
+            if (SettingsMigration.Apply(loaded, SettingsMigration.RecordsSchemaVersion(json))) TrySave(loaded);
+
             return loaded;
         }
         catch (Exception ex)

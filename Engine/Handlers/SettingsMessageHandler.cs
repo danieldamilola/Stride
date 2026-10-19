@@ -166,6 +166,11 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         ["clearOnExit"] = (s, v) => s.ClearDataOnExit = v == "true",
         ["searchSuggestions"] = (s, v) => s.SearchSuggestionsEnabled = v == "true",
         ["faviconProxy"] = (s, v) => s.FaviconProxyEnabled = v == "true",
+        // Parsed rather than cast: the value arrives from a web document, and an
+        // unrecognised one falls back to Balanced instead of throwing here. Live
+        // profiles follow through BrowserSettings.PropertyChanged in TabEngine, so
+        // nothing else is needed here.
+        ["trackingPrevention"] = (s, v) => s.TrackingPreventionMode = TrackingPreventionModes.Parse(v),
         ["blockDupes"] = (s, v) => s.BlockDuplicateTabs = v == "true",
         ["tabHibernation"] = (s, v) => s.TabHibernationEnabled = v == "true",
         ["tabSleep"] = (s, v) => s.TabSleepEnabled = v == "true",

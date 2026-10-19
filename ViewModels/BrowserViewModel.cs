@@ -389,6 +389,9 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
 
     /// <summary>
     /// Resolves site icons for rows that have a URL, newest rows first.
+    /// These rows read the memory and disk caches only. A third-party icon request
+    /// would publish every host in the user's history to the icon service on every
+    /// keystroke, and typing a query is not consent to that.
     /// Skips rows that already have one and stops when superseded.
     /// </summary>
     private async Task LoadRowFaviconsAsync(CancellationToken token)
@@ -399,7 +402,7 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
             {
                 if (token.IsCancellationRequested) return;
                 if (row.Favicon is not null || string.IsNullOrEmpty(row.Url)) continue;
-                var icon = await _faviconLoader.LoadAsync(row.Url);
+                var icon = await _faviconLoader.LoadAsync(row.Url, FaviconLoadScope.LocalListRow);
                 if (token.IsCancellationRequested) return;
                 if (icon is not null && Suggestions.Contains(row))
                     row.Favicon = icon;

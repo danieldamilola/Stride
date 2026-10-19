@@ -194,6 +194,56 @@ public sealed partial class TabEngine : IDisposable
                 // No-op: no custom resume handler needed.
             }
         };
+
+        // BrowserSettings is a process singleton shared by every window, and each window
+        // has its own engine and its own live profiles. Subscribing here is what makes a
+        // level picked in one window reach the profiles in all of them. It is removed in
+        // Dispose, because a torn-off window's engine outlives nothing.
+        _settings.PropertyChanged += OnSettingsPropertyChanged;
+    }
+
+    private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(BrowserSettings.TrackingPreventionMode)) return;
+        // Raised on whichever thread assigned the property, which for a settings page is
+        // not the one that owns the WebView2 controls.
+        _dispatcher.Invoke(ApplyTrackingPreventionToLiveProfiles);
+    }
+
+    /// <summary>
+    /// Pushes the current setting to every live profile in this window and reports how
+    /// many profiles were written. Called when the setting changes and, through
+    /// WebViewFactory.ConfigureCoreWebView, as each control is created.
+    /// </summary>
+    public int ApplyTrackingPreventionToLiveProfiles()
+    {
+        var level = TrackingPreventionModes.ToWebView2Level(_settings.TrackingPreventionMode);
+        var applied = 0;
+        // One profile can back several controls in a window. Writing the same profile twice
+        // is harmless, but keying on it keeps the count honest about profiles.
+        var written = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var id in _webViews.Keys.ToArray())
+        {
+            if (!TryGetCore(id, out var core) || core is null) continue;
+
+            try
+            {
+                var path = core.Profile.ProfilePath;
+                if (!string.IsNullOrEmpty(path) && !written.Add(path)) continue;
+            }
+            catch (Exception ex) { Trace.WriteLine($"TabEngine tracking prevention profile path unavailable: {ex.Message}"); }
+
+            try
+            {
+                core.Profile.PreferredTrackingPreventionLevel = level;
+                applied++;
+            }
+            catch (Exception ex) { Trace.WriteLine($"TabEngine tracking prevention not applied to tab {id}: {ex.Message}"); }
+        }
+
+        Trace.WriteLine($"TabEngine tracking prevention {_settings.TrackingPreventionMode} -> {level} on {applied} profile(s)");
+        return applied;
     }
 
     public void AttachHost(Panel webViewHost)
@@ -2166,6 +2216,7 @@ public sealed partial class TabEngine : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        _settings.PropertyChanged -= OnSettingsPropertyChanged;
         _webViewFactory.BrowserProcessExited -= OnBrowserProcessExited;
         _hibernationManager.Detach();
         _activationCts?.Cancel();

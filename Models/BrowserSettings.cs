@@ -62,11 +62,48 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _searchSuggestionsEnabled = true;
 
     /// <summary>
-    /// When true, missing favicons resolve through the DuckDuckGo icon proxy,
-    /// which shares visited domains with a third party.
+    /// When true, a page with no engine favicon and no cached icon asks the DuckDuckGo
+    /// icon service for one, which sends that page's host to a third party. Off by
+    /// default. Settings files written before version
+    /// <see cref="FaviconConsentSchemaVersion"/> are switched off once by
+    /// <see cref="Services.SettingsMigration"/>, because a saved true from that era came
+    /// from the property's old default-on value rather than from a choice the user made.
+    /// History, autocomplete and shortcut suggestion rows never use this path at all.
     /// </summary>
     [ObservableProperty]
-    private bool _faviconProxyEnabled = true;
+    private bool _faviconProxyEnabled;
+
+    /// <summary>
+    /// How hard WebView2 tracking prevention works. Balanced unless the user asks for
+    /// Strict. The level is written to every profile Stride creates, and to the live ones
+    /// when this changes, so the setting and the engine cannot drift apart.
+    /// </summary>
+    private TrackingPreventionMode _trackingPreventionMode = TrackingPreventionModes.Default;
+
+    [JsonConverter(typeof(TrackingPreventionModeJsonConverter))]
+    public TrackingPreventionMode TrackingPreventionMode
+    {
+        get => _trackingPreventionMode;
+        set => SetProperty(ref _trackingPreventionMode, value);
+    }
+
+    /// <summary>
+    /// The schema version of the settings file this build writes. Bumped when a change
+    /// has to be applied to a file an older build left behind. See
+    /// <see cref="Services.SettingsMigration"/>.
+    /// </summary>
+    [ObservableProperty]
+    private int _settingsSchemaVersion = CurrentSchemaVersion;
+
+    /// <summary>The newest settings schema this build understands.</summary>
+    public const int CurrentSchemaVersion = 1;
+
+    /// <summary>
+    /// The version at which the third-party favicon fallback became an explicit opt-in.
+    /// A file below this was written when the property defaulted to on, so a saved true
+    /// in it is not evidence that anyone chose it.
+    /// </summary>
+    public const int FaviconConsentSchemaVersion = 1;
 
     [ObservableProperty]
     private bool _blockDuplicateTabs = true;
@@ -355,6 +392,8 @@ public sealed partial class BrowserSettings : ObservableObject
         LinkPreviewAllowPress = d.LinkPreviewAllowPress;
         SearchSuggestionsEnabled = d.SearchSuggestionsEnabled;
         FaviconProxyEnabled = d.FaviconProxyEnabled;
+        TrackingPreventionMode = d.TrackingPreventionMode;
+        SettingsSchemaVersion = d.SettingsSchemaVersion;
     }
 
 }

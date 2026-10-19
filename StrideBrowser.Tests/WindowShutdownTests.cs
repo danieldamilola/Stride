@@ -1,5 +1,8 @@
 using System.IO;
+using System.Windows;
+using StrideBrowser.Models.LinkPreview;
 using StrideBrowser.Services;
+using StrideBrowser.Services.LinkPreview;
 using StrideBrowser.Services.UI;
 using Xunit;
 
@@ -212,6 +215,73 @@ public sealed class WindowShutdownWriteTests
 }
 
 /// <summary>
+/// What a window close is guaranteed to do once it has cancelled itself. WPF reads
+/// <c>e.Cancel</c> the instant OnClosing returns, so the close marks the entry and hands
+/// the rest of the work to an awaitable core the event cannot wait for. From that point a
+/// fault cannot be recovered by the user pressing close again, because the entry is
+/// already marked closing and a second close returns without touching it.
+/// </summary>
+public sealed class WindowCloseGuaranteeTests
+{
+    [Fact]
+    public async Task ASatisfiedCloseRunsEveryStepInOrder()
+    {
+        var log = new List<string>();
+
+        await BrowserWindowManager.RunCloseSteps(
+            ("writes", Step(log, "writes")),
+            ("recycle", Step(log, "recycle")),
+            ("engine", Step(log, "engine")));
+
+        Assert.Equal(["writes", "recycle", "engine"], log);
+    }
+
+    [Fact]
+    public async Task AFaultInOneStepDoesNotSkipTheOnesAfterIt()
+    {
+        // The writes are guarded on their own. A fault reaching them from outside, a
+        // service that could not be resolved or a link preview that could not be
+        // dismissed, used to skip the rest of the close, so the engine was never shut
+        // and the window was never told to close.
+        var log = new List<string>();
+
+        await BrowserWindowManager.RunCloseSteps(
+            ("writes", () => throw new InvalidOperationException("no link preview service")),
+            ("recycle", Step(log, "recycle")),
+            ("engine", Step(log, "engine")));
+
+        Assert.Equal(["recycle", "engine"], log);
+    }
+
+    [Fact]
+    public async Task AFaultDoesNotEscapeToTheDispatcher()
+    {
+        // Nothing may be handed back to the caller as a fault, because the caller is an
+        // event handler that cannot await and has nowhere to put one.
+        var thrown = false;
+        try
+        {
+            await BrowserWindowManager.RunCloseSteps(
+                ("writes", () => Task.FromException(new TimeoutException("deadline"))),
+                ("recycle", () => throw new InvalidOperationException("dispatcher already shut")),
+                ("engine", Step(new List<string>(), "engine")));
+        }
+        catch (Exception)
+        {
+            thrown = true;
+        }
+
+        Assert.False(thrown);
+    }
+
+    private static Func<Task> Step(List<string> log, string name) => () =>
+    {
+        log.Add(name);
+        return Task.CompletedTask;
+    };
+}
+
+/// <summary>
 /// The destination window of a dock is waited on before anything moves. A window that
 /// closes during that wait has to read as an aborted transfer, not as a fault.
 /// </summary>
@@ -403,4 +473,77 @@ public sealed class SessionSnapshotFileTests : IDisposable
         Assert.Empty(SessionSnapshot.Cohort([], "gone"));
         Assert.Empty(SessionSnapshot.Rows([]));
     }
+}
+
+/// <summary>
+/// The recycle half of a close, with the link preview service and each surviving window's
+/// recycle replaced by recording fakes. A fault in the preview or in one survivor used to
+/// skip the rest, so a window that lost its tabs to a closed window kept pointing at it.
+/// The seam run here is the one the close path runs, so the isolation is measured rather
+/// than asserted.
+/// </summary>
+public sealed class PreviewRecycleFaultTests
+{
+    private sealed class StubLinkPreview : ILinkPreviewService
+    {
+        private readonly Action _dismiss;
+        public StubLinkPreview(Action dismiss) => _dismiss = dismiss;
+        public LinkPreviewState Current => throw new NotSupportedException();
+        public event Action<LinkPreviewState>? StateChanged { add { } remove { } }
+        public LinkPreviewOptions Options => throw new NotSupportedException();
+        public bool RequestPeek(Guid tabId, string url, Rect anchorRect, LinkPreviewTrigger trigger, string currentTabUrl) => throw new NotSupportedException();
+        public void Dismiss() => _dismiss();
+        public void NotifyPreviewLoaded(string url) => throw new NotSupportedException();
+        public void UpdateOptions(LinkPreviewOptions options) => throw new NotSupportedException();
+        public bool IsPreviewVisible => throw new NotSupportedException();
+        public Guid? ActiveOriginTabId => throw new NotSupportedException();
+    }
+
+    [Fact]
+    public async Task APreviewFaultStillAttemptsEverySurvivorRecycleBeforeTheEngineStep()
+    {
+        // The preview fault is caught where it is raised, so the survivors are still
+        // reached, and they are reached as part of the recycle step, which runs before
+        // the engine step.
+        var log = new List<string>();
+
+        await BrowserWindowManager.RunCloseSteps(
+            ("writes", Step(log, "writes")),
+            ("recycle", () => BrowserWindowManager.RecycleHostsCoreAsync(
+                new StubLinkPreview(() => throw new InvalidOperationException("no link preview service")),
+                new Func<Task>[]
+                {
+                    () => { log.Add("recycle-A"); return Task.CompletedTask; },
+                    () => { log.Add("recycle-B"); return Task.CompletedTask; }
+                })),
+            ("engine", Step(log, "engine")));
+
+        Assert.Equal(["writes", "recycle-A", "recycle-B", "engine"], log);
+    }
+
+    [Fact]
+    public async Task ASurvivorRecycleFailureDoesNotSkipTheOthersOrTheEngineStep()
+    {
+        var log = new List<string>();
+
+        await BrowserWindowManager.RunCloseSteps(
+            ("writes", Step(log, "writes")),
+            ("recycle", () => BrowserWindowManager.RecycleHostsCoreAsync(
+                new StubLinkPreview(() => { }),
+                new Func<Task>[]
+                {
+                    () => { log.Add("recycle-A"); throw new InvalidOperationException("recycle fault"); },
+                    () => { log.Add("recycle-B"); return Task.CompletedTask; },
+                    () => { log.Add("recycle-C"); return Task.CompletedTask; }
+                })),
+            ("engine", Step(log, "engine")));
+
+        Assert.Equal(["writes", "recycle-A", "recycle-B", "recycle-C", "engine"], log);
+    }
+
+    private static Func<Task> Step(List<string> log, string name) => () =>
+    {
+        log.Add(name);
+        return Task.CompletedTask;
+    };
 }

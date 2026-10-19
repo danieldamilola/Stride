@@ -67,15 +67,25 @@ public sealed class WebViewFactory
     {
         var dataDir = _dataDirectory;
 
-        var options = new CoreWebView2EnvironmentOptions
-        {
-            AreBrowserExtensionsEnabled = true,
-            // Fluent overlay scrollbar: overlays content without pushing layout, works in Shadow DOM
-            ScrollBarStyle = CoreWebView2ScrollbarStyle.FluentOverlay,
-            AdditionalBrowserArguments = BuildBrowserArguments(_settings.SmartScreenEnabled, _settings.ForceDarkMode) +
-                (!_settings.HardwareAccelerationEnabled ? " --disable-gpu" : ""),
-        };
-        Environment = await CoreWebView2Environment.CreateAsync(null, dataDir, options);
+        Environment = await CoreWebView2Environment.CreateAsync(null, dataDir, BuildEnvironmentOptions(_settings));
+
+        // Custom crash reporting keeps Windows from sending crash data to Microsoft's
+        // endpoint. Local minidumps are the documented result, so they accumulate in the
+        // environment's own report folder. The pass is bounded, runs once per profile on
+        // the thread pool, and is never awaited on a navigation or UI path.
+        //
+        // The continuation runs for every outcome and never reads Result unless the task
+        // ran to completion. OnlyOnRanToCompletion left a faulted pass with no observer,
+        // so a pass that failed was lost instead of recorded.
+        _ = CrashDumpRetention.PruneAsync(FailureReportFolder(), dataDir)
+            .ContinueWith(t => Trace.WriteLine(
+                t.Status switch
+                {
+                    TaskStatus.RanToCompletion => $"WebViewFactory crash dump retention: {t.Result.Detail}",
+                    TaskStatus.Faulted => $"WebViewFactory crash dump retention failed: {t.Exception?.GetBaseException().Message}",
+                    _ => $"WebViewFactory crash dump retention ended as {t.Status}"
+                }),
+                TaskContinuationOptions.ExecuteSynchronously);
 
         // AdBlockEnabled is consumed by ExtensionManager, which enables or disables the
         // uBlock Origin extension. The browser side keeps no blocklist of its own: the
@@ -88,6 +98,57 @@ public sealed class WebViewFactory
             Trace.WriteLine($"WebView2 browser process exited: Kind={e.BrowserProcessExitKind}");
             BrowserProcessExited?.Invoke();
         };
+    }
+
+    /// <summary>
+    /// Builds the options every Stride WebView2 environment is created with.
+    ///
+    /// Two privacy properties are set here and both are documented SDK surface, not
+    /// Chromium flags:
+    ///
+    ///   IsCustomCrashReportingEnabled = true. Microsoft states that when this is true,
+    ///   "Windows won't send crash data to Microsoft endpoint". The default is false,
+    ///   where WebView respects the Windows diagnostic data setting instead. This does not
+    ///   disable every WebView2 diagnostic signal, and Stride does not claim it does.
+    ///   Required from SDK 1.0.1414-prerelease; Stride pins 1.0.4181-prerelease.
+    ///
+    ///   EnableTrackingPrevention = true. Already the default, and Microsoft says an app
+    ///   "shouldn't disable this property if WebView2 is being used as a 'full browser'
+    ///   with arbitrary navigation". Stated explicitly so the choice is visible rather
+    ///   than inherited. The per-profile strength is PreferredTrackingPreventionLevel,
+    ///   applied in ConfigureCoreWebView.
+    ///
+    /// SmartScreen is untouched here. It is a security control with its own setting, and
+    /// the reputation check it drives is still configured in ConfigureCoreWebView.
+    /// </summary>
+    public static CoreWebView2EnvironmentOptions BuildEnvironmentOptions(BrowserSettings settings)
+    {
+        return new CoreWebView2EnvironmentOptions
+        {
+            AreBrowserExtensionsEnabled = true,
+            // Fluent overlay scrollbar: overlays content without pushing layout, works in Shadow DOM
+            ScrollBarStyle = CoreWebView2ScrollbarStyle.FluentOverlay,
+            IsCustomCrashReportingEnabled = true,
+            EnableTrackingPrevention = true,
+            AdditionalBrowserArguments = BuildBrowserArguments(settings.SmartScreenEnabled, settings.ForceDarkMode) +
+                (!settings.HardwareAccelerationEnabled ? " --disable-gpu" : ""),
+        };
+    }
+
+    /// <summary>
+    /// The environment's own crash report folder, or null when the platform will not say.
+    /// FailureReportFolderPath is a getter only, so the folder is whatever WebView2 chose
+    /// inside the user data directory; CrashDumpRetention checks that before deleting
+    /// anything.
+    /// </summary>
+    private string? FailureReportFolder()
+    {
+        try { return Environment?.FailureReportFolderPath; }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"WebViewFactory failure report folder unavailable: {ex.Message}");
+            return null;
+        }
     }
 
         /// <summary>
@@ -164,6 +225,12 @@ public sealed class WebViewFactory
             ? CoreWebView2PreferredColorScheme.Dark
             : CoreWebView2PreferredColorScheme.Light;
 
+        // Tracking prevention is a per-profile setting and WebView2 persists it, so it is
+        // written on every control rather than left to whatever the profile last stored.
+        // That is what stops the settings page claiming Balanced while the engine is
+        // still running the Strict a previous run persisted.
+        ApplyTrackingPreventionLevel(core);
+
         core.SetVirtualHostNameToFolderMapping("local.assets", System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages"), CoreWebView2HostResourceAccessKind.Allow);
         var userAssetsPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
         if (!System.IO.Directory.Exists(userAssetsPath)) System.IO.Directory.CreateDirectory(userAssetsPath);
@@ -180,6 +247,18 @@ public sealed class WebViewFactory
         try { core.Settings.IsReputationCheckingRequired = _settings.SmartScreenEnabled; } catch (Exception ex) { Trace.WriteLine(ex); }
 
         try { core.Settings.IsSwipeNavigationEnabled = true; } catch (Exception ex) { Trace.WriteLine(ex); }
+    }
+
+    /// <summary>
+    /// Writes the user's chosen strength to a live profile. Only Balanced and Strict are
+    /// reachable, and the environment already has tracking prevention switched on, so this
+    /// never has to defend a None value.
+    /// </summary>
+    public void ApplyTrackingPreventionLevel(CoreWebView2 core)
+    {
+        var level = TrackingPreventionModes.ToWebView2Level(_settings.TrackingPreventionMode);
+        try { core.Profile.PreferredTrackingPreventionLevel = level; }
+        catch (Exception ex) { Trace.WriteLine($"WebViewFactory tracking prevention level not applied: {ex.Message}"); }
     }
 
     /// <summary>
