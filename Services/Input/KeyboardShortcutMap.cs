@@ -126,8 +126,16 @@ public sealed class KeyboardShortcutMap
         _entries = entries;
     }
 
+    private DateTime _recordingUntil;
+    public bool IsRecording
+    {
+        get => DateTime.UtcNow < _recordingUntil;
+        set => _recordingUntil = value ? DateTime.UtcNow.AddSeconds(20) : default;
+    }
+
     public async Task<bool> TryExecuteAsync(ModifierKeys modifiers, Key key)
     {
+        if (IsRecording) return false;
         foreach (var entry in _entries)
         {
             if (entry.Key == key && MatchModifiers(entry.Modifiers, modifiers))

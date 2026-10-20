@@ -159,12 +159,13 @@ public sealed class NavigationPolicyEngine
         Dispatcher dispatcher,
         Action<BrowserTab> navigateToFocus)
     {
-        if (!IsBlockedFocusHost(e.Uri, out _))
+        if (!IsBlockedFocusHost(e.Uri, out var blockedHost))
             return false;
 
         e.Cancel = true;
         dispatcher.InvokeAsync(() =>
         {
+            tab.BlockedHost = blockedHost ?? "";
             tab.Url = InternalUrls.Focus;
             navigateToFocus(tab);
         });

@@ -30,6 +30,7 @@ public static class IpcSecurityPolicy
         {
             TabEngine.InternalPageKind.Settings =>
                 message.StartsWith(WebMessagePrefix.Setting, StringComparison.Ordinal) ||
+                message.StartsWith("shortcut-recording:", StringComparison.Ordinal) ||
                 message == WebMessagePrefix.ResetSettings ||
                 message == WebMessagePrefix.CheckForUpdate ||
                 message.StartsWith(WebMessagePrefix.InstallUpdate, StringComparison.Ordinal) ||
@@ -71,6 +72,7 @@ public static class IpcSecurityPolicy
                 message.StartsWith(WebMessagePrefix.ShortcutRemove, StringComparison.Ordinal) ||
                 message.StartsWith(WebMessagePrefix.ShortcutClick, StringComparison.Ordinal) ||
                 message == WebMessagePrefix.FocusSettings ||
+                message.StartsWith("setting:newTabBackground:", StringComparison.Ordinal) ||
                 message == WebMessagePrefix.OpenBackgroundsFolder,
 
             TabEngine.InternalPageKind.Onboarding =>

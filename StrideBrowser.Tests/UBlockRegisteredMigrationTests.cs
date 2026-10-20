@@ -187,12 +187,13 @@ public sealed class UBlockRegisteredMigrationTests : IDisposable
         Assert.Equal(0, beforeUrls.Remote);
         Assert.Equal(beforeUrls, ContentUrls(File.ReadAllText(assets), TargetList));
         Assert.False(UBlockAssetRepair.RegistryKeyIsRepaired(File.ReadAllText(script)));
-        Assert.Equal(before.Count, Snapshot(manager.ExtensionsDir).Count);
+        var after = Snapshot(manager.ExtensionsDir);
+        Assert.Equal(before.Count, after.Count);
         foreach (var entry in before)
         {
-            Assert.True(Snapshot(manager.ExtensionsDir).ContainsKey(entry.Key));
-            Assert.Equal(entry.Value.Sha256, Snapshot(manager.ExtensionsDir)[entry.Key].Sha256);
-            Assert.Equal(entry.Value.Ticks, Snapshot(manager.ExtensionsDir)[entry.Key].Ticks);
+            Assert.True(after.ContainsKey(entry.Key));
+            Assert.Equal(entry.Value.Sha256, after[entry.Key].Sha256);
+            Assert.Equal(entry.Value.Ticks, after[entry.Key].Ticks);
         }
     }
 

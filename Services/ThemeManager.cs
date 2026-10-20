@@ -45,19 +45,17 @@ public sealed class ThemeManager
             _ => IsSystemThemeDark()
         };
 
-        var uri = new Uri(isDark ? "Themes/DarkTheme.xaml" : "Themes/LightTheme.xaml", UriKind.Relative);
+        var assemblyName = typeof(ThemeManager).Assembly.GetName().Name;
+        var uri = new Uri($"pack://application:,,,/{assemblyName};component/Themes/{(isDark ? "DarkTheme.xaml" : "LightTheme.xaml")}", UriKind.Absolute);
         
         var dict = new ResourceDictionary { Source = uri };
 
-        // Replace the first merged dictionary (which we set to DarkTheme in App.xaml)
-        if (Application.Current.Resources.MergedDictionaries.Count > 0)
-        {
-            Application.Current.Resources.MergedDictionaries[0] = dict;
-        }
-        else
-        {
-            Application.Current.Resources.MergedDictionaries.Add(dict);
-        }
+        var merged = Application.Current.Resources.MergedDictionaries;
+        var themes = merged.Where(d => d.Source?.OriginalString.EndsWith("Themes/DarkTheme.xaml", StringComparison.OrdinalIgnoreCase) == true ||
+            d.Source?.OriginalString.EndsWith("Themes/LightTheme.xaml", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var index = themes.Count == 0 ? 0 : merged.IndexOf(themes[0]);
+        foreach (var previous in themes) merged.Remove(previous);
+        merged.Insert(Math.Min(index, merged.Count), dict);
 
         ThemeChanged?.Invoke();
     }

@@ -1,5 +1,19 @@
 # Unreleased
 
+* Dark internal pages use the native theme colors for backgrounds, cards, hover states and borders, replacing the brown tones.
+
+* Removed the initial "Changes save automatically" text from Settings.
+
+* Switching tabs hides the previous page immediately. Late activations and background WebView initialization cannot replace the selected page or cancel its activation, including when opening internal pages.
+
+* Validation tools follow the newer history and telemetry contracts. Extension repair tests reuse one file snapshot, and deadline checks run apart from disk-heavy tests.
+
+* Integrated the newer browser branch into local main while preserving the pending Settings and internal-page fixes. The floating command bar stays removed, tabs compact when space runs out, and address entry has no outer border.
+
+* The default accent is #d4d4d4. Settings validate and save changes before applying them, report save failures and restart requirements, support shortcut recording, and preserve locked Focus rules during reset.
+
+* Internal pages share readable theme colors, keyboard focus, dialog behavior, and narrow layouts. New Tab includes wallpaper previews and address validation. History and New Tab respect the icon proxy preference.
+
 * **YouTube Unhook Works On Pages That Refuse Storage**: On a page where the browser blocks site storage, or in a private window, YouTube Unhook lost every setting at once and hid nothing, with nothing saying why. It now takes its settings from the page itself when the page will not keep them. Pages that do store them are unchanged, and a live settings change still applies without a navigation.
 * **A Window Close Fault Isolation**: A fault raised while a window was closing, outside the writes that were already guarded, skipped the rest of the close. The window stayed on screen with its own close already cancelled, so pressing close again did nothing, and the fault reached the WPF dispatcher as an unhandled exception. Every step of a close now runs whatever the step before it did, and the final close is always scheduled, with a scheduling fault traced rather than left to escape. Link preview dismissal and tab recycling are isolated so a fault in either does not skip the other. What is written and cleared is unchanged. Whether a real window then closes is WPF behaviour this build does not exercise.
 

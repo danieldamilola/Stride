@@ -675,7 +675,7 @@
                                     <Border x:Name="StandardSuggestionsPopupBorder"
                                             Background="{DynamicResource SuggestionPopupBackground}"
                                             BorderBrush="{DynamicResource SuggestionPopupBorder}"
-                                            BorderThickness="1,0,1,1"
+                                            BorderThickness="0"
                                             CornerRadius="0,0,6,6"
                                             Width="{Binding ElementName=StandardAddressBarBorder, Path=ActualWidth}"
                                             Padding="4,4,4,4">

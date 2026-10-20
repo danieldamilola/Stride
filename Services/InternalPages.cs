@@ -28,8 +28,8 @@ public sealed class InternalPages
     private string ApplyTheme(string html) => html.Replace("{{THEME}}", _themeManager.GetThemeString());
 
     /// <summary>Returns the new tab page HTML.</summary>
-    public string NewTabPage(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "") =>
-        ApplyTheme(_newTab.Render(shortcuts, accentColor, accentRgb, ipcToken, zoom, backgroundPath));
+    public string NewTabPage(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "", bool faviconProxyEnabled = true) =>
+        ApplyTheme(_newTab.Render(shortcuts, accentColor, accentRgb, ipcToken, zoom, backgroundPath, faviconProxyEnabled));
 
     /// <summary>Returns a minimal blank dark page.</summary>
     public string BlankPage() =>
@@ -43,8 +43,8 @@ public sealed class InternalPages
     public string SettingsPage(BrowserSettings settings, string ipcToken) => ApplyTheme(_settings.Render(settings, ipcToken));
 
     /// <summary>Returns the history page HTML.</summary>
-    public string HistoryPage(List<HistoryEntry> entries, string accentColor, string accentRgb, string ipcToken) =>
-        ApplyTheme(_history.Render(entries, accentColor, accentRgb, ipcToken));
+    public string HistoryPage(List<HistoryEntry> entries, string accentColor, string accentRgb, string ipcToken, bool faviconProxyEnabled = true) =>
+        ApplyTheme(_history.Render(entries, accentColor, accentRgb, ipcToken, faviconProxyEnabled));
 
     /// <summary>Returns the downloads page HTML.</summary>
     public string DownloadsPage(List<DownloadItem> items, string accentColor, string accentRgb, string ipcToken) =>
@@ -63,17 +63,17 @@ public sealed class InternalPages
         ApplyTheme(_error.Render(url, errorMessage, accentColor, accentRgb));
 
     /// <summary>Returns the focus block page HTML.</summary>
-    public string FocusPage() => Helpers.ResourceLoader.Load("Resources.Pages.Focus.html");
+    public string FocusPage(string blockedHost = "", string ipcToken = "") => ApplyTheme(Helpers.ResourceLoader.LoadTemplate("Resources.Pages.Focus.html", new Dictionary<string, string> { ["BLOCKED_HOST"] = System.Net.WebUtility.HtmlEncode(blockedHost), ["IPC_TOKEN"] = ipcToken }));
 
     /// <summary>Returns the health page HTML.</summary>
     public string HealthPage(string currentVersion, ExtensionManager.ExtensionHealth health, string ipcToken) =>
-        _health.Render(currentVersion, health, ipcToken);
+        ApplyTheme(_health.Render(currentVersion, health, ipcToken));
 
-    /// <summary>Converts a hex color like #7fb89a to an RGB triplet like 127,184,154.</summary>
+    /// <summary>Converts a hex color like #d4d4d4 to an RGB triplet like 212,212,212.</summary>
     public static string HexToRgb(string hex)
     {
         hex = hex.TrimStart('#');
-        if (hex.Length != 6) return "127,184,154";
+        if (hex.Length != 6) return "212,212,212";
         try
         {
             var r = Convert.ToInt32(hex[..2], 16);
@@ -81,7 +81,7 @@ public sealed class InternalPages
             var b = Convert.ToInt32(hex[4..6], 16);
             return $"{r},{g},{b}";
         }
-        catch (FormatException) { return "127,184,154"; }
-        catch (OverflowException) { return "127,184,154"; }
+        catch (FormatException) { return "212,212,212"; }
+        catch (OverflowException) { return "212,212,212"; }
     }
 }

@@ -99,14 +99,12 @@ public sealed class SettingsAboutCardTests
     }
 
     [Fact]
-    public void Settings_MarksYouTubeEnhancerUnavailable()
+    public void Settings_ExplainsUnavailablePlaybackControlsAndKeepsUnhook()
     {
-        var html = Render(new BrowserSettings { YtEnhancerEnabled = true });
-
-        Assert.Contains("YouTube Enhancer <span class=\"restart-tag\"", html);
-        Assert.Contains("Unavailable", html);
-        Assert.Contains("disabled onchange=\"s('ytEnhancerEnabled', this)\"", html);
-        Assert.Contains("Enhancer script is currently parked and unavailable.", html);
+        var html = Render(new BrowserSettings());
+        Assert.Contains("YouTube playback controls are unavailable", html);
+        Assert.DoesNotContain("onchange=\"s('ytEnhancerEnabled', this)\"", html);
+        Assert.Contains("onchange=\"s('unhookEnabled', this)\"", html);
     }
 
     [Theory]

@@ -113,6 +113,7 @@ public static class OwnedProcess
 /// that waits for exit before reading. The descendant case proves the drain deadline when a
 /// grandchild holds a pipe open after the child is gone.
 /// </summary>
+[Collection("DeadlineChecks")]
 public sealed class OwnedProcessTests
 {
     [Fact]

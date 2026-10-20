@@ -15,13 +15,13 @@
         color: var(--text-main);
         user-select: none;
       }
-      
+
       .settings-layout {
           display: flex;
           height: 100vh;
           overflow: hidden;
       }
-      
+
       .sidebar {
           padding: 40px 20px;
           display: flex;
@@ -72,7 +72,7 @@
           opacity: 1;
           color: var(--accent);
       }
-      
+
       .content-area {
           flex: 1;
           overflow-y: auto;
@@ -454,363 +454,15 @@
       }
     </style>
     <script>
-      const __T = "{{IPC_TOKEN}}:";
-      function s(key, el) {
-        const val = el.type === "checkbox" ? el.checked : el.value;
-        window.chrome.webview.postMessage(__T + "setting:" + key + ":" + val);
-      }
-      function setAccent(hex) {
-        window.chrome.webview.postMessage(__T + "setting:accentColor:" + hex);
-        document.querySelectorAll(".color-swatch").forEach(function (sw) {
-          sw.classList.toggle("active", sw.dataset.color === hex);
-        });
-      }
-      function updateOpacity(key, el, labelId) {
-        var pct = Math.round(parseFloat(el.value) * 100);
-        document.getElementById(labelId).textContent = pct + '%';
-        window.chrome.webview.postMessage(__T + "setting:" + key + ":" + el.value);
-      }
-      function toggleDim(key, el, sliderId) {
-        window.chrome.webview.postMessage(__T + "setting:" + key + ":" + el.checked);
-        var slider = document.getElementById(sliderId);
-        var label = document.getElementById(sliderId + 'Val');
-        if (slider) slider.disabled = !el.checked;
-        if (label) label.style.opacity = el.checked ? '1' : '0.4';
-        if (slider) slider.style.opacity = el.checked ? '1' : '0.4';
-      }
-      // ── Shortcut recording ──
-      var activeRecorder = null;
-
-      function startRecording(badge) {
-        if (activeRecorder) stopRecording(activeRecorder, false);
-        activeRecorder = badge;
-        badge.classList.add("recording");
-        badge.textContent = "Press keys...";
-        badge.dataset.oldCombo = badge.dataset.combo;
-      }
-
-      function stopRecording(badge, save) {
-        badge.classList.remove("recording");
-        if (!save) badge.textContent = formatCombo(badge.dataset.combo);
-        activeRecorder = null;
-      }
-
-      function formatCombo(combo) {
-        return combo
-          .split("+")
-          .map(function (p) {
-            return p.charAt(0).toUpperCase() + p.slice(1);
-          })
-          .join(" + ");
-      }
-
-      function resetShortcut(actionName, badge) {
-        var def = badge.dataset.defaultCombo;
-        badge.dataset.combo = def;
-        badge.textContent = formatCombo(def);
-        window.chrome.webview.postMessage(
-          __T + "setting:shortcutReset:" + actionName,
-        );
-      }
-
-      document.addEventListener(
-        "keydown",
-        function (e) {
-          if (!activeRecorder) return;
-          e.preventDefault();
-          e.stopPropagation();
-
-          // Ignore lone modifier keys
-          if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return;
-
-          var parts = [];
-          if (e.ctrlKey) parts.push("Ctrl");
-          if (e.shiftKey) parts.push("Shift");
-          if (e.altKey) parts.push("Alt");
-
-          // Map key name
-          var keyName = e.key;
-          if (keyName === " ") keyName = "Space";
-          else if (keyName === "ArrowLeft") keyName = "Left";
-          else if (keyName === "ArrowRight") keyName = "Right";
-          else if (keyName === "ArrowUp") keyName = "Up";
-          else if (keyName === "ArrowDown") keyName = "Down";
-          else if (keyName === "Escape") {
-            stopRecording(activeRecorder, false);
-            return;
-          } else if (keyName.length === 1) keyName = keyName.toUpperCase();
-
-          parts.push(keyName);
-          var combo = parts.join("+");
-
-          var badge = activeRecorder;
-          var actionName = badge.dataset.action;
-          badge.dataset.combo = combo;
-          badge.textContent = formatCombo(combo);
-          stopRecording(badge, true);
-
-          window.chrome.webview.postMessage(
-            __T + "setting:shortcut:" + actionName + ":" + combo,
-          );
-        },
-        true,
-      );
-
-      function saveFocusDomains() {
-        var val = document.getElementById("focusDomains").value;
-        window.chrome.webview.postMessage(
-          __T + "setting:focusDomains:" + encodeURIComponent(val),
-        );
-      }
-
-      function lockFocus() {
-        if (
-          confirm(
-            "Are you sure? This action is PERMANENT. You will not be able to unlock these domains from the UI.",
-          )
-        ) {
-          window.chrome.webview.postMessage(__T + "setting:focusLocked:true");
-          document.getElementById("focusInputSection").style.display = "none";
-          document.getElementById("focusLockedSection").style.display = "block";
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", function () {
-        var current = "{{ACCENT_COLOR}}";
-        document.querySelectorAll(".color-swatch").forEach(function (sw) {
-          if (sw.dataset.color === current) sw.classList.add("active");
-        });
-        var style = document.createElement("style");
-        style.textContent =
-          ".toggle:checked { background: " + current + " !important; }";
-        document.head.appendChild(style);
-
-        
-        // Search functionality
-        var searchInput = document.getElementById("searchInput");
-        if (searchInput) {
-          searchInput.addEventListener("input", function() {
-            var query = this.value.toLowerCase().trim();
-            
-            if (!query) {
-              sections.forEach(function(sec) {
-                sec.style.display = '';
-                var rows = sec.querySelectorAll('.setting-row');
-                rows.forEach(function(r) { r.style.display = ''; });
-                var cards = sec.querySelectorAll('.card');
-                cards.forEach(function(c) { c.style.display = ''; });
-                var subLabels = sec.querySelectorAll('.subsection-label');
-                subLabels.forEach(function(sl) { sl.style.display = ''; });
-              });
-              var activeTarget = null;
-              navItems.forEach(function(item) {
-                if (item.classList.contains("active")) activeTarget = item.dataset.target;
-              });
-              if (activeTarget) activateTab(activeTarget);
-              return;
-            }
-
-            sections.forEach(function(sec) {
-              var hasMatchInSection = false;
-              var cards = sec.querySelectorAll('.card');
-              
-              cards.forEach(function(card) {
-                var hasMatchInCard = false;
-                var rows = card.querySelectorAll('.setting-row');
-                
-                rows.forEach(function(row) {
-                  var text = row.textContent.toLowerCase();
-                  if (text.includes(query)) {
-                    row.style.display = '';
-                    hasMatchInCard = true;
-                    hasMatchInSection = true;
-                  } else {
-                    row.style.display = 'none';
-                  }
-                });
-                
-                card.style.display = hasMatchInCard ? '' : 'none';
-              });
-              
-              var allChildren = sec.querySelectorAll('.subsection-label, .setting-row');
-              var currentLabel = null;
-              var labelHasMatch = false;
-              allChildren.forEach(function(child) {
-                if (child.classList.contains('subsection-label')) {
-                  if (currentLabel && !labelHasMatch) currentLabel.style.display = 'none';
-                  currentLabel = child;
-                  labelHasMatch = false;
-                } else if (child.classList.contains('setting-row') && child.style.display !== 'none') {
-                  labelHasMatch = true;
-                }
-              });
-              if (currentLabel && !labelHasMatch) currentLabel.style.display = 'none';
-              else if (currentLabel) currentLabel.style.display = '';
-
-              if (hasMatchInSection) {
-                sec.style.display = 'block';
-                sec.classList.add('active');
-              } else {
-                sec.style.display = 'none';
-                sec.classList.remove('active');
-              }
-
-              // A collapsed group hides its rows, so a match inside one would
-              // be found but not visible. Open any group that has a hit, and
-              // close the ones that do not.
-              sec.querySelectorAll('.collapsible').forEach(function(col) {
-                var hit = col.querySelector('.setting-row:not([style*="display: none"])');
-                col.open = !!hit;
-              });
-            });
-          });
-        }
-
-        // Sidebar Navigation Logic
-        var navItems = document.querySelectorAll(".sidebar-nav-item");
-        var sections = document.querySelectorAll(".section");
-
-        function activateTab(targetId) {
-          navItems.forEach(function(item) {
-            if (item.dataset.target === targetId) {
-              item.classList.add("active");
-            } else {
-              item.classList.remove("active");
-            }
-          });
-
-          sections.forEach(function(sec) {
-            if (sec.id === targetId) {
-              sec.classList.add("active");
-            } else {
-              sec.classList.remove("active");
-            }
-          });
-
-          // Save active tab to localStorage safely
-          try {
-            localStorage.setItem("stride_active_settings_tab", targetId);
-          } catch (e) {
-            // Ignore if localStorage is blocked
-          }
-        }
-
-        navItems.forEach(function(item) {
-          item.addEventListener("click", function() {
-            activateTab(this.dataset.target);
-          });
-        });
-
-        // Restore active tab or default to first safely
-        var savedTab = null;
-        try {
-          savedTab = localStorage.getItem("stride_active_settings_tab");
-        } catch (e) {
-          // Ignore
-        }
-
-        if (savedTab && document.getElementById(savedTab)) {
-          activateTab(savedTab);
-        } else if (navItems.length > 0) {
-          activateTab(navItems[0].dataset.target);
-        }
-
-        // ── Collapsible group counts ──
-        // Each group shows how many of its sub-toggles are on, so a collapsed
-        // group still communicates its state instead of looking untouched.
-        // The master toggle is excluded: it is the group's own switch, not one
-        // of its options.
-        var collapsibles = document.querySelectorAll('.collapsible');
-
-        function refreshCounts() {
-          collapsibles.forEach(function(col) {
-            var key = col.dataset.collapsible;
-            var badge = col.querySelector('[data-count-for="' + key + '"]');
-            if (!badge) return;
-
-            var master = null;
-            col.querySelectorAll('.setting-row').forEach(function(row) {
-              var label = row.querySelector('.setting-label');
-              var cb = row.querySelector('input[type="checkbox"]');
-              if (label && cb && /^Enable /.test(label.textContent.trim())) master = cb;
-            });
-
-            var total = 0, on = 0;
-            col.querySelectorAll('.setting-row input[type="checkbox"]').forEach(function(cb) {
-              if (cb === master) return;
-              total++;
-              if (cb.checked) on++;
-            });
-
-            // A disabled group reads as off regardless of what its sub-toggles
-            // still hold, since none of them are being applied.
-            if (master && !master.checked) {
-              badge.textContent = 'off';
-              badge.classList.remove('is-on');
-            } else if (total === 0) {
-              badge.textContent = '';
-            } else if (on === 0) {
-              badge.textContent = 'off';
-              badge.classList.remove('is-on');
-            } else {
-              badge.textContent = on + '/' + total;
-              badge.classList.add('is-on');
-            }
-          });
-        }
-
-        // Keep the counts honest when the master toggle flips the whole group
-        // off: the sub-toggles stay checked in the DOM, so reflect the master.
-        collapsibles.forEach(function(col) {
-          col.addEventListener('toggle', refreshCounts);
-        });
-
-        document.addEventListener('change', function(e) {
-          if (e.target && e.target.type === 'checkbox') refreshCounts();
-        });
-
-        // Clearing the search must put the groups back the way the markup had
-        // them, since searching rewrites the open attribute.
-        var defaultOpen = {};
-        collapsibles.forEach(function(col) { defaultOpen[col.dataset.collapsible] = col.open; });
-        var searchInputEl = document.getElementById('searchInput');
-        if (searchInputEl) {
-          searchInputEl.addEventListener('input', function() {
-            if (this.value.trim()) return;
-            collapsibles.forEach(function(col) {
-              col.open = !!defaultOpen[col.dataset.collapsible];
-            });
-            refreshCounts();
-          });
-        }
-
-        refreshCounts();
-
-        // Init dim sliders disabled state
-        var sleepDimChk = document.querySelector('input[onchange*="tabSleepDim"]');
-        var hibDimChk = document.querySelector('input[onchange*="tabHibernationDim"]');
-        var sleepSlider = document.getElementById('sleepSlider');
-        var hibSlider = document.getElementById('hibSlider');
-        if (sleepDimChk && sleepSlider) {
-          sleepSlider.disabled = !sleepDimChk.checked;
-          sleepSlider.style.opacity = sleepDimChk.checked ? '1' : '0.4';
-          var lbl = document.getElementById('sleepSliderVal');
-          if (lbl) lbl.style.opacity = sleepDimChk.checked ? '1' : '0.4';
-        }
-        if (hibDimChk && hibSlider) {
-          hibSlider.disabled = !hibDimChk.checked;
-          hibSlider.style.opacity = hibDimChk.checked ? '1' : '0.4';
-          var lbl2 = document.getElementById('hibSliderVal');
-          if (lbl2) lbl2.style.opacity = hibDimChk.checked ? '1' : '0.4';
-        }
-      });
-    </script>
+const __T = "{{IPC_TOKEN}}:";
+{{SETTINGS_SCRIPT}}
+</script>
   <style>
 :root, :root[data-theme="dark"] {
-    --bg-base: #0e0d0b;
-    --bg-dark: #0e0d0b;
-    --bg-surface: #141310;
-    --bg-hover: #1f1d19;
+    --bg-base: #111113;
+    --bg-dark: #111113;
+    --bg-surface: #1a1a1e;
+    --bg-hover: #252528;
     --border: #333333;
     --text-main: #E0E0E0;
     --text-bright: #D4D4D4;
@@ -905,7 +557,7 @@
           gap: 8px;
       }
       .focus-warning-banner svg { width: 16px; height: 16px; color: #e53935; flex-shrink: 0; }
-      
+
       .sidebar { width: 220px; min-width: 220px; }
 </style>
 </head>
@@ -916,49 +568,50 @@
           <h1>Settings</h1>
         </div>
         <ul class="nav">
-          <li class="sidebar-nav-item active" data-target="section-general">
+          <li><button type="button" class="sidebar-nav-item active" data-target="section-general">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             General
-          </li>
-          <li class="sidebar-nav-item" data-target="section-appearance">
+          </button></li>
+          <li><button type="button" class="sidebar-nav-item" data-target="section-appearance">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
             Appearance
-          </li>
-          <li class="sidebar-nav-item" data-target="section-privacy">
+          </button></li>
+          <li><button type="button" class="sidebar-nav-item" data-target="section-privacy">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Privacy & Security
-          </li>
-          <li class="sidebar-nav-item" data-target="section-performance">
+          </button></li>
+          <li><button type="button" class="sidebar-nav-item" data-target="section-performance">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             Performance
-          </li>
-          <li class="sidebar-nav-item" data-target="section-extensions">
+          </button></li>
+          <li><button type="button" class="sidebar-nav-item" data-target="section-extensions">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
             Extensions
-          </li>
-          <li class="sidebar-nav-item" data-target="section-shortcuts">
+          </button></li>
+          <li><button type="button" class="sidebar-nav-item" data-target="section-shortcuts">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M10 16h4"/></svg>
             Keyboard Shortcuts
-          </li>
-          <li class="sidebar-nav-item" data-target="section-focus">
+          </button></li>
+          <li><button type="button" class="sidebar-nav-item" data-target="section-focus">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
             Focus Mode <span class="warn-dot"></span>
-          </li>
-          <li class="sidebar-nav-item" data-target="section-system">
+          </button></li>
+          <li><button type="button" class="sidebar-nav-item" data-target="section-system">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
-            System & About
-          </li>
+            About Stride
+          </button></li>
         </ul>
       </aside>
-      <main class="content-area">
+      <main class="content-area" id="settingsContent">
         <div class="settings-container">
 
           <!-- Search -->
           <div class="search-bar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" id="searchInput" placeholder="Search settings..." />
+            <input type="search" id="searchInput" aria-label="Search settings" placeholder="Search settings..." /><button type="button" id="clearSearch" class="search-clear" hidden>Clear</button>
           </div>
 
+<p id="searchSummary" class="search-summary" role="status" hidden></p><p id="settingsStatus" class="settings-status" role="status" aria-live="polite"></p>
           <!-- ════════ GENERAL ════════ -->
           <div class="section active" id="section-general">
             <div class="section-header">General</div>
@@ -979,15 +632,7 @@
                   </select>
                 </div>
               </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Search suggestions</div>
-                  <div class="setting-desc">Send address bar queries to DuckDuckGo to show search suggestions</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_SEARCH_SUGGESTIONS}} onchange="s('searchSuggestions', this)" />
-                </div>
-              </div>
+
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Default zoom</div>
@@ -1006,17 +651,7 @@
                   </select>
                 </div>
               </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Sidebar position</div>
-                </div>
-                <div class="setting-control">
-                  <select class="select" onchange="s('sidebarPosition', this)">
-                    <option value="left" {{SIDEBAR_LEFT}}>Left</option>
-                    <option value="right" {{SIDEBAR_RIGHT}}>Right</option>
-                  </select>
-                </div>
-              </div>
+
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Restore session on startup</div>
@@ -1039,9 +674,29 @@
           </div>
 
           <!-- ════════ APPEARANCE ════════ -->
-          <div class="section" id="section-appearance">
+          <div class="section" id="section-appearance" data-search-title="appearance">
             <div class="section-header">Theme</div>
             <div class="card">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Sidebar position</div>
+                </div>
+                <div class="setting-control">
+                  <select class="select" onchange="s('sidebarPosition', this)">
+                    <option value="left" {{SIDEBAR_LEFT}}>Left</option>
+                    <option value="right" {{SIDEBAR_RIGHT}}>Right</option>
+                  </select>
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Force dark mode on websites <span class="restart-tag">Restart required</span></div>
+                  <div class="setting-desc">Apply dark theme to all pages</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_DARK}} onchange="s('darkMode', this)" />
+                </div>
+              </div>
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">App Theme</div>
@@ -1154,9 +809,20 @@
           </div>
 
           <!-- ════════ PRIVACY & SECURITY ════════ -->
-          <div class="section" id="section-privacy">
+          <div class="section" id="section-privacy" data-search-title="Privacy and security">
             <div class="section-header">Privacy & Security</div>
             <div class="card">
+
+<div class="setting-row"><div class="setting-info"><div class="setting-label">Search suggestions</div><div class="setting-desc">Send address bar search text to DuckDuckGo for suggestions</div></div><div class="setting-control"><input type="checkbox" class="toggle" {{CHK_SEARCH_SUGGESTIONS}} onchange="s('searchSuggestions', this)" /></div></div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Ad and tracker blocking</div>
+                  <div class="setting-desc">Use uBlock Origin to block ads and trackers</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_ADBLOCK}} onchange="s('adBlock', this)" />
+                </div>
+              </div>
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Force HTTPS</div>
@@ -1209,7 +875,7 @@
           </div>
 
           <!-- ════════ PERFORMANCE ════════ -->
-          <div class="section" id="section-performance">
+          <div class="section" id="section-performance" data-search-title="performance">
             <div class="section-header">Performance</div>
             <div class="card">
               <div class="setting-row">
@@ -1285,109 +951,17 @@
 
           <!-- ════════ YOUTUBE ════════ -->
           <!-- ════════ EXTENSIONS ════════ -->
-          <div class="section" id="section-extensions">
+          <div class="section" id="section-extensions" data-search-title="extensions">
             <div class="section-header">Extensions</div>
 
-            <div class="card">
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Force dark mode on websites</div>
-                  <div class="setting-desc">Apply dark theme to all pages</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_DARK}} onchange="s('darkMode', this)" />
-                </div>
-              </div>
-            </div>
 
-            <div class="subsection-label">uBlock Origin</div>
-            <div class="card">
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">uBlock Origin</div>
-                  <div class="setting-desc">Block ads and trackers</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_ADBLOCK}} onchange="s('adBlock', this)" />
-                </div>
-              </div>
-            </div>
+
+
+
 
             <div class="subsection-label">YouTube</div>
 
-            <details class="collapsible" data-collapsible="enhancer">
-              <summary>
-                <span class="collapsible-summary-label">YouTube Enhancer <span class="restart-tag" style="color:var(--text-dim);background:rgba(255,255,255,0.06)">Unavailable</span></span>
-                <span class="collapsible-summary-meta">
-                  <span class="collapsible-count" data-count-for="enhancer"></span>
-                  <svg class="collapsible-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                </span>
-              </summary>
-              <div class="card">
-              <div class="setting-row" style="opacity: 0.6;">
-                <div class="setting-info">
-                  <div class="setting-label">Enable YouTube Enhancer</div>
-                  <div class="setting-desc">Enhancer script is currently parked and unavailable.</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_YT_ENHANCER}} disabled onchange="s('ytEnhancerEnabled', this)" />
-                </div>
-              </div>
-              <div class="setting-row" style="opacity: 0.6;">
-                <div class="setting-info">
-                  <div class="setting-label">Default quality</div>
-                </div>
-                <div class="setting-control">
-                  <select class="select" disabled onchange="s('ytQuality', this)">
-                    <option value="auto" {{YT_QUALITY_AUTO}}>Auto</option>
-                    <option value="highest" {{YT_QUALITY_HIGHEST}}>Highest available</option>
-                    <option value="lowest" {{YT_QUALITY_LOWEST}}>Lowest available</option>
-                    <option value="tiny" {{YT_QUALITY_TINY}}>144p</option>
-                    <option value="small" {{YT_QUALITY_SMALL}}>240p</option>
-                    <option value="medium" {{YT_QUALITY_MEDIUM}}>360p</option>
-                    <option value="large" {{YT_QUALITY_LARGE}}>480p</option>
-                    <option value="hd720" {{YT_QUALITY_720}}>720p</option>
-                    <option value="hd1080" {{YT_QUALITY_1080}}>1080p</option>
-                    <option value="hd1440" {{YT_QUALITY_1440}}>1440p</option>
-                    <option value="highres" {{YT_QUALITY_4K}}>4K</option>
-                  </select>
-                </div>
-              </div>
-              <div class="setting-row" style="opacity: 0.6;">
-                <div class="setting-info">
-                  <div class="setting-label">Default playback speed</div>
-                </div>
-                <div class="setting-control">
-                  <input type="number" class="input-number" value="{{YT_SPEED}}" min="0.25" max="3" step="0.25" disabled onchange="s('ytSpeed', this)" />
-                </div>
-              </div>
-              <div class="setting-row" style="opacity: 0.6;">
-                <div class="setting-info">
-                  <div class="setting-label">Disable autoplay</div>
-                  <div class="setting-desc">Stop videos from auto-playing next</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_YT_AUTOPLAY}} disabled onchange="s('ytAutoplay', this)" />
-                </div>
-              </div>
-              <div class="setting-row" style="opacity: 0.6;">
-                <div class="setting-info">
-                  <div class="setting-label">Pause on tab switch</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_YT_PAUSE}} disabled onchange="s('ytPauseTab', this)" />
-                </div>
-              </div>
-              <div class="setting-row" style="opacity: 0.6;">
-                <div class="setting-info">
-                  <div class="setting-label">Loop video</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_YT_LOOP}} disabled onchange="s('ytLoop', this)" />
-                </div>
-              </div>
-              </div>
-            </details>
+            <p class="setting-desc">YouTube playback controls are unavailable in this build. Unhook controls below apply to open YouTube tabs.</p>
 
             <details class="collapsible" data-collapsible="unhook">
               <summary>
@@ -1497,7 +1071,7 @@
           {{KEYBOARD_SHORTCUTS_HTML}}
 
           <!-- ════════ IRREVERSIBLE FOCUS ════════ -->
-          <div class="section" id="section-focus">
+          <div class="section" id="section-focus" data-search-title="focus">
             <div class="section-header">Irreversible Focus</div>
             <div class="focus-warning-card">
               <div class="focus-warning-banner">
@@ -1510,15 +1084,15 @@
                 </div>
                 <div id="focusInputSection" style="display: {{FOCUS_INPUT_DISPLAY}};">
                   <div style="font-size: 13.5px; color: var(--text-bright); margin-bottom: 8px">
-                    Enter domains to block (one per line)
+                    <label for="focusDomains">Domains to block, one per line</label>
                   </div>
                   <textarea
                     id="focusDomains"
                     style="width: 100%; height: 100px; background: var(--bg-surface); color: var(--text-bright); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: inherit; font-size: 13px; resize: vertical; outline: none; margin-bottom: 12px; transition: border-color 0.15s;"
                   >{{FOCUS_DOMAINS}}</textarea>
                   <div style="display: flex; gap: 10px; justify-content: flex-end">
-                    <button class="action-btn" onclick="saveFocusDomains()">Save Domains</button>
-                    <button class="action-btn" style="background: #e53935; color: white; border-color: #e53935" onclick="lockFocus()">LOCK PERMANENTLY</button>
+                    <button class="action-btn" onclick="saveFocusDomains()">Save domains</button>
+                    <button class="action-btn" style="background: #e53935; color: white; border-color: #e53935" onclick="lockFocus()">Lock Focus permanently</button>
                   </div>
                 </div>
                 <div id="focusLockedSection" style="display: {{FOCUS_LOCKED_DISPLAY}}; text-align: center; padding: 20px 0;">
@@ -1526,7 +1100,7 @@
                     Focus Mode is Permanently Locked
                   </div>
                   <div style="font-size: 13px; color: var(--text-muted)">
-                    Your configured domains, plus the adult-content and Telegram blocklists, are locked in and cannot be disabled from here.
+                    Your domains and the adult-content and Telegram blocklists stay blocked when browser settings are reset.<pre id="lockedDomains" style="white-space:pre-wrap;text-align:left;margin-top:12px">{{FOCUS_DOMAINS}}</pre>
                   </div>
                 </div>
               </div>
@@ -1534,7 +1108,7 @@
           </div>
 
           <!-- ════════ SYSTEM ════════ -->
-          <div class="section" id="section-system">
+          <div class="section" id="section-system" data-search-title="About Stride">
             <div class="section-header">About Stride</div>
 
             <div class="card" style="padding:0; overflow:hidden;">
@@ -1616,15 +1190,62 @@
                 </div>
               </div>
             </div>
-            
-            <div class="card" style="margin-top: 16px">
+
+            <details class="card"><summary style="padding:16px;cursor:pointer">Technical details</summary>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Stride Browser</div>
+                  <div class="setting-desc">Primary application build</div>
+                </div>
+                <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
+                  v{{CURRENT_VERSION}}
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Microsoft Edge WebView2</div>
+                  <div class="setting-desc">Installed Microsoft Edge WebView2 runtime</div>
+                </div>
+                <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
+                  v{{WEBVIEW2_VERSION}}
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">.NET Runtime</div>
+                  <div class="setting-desc">Application framework runtime</div>
+                </div>
+                <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
+                  v{{DOTNET_VERSION}}
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">T&C Lens AI</div>
+                  <div class="setting-desc">Embedded extension for Terms & Conditions analysis</div>
+                </div>
+                <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
+                  v1.0.0
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">CommunityToolkit MVVM</div>
+                  <div class="setting-desc">MVVM architectural toolkit</div>
+                </div>
+                <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
+                  v{{MVVM_VERSION}}
+                </div>
+              </div>
+            </details>
+<div class="card" style="margin-top: 16px">
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label" style="color: #e53935">Reset all settings</div>
-                  <div class="setting-desc">Restore all settings to their default values</div>
+                  <div class="setting-desc">Restore browser preferences. Locked Focus rules stay unchanged.</div>
                 </div>
                 <div class="setting-control">
-                  <button class="action-btn danger" style="color: #e53935; border-color: #e53935" onclick="if(confirm('Reset all settings to defaults? This cannot be undone.')) window.chrome.webview.postMessage(__T + 'reset-settings')">Reset to defaults</button>
+                  <button class="action-btn danger" style="color: #e53935; border-color: #e53935" onclick="if(confirm('Reset browser preferences? Locked Focus rules will remain in place. Restart Stride afterward to apply startup preferences.')) window.chrome.webview.postMessage(__T + 'reset-settings')">Reset to defaults</button>
                 </div>
               </div>
             </div>
@@ -1633,15 +1254,25 @@
               let currentDownloadUrl = '';
               if (window.chrome && window.chrome.webview) {
                   window.chrome.webview.addEventListener('message', function(event) {
+                      if (typeof event.data === 'string' && event.data.startsWith('update-failed:')) {
+                          document.getElementById('updateStatus').textContent = event.data.slice('update-failed:'.length);
+                          const button = document.getElementById('checkUpdateBtn');
+                          button.textContent = 'Download & Install'; button.disabled = false;
+                          return;
+                      }
+                      if (typeof event.data === 'string' && event.data.startsWith('update-progress:')) {
+                          document.getElementById('updateStatus').textContent = 'Downloading update: ' + event.data.slice('update-progress:'.length) + '%';
+                          return;
+                      }
                       if (typeof event.data === 'string' && event.data.startsWith('update-check-result:')) {
                           const parts = event.data.split(':');
                           const isAvailable = parts[1] === 'true';
                           const version = parts[2];
-                          currentDownloadUrl = parts.slice(3).join(':'); 
-                          
+                          currentDownloadUrl = parts.slice(3).join(':');
+
                           const btn = document.getElementById('checkUpdateBtn');
                           const status = document.getElementById('updateStatus');
-                          
+
                           if (isAvailable) {
                               status.innerText = 'New version available: ' + version;
                               btn.innerText = 'Download & Install';

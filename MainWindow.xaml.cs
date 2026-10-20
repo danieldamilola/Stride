@@ -822,7 +822,7 @@ public partial class MainWindow : Window
         try
         {
             var tab = _engine.CreateTab(InternalUrls.OneTab);
-            tab.Title = "OneTab";
+            tab.Title = "Saved tabs";
             _engine.SwitchTo(tab);
             // Creation serves the page through routing; no second navigation here.
             await _engine.ActivateAsync(tab);
@@ -892,32 +892,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnSettingChanged(string key, string _)
+    private void OnSettingChanged(string key, string value)
     {
-        if (key == "darkMode")
-        {
-            // Native dark mode (WebContentsForceDark) takes effect at engine init — a restart is required.
-            // Show a banner on the settings page to inform the user.
-            var msg = _vm.Settings.ForceDarkMode ? "Dark mode enabled" : "Dark mode disabled";
-            var js = $@"(function() {{
-                var existing = document.getElementById('stride-restart-banner');
-                if (existing) existing.remove();
-                var banner = document.createElement('div');
-                banner.id = 'stride-restart-banner';
-                banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#e0e0e0;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 22px;font-size:14px;font-family:inherit;display:flex;align-items:center;gap:14px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
-                banner.innerHTML = '<span style=""font-size:18px"">🌙</span><span><strong>{msg}</strong> — Restart Stride to apply</span><button onclick=""this.parentElement.remove()"" style=""background:rgba(255,255,255,0.1);border:none;color:#e0e0e0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;margin-left:8px;"">Dismiss</button>';
-                document.body.appendChild(banner);
-                setTimeout(() => {{ if(banner.parentNode) banner.remove(); }}, 6000);
-            }})();";
-            foreach (var tab in _engine.Tabs)
-            {
-                if (tab.Url?.StartsWith("internal://settings") == true)
-                    _engine.ExecuteScript(tab.Id, js);
-            }
-        }
-
-
-        if (key == "appTheme")
+        if (key == "shortcutRecording" && _shortcuts is not null) _shortcuts.IsRecording = value == "true";
+        if (key is "appTheme" or "reset")
         {
             var tm = _services.GetRequiredService<ThemeManager>();
             var themeStr = tm.GetThemeString();
@@ -935,7 +913,7 @@ public partial class MainWindow : Window
                 UpdateToolbarTint(_engine.ActiveTab);
         }
 
-        if (key == "accentColor")
+        if (key is "accentColor" or "reset")
             ApplyAccentColor(_vm.Settings.AccentColor);
 
         if (key == "adaptiveTint" && _engine.ActiveTab is not null)
@@ -945,7 +923,7 @@ public partial class MainWindow : Window
         }
 
         // Live-rebuild shortcut bindings when user rebinds a key
-        if (key is "shortcut" or "shortcutReset")
+        if (key is "shortcut" or "shortcutReset" or "reset")
             _shortcuts?.RebuildBindings(_vm.Settings.CustomShortcuts);
 
         // Removed: Reloading the settings page here causes it to jump back to the General tab
@@ -1001,6 +979,7 @@ public partial class MainWindow : Window
 
     private async void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (_shortcuts?.IsRecording == true) return;
         try
         {
             if (e.Key == Key.Escape && _tabStripController.CancelDrag())

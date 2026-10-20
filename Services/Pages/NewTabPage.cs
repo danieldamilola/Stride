@@ -15,7 +15,7 @@ public sealed class NewTabPage
     private static readonly object _randLock = new();
 
     /// <summary>Returns the new tab page HTML.</summary>
-    public string Render(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "")
+    public string Render(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "", bool faviconProxyEnabled = true)
     {
         var shortcutsJson = JsonSerializer.Serialize(shortcuts);
         var shortcutsB64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(shortcutsJson));
@@ -100,6 +100,8 @@ public sealed class NewTabPage
             {
                 ["BACKGROUND"] = safeBackground,
                 ["SHORTCUTS"] = shortcutsB64,
+                ["FAVICON_PROXY"] = faviconProxyEnabled ? "true" : "false",
+                ["WALLPAPERS"] = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize(backgroundUrls))),
                 ["ACCENT"] = accentColor,
                 ["ACCENT_RGB"] = accentRgb,
                 ["IPC_TOKEN"] = ipcToken,

@@ -1281,5 +1281,5 @@ public sealed class ExtensionManager
         return new ExtensionHealth(hasFolder, hasZip, hasHash, assetsStripped, UBlockVersion);
     }
 
-    public sealed record ExtensionHealth(bool HasFolder, bool HasZip, bool HasHash, bool AssetsStripped, string Version);
+    public sealed record ExtensionHealth(bool HasFolder, bool HasZip, bool HasHash, bool AssetsStripped, string Version, bool? Registered = null, bool? Enabled = null);
 }

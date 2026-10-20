@@ -9,6 +9,8 @@ namespace StrideBrowser.Models;
 /// </summary>
 public sealed partial class BrowserTab : ObservableObject
 {
+    public string BlockedHost { get; set; } = "";
+
     /// <summary>Unique tab identifier.</summary>
     public Guid Id { get; } = Guid.NewGuid();
 

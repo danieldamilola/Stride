@@ -400,6 +400,7 @@ public sealed partial class TabEngine : IDisposable
         foreach (var t in Tabs) t.IsActive = false;
         tab.IsActive = true;
         ActiveTab = tab;
+        ShowOnlyActiveWebView(tab);
         TabStateChanged?.Invoke(tab);
         ActiveTabChanged?.Invoke(tab);
     }
@@ -409,10 +410,15 @@ public sealed partial class TabEngine : IDisposable
     {
         if (_disposed || !Tabs.Contains(tab) || _webViewFactory.Environment is null) return;
 
-        // Cancel any in-flight activation continuation so rapid clicks don't queue display updates
-        _activationCts?.Cancel();
-        _activationCts?.Dispose();
-        var cts = _activationCts = new CancellationTokenSource();
+        // Background readiness may create a control, but it does not own the display
+        // and must not cancel the selected tab's activation.
+        CancellationTokenSource? cts = null;
+        if (ActiveTab == tab)
+        {
+            _activationCts?.Cancel();
+            _activationCts?.Dispose();
+            cts = _activationCts = new CancellationTokenSource();
+        }
 
         // Check if creation or setup is already in flight for this tab.
         // Setup completion takes precedence over mere control or CoreWebView2 existence.
@@ -428,7 +434,7 @@ public sealed partial class TabEngine : IDisposable
                 return;
             }
 
-            if (cts.IsCancellationRequested || _disposed || !Tabs.Contains(tab)) return;
+            if (cts is null || cts.IsCancellationRequested || _disposed || ActiveTab != tab || !Tabs.Contains(tab)) return;
 
             ShowOnlyActiveWebView(tab);
             tab.LastActiveTime = DateTime.UtcNow;
@@ -440,6 +446,7 @@ public sealed partial class TabEngine : IDisposable
         // If the tab already has a live, fully set up WebView, show it immediately
         if (_webViews.TryGetValue(tab.Id, out var existing) && existing.CoreWebView2 is not null && !tab.IsHibernated)
         {
+            if (cts is null || ActiveTab != tab) return;
             existing.CoreWebView2.Resume();
             tab.IsSleeping = false;
             ShowOnlyActiveWebView(tab);
@@ -463,7 +470,7 @@ public sealed partial class TabEngine : IDisposable
                 return;
             }
 
-            if (cts.IsCancellationRequested || _disposed || !Tabs.Contains(tab)) return;
+            if (cts is null || cts.IsCancellationRequested || _disposed || ActiveTab != tab || !Tabs.Contains(tab)) return;
 
             ShowOnlyActiveWebView(tab);
             tab.LastActiveTime = DateTime.UtcNow;
@@ -524,7 +531,7 @@ public sealed partial class TabEngine : IDisposable
             _activationGate.Release();
         }
 
-        if (cts.IsCancellationRequested || _disposed || !Tabs.Contains(tab)) return;
+        if (cts is null || cts.IsCancellationRequested || _disposed || ActiveTab != tab || !Tabs.Contains(tab)) return;
 
         ShowOnlyActiveWebView(tab);
         tab.LastActiveTime = DateTime.UtcNow;
@@ -805,7 +812,7 @@ public sealed partial class TabEngine : IDisposable
         // startup request believing it had been superseded when it had not.
         var intent = BeginNavigationIntent(tab.Id);
         var kind = GetInternalPageKind(tab.Url);
-        tab.ActiveInternalDocument = new InternalDocumentIdentity(tab.Id, kind, _ipcToken, intent);
+        tab.ActiveInternalDocument = new InternalDocumentIdentity(tab.Id, kind, _ipcToken, intent, html);
         try
         {
             Trace.WriteLine($"ServeBuiltIn page={pageName} bytes={html.Length}");
@@ -821,7 +828,7 @@ public sealed partial class TabEngine : IDisposable
     public void NavigateToNewTab(BrowserTab tab)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom), "newtab"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom, _settings.NewTabBackground, _settings.FaviconProxyEnabled), "newtab"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToSettings(BrowserTab tab, BrowserSettings settings)
@@ -839,7 +846,7 @@ public sealed partial class TabEngine : IDisposable
     public void NavigateToHistory(BrowserTab tab, List<Models.HistoryEntry> entries)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.HistoryPage(_historyStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken), "history"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.HistoryPage(_historyStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.FaviconProxyEnabled), "history"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToDownloads(BrowserTab tab)
@@ -870,7 +877,7 @@ public sealed partial class TabEngine : IDisposable
     public void NavigateToFocus(BrowserTab tab)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.FocusPage(), "focus"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.FocusPage(tab.BlockedHost, _ipcToken), "focus"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToHealth(BrowserTab tab)
@@ -954,6 +961,20 @@ public sealed partial class TabEngine : IDisposable
                 await wv.CoreWebView2.ExecuteScriptAsync(script);
             }
             catch (Exception ex) { Trace.WriteLine($"FindInPage failed: {ex.Message}"); }
+        }
+    }
+
+    public void PostMessageToSettingsTabs(string message)
+    {
+        foreach (var tab in Tabs.Where(t => t.Url == InternalUrls.Settings))
+            _ipcBridge.PostMessageToActiveTab(tab.Id, message);
+    }
+
+    public void ApplyDefaultZoom()
+    {
+        foreach (var (id, view) in _webViews)
+        {
+            if (!IsServableBuiltInPage(GetTabUrl(id))) view.ZoomFactor = _settings.DefaultZoom / 100.0;
         }
     }
 
@@ -1721,7 +1742,7 @@ public sealed partial class TabEngine : IDisposable
         {
             if (!_webViews.ContainsKey(tab.Id)) return;
 
-            if (!string.Equals(e.Uri, "about:blank", StringComparison.OrdinalIgnoreCase))
+            if (tab.ActiveInternalDocument is { } document && !document.TryStartNavigation(e.Uri))
             {
                 tab.ActiveInternalDocument = null;
             }
@@ -2043,6 +2064,7 @@ public sealed partial class TabEngine : IDisposable
 
     private void ShowOnlyActiveWebView(BrowserTab activeTab)
     {
+        if (activeTab != ActiveTab) return;
         foreach (var (id, wv) in _webViews)
         {
             var isActive = id == activeTab.Id;

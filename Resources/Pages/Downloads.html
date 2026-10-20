@@ -7,9 +7,9 @@
         :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
 
         :root, :root[data-theme="dark"] {
-            --bg-base: #0e0d0b;
-            --bg-surface: #141310;
-            --bg-hover: #1f1d19;
+            --bg-base: #111113;
+            --bg-surface: #1a1a1e;
+            --bg-hover: #252528;
             --border: rgba(255, 255, 255, 0.08);
             --border-subtle: rgba(255, 255, 255, 0.04);
             --text-bright: #f4f4f5;
@@ -23,8 +23,8 @@
             --bg-hover: #f4f4f6;
             --border: rgba(0, 0, 0, 0.08);
             --border-subtle: rgba(0, 0, 0, 0.04);
-            --text-bright: #09090b;
-            --text-main: #18181b;
+            --text-bright: #111113;
+            --text-main: #1a1a1e;
             --text-muted: #71717a;
             --text-dim: #a1a1aa;
         }
@@ -35,8 +35,8 @@
                 --bg-hover: #f4f4f6;
                 --border: rgba(0, 0, 0, 0.08);
                 --border-subtle: rgba(0, 0, 0, 0.04);
-                --text-main: #18181b;
-                --text-bright: #09090b;
+                --text-main: #1a1a1e;
+                --text-bright: #111113;
                 --text-muted: #71717a;
                 --text-dim: #a1a1aa;
             }
@@ -200,8 +200,8 @@
     <div class="header">
         <h1>Downloads</h1>
         <div class="header-actions">
-            <button class="icon-btn" id="clearBtn">Clear completed</button>
-            <button class="icon-btn danger" id="clearAllBtn">Clear all</button>
+            <button class="icon-btn" id="clearBtn">Clear completed records</button>
+            <button class="icon-btn danger" id="clearAllBtn">Cancel downloads and clear list</button>
         </div>
     </div>
 
@@ -420,9 +420,9 @@
 
         document.getElementById('clearAllBtn').addEventListener('click', () => {
              showConfirm(
-                'Clear all downloads?',
+                'Cancel downloads and clear the list?',
                 'This will cancel active downloads and remove everything from the list. The files will remain on your computer.',
-                'Clear all',
+                'Cancel downloads and clear',
                 () => post(__T + 'download-clear-all')
             );
         });

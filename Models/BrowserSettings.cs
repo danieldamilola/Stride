@@ -25,7 +25,7 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _adBlockEnabled = true;
 
     [ObservableProperty]
-    private string _accentColor = "#7fb89a";
+    private string _accentColor = "#d4d4d4";
 
     [ObservableProperty]
     private int _defaultZoom = 90;
@@ -351,8 +351,11 @@ public sealed partial class BrowserSettings : ObservableObject
         AddressBarOnLeft = d.AddressBarOnLeft;
         NewTabBackground = d.NewTabBackground;
         NewTabShortcuts = new List<ShortcutItem>(d.NewTabShortcuts);
-        FocusLocked = d.FocusLocked;
-        FocusDomains = d.FocusDomains;
+        if (!FocusLocked)
+        {
+            FocusLocked = d.FocusLocked;
+            FocusDomains = d.FocusDomains;
+        }
         CustomShortcuts = new Dictionary<string, string>(d.CustomShortcuts);
         HasCompletedOnboarding = d.HasCompletedOnboarding;
         LastSeenReleaseNotesVersion = d.LastSeenReleaseNotesVersion;
