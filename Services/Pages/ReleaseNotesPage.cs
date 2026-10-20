@@ -1,64 +1,51 @@
+using System.Net;
 using System.Text;
-using System.Collections.Generic;
+using StrideBrowser.Engine;
 using StrideBrowser.Helpers;
 
 namespace StrideBrowser.Services.Pages;
 
 public sealed class ReleaseNotesPage
 {
-    public string Render(string currentVersion, IReadOnlyList<Engine.ReleaseNotesProvider.ReleaseVersion> releases, string accentColor, string accentRgb, string ipcToken)
+    public string Render(string currentVersion, IReadOnlyList<ReleaseNotesProvider.ReleaseVersion> releases, string accentColor, string accentRgb, string ipcToken)
     {
-        string ItemsHtml(IReadOnlyList<(string title, string desc)> items, string tag, string tagCls)
-        {
-            if (items.Count == 0) return "";
-            var sb = new StringBuilder();
-            foreach (var (t, d) in items)
-            {
-                sb.Append("<li class=\"changelog-item\">");
-                sb.Append("<div class=\"changelog-tag ").Append(tagCls).Append("\">").Append(tag).Append("</div>");
-                sb.Append("<div class=\"changelog-content\">");
-                sb.Append("<div class=\"changelog-title\">").Append(System.Net.WebUtility.HtmlEncode(t)).Append("</div>");
-                if (!string.IsNullOrWhiteSpace(d))
-                {
-                    sb.Append("<div class=\"changelog-desc\">").Append(System.Net.WebUtility.HtmlEncode(d)).Append("</div>");
-                }
-                sb.Append("</div></li>");
-            }
-            return sb.ToString();
-        }
-
         var logsHtml = new StringBuilder();
-
         foreach (var release in releases)
         {
-            logsHtml.Append("<details class=\"release-log\"" + (release == releases[0] ? " open" : "") + "><summary>");
-            logsHtml.Append("<div class=\"log-header\">");
-            logsHtml.Append("<div class=\"log-version\">v").Append(System.Net.WebUtility.HtmlEncode(release.Version)).Append("</div>");
-            logsHtml.Append("<div class=\"log-date\">").Append(System.Net.WebUtility.HtmlEncode(release.Date)).Append("</div>");
-            logsHtml.Append("</div></summary>");
-            logsHtml.Append("<ul class=\"changelog-list\">");
-            logsHtml.Append(ItemsHtml(release.Features, "Added", "feature"));
-            logsHtml.Append(ItemsHtml(release.Fixes, "Fixed", "fix"));
+            logsHtml.Append("<details class=\"release-log\"");
+            if (release == releases[0]) logsHtml.Append(" open");
+            logsHtml.Append("><summary><div class=\"log-header\"><div class=\"log-version\">v")
+                .Append(WebUtility.HtmlEncode(release.Version))
+                .Append("</div><div class=\"log-date\">")
+                .Append(WebUtility.HtmlEncode(release.Date))
+                .Append("</div></div></summary><ul class=\"changelog-list\">");
+            foreach (var section in release.Sections)
+            {
+                var tagClass = section.Category switch { "Added" => "feature", "Fixed" => "fix", _ => "" };
+                foreach (var item in section.Items)
+                {
+                    logsHtml.Append("<li class=\"changelog-item\"><div class=\"changelog-tag ")
+                        .Append(tagClass).Append("\">").Append(WebUtility.HtmlEncode(section.Category))
+                        .Append("</div><div class=\"changelog-content\"><div class=\"changelog-title\">")
+                        .Append(WebUtility.HtmlEncode(item)).Append("</div></div></li>");
+                }
+            }
             logsHtml.Append("</ul></details>");
         }
-
-        var latest = releases.Count > 0
-            ? releases[0]
-            : new Engine.ReleaseNotesProvider.ReleaseVersion(
-                currentVersion, "", "Thanks for updating",
-                "Stride keeps getting lighter and more customizable.",
-                new List<(string, string)>(), new List<(string, string)>());
+        if (releases.Count == 0)
+        {
+            logsHtml.Append("<p class=\"sub\">Version ").Append(WebUtility.HtmlEncode(currentVersion))
+                .Append(" is in development. No releases have been published yet.</p>");
+        }
 
         return ResourceLoader.LoadTemplate("Resources.Pages.ReleaseNotes.html", new Dictionary<string, string>
         {
-            ["VERSION"]          = System.Net.WebUtility.HtmlEncode(currentVersion),
-            ["DATE"]             = System.Net.WebUtility.HtmlEncode(latest.Date),
-            ["HIGHLIGHT_TITLE"]  = System.Net.WebUtility.HtmlEncode(latest.HighlightTitle),
-            ["HIGHLIGHT_DESC"]   = System.Net.WebUtility.HtmlEncode(latest.HighlightDesc),
+            ["VERSION"] = WebUtility.HtmlEncode(currentVersion),
+            ["DATE"] = releases.Count > 0 ? WebUtility.HtmlEncode(releases[0].Date) : "Unreleased",
             ["ALL_RELEASES_HTML"] = logsHtml.ToString(),
-            ["ACCENT"]           = accentColor,
-            ["ACCENT_RGB"]       = accentRgb,
-            ["IPC_TOKEN"]        = ipcToken
+            ["ACCENT"] = accentColor,
+            ["ACCENT_RGB"] = accentRgb,
+            ["IPC_TOKEN"] = ipcToken
         });
     }
 }

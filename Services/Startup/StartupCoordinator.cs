@@ -60,7 +60,7 @@ public class StartupCoordinator
             isPostUpdate = true;
         }
         
-        var currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.2.0";
+        var currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.1.0";
         bool isNewVersion = false;
         if (_settings.LastSeenReleaseNotesVersion != currentVersion)
         {

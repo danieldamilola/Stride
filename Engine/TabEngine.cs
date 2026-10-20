@@ -777,7 +777,7 @@ public sealed partial class TabEngine : IDisposable
                 NavigateToOnboarding(tab);
                 return true;
             case InternalPageKind.ReleaseNotes:
-                NavigateToReleaseNotes(tab, System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.2.0");
+                NavigateToReleaseNotes(tab, System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.1.0");
                 return true;
             case InternalPageKind.Focus:
                 NavigateToFocus(tab);
@@ -886,7 +886,7 @@ public sealed partial class TabEngine : IDisposable
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
         try
         {
-            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.2.0";
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.1.0";
             var health = _extensionManager.GetHealth();
             NavigateToHtmlString(tab, _pages.HealthPage(version, health, _ipcToken), "health");
         }

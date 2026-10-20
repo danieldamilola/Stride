@@ -9,7 +9,7 @@
     <RootNamespace>StrideBrowser</RootNamespace>
     <AssemblyName>Stride</AssemblyName>
     <ApplicationIcon>icons\stride.ico</ApplicationIcon>
-    <Version>1.2.2</Version>
+    <Version>0.1.0</Version>
     <!-- Exclude nested projects and verification artifacts from SDK and WPF item globs. -->
     <DefaultItemExcludesInProjectFolder>$(DefaultItemExcludesInProjectFolder);tools\**;src\**;StrideBrowser.Tests\**;Stride.Updater\**</DefaultItemExcludesInProjectFolder>
   </PropertyGroup>
@@ -45,6 +45,11 @@
     <None Remove="StrideBrowser.Tests\**" />
     <None Remove="src\**" />
     <None Remove="tools\**" />
+  </ItemGroup>
+
+  <!-- The changelog is also the source for the in-app release notes. -->
+  <ItemGroup>
+    <EmbeddedResource Include="CHANGELOG.md" LogicalName="StrideBrowser.CHANGELOG.md" />
   </ItemGroup>
 
   <!-- Embedded HTML templates and JS scripts -->

@@ -3,7 +3,7 @@ let activeRecorder = null;
 let recorderTimer = null;
 function showSettingStatus(message, error = false) {
   const status = document.getElementById('settingsStatus');
-  if (status) { status.textContent = message; status.dataset.error = String(error); }
+  if (status) { status.textContent = message; status.dataset.error = String(error); status.hidden = !message; }
 }
 function postSetting(key, val, el) {
   val = String(val);
@@ -55,14 +55,26 @@ function stopRecording(badge, save) {
 }
 function formatCombo(combo) { return combo.split('+').join(' + '); }
 function resetShortcut(action, badge) { postSetting('shortcutReset', action, badge); }
+const specialKeys = { ' ':'Space', ArrowLeft:'Left', ArrowRight:'Right', ArrowUp:'Up', ArrowDown:'Down' };
+const codeKeys = { Backquote:'`', Minus:'-', Equal:'=', BracketLeft:'[', BracketRight:']', Backslash:'\\', Semicolon:';', Quote:"'", Comma:',', Period:'.', Slash:'/' };
+// e.key carries the character the layout produces, so Shift+1 arrives as "!",
+// which the shortcut parser cannot bind. Read physical digit and punctuation
+// keys from e.code so the recorded combo matches the key the user pressed.
+function recordedKey(e) {
+  if (/^(Digit|Numpad)\d$/.test(e.code || '')) return e.code.slice(-1);
+  if (codeKeys[e.code]) return codeKeys[e.code];
+  if (specialKeys[e.key]) return specialKeys[e.key];
+  return e.key.length === 1 ? e.key.toUpperCase() : e.key;
+}
+function comboFromEvent(e) {
+  return [e.ctrlKey && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt', recordedKey(e)].filter(Boolean).join('+');
+}
 document.addEventListener('keydown', e => {
   if (!activeRecorder) return;
   e.preventDefault(); e.stopPropagation();
   if (['Control','Shift','Alt','Meta'].includes(e.key)) return;
   if (e.key === 'Escape') { stopRecording(activeRecorder, false); return; }
-  const keys = { ' ':'Space', ArrowLeft:'Left', ArrowRight:'Right', ArrowUp:'Up', ArrowDown:'Down' };
-  const key = keys[e.key] || (e.key.length === 1 ? e.key.toUpperCase() : e.key);
-  const combo = [e.ctrlKey && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt', key].filter(Boolean).join('+');
+  const combo = comboFromEvent(e);
   const badge = activeRecorder;
   stopRecording(badge, false);
   postSetting('shortcut', badge.dataset.action + ':' + combo, badge);
@@ -148,7 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const pending = pendingSettings.get(result.key);
     if (pending && pending.value !== result.value) return;
     if (pending) { clearTimeout(pending.timer); pendingSettings.delete(result.key); }
-    showSettingStatus(result.message, !result.success);
+    const message = result.success ? (result.restartRequired ? 'Restart Stride to apply this change.' : '') : result.message;
+    showSettingStatus(message, !result.success);
     if (!result.success) { const el = pending?.el; if (el?.dataset.savedValue !== undefined) { if (el.type === 'checkbox') el.checked = el.dataset.savedValue === 'true'; else el.value = el.dataset.savedValue; } return; }
     document.querySelectorAll('[data-setting-key="'+result.key+'"]').forEach(el => {
       if (el.type === 'checkbox') el.checked = result.value === 'true'; else el.value = result.value;
