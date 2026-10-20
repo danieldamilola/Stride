@@ -71,7 +71,7 @@ internal static class Verification
             {
                 var literal = JsonSerializer.Serialize(key);
                 await webview.ExecuteScriptAsync($"(() => {{ const el=document.querySelector('[data-setting-key='+{literal}+']'); el.checked={value.ToString().ToLowerInvariant()}; el.dispatchEvent(new Event('change',{{bubbles:true}})); }})()");
-                try { await WaitFor(async () => await JsBool(webview, "document.getElementById('settingsStatus').textContent.startsWith('Saved')")); }
+                try { await WaitFor(async () => await JsBool(webview, "pendingSettings.size === 0 && document.getElementById('settingsStatus').dataset.error !== 'true' ")); }
                 catch { Console.WriteLine("Failed key=" + key + " status=" + await webview.ExecuteScriptAsync("document.getElementById('settingsStatus').textContent")); throw; }
                 if (!File.Exists(Path.Combine(output, "settings.json"))) throw new Exception("Settings did not persist.");
                 var persisted = store.Load();
@@ -83,7 +83,7 @@ internal static class Verification
         await Load(() => engine.NavigateToSettings(tab, settings), webview.CoreWebView2);
         await WaitFor(async () => await JsBool(webview, "document.querySelectorAll('[data-setting-key]').length > 0"));
         await webview.ExecuteScriptAsync("document.querySelector('[data-setting-key=autoCheckForUpdates]').click()");
-        await WaitFor(async () => await JsBool(webview, "document.getElementById('settingsStatus').textContent === 'Saved.'"));
+        await WaitFor(async () => await JsBool(webview, "pendingSettings.size === 0 && document.getElementById('settingsStatus').dataset.error !== 'true'"));
         verified++;
         var before = store.Load().AutoCheckForUpdates;
         await Load(() => webview.CoreWebView2.NavigateToString("<html><body>Unregistered document</body></html>"), webview.CoreWebView2);
@@ -92,7 +92,7 @@ internal static class Verification
         if (store.Load().AutoCheckForUpdates != before) throw new Exception("Unregistered document was accepted.");
         await Load(() => engine.NavigateToSettings(tab, settings), webview.CoreWebView2);
         await webview.ExecuteScriptAsync("document.querySelector('[data-setting-key=autoCheckForUpdates]').click()");
-        await WaitFor(async () => await JsBool(webview, "document.getElementById('settingsStatus').textContent === 'Saved.'"));
+        await WaitFor(async () => await JsBool(webview, "pendingSettings.size === 0 && document.getElementById('settingsStatus').dataset.error !== 'true'"));
         verified++;
 
         var history = new List<HistoryEntry> { new() { Url="https://example.com/docs", Title="Example documentation" } };
@@ -107,9 +107,9 @@ internal static class Verification
                 ["downloads"]=pages.DownloadsPage([],settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification"),
                 ["saved-tabs"]=pages.OneTabPage(saved,settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification"),
                 ["onboarding"]=pages.OnboardingPage(settings,settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification"),
-                ["release-notes"]=pages.ReleaseNotesPage("1.2.2",ReleaseNotesProvider.GetAllReleases(),settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification"),
+                ["release-notes"]=pages.ReleaseNotesPage("0.1.0",ReleaseNotesProvider.GetAllReleases(),settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification"),
                 ["focus"]=pages.FocusPage("blocked.example", "verification"),
-                ["health"]=pages.HealthPage("1.2.2",new ExtensionManager.ExtensionHealth(true,true,true,false,"test"),"verification"),
+                ["health"]=pages.HealthPage("0.1.0",new ExtensionManager.ExtensionHealth(true,true,true,false,"test"),"verification"),
                 ["error"]=pages.ErrorPage("https://offline.example","The connection could not be completed.",settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor))
             };
             foreach (var (name, content) in html)

@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     private readonly TabStripController _tabStripController;
     private readonly ToolbarDropController _toolbarDropController;
     private readonly ToolbarNavigationController _toolbarNavigationController;
+    private readonly SiteInfoController _siteInfoController;
     private readonly IOneTabStore _oneTabStore;
     private readonly ISessionStore _sessionStore;
     private readonly IHistoryStore _historyStore;
@@ -87,6 +88,9 @@ public partial class MainWindow : Window
             () => _engine.ActiveTab, _tabStripController.ActivateTabAsync);
         Closed += (_, _) => _tabStripController.Dispose();
         Closed += (_, _) => _toolbarDropController.Dispose();
+        _siteInfoController = new SiteInfoController(SiteInfoButton, StandardSecurityIcon, SiteInfoPopup,
+            SiteInfoHost, SiteInfoConnection, SiteInfoDescription, _vm.CloseSuggestions);
+        Closed += (_, _) => _siteInfoController.Dispose();
         _toolbarNavigationController = new ToolbarNavigationController(RefreshButton, _engine);
         Closed += (_, _) => _toolbarNavigationController.Dispose();
         _windows.Register(this, _engine, TabList, services);
@@ -311,7 +315,7 @@ public partial class MainWindow : Window
                         StandardAddressBar.IsKeyboardFocusWithin,
                         _vm.IsAddressEditedSinceDisplay))
                     _vm.SyncAddressBar(tab);
-                UpdateSecurityIcon(tab.Url);
+                _siteInfoController.Update(tab);
                 UpdateUrlLabel(tab);
                 _tintAdapter.UpdateTint(tab, _vm.Settings.AdaptiveToolbarTint);
                 _isUpdatingSelection = true;
@@ -345,19 +349,17 @@ public partial class MainWindow : Window
             if (tab.IsActive)
             {
                 _vm.IsLoading = isLoading;
+                _siteInfoController.Update(tab);
                 _vm.SyncNavigationState();
                 if (isLoading)
                 {
                     LoadingBar.Visibility = Visibility.Visible;
                     StartLoadingAnimation();
-                    StartSecuritySpinner();
                 }
                 else
                 {
                     StopLoadingAnimation();
-                    StopSecuritySpinner();
                     LoadingBar.Visibility = Visibility.Collapsed;
-                    UpdateSecurityIcon(tab.Url);
                 }
             }
         };
@@ -766,52 +768,6 @@ public partial class MainWindow : Window
     private void UpdateToolbarTint(BrowserTab tab) =>
         _tintAdapter.UpdateTint(tab, _vm.Settings.AdaptiveToolbarTint);
 
-
-    private void UpdateSecurityIcon(string url)
-    {
-        if (string.IsNullOrEmpty(url) || InternalUrls.IsInternal(url))
-        {
-            StandardSecurityIcon.Visibility = Visibility.Collapsed;
-            return;
-        }
-
-        StandardSecurityIcon.Visibility = Visibility.Visible;
-
-        if (url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            StandardSecurityIcon.Data = (StreamGeometry)FindResource("IconLock");
-            StandardSecurityIcon.Stroke = new SolidColorBrush(Color.FromRgb(0x6B, 0x8F, 0x71));
-        }
-        else
-        {
-            StandardSecurityIcon.Data = (StreamGeometry)FindResource("IconGlobe");
-            StandardSecurityIcon.Stroke = (Brush)FindResource("TextSecondary");
-        }
-    }
-
-    private void StartSecuritySpinner()
-    {
-        if (StandardSecurityIcon.Visibility != Visibility.Visible) return;
-
-        StopSecuritySpinner();
-        StandardSecurityIcon.Data = (StreamGeometry)FindResource("IconRefresh");
-        StandardSecurityIcon.Stroke = (Brush)FindResource("Accent");
-        var rot = new RotateTransform();
-        StandardSecurityIcon.RenderTransformOrigin = new Point(0.5, 0.5);
-        StandardSecurityIcon.RenderTransform = rot;
-        var spin = new DoubleAnimation(0, 360, TimeSpan.FromSeconds(0.9))
-        {
-            RepeatBehavior = RepeatBehavior.Forever
-        };
-        rot.BeginAnimation(RotateTransform.AngleProperty, spin);
-    }
-
-    private void StopSecuritySpinner()
-    {
-        if (StandardSecurityIcon.RenderTransform is RotateTransform rot)
-            rot.BeginAnimation(RotateTransform.AngleProperty, null);
-        StandardSecurityIcon.RenderTransform = null;
-    }
 
     // ───────────────────── OneTab ─────────────────────
 

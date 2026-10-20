@@ -37,4 +37,6 @@ Wait for explicit user confirmation that a fix or feature works before committin
 
 Update `CHANGELOG.md` after every feature, fix or change. Keep pending changes under `Unreleased`. Do not recreate `ReleaseNotes.md`.
 
+Use `## [Unreleased]` with `### Added`, `### Changed`, `### Fixed` and other standard change categories. When publishing, move those entries into a dated `## [x.y.z] - YYYY-MM-DD` section and keep an empty Unreleased section above it. The app reads dated release sections from the embedded changelog. Keep entries as plain-text `- ` bullets. Update the versions in `Stride.csproj` and `Stride.Updater/Stride.Updater.csproj` and the fallback in `installer.iss` together.
+
 Stride uses a custom micro-updater. When building a new installer or publishing an update, generate both the `.zip` update package and the native `.exe` installer.

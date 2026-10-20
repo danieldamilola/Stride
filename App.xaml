@@ -32,6 +32,8 @@
         <Geometry x:Key="IconClose">M 18 6 L 6 18 M 6 6 L 18 18</Geometry>
         <Geometry x:Key="IconGlobe">M 12 2 A 10 10 0 1 0 12 22 A 10 10 0 0 0 12 2 Z M 2 12 L 22 12</Geometry>
         <Geometry x:Key="IconLock">M 19 11 L 5 11 L 5 21 L 19 21 Z M 8 11 L 8 7 A 4 4 0 0 1 16 7 L 16 11</Geometry>
+        <Geometry x:Key="IconSiteControls">M 3 6 H 7 M 13 6 H 21 M 3 18 H 11 M 17 18 H 21 M 13 6 A 3 3 0 1 1 7 6 A 3 3 0 1 1 13 6 M 17 18 A 3 3 0 1 1 11 18 A 3 3 0 1 1 17 18</Geometry>
+        <Geometry x:Key="IconConnectionWarning">M 12 3 L 22 21 H 2 Z M 12 9 V 14 M 12 17 V 17.2</Geometry>
         <Geometry x:Key="IconMinimize">M 5 12 L 19 12</Geometry>
         <Geometry x:Key="IconMaximize">M 5 5 L 19 5 L 19 19 L 5 19 Z</Geometry>
         <Geometry x:Key="IconSettings">M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6z</Geometry>

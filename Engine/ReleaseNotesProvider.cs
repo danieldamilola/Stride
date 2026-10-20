@@ -1,56 +1,78 @@
-using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text.RegularExpressions;
+using StrideBrowser.Helpers;
 
 namespace StrideBrowser.Engine;
 
 public static class ReleaseNotesProvider
 {
-    public record ReleaseVersion(string Version, string Date, string HighlightTitle, string HighlightDesc, IReadOnlyList<(string title, string desc)> Features, IReadOnlyList<(string title, string desc)> Fixes);
+    public record ReleaseSection(string Category, IReadOnlyList<string> Items);
+    public record ReleaseVersion(string Version, string Date, IReadOnlyList<ReleaseSection> Sections);
 
-    public static IReadOnlyList<ReleaseVersion> GetAllReleases()
+    private static readonly Lazy<IReadOnlyList<ReleaseVersion>> Releases = new(
+        () => ParseChangelog(ResourceLoader.Load("CHANGELOG.md")));
+
+    public static IReadOnlyList<ReleaseVersion> GetAllReleases() => Releases.Value;
+
+    // Only dated releases are shown in the app. Unreleased entries stay in the repository.
+    public static IReadOnlyList<ReleaseVersion> ParseChangelog(string markdown)
     {
-        return new List<ReleaseVersion>
+        var releases = new List<ReleaseVersion>();
+        string? version = null;
+        string date = "";
+        var sections = new List<ReleaseSection>();
+        string? category = null;
+        var items = new List<string>();
+
+        void FinishSection()
         {
-            new("1.2.2", "Sep 09, 2026", "Icons & Toolbar Polish", "New app icons and automatic tab strip scrolling.",
-                new List<(string, string)> {
-                    ("Updated App Icons", "New Stride logo across the app with larger taskbar and Task Manager icons, refreshed tab fallback and onboarding branding. Multiple sizes 16 to 512 and new ICO"),
-                    ("Toolbar Auto-Scroll", "Opening a new tab now scrolls the strip to bring the new tab into view when overflowed")
-                },
-                new List<(string, string)> {
-                    ("Tab Strip Overflow", "Fixed hidden new tabs when toolbar overflowed. Manual scroll left to view older tabs no longer snaps back")
-                }),
+            if (category is not null && items.Count > 0)
+                sections.Add(new ReleaseSection(category, items.ToArray()));
+            category = null;
+            items.Clear();
+        }
 
-            new("1.2.1", "Aug 29, 2026", "Security & Polish", "Major security fixes and UX polish for the dynamic context menu.",
-                new List<(string, string)> {
-                    ("Internal Pages Design Sync", "Redesigned the Onboarding and Release Notes pages"),
-                    ("Quick Access Links", "Added What's New and Getting Started buttons to Settings")
-                },
-                new List<(string, string)> {
-                    ("Security and Privacy", "Resolved multiple findings from the recent architecture and codebase security audits"),
-                    ("YouTube Tools", "Enhanced stability and live reload configuration for YouTube Enhancer and Unhook"),
-                    ("Fullscreen State", "F11 and video fullscreen now properly synchronize and cover the taskbar")
-                }),
+        void FinishRelease()
+        {
+            FinishSection();
+            if (version is not null)
+                releases.Add(new ReleaseVersion(version, date, sections.ToArray()));
+            version = null;
+            sections.Clear();
+        }
 
-            new("1.2.0", "Aug 24, 2026", "Native Seamless Updater", "Invisible micro updater, polished downloads, and a context aware menu.",
-                new List<(string, string)> {
-                    ("Native Seamless Updates", "Gear in tray icon with circular progress ring and checkmark to install without UAC or wizards"),
-                    ("Invisible Micro-Updater", "Swaps files behind the scenes with a native GUI updater"),
-                    ("Release Notes Auto-Open", "internal://releasenotes opens once after each update"),
-                    ("Dynamic Context Menu", "Context aware menu with navigation row, Find in Page, Edit, Link and Image actions, Reader and T&C Lens"),
-                    ("Reader Mode & Link Preview", "Distraction-free reading and Alt triggered link previews")
-                },
-                new List<(string, string)> {
-                    ("Micro-Updater merge crash", "Recursive merge and validation before swapping"),
-                    ("Downloads 100 percent hang", "Fixed GC and SmartScreen suspend causing freeze at 100 percent"),
-                    ("Download UI commands", "Pause Resume Cancel now work on active downloads"),
-                    ("Local HTML files", "Open local html via Explorer or command line securely"),
-                    ("New Tab reloads", "Shortcut add or remove no longer flickers"),
-                    ("New Tab shortcuts", "Special characters no longer break the page, passed via Base64"),
-                    ("Toolbar toggles", "Show Reader Icon now hides correctly"),
-                    ("Link Preview and Reader", "Preview window and Reader activation fixed"),
-                    ("Right-Click menu", "COM error from unconditional context data reading fixed")
-                }),
-        };
+        using var reader = new StringReader(markdown);
+        while (reader.ReadLine() is { } line)
+        {
+            if (line.StartsWith("## ", StringComparison.Ordinal))
+            {
+                FinishRelease();
+                var heading = Regex.Match(line,
+                    @"^## \[(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\] - (\d{4}-\d{2}-\d{2})$");
+                if (heading.Success && DateOnly.TryParseExact(heading.Groups[2].Value,
+                    "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                {
+                    version = heading.Groups[1].Value;
+                    date = heading.Groups[2].Value;
+                }
+            }
+            else if (version is not null && line.StartsWith("### ", StringComparison.Ordinal))
+            {
+                FinishSection();
+                var name = line[4..].Trim();
+                if (name is "Added" or "Changed" or "Deprecated" or "Removed" or "Fixed" or "Security")
+                    category = name;
+            }
+            else if (version is not null && category is not null)
+            {
+                if (line.StartsWith("- ", StringComparison.Ordinal))
+                    items.Add(line[2..].Trim());
+                else if (items.Count > 0 && line.StartsWith("  ", StringComparison.Ordinal))
+                    items[^1] += " " + line.Trim();
+            }
+        }
+        FinishRelease();
+        return releases.ToArray();
     }
 }
-
-

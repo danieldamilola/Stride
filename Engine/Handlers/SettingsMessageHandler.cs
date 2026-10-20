@@ -9,13 +9,16 @@ using StrideBrowser.Services;
 
 namespace StrideBrowser.Engine.Handlers;
 
-public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
+public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter, IDisposable
 {
     private readonly TabEngine _engine;
     private readonly BrowserSettings _settings;
     private readonly ISettingsStore _settingsStore;
     private readonly UpdateService _updateService;
     private readonly TabHibernationManager _hibernationManager;
+    private readonly EventHandler<string> _onUpdateFailed;
+    private readonly EventHandler<double> _onDownloadProgress;
+    private bool _disposed;
 
     public event Action<string, string>? SettingChanged;
 
@@ -27,8 +30,23 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter
         _settingsStore = settingsStore;
         _updateService = updateService;
         _hibernationManager = hibernationManager;
-        _updateService.UpdateFailed += (_, message) => _engine.PostMessageToSettingsTabs("update-failed:" + message);
-        _updateService.DownloadProgressChanged += (_, progress) => _engine.PostMessageToSettingsTabs("update-progress:" + progress.ToString("F0", CultureInfo.InvariantCulture));
+        // UpdateService is a singleton and this handler is scoped to one window, so the
+        // callbacks have to be released when that window's scope ends or every window
+        // ever opened stays reachable through the updater.
+        _onUpdateFailed = (_, message) => _engine.PostMessageToSettingsTabs("update-failed:" + message);
+        _onDownloadProgress = (_, progress) => _engine.PostMessageToSettingsTabs("update-progress:" + progress.ToString("F0", CultureInfo.InvariantCulture));
+        _updateService.UpdateFailed += _onUpdateFailed;
+        _updateService.DownloadProgressChanged += _onDownloadProgress;
+    }
+
+    /// <summary>Detaches the per-window subscriptions from the shared update service.</summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _updateService.UpdateFailed -= _onUpdateFailed;
+        _updateService.DownloadProgressChanged -= _onDownloadProgress;
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>Returns the message routes handled by this handler.</summary>

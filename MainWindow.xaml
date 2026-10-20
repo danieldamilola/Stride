@@ -590,13 +590,42 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Path x:Name="StandardSecurityIcon"
-                                              Grid.Column="0"
-                                              Data="{StaticResource IconLock}"
-                                              Stroke="{DynamicResource TextMuted}"
-                                              StrokeThickness="1.2" Width="12" Height="12"
-                                              Stretch="Uniform" VerticalAlignment="Center"
-                                              Margin="0,0,7,0"/>
+                                        <Button x:Name="SiteInfoButton" Grid.Column="0"
+                                                Style="{DynamicResource IconBtn}"
+                                                Width="20" Height="24" Padding="3"
+                                                Margin="-4,0,3,0" Visibility="Collapsed"
+                                                ToolTip="Site information"
+                                                AutomationProperties.Name="Site information">
+                                            <Path x:Name="StandardSecurityIcon"
+                                                  Data="{StaticResource IconSiteControls}"
+                                                  Stroke="{DynamicResource TextMuted}"
+                                                  StrokeThickness="1.4" Width="12" Height="12"
+                                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                  StrokeLineJoin="Round" Stretch="Uniform"/>
+                                        </Button>
+                                        <Popup x:Name="SiteInfoPopup"
+                                               PlacementTarget="{Binding ElementName=SiteInfoButton}"
+                                               Placement="Custom"
+                                               StaysOpen="False" AllowsTransparency="True">
+                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}"
+                                                    BorderThickness="1" CornerRadius="8" Padding="16"
+                                                    Width="280" Focusable="True">
+                                                <StackPanel>
+                                                    <TextBlock Text="Site information" FontSize="13"
+                                                               Foreground="{DynamicResource TextSecondary}"/>
+                                                    <TextBlock x:Name="SiteInfoHost" FontSize="14"
+                                                               Foreground="{DynamicResource TextPrimary}"
+                                                               TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                                    <TextBlock x:Name="SiteInfoConnection" FontSize="13"
+                                                               Foreground="{DynamicResource TextPrimary}"
+                                                               TextWrapping="Wrap" Margin="0,16,0,0"/>
+                                                    <TextBlock x:Name="SiteInfoDescription" FontSize="12"
+                                                               Foreground="{DynamicResource TextSecondary}"
+                                                               TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Popup>
                                         <TextBox x:Name="StandardAddressBar"
                                                  Grid.Column="1"
                                                  Background="Transparent"

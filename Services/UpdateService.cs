@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection;
@@ -55,7 +56,11 @@ public sealed class UpdateService
         _latestVersion = null;
         try
         {
-            var release = await _http.GetFromJsonAsync<GitHubRelease>(GitHubApiUrl);
+            using var response = await _http.GetAsync(GitHubApiUrl);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return false;
+            response.EnsureSuccessStatusCode();
+            var release = await response.Content.ReadFromJsonAsync<GitHubRelease>();
             if (release is null || string.IsNullOrEmpty(release.TagName))
                 return false;
 

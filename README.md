@@ -4,8 +4,8 @@
   <p><strong>A fast, modern, and privacy-focused web browser built for Windows.</strong></p>
 
   <p>
-    <a href="https://github.com/danieldamilola/Stride/releases/latest">
-      <img src="https://img.shields.io/github/v/release/danieldamilola/Stride?style=flat-square&color=FF6E30" alt="Latest Release" />
+    <a href="CHANGELOG.md">
+      <img src="https://img.shields.io/badge/version-0.1.0%20in%20development-gray?style=flat-square" alt="Version 0.1.0 in development" />
     </a>
     <a href="https://dotnet.microsoft.com/download/dotnet/9.0">
       <img src="https://img.shields.io/badge/.NET-9.0-512BD4?style=flat-square&logo=dotnet" alt=".NET 9.0" />
@@ -38,15 +38,10 @@ We set out to build a browser that rethinks desktop tab management, respects you
 - **Custom Start Pages**: Personalize your New Tab page with beautiful, custom background image options.
 - **OneTab Consolidation**: Built-in tools for sweeping your open tabs into a single, clean list for later reading.
 
-## Installation (Quick Start)
+## Installation
 
-The easiest way to install Stride is by downloading the pre-compiled installer.
-
-1. Go to the [Releases Page](https://github.com/danieldamilola/Stride/releases).
-2. Download the latest `Stride-Setup.exe`.
-4. Double-click to run the installer.
-   > **Note:** Stride is shipped as a self-contained executable. It natively bundles the Microsoft .NET 9 Desktop Runtime, so you can install and run it immediately without downloading any extra frameworks.
-5. Launch Stride and enjoy a cleaner web!
+Stride is restarting at version 0.1.0. No installer is currently published.
+Build from source using the instructions below. Future installers and update packages will be available on the [releases page](https://github.com/danieldamilola/Stride/releases).
 
 ## Development & Building from Source
 
@@ -76,7 +71,7 @@ If you want to build Stride yourself, you'll need the following prerequisites:
    ```
 
 ### Building the Installer
-Stride uses **Velopack** for packaging and auto-updates. To generate the `.exe` installer yourself, run the build script:
+Stride uses a custom micro-updater. The build script generates both `Stride-win-Setup.exe` for installation and `Stride-win-x64.zip` for updates:
 ```powershell
 .\build-release.ps1
 ```
