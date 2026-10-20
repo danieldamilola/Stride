@@ -69,6 +69,17 @@ public partial class LinkPreviewWindow : Window
     public async Task NavigateToAsync(string url)
     {
         if (string.IsNullOrWhiteSpace(url)) return;
+
+        // Re-checked here rather than trusted from the caller. This is the point where the URL
+        // actually becomes a network fetch with the user's cookies, and LinkPreviewPolicy is
+        // an upstream decision that a future caller could forget to route through.
+        if (!Helpers.NetworkTargetGuard.IsSafePreviewTarget(url))
+        {
+            Trace.WriteLine($"LinkPreview refused {url}");
+            UpdateHeader(url, "Refused");
+            return;
+        }
+
         _currentUrl = url;
         UpdateHeader(url, "Loading...");
 

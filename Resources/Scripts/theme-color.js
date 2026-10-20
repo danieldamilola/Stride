@@ -1,22 +1,26 @@
 ﻿(function() {
-    var TOKEN = '__STRIDE_IPC_TOKEN__';
-    var t = function(m) { window.chrome.webview.postMessage(TOKEN + ':' + m); };
+    // The session token is not needed here. The host already checks the message source
+    // before it accepts a THEME_COLOR value, and everything this script computes comes from
+    // the page's own computed styles, so the page could send it unauthenticated anyway.
+    // Publishing the token into this closure only widened the set of pages that could read it.
+    var t = function(m) { window.chrome.webview.postMessage('THEME_COLOR:' + m); };
+
     function colorToHex(color, baseColor) {
         if (!color || color === 'rgba(0, 0, 0, 0)' || color === 'transparent') return '';
         var canvas = document.createElement('canvas');
         canvas.width = 1;
         canvas.height = 1;
         var ctx = canvas.getContext('2d');
-        
+
         ctx.fillStyle = '#000000';
         ctx.fillStyle = color;
         var parsed1 = ctx.fillStyle;
         ctx.fillStyle = '#ffffff';
         ctx.fillStyle = color;
         var parsed2 = ctx.fillStyle;
-        
+
         if (parsed1 === '#000000' && parsed2 === '#ffffff') return '';
-        
+
         var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         ctx.fillStyle = isDark ? '#121212' : '#ffffff';
         if (baseColor && baseColor !== 'rgba(0, 0, 0, 0)' && baseColor !== 'transparent') {
@@ -25,7 +29,7 @@
         ctx.fillRect(0, 0, 1, 1);
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, 1, 1);
-        
+
         var data = ctx.getImageData(0, 0, 1, 1).data;
         function hex(x) { return ('0' + x.toString(16)).slice(-2); }
         return '#' + hex(data[0]) + hex(data[1]) + hex(data[2]);
@@ -48,7 +52,7 @@
                     if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
                         var h = colorToHex(bg, baseBg);
                         if (h) {
-                            t('THEME_COLOR:' + h);
+                            t(h);
                             return;
                         }
                     }
@@ -71,7 +75,7 @@
         }
         var hex = colorToHex(themeColor, baseBg);
         if (hex) {
-            t('THEME_COLOR:' + hex);
+            t(hex);
             return;
         }
 
@@ -83,7 +87,7 @@
                 if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
                     var h = colorToHex(bg, baseBg);
                     if (h) {
-                        t('THEME_COLOR:' + h);
+                        t(h);
                         return;
                     }
                 }
@@ -95,16 +99,16 @@
                 if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
                     var h = colorToHex(bg, baseBg);
                     if (h) {
-                        t('THEME_COLOR:' + h);
+                        t(h);
                         return;
                     }
                 }
             }
         } catch(e) {}
 
-        t('THEME_COLOR:');
+        t('');
     }
-    
+
     let dispatchTimeout;
     let lastSentAt = 0;
     const throttleIntervalMs = 250;
@@ -132,7 +136,7 @@
         ['click', 'resize', 'scroll', 'visibilitychange', 'DOMContentLoaded', 'load'].forEach(function(event) {
             window.addEventListener(event, sendColour);
         });
-        
+
         ['transitionend', 'transitioncancel', 'animationend', 'animationcancel'].forEach(function(event) {
             window.addEventListener(event, sendColourRequiresFocus);
         });
@@ -140,7 +144,7 @@
         var observer = new MutationObserver(function(mutations) {
             sendColour();
         });
-        
+
         function tryObserve() {
             if (document.head && document.documentElement) {
                 observer.observe(document.head, { childList: true, subtree: true, attributes: true, attributeFilter: ['content'] });
@@ -152,6 +156,6 @@
         }
         tryObserve();
     }
-    
+
     enableDynamic();
 })();

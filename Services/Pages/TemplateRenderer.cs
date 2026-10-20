@@ -26,7 +26,10 @@ public static class TemplateRenderer
             new Dictionary<string, string>
             {
                 [jsonKey] = safe,
-                ["ACCENT"] = accentColor,
+                // ACCENT lands in a raw CSS custom property on every page that uses this
+                // renderer. SettingsStore normalises it to a hex literal on load; encoding
+                // here keeps the sink safe for any other caller.
+                ["ACCENT"] = JsEncoder.HtmlEncode(accentColor),
                 ["ACCENT_RGB"] = accentRgb,
                 ["IPC_TOKEN"] = ipcToken
             });

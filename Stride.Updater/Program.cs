@@ -95,7 +95,12 @@ public static class Program
                 throw new FileNotFoundException($"Update package not found: {updateZipPath}");
 
             Directory.CreateDirectory(stagingDir);
-            ZipFile.ExtractToDirectory(updateZipPath, stagingDir, overwriteFiles: true);
+
+            // Screen the archive before extracting. A small zip can declare an enormous output,
+            // and this process replaces every file in the install directory with the result.
+            ScreenArchive(updateZipPath);
+
+            ExtractArchiveWithLimits(updateZipPath, stagingDir);
 
             // Validate extracted package contains the main executable
             if (!File.Exists(Path.Combine(stagingDir, "Stride.exe")))
@@ -192,6 +197,77 @@ public static class Program
                 }
             }
             File.WriteAllText(Path.Combine(targetDir, "updater_error.log"), ex.ToString());
+        }
+    }
+
+    /// <summary>Ceilings for an update package, all well above a real Stride release.</summary>
+    private const int MaxArchiveEntries = 20000;
+    private const long MaxArchiveUncompressedBytes = 1024L * 1024 * 1024;
+    private const long MaxSingleEntryBytes = 128L * 1024 * 1024;
+
+    /// <summary>
+    /// Refuses an archive whose declared shape is implausible before anything is written to
+    /// disk. Entry sizes are read from the central directory, which a decompression bomb
+    /// inflates without spending bytes on the wire.
+    /// </summary>
+    private static void ScreenArchive(string zipPath)
+    {
+        using var zip = ZipFile.OpenRead(zipPath);
+
+        if (zip.Entries.Count > MaxArchiveEntries)
+            throw new InvalidDataException($"Update archive has {zip.Entries.Count} entries, over the {MaxArchiveEntries} limit.");
+
+        long total = 0;
+        foreach (var entry in zip.Entries)
+        {
+            if (entry.Length > MaxSingleEntryBytes)
+                throw new InvalidDataException($"Update archive entry '{entry.FullName}' declares {entry.Length} bytes.");
+
+            total += entry.Length;
+            if (total > MaxArchiveUncompressedBytes)
+                throw new InvalidDataException($"Update archive declares more than {MaxArchiveUncompressedBytes} bytes of output.");
+        }
+    }
+
+    /// <summary>
+    /// Extracts the archive while counting bytes actually written. Central-directory sizes can
+    /// understate the output, so per-entry and total caps are enforced on the copy loop.
+    /// </summary>
+    private static void ExtractArchiveWithLimits(string zipPath, string stagingDir)
+    {
+        using var zip = ZipFile.OpenRead(zipPath);
+        var stagingRoot = Path.GetFullPath(stagingDir);
+        long totalWritten = 0;
+        var buffer = new byte[81920];
+
+        foreach (var entry in zip.Entries)
+        {
+            var destination = Path.GetFullPath(Path.Combine(stagingRoot, entry.FullName));
+            if (!destination.StartsWith(stagingRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(destination, stagingRoot, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException($"Update archive entry escapes staging: '{entry.FullName}'.");
+
+            if (entry.FullName.EndsWith("/", StringComparison.Ordinal) || string.IsNullOrEmpty(entry.Name))
+            {
+                Directory.CreateDirectory(destination);
+                continue;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            using var source = entry.Open();
+            using var dest = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.None);
+            long entryWritten = 0;
+            int read;
+            while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                entryWritten += read;
+                totalWritten += read;
+                if (entryWritten > MaxSingleEntryBytes)
+                    throw new InvalidDataException($"Update archive entry '{entry.FullName}' exceeds {MaxSingleEntryBytes} bytes written.");
+                if (totalWritten > MaxArchiveUncompressedBytes)
+                    throw new InvalidDataException($"Update archive exceeds {MaxArchiveUncompressedBytes} bytes written.");
+                dest.Write(buffer, 0, read);
+            }
         }
     }
 
