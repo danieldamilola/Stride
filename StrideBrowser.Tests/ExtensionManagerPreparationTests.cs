@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using StrideBrowser.Services;
@@ -31,7 +32,14 @@ public sealed class ExtensionManagerPreparationTests : IDisposable
     public void Dispose() => _root.Delete(true);
 
     private ExtensionManager NewManager(HttpClient? http = null) =>
-        new(ExtensionsDir, HashFile, BundledDir, http);
+        new(ExtensionsDir, HashFile, BundledDir, http, TinyZipHash);
+
+    /// <summary>Fixed so every call produces the same bytes, and therefore one hash.</summary>
+    private static readonly DateTimeOffset ZipTimestamp =
+        new(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+    private static readonly string TinyZipHash =
+        Convert.ToHexString(SHA256.HashData(MakeTinyZip()));
 
     private void WriteBundledZip(string name = "uBlock0_1.73.0.chromium.zip")
     {
@@ -46,14 +54,19 @@ public sealed class ExtensionManagerPreparationTests : IDisposable
         using (var zip = new System.IO.Compression.ZipArchive(buffer, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true))
         {
             // Each entry stream is closed before the next entry is created. Leaving
-            // one open makes the archive reject the next CreateEntry call.
-            using (var manifest = zip.CreateEntry("manifest.json").Open())
+            // one open makes the archive reject the next CreateEntry call. The
+            // timestamp is fixed so the archive bytes, and its pinned hash, are stable.
+            var manifestEntry = zip.CreateEntry("manifest.json");
+            manifestEntry.LastWriteTime = ZipTimestamp;
+            using (var manifest = manifestEntry.Open())
             using (var writer = new StreamWriter(manifest))
             {
                 writer.Write("{\"manifest_version\":3,\"name\":\"uBlock Origin\",\"version\":\"1.73.0\"}");
             }
 
-            using (var assets = zip.CreateEntry("assets/assets.json").Open())
+            var assetsEntry = zip.CreateEntry("assets/assets.json");
+            assetsEntry.LastWriteTime = ZipTimestamp;
+            using (var assets = assetsEntry.Open())
             using (var writer = new StreamWriter(assets))
             {
                 writer.Write("{\"filter\":{\"contentURL\":\"https://cdn.jsdelivr.net/x.js\",\"cdnURLs\":[\"u\"],\"patchURLs\":[\"p\"]}}");

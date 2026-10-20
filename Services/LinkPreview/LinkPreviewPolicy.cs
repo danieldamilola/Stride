@@ -26,6 +26,13 @@ public sealed class LinkPreviewPolicy : ILinkPreviewPolicy
         if (uri.Scheme is not "http" and not "https") return false;
         if (string.IsNullOrWhiteSpace(uri.Host)) return false;
 
+        // The preview renders in a real WebView2 with the user's cookies. Loopback and
+        // link-local targets are refused outright, which keeps the 169.254.169.254 cloud
+        // metadata service out of reach. RFC1918 stays allowed on purpose: previewing a
+        // device on the user's own LAN is something Alt+click is for, and blocking it would
+        // remove a feature rather than close a hole.
+        if (!Helpers.NetworkTargetGuard.IsSafePreviewTarget(trimmed)) return false;
+
         // Reject same-document navigation (including fragment differences)
         if (!string.IsNullOrWhiteSpace(currentTabUrl))
         {

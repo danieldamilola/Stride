@@ -132,7 +132,7 @@ public sealed class IpcSecurityTests
         var tab = new BrowserTab("https://example.com");
         tab.ActiveInternalDocument = null;
 
-        var telemetryPayload = telemetryToken + ":THEME_COLOR:#112233";
+        var telemetryPayload = "THEME_COLOR:#112233";
         var handled = bridge.ProcessIncomingWebMessage(tab, "https://example.com", telemetryPayload);
 
         Assert.True(handled);
@@ -247,7 +247,7 @@ public sealed class IpcSecurityTests
         var tab = new BrowserTab("https://wallhaven.cc/w/123456");
         tab.ActiveInternalDocument = null;
 
-        var payload = telemetryToken + ":download-request:https://w.wallhaven.cc/full/123456.jpg";
+        var payload = "wallhaven-download:https://w.wallhaven.cc/full/123456.jpg";
         var handled = bridge.ProcessIncomingWebMessage(tab, "https://wallhaven.cc/w/123456", payload);
 
         Assert.True(handled);

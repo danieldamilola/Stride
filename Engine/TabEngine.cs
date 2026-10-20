@@ -9,6 +9,7 @@ using StrideBrowser.Helpers;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
 using StrideBrowser.Services.ContextMenus;
+using StrideBrowser.Services.UI;
 
 namespace StrideBrowser.Engine;
 
@@ -1454,7 +1455,7 @@ public sealed partial class TabEngine : IDisposable
                             Template = (System.Windows.Controls.ControlTemplate)System.Windows.Application.Current.Resources["ContextMenuNavRowTemplate"]
                         };
                         cm.Items.Add(navItem);
-                        cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
+                        cm.Items.Add(MenuSeparator.Create());
                     }
 
                     foreach (var item in plan.Items)
@@ -1462,7 +1463,7 @@ public sealed partial class TabEngine : IDisposable
                         switch (item)
                         {
                             case ContextMenuItemSpec.Separator:
-                                cm.Items.Add(new Separator { Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderBrush"] });
+                                cm.Items.Add(MenuSeparator.Create());
                                 break;
                             case ContextMenuItemSpec.Command command:
                             {

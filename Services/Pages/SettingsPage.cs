@@ -83,8 +83,13 @@ public sealed class SettingsPage
                 ["MVVM_VERSION"] = typeof(CommunityToolkit.Mvvm.ComponentModel.ObservableObject).Assembly.GetName().Version?.ToString(3) ?? "Unknown",
                 ["DOTNET_VERSION"] = System.Environment.Version.ToString(2),
                 ["APP_ICON"] = AppIconDataUri(),
-                ["ACCENT_COLOR"] = settings.AccentColor,
-                ["ACCENT"] = settings.AccentColor,
+                // ACCENT_COLOR sits inside a JavaScript string literal in Settings.html and ACCENT is a raw
+                // CSS custom property, so neither JsEncoder nor HtmlEncode covers both. Both
+                // are safe because AccentColor is normalised to a hex literal at the settings
+                // boundary; the encoding here is the second layer that keeps the sink safe if
+                // a future writer forgets that rule.
+                ["ACCENT_COLOR"] = StrideBrowser.Helpers.JsEncoder.Encode(settings.AccentColor),
+                ["ACCENT"] = StrideBrowser.Helpers.JsEncoder.HtmlEncode(settings.AccentColor),
                 ["ACCENT_RGB"] = HexToRgb(settings.AccentColor),
                 ["YT_QUALITY_AUTO"] = SelStr(settings.YtDefaultQuality, "auto"),
                 ["YT_QUALITY_HIGHEST"] = SelStr(settings.YtDefaultQuality, "highest"),

@@ -356,10 +356,21 @@
             return new Date(dateStr).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
         }
 
+        // Escapes every character that is special in HTML text OR in a quoted attribute
+        // value. The previous textContent -> innerHTML trick looked like it escaped quotes
+        // but it does not: the HTML fragment serializer only escapes & < > and U+00A0, so a
+        // URL containing an apostrophe used to terminate the JS string literal inside the
+        // entry's inline openUrl handler and execute as script. Attribute values read here
+        // come from browsing history, which any visited page can seed via its own fragment.
         function escapeHtml(s) {
-            const d = document.createElement('div');
-            d.textContent = s;
-            return d.innerHTML;
+            return String(s ?? '').replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+            });
+        }
+
+        // Host is only ever interpolated into a URL path segment, so percent-encode it.
+        function faviconUrl(domain) {
+            return 'https://icons.duckduckgo.com/ip3/' + encodeURIComponent(domain) + '.ico';
         }
 
         const dateChevronSvg = `<svg class="date-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
@@ -415,10 +426,10 @@
                         const e = domainEntries[0];
                         const title = e.Title || e.Url;
                         html += `<div class="entry">
-                            <img ${ {{FAVICON_PROXY}} ? 'src="https://icons.duckduckgo.com/ip3/' + domain + '.ico"' : '' } width="15" height="15"
+                            <img src="${faviconUrl(domain)}" width="15" height="15"
                                  onerror="this.style.display='none'" style="margin-right:8px;border-radius:3px;flex-shrink:0">
                             <div class="entry-main">
-                                <a class="entry-title" onclick="openUrl('${escapeHtml(e.Url)}')">${escapeHtml(title)}</a>
+                                <a class="entry-title" data-url="${escapeHtml(e.Url)}">${escapeHtml(title)}</a>
                                 <span class="entry-url">${escapeHtml(e.Url)}</span>
                             </div>
                             <span class="entry-time">${formatTime(e.VisitedAt)}</span>
@@ -426,7 +437,7 @@
                     } else {
                         html += `<div class="domain-group collapsed" id="${groupId}">
                             <div class="domain-header" onclick="toggleGroup('${groupId}')">
-                                <img ${ {{FAVICON_PROXY}} ? 'src="https://icons.duckduckgo.com/ip3/' + domain + '.ico"' : '' } width="15" height="15"
+                                <img src="${faviconUrl(domain)}" width="15" height="15"
                                      onerror="this.style.display='none'">
                                 <span class="domain-name">${escapeHtml(label)}</span>
                                 ${dateChevronSvg}
@@ -437,7 +448,7 @@
                             const title = e.Title || e.Url;
                             html += `<div class="entry">
                                 <div class="entry-main">
-                                    <a class="entry-title" onclick="openUrl('${escapeHtml(e.Url)}')">${escapeHtml(title)}</a>
+                                    <a class="entry-title" data-url="${escapeHtml(e.Url)}">${escapeHtml(title)}</a>
                                     <span class="entry-url">${escapeHtml(e.Url)}</span>
                                 </div>
                                 <span class="entry-time">${formatTime(e.VisitedAt)}</span>
@@ -473,6 +484,17 @@
         function openUrl(url) {
             window.chrome.webview.postMessage(__T + 'history-open:' + url);
         }
+
+        // Delegated so the URL never has to be re-serialised into an inline onclick
+        // attribute. dataset.url decodes the HTML entities escapeHtml applied, so the
+        // host receives the exact original string. Bound once on the container, which
+        // survives the innerHTML replacement inside render().
+        document.getElementById('historyContent').addEventListener('click', e => {
+            const link = e.target.closest('a.entry-title[data-url]');
+            if (!link) return;
+            e.preventDefault();
+            openUrl(link.dataset.url);
+        });
 
         document.getElementById('collapseAllBtn').addEventListener('click', () => {
             const sections = document.querySelectorAll('.date-section');

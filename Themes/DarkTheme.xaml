@@ -6,6 +6,7 @@
     <Color x:Key="SurfaceColor">#222222</Color>
     <Color x:Key="SurfaceHoverColor">#2A2A2A</Color>
     <Color x:Key="BorderColor">#313131</Color>
+    <Color x:Key="SeparatorLineColor">#3C3C42</Color>
     <Color x:Key="AccentColor">#d4d4d4</Color>
     <Color x:Key="AccentWashColor">#18d4d4d4</Color>
     <Color x:Key="TextPrimaryColor">#EEEEEE</Color>
@@ -22,6 +23,7 @@
     <SolidColorBrush x:Key="SurfaceBrush"      Color="{StaticResource SurfaceColor}"/>
     <SolidColorBrush x:Key="SurfaceHoverBrush" Color="{StaticResource SurfaceHoverColor}"/>
     <SolidColorBrush x:Key="BorderBrush"       Color="{StaticResource BorderColor}"/>
+    <SolidColorBrush x:Key="SeparatorLineBrush" Color="{StaticResource SeparatorLineColor}"/>
     <!-- Address suggestions use the same surface as other dark menus. -->
     <SolidColorBrush x:Key="SuggestionPopupBackground" Color="{StaticResource SurfaceColor}"/>
     <SolidColorBrush x:Key="SuggestionPopupBorder"    Color="{StaticResource BorderColor}"/>

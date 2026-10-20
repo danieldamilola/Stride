@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using StrideBrowser.Services;
 using Xunit;
@@ -255,13 +256,15 @@ public sealed class ExtensionReconcilePlanTests : IDisposable
         // that it rewrote nothing.
         var bundled = Path.Combine(_root.FullName, "bundled");
         Directory.CreateDirectory(bundled);
-        File.WriteAllBytes(Path.Combine(bundled, "uBlock0_1.73.0.chromium.zip"), TinyZip());
+        var zipPath = Path.Combine(bundled, "uBlock0_1.73.0.chromium.zip");
+        File.WriteAllBytes(zipPath, TinyZip());
 
         var manager = new ExtensionManager(
             Path.Combine(_root.FullName, "extensions"),
             Path.Combine(_root.FullName, "ublock.sha256"),
             bundled,
-            new HttpClient(new ThrowingHandler()));
+            new HttpClient(new ThrowingHandler()),
+            Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(zipPath))));
 
         var cold = await manager.PrepareAsync();
         Assert.NotNull(cold);

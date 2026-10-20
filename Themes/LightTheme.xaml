@@ -6,6 +6,7 @@
     <Color x:Key="SurfaceColor">#FFFFFF</Color>
     <Color x:Key="SurfaceHoverColor">#E6E6E5</Color>
     <Color x:Key="BorderColor">#D4D4D2</Color>
+    <Color x:Key="SeparatorLineColor">#BCBCB9</Color>
     <Color x:Key="AccentColor">#d4d4d4</Color>
     <Color x:Key="AccentWashColor">#20d4d4d4</Color>
     <Color x:Key="TextPrimaryColor">#111113</Color>
@@ -22,6 +23,7 @@
     <SolidColorBrush x:Key="SurfaceBrush"      Color="{StaticResource SurfaceColor}"/>
     <SolidColorBrush x:Key="SurfaceHoverBrush" Color="{StaticResource SurfaceHoverColor}"/>
     <SolidColorBrush x:Key="BorderBrush"       Color="{StaticResource BorderColor}"/>
+    <SolidColorBrush x:Key="SeparatorLineBrush" Color="{StaticResource SeparatorLineColor}"/>
     <!-- Suggestion popup palette. Owned by the theme, not the window, because the
          address field repaints itself from the popup surface while suggestions are
          open. Reuses the existing surface and border colors so no new palette is

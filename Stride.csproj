@@ -99,6 +99,12 @@
   <ItemGroup>
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The test project exercises internal security predicates such as the pinned
+         uBlock hash and the archive size limits. -->
+    <InternalsVisibleTo Include="StrideBrowser.Tests" />
+  </ItemGroup>
+
 </Project>
 
 
