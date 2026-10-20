@@ -1,5 +1,7 @@
 # Unreleased
 
+- Context menu separators now use the theme's line colour instead of the WPF default, so they stay visible in both themes.
+
 * Added optional history retention and clearing on exit to the roadmap.
 
 * The dark theme uses neutral charcoal backgrounds, gray borders and neutral text across the browser frame, address suggestions, link previews and built-in pages.
