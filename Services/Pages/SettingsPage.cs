@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using System.Text;
 using StrideBrowser.Models;
 using StrideBrowser.Services.Input;
@@ -47,7 +48,11 @@ public sealed class SettingsPage
                 ["CHK_HTTPS"] = Chk(settings.ForceHttps),
                 ["CHK_SMARTSCREEN"] = Chk(settings.SmartScreenEnabled),
                 ["CHK_ADBLOCK"] = Chk(settings.AdBlockEnabled),
+                ["CHK_SEARCH_SUGGESTIONS"] = Chk(settings.SearchSuggestionsEnabled),
+                ["CHK_FAVICON_PROXY"] = Chk(settings.FaviconProxyEnabled),
                 ["CHK_CLEAR"] = Chk(settings.ClearDataOnExit),
+                ["TRACKING_BALANCED"] = SelStr(settings.TrackingPreventionMode.ToString(), "Balanced"),
+                ["TRACKING_STRICT"] = SelStr(settings.TrackingPreventionMode.ToString(), "Strict"),
                 ["CHK_DUPES"] = Chk(settings.BlockDuplicateTabs),
                 ["CHK_TAB_HIBERNATION"] = Chk(settings.TabHibernationEnabled),
                 ["CHK_TAB_SLEEP"] = Chk(settings.TabSleepEnabled),
@@ -62,17 +67,22 @@ public sealed class SettingsPage
                 ["ADDR_LEFT"] = settings.AddressBarOnLeft ? " selected" : "",
                 ["ADDR_RIGHT"] = settings.AddressBarOnLeft ? "" : " selected",
                 ["CHK_ADAPTIVE_TINT"] = Chk(settings.AdaptiveToolbarTint),
+                ["CHK_ROUNDED_FRAME"] = Chk(settings.RoundedWebContentFrameEnabled),
                 ["CHK_BACKARROW"] = Chk(settings.ShowBackArrow),
                 ["CHK_FWDARROW"] = Chk(settings.ShowForwardArrow),
                 ["CHK_REFRESH"] = Chk(settings.ShowRefreshButton),
                 ["CHK_DOWNLOADS"] = Chk(settings.ShowDownloadsIcon),
                 ["CHK_SETTINGSICON"] = Chk(settings.ShowSettingsIcon),
                 ["CHK_READERICON"] = Chk(settings.ShowReaderIcon),
-                ["CHK_USE_FLOATING_BAR"] = Chk(settings.UseFloatingCommandBar),
                 ["CHK_AUTO_CHECK_FOR_UPDATES"] = Chk(settings.AutoCheckForUpdates),
-                ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.1.3",
-                ["WEBVIEW2_VERSION"] = typeof(Microsoft.Web.WebView2.Core.CoreWebView2).Assembly.GetName().Version?.ToString(3) ?? "1.0.4181",
+                ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "unknown",
+                // The WebView2 SDK assembly version, labelled "SDK" in the About card because the
+                // installed browser runtime version is not exposed here. "unknown", never a literal,
+                // when even the SDK assembly version cannot be read.
+                ["WEBVIEW2_VERSION"] = typeof(Microsoft.Web.WebView2.Core.CoreWebView2).Assembly.GetName().Version?.ToString(3) ?? "unknown",
+                ["MVVM_VERSION"] = typeof(CommunityToolkit.Mvvm.ComponentModel.ObservableObject).Assembly.GetName().Version?.ToString(3) ?? "Unknown",
                 ["DOTNET_VERSION"] = System.Environment.Version.ToString(2),
+                ["APP_ICON"] = AppIconDataUri(),
                 // ACCENT_COLOR sits inside a JavaScript string literal in Settings.html and ACCENT is a raw
                 // CSS custom property, so neither JsEncoder nor HtmlEncode covers both. Both
                 // are safe because AccentColor is normalised to a hex literal at the settings
@@ -122,15 +132,22 @@ public sealed class SettingsPage
                 ["CHK_UNHOOK_AUTOPLAY"] = Chk(settings.UnhookDisableAutoplay),
                 ["CHK_UNHOOK_ANNOTATIONS"] = Chk(settings.UnhookDisableAnnotations),
                 ["KEYBOARD_SHORTCUTS_HTML"] = BuildShortcutsHtml(settings.CustomShortcuts),
+                ["SETTINGS_SCRIPT"] = Helpers.ResourceLoader.Load("Resources.Scripts.settings-page.js"),
                 ["IPC_TOKEN"] = ipcToken,
             });
+    }
+
+    private static string GetRuntimeVersion()
+    {
+        try { return Microsoft.Web.WebView2.Core.CoreWebView2Environment.GetAvailableBrowserVersionString(); }
+        catch { return "Unavailable"; }
     }
 
     /// <summary>Builds the keyboard shortcuts HTML section.</summary>
     private static string BuildShortcutsHtml(Dictionary<string, string> customShortcuts)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("<div class=\"section\" id=\"section-shortcuts\">");
+        sb.AppendLine("<div class=\"section\" id=\"section-shortcuts\" data-search-title=\"Keyboard shortcuts\">");
         sb.AppendLine("    <div class=\"section-header\">Keyboard Shortcuts</div>");
         sb.AppendLine("    <div class=\"card\">");
 
@@ -173,13 +190,12 @@ public sealed class SettingsPage
             sb.AppendLine("            <div class=\"shortcut-controls\">");
 
             // Reset button (only shown if custom)
-            if (isCustom)
             {
-                sb.AppendLine($"                <button class=\"shortcut-reset\" onclick=\"resetShortcut('{escName}', this.nextElementSibling)\" title=\"Reset to {escDefaultDisplay}\">Reset</button>");
+                sb.AppendLine($"                <button class=\"shortcut-reset\" onclick=\"resetShortcut('{escName}', this.nextElementSibling)\" {(!isCustom ? "hidden" : "")} title=\"Reset to {escDefaultDisplay}\">Reset</button>");
             }
 
             // Clickable combo badge
-            sb.AppendLine($"                <span class=\"shortcut-badge\" data-action=\"{escCombo}\" data-combo=\"{escCombo}\" data-default-combo=\"{escDefault}\" onclick=\"startRecording(this)\">{escDisplay}</span>");
+            sb.AppendLine($"                <button type=\"button\" class=\"shortcut-badge\" data-action=\"{escName}\" data-combo=\"{escCombo}\" data-default-combo=\"{escDefault}\" onclick=\"startRecording(this)\">{escDisplay}</button>");
 
             sb.AppendLine("            </div>");
             sb.AppendLine("        </div>");
@@ -202,7 +218,7 @@ public sealed class SettingsPage
     private static string HexToRgb(string hex)
     {
         hex = hex.TrimStart('#');
-        if (hex.Length != 6) return "127,184,154";
+        if (hex.Length != 6) return "212,212,212";
         try
         {
             var r = Convert.ToInt32(hex[..2], 16);
@@ -210,7 +226,28 @@ public sealed class SettingsPage
             var b = Convert.ToInt32(hex[4..6], 16);
             return $"{r},{g},{b}";
         }
-        catch (FormatException) { return "127,184,154"; }
-        catch (OverflowException) { return "127,184,154"; }
+        catch (FormatException) { return "212,212,212"; }
+        catch (OverflowException) { return "212,212,212"; }
+    }
+
+    /// <summary>
+    /// The app icon as a data URI for the about card. Embedded as a resource so the page
+    /// has no dependency on files sitting next to the executable. Returns an empty string
+    /// so the card still renders when the resource is missing.
+    /// </summary>
+    private static string AppIconDataUri()
+    {
+        try
+        {
+            using var stream = Helpers.ResourceLoader.OpenStream("icons.stride-browser-128x128.png");
+            using var memory = new MemoryStream();
+            stream.CopyTo(memory);
+            return "data:image/png;base64," + Convert.ToBase64String(memory.ToArray());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Trace.WriteLine($"App icon unavailable: {ex.Message}");
+            return "";
+        }
     }
 }

@@ -48,6 +48,18 @@ public sealed class ReaderService : IReaderService
 
     public ReaderOptions Options => _options;
 
+    /// <summary>
+    /// Hands a tab's reader session to the reader service of the window it moved to.
+    /// Each window owns its own service, so without this the tab would come back from a
+    /// tear looking normal while the overlay no longer matches the page under it.
+    /// </summary>
+    public void TransferSessionTo(ReaderService destination, Guid tabId)
+    {
+        if (destination is null || ReferenceEquals(destination, this)) return;
+        if (_sessions.Remove(tabId, out var session)) destination._sessions[tabId] = session;
+        if (_articleCache.Remove(tabId, out var article)) destination._articleCache[tabId] = article;
+    }
+
     public event EventHandler<Guid>? SessionChanged;
 
     public async Task<bool> CanEnterReaderAsync(Guid tabId)

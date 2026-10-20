@@ -23,17 +23,18 @@ public sealed class FocusBlocklistService
     };
 
     private readonly ISettingsStore _settingsStore;
+    private readonly BrowserSettings _settings;
     private HashSet<string> _compiledDomains = new(StringComparer.OrdinalIgnoreCase);
     private bool _isLoaded;
     private readonly object _loadLock = new();
 
-    public FocusBlocklistService(ISettingsStore settingsStore)
+    public FocusBlocklistService(ISettingsStore settingsStore, BrowserSettings? settings = null)
     {
         _settingsStore = settingsStore;
+        _settings = settings ?? _settingsStore.Load();
 
         // Load domains asynchronously if Focus mode is currently locked
-        var settings = _settingsStore.Load();
-        if (settings.FocusLocked)
+        if (_settings.FocusLocked)
         {
             _ = InitializeAsync();
         }
@@ -47,13 +48,12 @@ public sealed class FocusBlocklistService
     {
         if (string.IsNullOrEmpty(host)) return false;
 
-        var settings = _settingsStore.Load();
-        if (!settings.FocusLocked) return false;
+        if (!_settings.FocusLocked) return false;
 
         // Check custom user domains first (from settings)
-        if (!string.IsNullOrWhiteSpace(settings.FocusDomains))
+        if (!string.IsNullOrWhiteSpace(_settings.FocusDomains))
         {
-            var custom = settings.FocusDomains
+            var custom = _settings.FocusDomains
                 .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(d => d.Trim());
             if (FocusDomainMatcher.MatchesCustomDomain(host, custom))

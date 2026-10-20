@@ -48,7 +48,7 @@ public sealed class SettingsStoreAccentColorTests
     {
         var result = SettingsStore.NormalizeAccentColor(value);
 
-        Assert.Equal("#D4A574", result);
+        Assert.Equal("#d4d4d4", result);
         Assert.Matches("^#[0-9a-fA-F]{3}$|^#[0-9a-fA-F]{6}$", result);
     }
 

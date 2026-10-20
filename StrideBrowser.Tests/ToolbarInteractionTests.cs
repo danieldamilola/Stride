@@ -41,38 +41,49 @@ public sealed class ToolbarInteractionTests
     }
 
     [Fact]
-    public void CompactTabs_OnlyActiveTabExpands()
+    public void PinnedTab_StaysIconWidthWhileUnpinnedTabsShareTheRest()
     {
-        Assert.Equal(new double[] { 32, 32, 160, 32 }, TabShrinkPanel.ComputeWidths(800, new[] { true, false, false, false }, 2, false));
+        // The pinned tab keeps its icon width while the three unpinned tabs share
+        // 720 DIP of the remaining viewport at the full card width.
+        Assert.Equal(new double[] { 32, 160, 160, 160 }, TabShrinkPanel.ComputeWidths(800, new[] { true, false, false, false }, 2));
     }
 
     [Fact]
-    public void FullNames_UseViewportAndPreservePinnedWidths()
+    public void TabWidths_UseViewportAndPreservePinnedWidths()
     {
-        Assert.Equal(new double[] { 32, 160, 144 }, TabShrinkPanel.ComputeWidths(344, new[] { true, false, false }, 1, true));
+        Assert.Equal(new double[] { 32, 160, 144 }, TabShrinkPanel.ComputeWidths(344, new[] { true, false, false }, 1));
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void CrowdedTabs_ShrinkToTheIconFloorBeforeScrolling(bool fullNames)
+    [Fact]
+    public void CrowdedTabs_ShrinkToTheIconFloorBeforeScrolling()
     {
-        var widths = TabShrinkPanel.ComputeWidths(80, new[] { true, false, false, false }, 2, fullNames);
+        var widths = TabShrinkPanel.ComputeWidths(80, new[] { true, false, false, false }, 2);
 
         Assert.Equal(new[] { 32, TabShrinkPanel.IconTabWidth, TabShrinkPanel.IconTabWidth, TabShrinkPanel.IconTabWidth }, widths);
     }
 
     [Fact]
+    public void RoomyStrip_GivesEveryUnpinnedTabAReadableCard()
+    {
+        // A retired icon-only mode used to clamp inactive tabs to 32 DIP regardless of
+        // available width, so a very wide strip still showed bare favicons.
+        var widths = TabShrinkPanel.ComputeWidths(1400, new[] { false, false, false, false }, 0);
+
+        Assert.All(widths[1..], w => Assert.True(w > TabShrinkPanel.IconTabWidth,
+            $"inactive tabs should use the spare room, got {w} DIP"));
+    }
+
+    [Fact]
     public void AllPinnedTabs_StayUsableEvenWhenTheyOverflow()
     {
-        Assert.Equal(new double[] { 32, 32, 32 }, TabShrinkPanel.ComputeWidths(40, new[] { true, true, true }, 1, true));
+        Assert.Equal(new double[] { 32, 32, 32 }, TabShrinkPanel.ComputeWidths(40, new[] { true, true, true }, 1));
     }
 
     [Fact]
     public void EmptyViewport_KeepsTabsOnTheIconFloor()
     {
         Assert.Equal(new[] { TabShrinkPanel.IconTabWidth, TabShrinkPanel.IconTabWidth },
-            TabShrinkPanel.ComputeWidths(0, new[] { false, false }, 1, true));
+            TabShrinkPanel.ComputeWidths(0, new[] { false, false }, 1));
     }
 
     [Theory]
@@ -127,9 +138,9 @@ public sealed class ToolbarInteractionTests
     }
 
     [Fact]
-    public void CompactTabs_SelectedTabKeepsItsShareWhenTheStripCanHoldIt()
+    public void SelectedTab_KeepsItsShareWhenTheStripCanHoldIt()
     {
-        var widths = TabShrinkPanel.ComputeWidths(400, new bool[10], 4, false);
+        var widths = TabShrinkPanel.ComputeWidths(400, new bool[10], 4);
 
         Assert.Equal(76, widths[4]);
         Assert.All(widths.Where((_, index) => index != 4), width => Assert.Equal(32, width));
@@ -137,9 +148,9 @@ public sealed class ToolbarInteractionTests
     }
 
     [Fact]
-    public void CompactTabs_SelectedTabSharesTheCompactFloorOnceTheStripIsFull()
+    public void SelectedTab_SharesTheIconFloorOnceTheStripIsFull()
     {
-        var widths = TabShrinkPanel.ComputeWidths(300, new bool[30], 20, false);
+        var widths = TabShrinkPanel.ComputeWidths(300, new bool[30], 20);
 
         Assert.All(widths, width => Assert.Equal(TabShrinkPanel.IconTabWidth, width));
     }

@@ -34,12 +34,47 @@ public sealed class WebViewIpcBridge
     private readonly IDownloadStore _downloadStore;
     private readonly Dictionary<string, Microsoft.Web.WebView2.Core.CoreWebView2DownloadOperation> _activeNativeDownloads;
     private readonly string _ipcToken;
+    private readonly string _telemetryToken;
     private readonly Func<Guid, bool> _isTabAlive;
     private readonly Func<Guid, dynamic?> _getWebView;
     private readonly Func<string, BrowserTab> _createTab;
     private readonly Func<BrowserTab, Task> _activateAsync;
     private readonly Action<BrowserTab> _closeTab;
+    private readonly Func<BrowserTab, CancellationToken, Task<CoreWebView2?>> _ensureTabReadyAsync;
+    private readonly Action<BrowserTab> _removeSentinelTab;
     private readonly Services.LinkPreview.ILinkPreviewDownloadSuppressor _downloadSuppressor;
+
+    public WebViewIpcBridge(
+        Dispatcher dispatcher,
+        BrowserSettings settings,
+        IDownloadStore downloadStore,
+        string ipcToken,
+        string telemetryToken,
+        Dictionary<string, Microsoft.Web.WebView2.Core.CoreWebView2DownloadOperation> activeNativeDownloads,
+        Func<Guid, bool> isTabAlive,
+        Func<Guid, dynamic?> getWebView,
+        Func<string, BrowserTab> createTab,
+        Func<BrowserTab, Task> activateAsync,
+        Action<BrowserTab> closeTab,
+        Func<BrowserTab, CancellationToken, Task<CoreWebView2?>> ensureTabReadyAsync,
+        Action<BrowserTab> removeSentinelTab,
+        Services.LinkPreview.ILinkPreviewDownloadSuppressor downloadSuppressor)
+    {
+        _dispatcher = dispatcher;
+        _settings = settings;
+        _downloadStore = downloadStore;
+        _ipcToken = ipcToken;
+        _telemetryToken = telemetryToken;
+        _activeNativeDownloads = activeNativeDownloads;
+        _isTabAlive = isTabAlive;
+        _getWebView = getWebView;
+        _createTab = createTab;
+        _activateAsync = activateAsync;
+        _closeTab = closeTab;
+        _ensureTabReadyAsync = ensureTabReadyAsync;
+        _removeSentinelTab = removeSentinelTab;
+        _downloadSuppressor = downloadSuppressor;
+    }
 
     public WebViewIpcBridge(
         Dispatcher dispatcher,
@@ -52,26 +87,32 @@ public sealed class WebViewIpcBridge
         Func<string, BrowserTab> createTab,
         Func<BrowserTab, Task> activateAsync,
         Action<BrowserTab> closeTab,
+        Func<BrowserTab, CancellationToken, Task<CoreWebView2?>> ensureTabReadyAsync,
+        Action<BrowserTab> removeSentinelTab,
         Services.LinkPreview.ILinkPreviewDownloadSuppressor downloadSuppressor)
+        : this(
+            dispatcher,
+            settings,
+            downloadStore,
+            ipcToken,
+            Guid.NewGuid().ToString("N"),
+            activeNativeDownloads,
+            isTabAlive,
+            getWebView,
+            createTab,
+            activateAsync,
+            closeTab,
+            ensureTabReadyAsync,
+            removeSentinelTab,
+            downloadSuppressor)
     {
-        _dispatcher = dispatcher;
-        _settings = settings;
-        _downloadStore = downloadStore;
-        _ipcToken = ipcToken;
-        _activeNativeDownloads = activeNativeDownloads;
-        _isTabAlive = isTabAlive;
-        _getWebView = getWebView;
-        _createTab = createTab;
-        _activateAsync = activateAsync;
-        _closeTab = closeTab;
-        _downloadSuppressor = downloadSuppressor;
     }
 
-    public void Wire(dynamic wv, BrowserTab tab)
+    internal void Wire(dynamic wv, BrowserTab tab, WebViewSubscriptions subscriptions)
     {
         CoreWebView2 core = wv.CoreWebView2;
         TryDetachHostWindowClose((object)wv, (object)core);
-        core.ContainsFullScreenElementChanged += (_, _) =>
+        EventHandler<object> onContainsFullScreenElementChanged = (_, _) =>
         {
             if (!_isTabAlive(tab.Id)) return;
             _dispatcher.InvokeAsync(() =>
@@ -79,18 +120,31 @@ public sealed class WebViewIpcBridge
                 FullScreenChanged?.Invoke(core.ContainsFullScreenElement);
             });
         };
-        WireWebMessageReceived(core, tab);
+        core.ContainsFullScreenElementChanged += onContainsFullScreenElementChanged;
+        subscriptions.Add(() => core.ContainsFullScreenElementChanged -= onContainsFullScreenElementChanged);
+        WireWebMessageReceived(core, tab, subscriptions);
 
-        Handlers.TabDownloadHandler.Wire(core, _dispatcher, _downloadStore, _activeNativeDownloads, _downloadSuppressor);
+        WireNewWindowRequested(core, tab, subscriptions);
 
-        WireNewWindowRequested(core, tab);
-
-        core.WindowCloseRequested += (_, _) =>
+        EventHandler<object> onWindowCloseRequested = (_, _) =>
         {
             _dispatcher.Invoke(() => _closeTab(tab));
         };
+        core.WindowCloseRequested += onWindowCloseRequested;
+        subscriptions.Add(() => core.WindowCloseRequested -= onWindowCloseRequested);
+    }
 
-        Handlers.TabDialogHandler.Wire(core, _dispatcher, _settings);
+    /// <summary>
+    /// Wires the handlers that belong to the control for as long as it lives, not to the
+    /// window it is shown in. Downloads and page dialogs must not be wired again when a
+    /// tab moves, or the download table would gain a second entry per tab and a dialog
+    /// would be owned by a window that is no longer on screen.
+    /// </summary>
+    public void WireLifetimeEvents(dynamic wv, BrowserTab tab)
+    {
+        CoreWebView2 core = wv.CoreWebView2;
+        Handlers.TabDownloadHandler.Wire(core, _dispatcher, _downloadStore, _activeNativeDownloads, _downloadSuppressor);
+        Handlers.TabDialogHandler.Wire(core, _dispatcher, _settings, () => Window.GetWindow((FrameworkElement)wv));
     }
 
     /// <summary>
@@ -160,6 +214,143 @@ public sealed class WebViewIpcBridge
             wv.CoreWebView2.PostWebMessageAsString(message);
         }
         catch (Exception ex) { Trace.WriteLine($"PostMessageToActiveTab failed: {ex.Message}"); }
+    }
+
+    public bool ProcessIncomingWebMessage(BrowserTab tab, string? source, string? msg, string? topLevelSource = null)
+    {
+        if (!_isTabAlive(tab.Id) || string.IsNullOrEmpty(msg)) return false;
+
+        // The injected theme-color and link-preview scripts post without a token. Neither
+        // message carries privilege: the colour is shape-checked before it reaches the
+        // toolbar, and the preview URL is screened by LinkPreviewPolicy before anything is
+        // fetched or rendered. Both must come from the tab's own top-level document so a
+        // cross-origin iframe cannot repaint the toolbar or force a preview.
+        if (msg.StartsWith("THEME_COLOR:", StringComparison.Ordinal))
+        {
+            var colorStr = msg.Substring("THEME_COLOR:".Length);
+            if (!IsThemeColorValue(colorStr))
+            {
+                Trace.WriteLine($"Ignoring malformed THEME_COLOR from {source}");
+                return true;
+            }
+            if (!IsSameTopLevelDocument(source, topLevelSource)) return true;
+            _dispatcher.InvokeAsync(() =>
+            {
+                tab.ThemeColor = colorStr;
+                TabStateChanged?.Invoke(tab);
+            });
+            return true;
+        }
+
+        if (msg.StartsWith("LINK_PREVIEW_PEEK:", StringComparison.Ordinal))
+        {
+            if (!_settings.LinkPreviewEnabled) return true;
+            if (!IsSameTopLevelDocument(source, topLevelSource)) return true;
+
+            var json = msg.Substring("LINK_PREVIEW_PEEK:".Length);
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                var root = doc.RootElement;
+                var url = root.GetProperty("url").GetString() ?? string.Empty;
+                if (!root.TryGetProperty("rect", out var rectArr) ||
+                    rectArr.ValueKind != System.Text.Json.JsonValueKind.Array ||
+                    rectArr.GetArrayLength() < 4)
+                {
+                    return true;
+                }
+
+                if (rectArr[0].ValueKind != System.Text.Json.JsonValueKind.Number ||
+                    rectArr[1].ValueKind != System.Text.Json.JsonValueKind.Number ||
+                    rectArr[2].ValueKind != System.Text.Json.JsonValueKind.Number ||
+                    rectArr[3].ValueKind != System.Text.Json.JsonValueKind.Number)
+                {
+                    return true;
+                }
+
+                var left = rectArr[0].GetDouble();
+                var top = rectArr[1].GetDouble();
+                var width = rectArr[2].GetDouble();
+                var height = rectArr[3].GetDouble();
+                var rect = new Rect(left, top, width, height);
+                var trigger = LinkPreviewTrigger.AltPress;
+                _dispatcher.InvokeAsync(() => LinkPreviewRequested?.Invoke(tab, url, rect, trigger));
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"LinkPreview parse failed: {ex.Message}");
+            }
+            return true;
+        }
+
+        // Wallhaven posts this from a page on wallhaven.cc. Authorisation is by message
+        // source origin, not by a token, because the old scheme published the session token
+        // as a global on those origins. Any script on wallhaven.cc could read it and drive
+        // every privileged route; this way only this one route is reachable, and only from
+        // that site.
+        if (msg.StartsWith("wallhaven-download:", StringComparison.Ordinal))
+        {
+            if (!IsWallhavenSource(source)) return false;
+            if (!IsSameTopLevelDocument(source, topLevelSource)) return false;
+            var wallhavenUrl = msg.Substring("wallhaven-download:".Length);
+            _dispatcher.Invoke(() => WebMessageReceived?.Invoke(
+                WebMessagePrefix.DownloadRequest + wallhavenUrl));
+            return true;
+        }
+
+        // Bundled internal pages are served from local.assets. user.assets is a
+        // user-writable folder, so it is deliberately not treated as trusted; see
+        // WebViewFactory.
+        bool isTrustedLocalAsset = IsTrustedAssetOrigin(source);
+        if (isTrustedLocalAsset)
+        {
+            if (IpcSecurityPolicy.IsRouteAllowedForLocalAsset(msg))
+            {
+                _dispatcher.Invoke(() => WebMessageReceived?.Invoke(msg));
+                return true;
+            }
+            return false;
+        }
+
+        // Privileged internal page commands. A web message from a subframe never carries the
+        // privileged intent of the page the user is on.
+        if (!IsSameTopLevelDocument(source, topLevelSource)) return false;
+        if (!string.Equals(source, "about:blank", StringComparison.OrdinalIgnoreCase))
+        {
+            Trace.WriteLine($"Rejected IPC command from untrusted origin: {source}");
+            return false;
+        }
+
+        // Tab must have an active verified internal document identity
+        var activeDoc = tab.ActiveInternalDocument;
+        if (activeDoc == null || activeDoc.TabId != tab.Id)
+        {
+            Trace.WriteLine($"Rejected IPC command: tab {tab.Id} has no active internal document");
+            return false;
+        }
+
+        // Message must start with the valid document token prefix
+        if (!msg.StartsWith(activeDoc.DocumentToken + ":", StringComparison.Ordinal) &&
+            !msg.StartsWith(_ipcToken + ":", StringComparison.Ordinal))
+        {
+            Trace.WriteLine("Rejected IPC command: missing or invalid document token prefix");
+            return false;
+        }
+
+        var tokenLength = msg.StartsWith(activeDoc.DocumentToken + ":", StringComparison.Ordinal)
+            ? activeDoc.DocumentToken.Length
+            : _ipcToken.Length;
+        var stripped = msg[(tokenLength + 1)..];
+
+        // Check route permissions for this internal page kind
+        if (!IpcSecurityPolicy.IsRouteAllowedForPage(activeDoc.PageKind, stripped))
+        {
+            Trace.WriteLine($"Rejected IPC command: route '{stripped}' is not permitted for page kind {activeDoc.PageKind}");
+            return false;
+        }
+
+        _dispatcher.Invoke(() => WebMessageReceived?.Invoke(stripped));
+        return true;
     }
 
     /// <summary>
@@ -259,131 +450,84 @@ public sealed class WebViewIpcBridge
         return Array.Exists(WallhavenHosts, h => string.Equals(uri.Host, h, StringComparison.OrdinalIgnoreCase));
     }
 
-    private void WireWebMessageReceived(CoreWebView2 core, BrowserTab tab)
+    private void WireWebMessageReceived(CoreWebView2 core, BrowserTab tab, WebViewSubscriptions subscriptions)
     {
-        core.WebMessageReceived += (_, e) =>
+        EventHandler<CoreWebView2WebMessageReceivedEventArgs> onWebMessageReceived = (_, e) =>
         {
-            if (!_isTabAlive(tab.Id)) return;
-
             var msg = e.TryGetWebMessageAsString();
-            if (string.IsNullOrEmpty(msg)) return;
-
-            bool isTrustedLocalAsset = IsTrustedAssetOrigin(e.Source);
-
-            // THEME_COLOR is emitted by the injected theme-color script with no token. It is
-            // not a privileged message: the value is derived from the page's own computed
-            // styles, so the page could send it unauthenticated anyway. Publishing the session
-            // token to that script only widened the set of origins able to read it. The value
-            // is shape-checked because it is applied to UI.
-            if (msg.StartsWith("THEME_COLOR:", StringComparison.Ordinal))
-            {
-                var colorStr = msg.Substring("THEME_COLOR:".Length);
-                if (!IsThemeColorValue(colorStr))
-                {
-                    Trace.WriteLine($"Ignoring malformed THEME_COLOR from {e.Source}");
-                    return;
-                }
-                // The sender must be the tab's own top-level document. A cross-origin iframe
-                // on the page posts to the same bridge, so without this an ad iframe could
-                // repaint the toolbar. NavigationCompleted re-frames the value anyway.
-                if (!IsSameTopLevelDocument(e.Source, TopLevelSource(core))) return;
-                _dispatcher.InvokeAsync(() =>
-                {
-                    tab.ThemeColor = colorStr;
-                    TabStateChanged?.Invoke(tab);
-                });
-                return;
-            }
-
-            // The wallhaven download button posts this from a page on wallhaven.cc. Authorisation is by
-            // message source origin, not by a token, because the old scheme published the
-            // session token as a global on those origins. Any script on wallhaven.cc could read
-            // it and drive every privileged route; this way only this one route is reachable,
-            // and only from that site.
-            if (msg.StartsWith("wallhaven-download:", StringComparison.Ordinal))
-            {
-                if (!IsWallhavenSource(e.Source)) return;
-                if (!IsSameTopLevelDocument(e.Source, TopLevelSource(core))) return;
-                var wallhavenUrl = msg.Substring("wallhaven-download:".Length);
-                _dispatcher.Invoke(() => WebMessageReceived?.Invoke(
-                    WebMessagePrefix.DownloadRequest + wallhavenUrl));
-                return;
-            }
-
-            // LINK_PREVIEW_PEEK arrives without the session token. It carries no privilege of its own:
-            // it asks the host to consider showing a preview, and LinkPreviewService runs the
-            // URL through LinkPreviewPolicy before anything is fetched or rendered. The token
-            // used to guard it only proved the sender had read the injected script, which the
-            // page itself is the source of.
-            if (msg.StartsWith("LINK_PREVIEW_PEEK:", StringComparison.Ordinal))
-            {
-                if (!_settings.LinkPreviewEnabled) return;
-
-                var json = msg.Substring("LINK_PREVIEW_PEEK:".Length);
-                try
-                {
-                    using var doc = System.Text.Json.JsonDocument.Parse(json);
-                    var root = doc.RootElement;
-                    var url = root.GetProperty("url").GetString() ?? string.Empty;
-                    if (!root.TryGetProperty("rect", out var rectArr) ||
-                        rectArr.ValueKind != System.Text.Json.JsonValueKind.Array ||
-                        rectArr.GetArrayLength() < 4)
-                    {
-                        return;
-                    }
-
-                    if (rectArr[0].ValueKind != System.Text.Json.JsonValueKind.Number ||
-                        rectArr[1].ValueKind != System.Text.Json.JsonValueKind.Number ||
-                        rectArr[2].ValueKind != System.Text.Json.JsonValueKind.Number ||
-                        rectArr[3].ValueKind != System.Text.Json.JsonValueKind.Number)
-                    {
-                        return;
-                    }
-
-                    var left = rectArr[0].GetDouble();
-                    var top = rectArr[1].GetDouble();
-                    var width = rectArr[2].GetDouble();
-                    var height = rectArr[3].GetDouble();
-                    var rect = new Rect(left, top, width, height);
-                    var trigger = LinkPreviewTrigger.AltPress;
-                    _dispatcher.InvokeAsync(() => LinkPreviewRequested?.Invoke(tab, url, rect, trigger));
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Trace.WriteLine($"LinkPreview parse failed: {ex.Message}");
-                }
-                return;
-            }
-
-            // A web message from a subframe never carries the privileged intent of the page the user is
-            // on. Refusing frames early also keeps a cross-origin iframe from reaching the
-            // internal-page routes if it ever guessed the session token.
-            if (!IsSameTopLevelDocument(e.Source, TopLevelSource(core))) return;
-
-            if (!isTrustedLocalAsset)
-            {
-                // SECURITY: Internal pages loaded via NavigateToString (origin = about:blank)
-                // embed a per-session secret token. The token stays in the binary and in those
-                // templates. It is no longer substituted into any script injected into a remote
-                // page, so a site that can read its own injected source has nothing to read.
-                if (!msg.StartsWith(_ipcToken + ":", StringComparison.Ordinal))
-                {
-                    return;
-                }
-                // Strip the token prefix before forwarding the payload
-                msg = msg[(_ipcToken.Length + 1)..];
-            }
-
-            if (!string.IsNullOrEmpty(msg))
-            {
-                _dispatcher.Invoke(() => WebMessageReceived?.Invoke(msg));
-            }
+            ProcessIncomingWebMessage(tab, e.Source, msg, TopLevelSource(core));
         };
+        core.WebMessageReceived += onWebMessageReceived;
+        subscriptions.Add(() => core.WebMessageReceived -= onWebMessageReceived);
     }
 
-    private void WireNewWindowRequested(CoreWebView2 core, BrowserTab tab)
+    public interface IDeferralToken
     {
-        core.NewWindowRequested += (_, e) =>
+        void Complete();
+    }
+
+    private sealed class CoreWebView2DeferralAdapter : IDeferralToken
+    {
+        private readonly CoreWebView2Deferral _deferral;
+        public CoreWebView2DeferralAdapter(CoreWebView2Deferral deferral) => _deferral = deferral;
+        public void Complete() => _deferral.Complete();
+    }
+
+    public async Task ProcessNewWindowRequestedAsync(
+        CoreWebView2Deferral? deferral,
+        Action<CoreWebView2?> assignNewWindow,
+        string uri,
+        Action<string>? updateTabUrl = null)
+    {
+        IDeferralToken? token = deferral is null ? null : new CoreWebView2DeferralAdapter(deferral);
+        await ProcessNewWindowRequestedAsync(token, assignNewWindow, uri, updateTabUrl);
+    }
+
+    public async Task ProcessNewWindowRequestedAsync(
+        IDeferralToken? deferral,
+        Action<CoreWebView2?> assignNewWindow,
+        string uri,
+        Action<string>? updateTabUrl = null)
+    {
+        BrowserTab? newTab = null;
+        try
+        {
+            newTab = _createTab("internal://pending-native");
+
+            var readyCore = await _ensureTabReadyAsync(newTab, CancellationToken.None);
+            if (readyCore is not null && _isTabAlive(newTab.Id))
+            {
+                var wv = _getWebView(newTab.Id);
+                if (wv is Microsoft.Web.WebView2.Wpf.WebView2 std4) std4.DefaultBackgroundColor = _settings.ForceDarkMode ? WebViewFactory.DarkBackground : System.Drawing.Color.White;
+                else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp4) comp4.DefaultBackgroundColor = _settings.ForceDarkMode ? WebViewFactory.DarkBackground : System.Drawing.Color.White;
+
+                assignNewWindow(readyCore);
+                newTab.Url = uri;
+                updateTabUrl?.Invoke(uri);
+            }
+            else if (newTab is not null)
+            {
+                _removeSentinelTab(newTab);
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"NewWindowRequested error: {ex.Message}");
+            if (newTab is not null)
+            {
+                try { _removeSentinelTab(newTab); }
+                catch (Exception cleanupEx) { Trace.WriteLine($"Failed to remove sentinel tab: {cleanupEx.Message}"); }
+            }
+        }
+        finally
+        {
+            deferral?.Complete();
+        }
+    }
+
+    private void WireNewWindowRequested(CoreWebView2 core, BrowserTab tab, WebViewSubscriptions subscriptions)
+    {
+        EventHandler<CoreWebView2NewWindowRequestedEventArgs> onNewWindowRequested = (_, e) =>
         {
             // Treat as popup if it requests specific dimensions or isn't explicitly user-initiated (e.g. OAuth flows)
             if (e.WindowFeatures.HasPosition || e.WindowFeatures.HasSize || !e.IsUserInitiated)
@@ -400,34 +544,10 @@ public sealed class WebViewIpcBridge
 
             _ = _dispatcher.InvokeAsync(async () =>
             {
-                try
-                {
-                    // Create tab with a sentinel URL so NavigateInitialUrl does NOT navigate it.
-                    // This keeps the CoreWebView2 clean so we can assign it to e.NewWindow.
-                    var newTab = _createTab("internal://pending-native");
-
-                    // ActivateAsync is triggered via TabStateChanged but we await it directly to ensure readiness
-                    await _activateAsync(newTab);
-
-                    var wv = _getWebView(newTab.Id);
-                    if (wv?.CoreWebView2 != null)
-                    {
-                        // Fix background color (internal:// made it transparent, we want opaque for the popup)
-                        if (wv is Microsoft.Web.WebView2.Wpf.WebView2 std4) std4.DefaultBackgroundColor = _settings.ForceDarkMode ? WebViewFactory.DarkBackground : System.Drawing.Color.White;
-                        else if (wv is Microsoft.Web.WebView2.Wpf.WebView2CompositionControl comp4) comp4.DefaultBackgroundColor = _settings.ForceDarkMode ? WebViewFactory.DarkBackground : System.Drawing.Color.White;
-
-                        // Let WebView2 do the navigation natively!
-                        // This allows extensions (like uBlock Origin) to intercept the new window request!
-                        e.NewWindow = wv.CoreWebView2;
-                        newTab.Url = e.Uri; // Update the UI to reflect the requested URL
-                    }
-                }
-                catch (Exception ex) { Trace.WriteLine($"NewWindowRequested error: {ex.Message}"); }
-                finally
-                {
-                    deferral.Complete();
-                }
+                await ProcessNewWindowRequestedAsync(deferral, coreReady => e.NewWindow = coreReady, e.Uri);
             });
         };
+        core.NewWindowRequested += onNewWindowRequested;
+        subscriptions.Add(() => core.NewWindowRequested -= onNewWindowRequested);
     }
 }

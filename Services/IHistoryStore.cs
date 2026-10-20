@@ -8,6 +8,6 @@ public interface IHistoryStore
     void Add(string url, string title);
     List<HistoryEntry> Load();
     List<HistoryEntry> Search(string query);
-    void Clear();
+    bool Clear();
     List<HistoryEntry> GetFrequentSites(int count = 8);
 }

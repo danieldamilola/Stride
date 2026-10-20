@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <title>Welcome to Stride</title>
 <style>
-  :root { --accent: #7fb89a; --accent-rgb: 127,184,154; }
+  :root { --accent: #d4d4d4; --accent-rgb: 212,212,212; }
   :root, :root[data-theme="dark"] {
-    --bg-base: #0e0d0b;
-    --bg-surface: #141310;
-    --bg-hover: #1f1d19;
+    --bg-base: #111113;
+    --bg-surface: #1a1a1e;
+    --bg-hover: #252528;
     --border: #333333;
     --text-main: #E0E0E0;
     --text-bright: #D4D4D4;
@@ -55,81 +55,81 @@
     flex-direction: column;
   }
   .top { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  .brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; letter-spacing: -0.02em; color: #e8e2d7; opacity: 0.8; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; letter-spacing: -0.02em; color: var(--text-main); opacity: 0.8; }
   .brand-mark { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; }
   .progress { display: flex; gap: 4px; }
   .progress .bar { height: 2px; border-radius: 999px; transition: all 0.5s cubic-bezier(0.2,0.8,0.2,1); }
-  .skip { font-size: 12px; color: #4a4540; transition: color 0.15s; }
-  .skip:hover { color: #8a8278; }
+  .skip { font-size: 12px; color: var(--text-muted); transition: color 0.15s; }
+  .skip:hover { color: var(--text-muted); }
   .stage { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 40px 0; }
   .step { display: none; max-width: 640px; margin: 0 auto; width: 100%; }
   .step.active { display: block; animation: rise 400ms cubic-bezier(0.2,0.8,0.2,1); }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-  h1 { font-size: 44px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.05; color: #e8e2d7; }
+  h1 { font-size: 44px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.05; color: var(--text-main); }
   h2 { font-size: 30px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
-  .eyebrow { font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.12em; color: #4a4540; margin-bottom: 20px; }
-  .sub { color: #6b6560; font-size: 14px; line-height: 1.6; }
+  .eyebrow { font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 20px; }
+  .sub { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
   .highlights { list-style: none; margin-top: 32px; display: flex; flex-direction: column; gap: 10px; }
   .highlights li { display: flex; gap: 12px; align-items: flex-start; }
   .highlights .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; }
-  .highlights strong { font-size: 14px; font-weight: 500; color: #e8e2d7; }
-  .highlights span { font-size: 13px; color: #4a4540; }
+  .highlights strong { font-size: 14px; font-weight: 500; color: var(--text-main); }
+  .highlights span { font-size: 13px; color: var(--text-muted); }
   .group { margin-top: 28px; }
-  .group-title { font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; color: #4a4540; margin-bottom: 12px; }
-  .card { background: #111009; border: 1px solid #2a2824; border-radius: 16px; overflow: hidden; }
+  .group-title { font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 12px; }
+  .card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
   .row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; }
   .row + .row { border-top: 1px solid rgba(255,255,255,0.05); }
   .row .info { flex: 1; min-width: 0; }
-  .row .label { font-size: 13px; font-weight: 500; color: #e8e2d7; }
-  .row .desc { font-size: 12px; color: #6b6560; line-height: 1.4; margin-top: 2px; }
-  .toggle { appearance: none; -webkit-appearance: none; width: 40px; height: 22px; flex-shrink: 0; border-radius: 999px; background: #2a2824; position: relative; transition: background 0.2s; cursor: pointer; border: none; }
-  .toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #0e0d0b; transition: transform 0.2s; }
+  .row .label { font-size: 13px; font-weight: 500; color: var(--text-main); }
+  .row .desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-top: 2px; }
+  .toggle { appearance: none; -webkit-appearance: none; width: 40px; height: 22px; flex-shrink: 0; border-radius: 999px; background: var(--bg-surface); position: relative; transition: background 0.2s; cursor: pointer; border: none; }
+  .toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #111113; transition: transform 0.2s; }
   .toggle:checked { background: var(--accent); }
   .toggle:checked::after { transform: translateX(18px); }
-  .checkbox { width: 18px; height: 18px; flex-shrink: 0; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; cursor: pointer; border: 1.5px solid #3a3630; background: transparent; }
+  .checkbox { width: 18px; height: 18px; flex-shrink: 0; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; cursor: pointer; border: 1.5px solid var(--border); background: transparent; }
   .checkbox.on { background: var(--accent); border-color: var(--accent); }
   .tool-grid { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .tool { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: #111009; border: 1px solid #2a2824; border-radius: 16px; }
+  .tool { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; }
   .tool .t-head { display: flex; align-items: center; gap: 10px; }
-  .tool .t-icon { width: 28px; height: 28px; flex-shrink: 0; border-radius: 8px; background: rgba(127,184,154,0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; }
+  .tool .t-icon { width: 28px; height: 28px; flex-shrink: 0; border-radius: 8px; background: rgba(var(--accent-rgb),0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; }
   .tool .t-icon svg { width: 15px; height: 15px; }
-  .tool .t-name { font-size: 13px; font-weight: 500; flex: 1; color: #e8e2d7; }
-  .tool .t-desc { font-size: 12px; color: #6b6560; line-height: 1.5; }
+  .tool .t-name { font-size: 13px; font-weight: 500; flex: 1; color: var(--text-main); }
+  .tool .t-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
   .tool .t-state { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
   .addr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
-  .addr-card { text-align: left; border-radius: 16px; overflow: hidden; transition: all 0.15s; border: 1.5px solid #2a2824; background: #161512; }
-  .addr-card.on { border-color: var(--accent); background: rgba(127,184,154,0.04); }
-  .addr-preview { background: #0e0d0b; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 16px; height: 112px; position: relative; display: flex; align-items: center; justify-content: center; }
+  .addr-card { text-align: left; border-radius: 16px; overflow: hidden; transition: all 0.15s; border: 1.5px solid var(--border); background: var(--bg-surface); }
+  .addr-card.on { border-color: var(--accent); background: rgba(var(--accent-rgb),0.04); }
+  .addr-preview { background: #111113; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 16px; height: 112px; position: relative; display: flex; align-items: center; justify-content: center; }
   .addr-body { padding: 14px; }
-  .addr-title { font-size: 13px; font-weight: 500; color: #e8e2d7; margin-bottom: 4px; }
-  .addr-desc { font-size: 12px; color: #6b6560; line-height: 1.4; }
+  .addr-title { font-size: 13px; font-weight: 500; color: var(--text-main); margin-bottom: 4px; }
+  .addr-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
   .tiles { display: flex; gap: 8px; }
-  .tile { flex: 1; padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; transition: all 0.15s; border: 1px solid #2a2824; background: #111009; color: #4a4540; }
-  .tile.on { background: rgba(127,184,154,0.08); border-color: rgba(127,184,154,0.5); color: #e8e2d7; }
+  .tile { flex: 1; padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; transition: all 0.15s; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-muted); }
+  .tile.on { background: rgba(var(--accent-rgb),0.08); border-color: rgba(var(--accent-rgb),0.5); color: var(--text-main); }
   .swatches { display: flex; gap: 10px; }
-  .swatches button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #2a2824; transition: transform 0.1s, box-shadow 0.1s; }
-  .swatches button.on { box-shadow: 0 0 0 2px #0e0d0b, 0 0 0 4px var(--accent); transform: scale(1.05); }
-  .segmented { display: flex; background: #111009; border: 1px solid #2a2824; border-radius: 12px; padding: 3px; gap: 3px; }
-  .segmented button { flex: 1; padding: 8px 10px; border-radius: 8px; font-size: 12px; color: #4a4540; transition: all 0.15s; }
-  .segmented button.on { background: rgba(127,184,154,0.12); color: #e8e2d7; }
-  .engine { width: 100%; text-align: left; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; transition: all 0.15s; border: 1px solid #2a2824; background: #111009; margin-bottom: 6px; }
-  .engine.on { background: rgba(127,184,154,0.06); border-color: rgba(127,184,154,0.5); }
-  .engine .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #3a3630; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .swatches button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); transition: transform 0.1s, box-shadow 0.1s; }
+  .swatches button.on { box-shadow: 0 0 0 2px #111113, 0 0 0 4px var(--accent); transform: scale(1.05); }
+  .segmented { display: flex; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; padding: 3px; gap: 3px; }
+  .segmented button { flex: 1; padding: 8px 10px; border-radius: 8px; font-size: 12px; color: var(--text-muted); transition: all 0.15s; }
+  .segmented button.on { background: rgba(var(--accent-rgb),0.12); color: var(--text-main); }
+  .engine { width: 100%; text-align: left; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; transition: all 0.15s; border: 1px solid var(--border); background: var(--bg-surface); margin-bottom: 6px; }
+  .engine.on { background: rgba(var(--accent-rgb),0.06); border-color: rgba(var(--accent-rgb),0.5); }
+  .engine .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .engine.on .radio { border-color: var(--accent); background: var(--accent); }
-  .engine .radio-dot { width: 6px; height: 6px; border-radius: 50%; background: #0e0d0b; display: none; }
+  .engine .radio-dot { width: 6px; height: 6px; border-radius: 50%; background: #111113; display: none; }
   .engine.on .radio-dot { display: block; }
   .gratitude { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 20px; padding: 20px 0; }
-  .g-check { width: 56px; height: 56px; border-radius: 50%; background: rgba(127,184,154,0.12); color: #7fb89a; display: flex; align-items: center; justify-content: center; }
+  .g-check { width: 56px; height: 56px; border-radius: 50%; background: rgba(var(--accent-rgb),0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; }
   .g-check svg { width: 28px; height: 28px; }
   .foot { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.05); }
-  .primary { background: var(--accent); color: #0e0d0b; font-size: 13px; font-weight: 600; padding: 10px 22px; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: opacity 0.15s, transform 0.1s; }
+  .primary { background: var(--accent); color: #111113; font-size: 13px; font-weight: 600; padding: 10px 22px; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: opacity 0.15s, transform 0.1s; }
   .primary:hover { opacity: 0.9; }
   .primary:active { transform: scale(0.97); }
-  .ghost { color: #4a4540; font-size: 12px; transition: color 0.15s; }
-  .ghost:hover { color: #8a8278; }
+  .ghost { color: var(--text-muted); font-size: 12px; transition: color 0.15s; }
+  .ghost:hover { color: var(--text-muted); }
   .ghost:disabled { opacity: 0; pointer-events: none; }
   .mono { font-family: 'DM Mono', monospace; }
-  kbd { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-family: 'DM Mono', monospace; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #8a8278; }
+  kbd { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-family: 'DM Mono', monospace; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -151,46 +151,35 @@
         <li><span class="dot" style="background:var(--accent)"></span><span><strong>Light by design.</strong> <span>Tab hibernation and sleep keep RAM and CPU low as your session grows.</span></span></li>
         <li><span class="dot" style="background:var(--accent)"></span><span><strong>uBlock Origin built in.</strong> <span>Ad and tracker blocking from the very first page load.</span></span></li>
         <li><span class="dot" style="background:var(--accent)"></span><span><strong>Focus mode.</strong> <span>A hard lock that keeps you off distraction sites when you need to work.</span></span></li>
-        <li><span class="dot" style="background:var(--accent)"></span><span><strong>YouTube tools.</strong> <span>Quality control, speed presets, and hide anything you don't want to see.</span></span></li>
+        <li><span class="dot" style="background:var(--accent)"></span><span><strong>YouTube Unhook.</strong> <span>Hide feeds, comments, recommendations and distractions for focused video watching.</span></span></li>
       </ul>
     </section>
 
     <!-- Step 2 · Address bar -->
     <section class="step" data-step="1">
       <p class="eyebrow">Address bar</p>
-      <h2>How do you want to navigate?</h2>
-      <p class="sub">Stride has two address bar modes. You can switch between them later in Settings. This just picks your starting point.</p>
+      <h2>Navigate from the toolbar.</h2>
+      <p class="sub">Stride keeps one address bar, inline in the toolbar. It shows the bare domain until you click it. Toggle it with <kbd>Ctrl+L</kbd>.</p>
       <div class="addr-grid">
-        <button class="addr-card" data-floating="true" id="addrFloating">
-          <div class="addr-preview">
-            <div style="position:absolute;top:8px;left:12px;display:flex;gap:4px">
-              <div style="height:18px;width:72px;border-radius:6px;display:flex;align-items:center;gap:4px;padding:0 6px;background:#1e1c18"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></span><span style="height:5px;flex:1;border-radius:999px;background:rgba(255,255,255,0.1)"></span></div>
-              <div style="height:18px;width:14px;border-radius:6px;background:#1a1815"></div>
-            </div>
-            <div style="width:160px;height:26px;border-radius:999px;display:flex;align-items:center;padding:0 10px;gap:6px;background:#1e1c18;border:1px solid rgba(127,184,154,0.25);box-shadow:0 4px 16px rgba(0,0,0,0.3)"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent)"></span><span style="height:5px;flex:1;border-radius:999px;background:#3a3630"></span></div>
-          </div>
-          <div class="addr-body"><div class="addr-title">Floating command bar</div><div class="addr-desc">Centered overlay on top of the page. Toggle it with <kbd>Ctrl+L</kbd>. Feels like a launcher.</div></div>
-        </button>
-        <button class="addr-card" data-floating="false" id="addrStandard">
+        <div class="addr-card on" id="addrStandard" style="border-color:var(--accent);background:color-mix(in srgb, var(--accent) 4%, #1a1a1e)">
           <div class="addr-preview" style="flex-direction:column;justify-content:flex-start;gap:8px;padding-top:12px">
-            <div style="display:flex;align-items:center;gap:6px;width:100%"><span style="display:flex;gap:4px"><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span></span><span style="flex:1;height:22px;border-radius:6px;display:flex;align-items:center;padding:0 8px;gap:6px;background:#1e1c18;border:1px solid #2a2824"><span style="width:6px;height:6px;border-radius:50%;background:#3a3630"></span><span style="height:5px;flex:1;border-radius:999px;background:rgba(255,255,255,0.1)"></span></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span></div>
+            <div style="display:flex;align-items:center;gap:6px;width:100%"><span style="display:flex;gap:4px"><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span></span><span style="flex:1;height:22px;border-radius:6px;display:flex;align-items:center;padding:0 8px;gap:6px;background:#1a1a1e;border:1px solid var(--border)"><span style="width:6px;height:6px;border-radius:50%;background:#2a2a2e"></span><span style="height:5px;flex:1;border-radius:999px;background:rgba(255,255,255,0.1)"></span></span><span style="width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,0.06)"></span></div>
             <div style="flex:1;width:100%;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05)"></div>
           </div>
           <div class="addr-body"><div class="addr-title">Standard address bar</div><div class="addr-desc">Inline in the toolbar. Classic browser feel. Can be positioned left or right of the tab strip.</div></div>
-        </button>
+        </div>
       </div>
-      <p style="font-size:11px;color:#3a3630;margin-top:14px">Note: switching modes requires a restart.</p>
     </section>
 
     <!-- Step 3 · Privacy -->
     <section class="step" data-step="2">
       <p class="eyebrow">Privacy</p>
-      <h2>Defaults that don't phone home.</h2>
+      <h2>Choose your privacy settings.</h2>
       <p class="sub">Everything below is on unless you turn it off. Stride keeps your data on your machine.</p>
       <div class="card" style="margin-top:20px">
         <div class="row"><div class="info"><div class="label">Ad & tracker blocking</div><div class="desc">uBlock Origin v1.73.0, runs locally with no cloud dependency.</div></div><input type="checkbox" class="toggle" data-k="adBlock" checked></div>
         <div class="row"><div class="info"><div class="label">Force HTTPS</div><div class="desc">Upgrades http:// to https:// automatically. Localhost stays http.</div></div><input type="checkbox" class="toggle" data-k="forceHttps" checked></div>
-        <div class="row"><div class="info"><div class="label">SmartScreen</div><div class="desc">Checks URLs and downloads against reputation data. Requires restart to change.</div></div><input type="checkbox" class="toggle" data-k="smartScreen" checked></div>
+        <div class="row"><div class="info"><div class="label">SmartScreen</div><div class="desc">Checks website and download URLs with Microsoft. Requires a restart to change.</div></div><input type="checkbox" class="toggle" data-k="smartScreen" checked></div>
         <div class="row"><div class="info"><div class="label">Tab hibernation</div><div class="desc">Unloads tabs after 1 to 5 minutes of inactivity based on open tab count.</div></div><input type="checkbox" class="toggle" data-k="hibernate" checked></div>
         <div class="row"><div class="info"><div class="label">Clear data on exit</div><div class="desc">Wipes history, cookies, and cache every time you close the window.</div></div><input type="checkbox" class="toggle" data-k="clearOnExit"></div>
       </div>
@@ -203,15 +192,15 @@
       <p class="sub">Stride ships with two built-in extensions. No extension store, no installs. They're always there.</p>
       <div class="tool-grid">
         <div class="tool">
-          <div class="t-head"><span class="t-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="t-name">uBlock Origin</span><span style="font-size:10px;padding:3px 7px;border-radius:6px;font-family:'DM Mono',monospace;background:rgba(127,184,154,0.12);color:var(--accent)">Always on</span></div>
+          <div class="t-head"><span class="t-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="t-name">uBlock Origin</span><span style="font-size:10px;padding:3px 7px;border-radius:6px;font-family:'DM Mono',monospace;background:rgba(var(--accent-rgb),0.12);color:var(--accent)">Always on</span></div>
           <div class="t-desc">Blocks ads, trackers, and malware domains. The zip ships with Stride and is SHA-verified on load. It never downloads from the web after install. YouTube ads, banner ads, cookie banners: gone.</div>
         </div>
         <div class="tool">
-          <div class="t-head"><span class="t-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg></span><span class="t-name">T&C Lens</span><span style="font-size:10px;padding:3px 7px;border-radius:6px;font-family:'DM Mono',monospace;background:#1a1815;color:#6b6560">On demand</span></div>
+          <div class="t-head"><span class="t-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg></span><span class="t-name">T&C Lens</span><span style="font-size:10px;padding:3px 7px;border-radius:6px;font-family:'DM Mono',monospace;background:#151517;color: var(--text-muted)">On demand</span></div>
           <div class="t-desc">Press <kbd>Alt+T</kbd> on any page. Stride extracts the page text and opens it in a clean reader view so you can actually read what you're agreeing to.</div>
-          <div style="margin-top:12px;border-radius:10px;overflow:hidden;border:1px solid #1e1c18;background:#0e0d0b;font-size:10px;font-family:'DM Mono',monospace">
-            <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.05)"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span><span style="color:#4a4540">T&C Lens / some-service.com</span><span style="margin-left:auto;display:flex;gap:6px"><span style="height:10px;width:44px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="height:10px;width:56px;border-radius:4px;background:rgba(127,184,154,0.12)"></span></span></div>
-            <div style="padding:10px 12px;display:flex;flex-direction:column;gap:6px"><span style="height:6px;border-radius:999px;background:rgba(127,184,154,0.18);width:92%"></span><span style="height:6px;border-radius:999px;background:rgba(127,184,154,0.28);width:85%"></span><span style="height:6px;border-radius:999px;background:#1e1c18;width:78%"></span><span style="height:6px;border-radius:999px;background:#1e1c18;width:70%"></span></div>
+          <div style="margin-top:12px;border-radius:10px;overflow:hidden;border:1px solid #1a1a1e;background:#111113;font-size:10px;font-family:'DM Mono',monospace">
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.05)"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span><span style="color: var(--text-muted)">T&C Lens / some-service.com</span><span style="margin-left:auto;display:flex;gap:6px"><span style="height:10px;width:44px;border-radius:4px;background:rgba(255,255,255,0.06)"></span><span style="height:10px;width:56px;border-radius:4px;background:rgba(var(--accent-rgb),0.12)"></span></span></div>
+            <div style="padding:10px 12px;display:flex;flex-direction:column;gap:6px"><span style="height:6px;border-radius:999px;background:rgba(var(--accent-rgb),0.18);width:92%"></span><span style="height:6px;border-radius:999px;background:rgba(var(--accent-rgb),0.28);width:85%"></span><span style="height:6px;border-radius:999px;background:#1a1a1e;width:78%"></span><span style="height:6px;border-radius:999px;background:#1a1a1e;width:70%"></span></div>
           </div>
         </div>
       </div>
@@ -232,14 +221,15 @@
       <div style="margin-top:20px">
         <div class="group-title">Theme</div>
         <div class="tiles" id="themeTiles">
-          <button class="tile" data-theme="system"><span class="swatch" style="background:linear-gradient(135deg,#0e0d0b 50%,#e8e2d7 50%)"></span>System</button>
+          <button class="tile" data-theme="system"><span class="swatch" style="background:linear-gradient(135deg,#111113 50%,#e8e2d7 50%)"></span>System</button>
           <button class="tile" data-theme="light"><span class="swatch" style="background:#e8e2d7"></span>Light</button>
-          <button class="tile" data-theme="dark"><span class="swatch" style="background:#0e0d0b"></span>Dark</button>
+          <button class="tile" data-theme="dark"><span class="swatch" style="background:#111113"></span>Dark</button>
         </div>
       </div>
       <div style="margin-top:20px">
         <div class="group-title">Accent color</div>
         <div class="swatches" id="accentSwatches">
+          <button data-accent="#d4d4d4" style="background:#d4d4d4" aria-label="Gray"></button>
           <button data-accent="#7fb89a" style="background:#7fb89a" aria-label="Sage"></button>
           <button data-accent="#c9a86c" style="background:#c9a86c" aria-label="Gold"></button>
           <button data-accent="#7c9cbf" style="background:#7c9cbf" aria-label="Blue"></button>
@@ -273,12 +263,12 @@
         <p class="sub" style="text-align:center">84 features, all yours. Open Settings anytime to go deeper.</p>
       </div>
       <div style="margin-top:40px;display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">New tab, close tab</span><kbd>Ctrl+T / Ctrl+W</kbd></div>
-        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">Focus address bar</span><kbd>Ctrl+L</kbd></div>
-        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">Open OneTab</span><kbd>Ctrl+Shift+O</kbd></div>
-        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">T&C Lens on current page</span><kbd>Alt+T</kbd></div>
-        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">History</span><kbd>Ctrl+H</kbd></div>
-        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color:#6b6560">Settings</span><kbd>Ctrl+,</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color: var(--text-muted)">New tab, close tab</span><kbd>Ctrl+T / Ctrl+W</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color: var(--text-muted)">Focus address bar</span><kbd>Ctrl+L</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color: var(--text-muted)">Open OneTab</span><kbd>Ctrl+Shift+O</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color: var(--text-muted)">T&C Lens on current page</span><kbd>Alt+T</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color: var(--text-muted)">History</span><kbd>Ctrl+H</kbd></div>
+        <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:13px;color: var(--text-muted)">Settings</span><kbd>Ctrl+,</kbd></div>
       </div>
       <button class="primary" id="doneBtn" style="width:100%;justify-content:center;margin-top:40px;padding:14px">Open new tab</button>
     </section>
@@ -286,7 +276,7 @@
 
   <footer class="foot">
     <button class="ghost" id="backBtn" style="display:flex;align-items:center;gap:6px;font-size:12px"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2.5L4.5 7 9 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> back</button>
-    <span class="mono" id="pageNum" style="font-size:11px;color:#3a3630">01 / 06</span>
+    <span class="mono" id="pageNum" style="font-size:11px;color: var(--text-muted)">01 / 06</span>
     <button class="primary" id="nextBtn" style="display:flex;align-items:center;gap:6px">Continue <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2.5L9.5 7 5 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </footer>
 </div>
@@ -300,7 +290,7 @@
   // dataEl holds Stride settings snapshot when hosted; fallback to localStorage for standalone preview
   const LS_KEY = 'stride.onboarding.figma';
   const ls = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch(e) { return {}; }})();
-  const S = Object.assign({ theme: 'dark', accent: '#7fb89a', floatingBar: true, adBlock: true, smartScreen: true, httpsForce: true, clearOnExit: false, hibernate: true, engine: 'ddg', importFrom: 'chrome', importHistory: true, importBookmarks: true, setDefault: true }, initial, ls);
+  const S = Object.assign({ theme: 'dark', accent: '#d4d4d4', adBlock: true, smartScreen: true, httpsForce: true, clearOnExit: false, hibernate: true, engine: 'ddg', importFrom: 'chrome', importHistory: true, importBookmarks: true, setDefault: true }, initial, ls);
   const save = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e) {} };
   const post = (msg) => { if (window.chrome?.webview) window.chrome.webview.postMessage(__T + msg); };
   const postSetting = (k, v) => post('setting:' + k + ':' + v);
@@ -326,7 +316,7 @@
     steps.forEach((s,i) => s.classList.toggle('active', i === cur));
     bars.forEach((b,i) => {
       b.style.width = i === cur ? '2.5rem' : '0.5rem';
-      b.style.background = i <= cur ? (S.accent || '#7fb89a') : '#2a2824';
+      b.style.background = i <= cur ? (S.accent || '#d4d4d4') : '#252528';
     });
     pageNum.textContent = String(cur+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
     backBtn.style.visibility = cur === 0 ? 'hidden' : 'visible';
@@ -347,24 +337,8 @@
   document.getElementById('doneBtn')?.addEventListener('click', () => {
     post('onboarding-done');
     // standalone fallback
-    if (!window.chrome?.webview) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#6b6560;font-family:DM Sans,sans-serif">Done. In Stride this opens a new tab.</div>'; }
+    if (!window.chrome?.webview) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color: var(--text-muted);font-family:DM Sans,sans-serif">Done. In Stride this opens a new tab.</div>'; }
   });
-
-  // Address bar cards
-  const floatCard = document.getElementById('addrFloating');
-  const stdCard = document.getElementById('addrStandard');
-  function syncAddr() {
-    const on = !!S.floatingBar;
-    floatCard.classList.toggle('on', on);
-    stdCard.classList.toggle('on', !on);
-    floatCard.style.borderColor = on ? S.accent : '#2a2824';
-    floatCard.style.background = on ? S.accent + '08' : '#161512';
-    stdCard.style.borderColor = !on ? S.accent : '#2a2824';
-    stdCard.style.background = !on ? S.accent + '08' : '#161512';
-  }
-  floatCard.addEventListener('click', () => { S.floatingBar = true; save(); postSetting('useFloatingBar','true'); syncAddr(); });
-  stdCard.addEventListener('click', () => { S.floatingBar = false; save(); postSetting('useFloatingBar','false'); syncAddr(); });
-  syncAddr();
 
   // Toggles
   document.querySelectorAll('input.toggle[data-k]').forEach(el => {
@@ -399,7 +373,7 @@
       const isPrivate = ['ddg','brave','start'].includes(e.id);
       const btn = document.createElement('button');
       btn.className = 'engine' + (sel ? ' on' : '');
-      btn.innerHTML = '<span class="radio"><span class="radio-dot"></span></span><span style="flex:1;min-width:0"><span style="font-size:13px;color:#e8e2d7">' + e.name + '</span><span style="font-size:11px;color:#4a4540;margin-left:8px">' + e.note + '</span></span><span style="font-size:9px;padding:3px 6px;border-radius:4px;font-family:DM Mono,monospace;background:' + (isPrivate ? 'rgba(127,184,154,0.08)' : '#1a1815') + ';color:' + (isPrivate ? S.accent : '#6b6560') + '">' + e.tag + '</span>';
+      btn.innerHTML = '<span class="radio"><span class="radio-dot"></span></span><span style="flex:1;min-width:0"><span style="font-size:13px;color: var(--text-main)">' + e.name + '</span><span style="font-size:11px;color: var(--text-muted);margin-left:8px">' + e.note + '</span></span><span style="font-size:9px;padding:3px 6px;border-radius:4px;font-family:DM Mono,monospace;background:' + (isPrivate ? 'rgba(var(--accent-rgb),0.08)' : '#151517') + ';color:' + (isPrivate ? S.accent : '#6b6560') + '">' + e.tag + '</span>';
       if (sel) { btn.style.background = S.accent + '0a'; btn.style.borderColor = S.accent + '80'; }
       btn.addEventListener('click', () => { S.engine = e.id; save(); postSetting('search', engineMap[e.id]); renderEngines(); });
       engineList.appendChild(btn);
@@ -452,13 +426,13 @@
       const k = cb.dataset.k;
       const on = !!S[k];
       cb.classList.toggle('on', on);
-      cb.innerHTML = on ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 3.5-4" stroke="#0e0d0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+      cb.innerHTML = on ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 3.5-4" stroke="#111113" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
     });
   }
   importTiles.forEach(t => t.addEventListener('click', () => { S.importFrom = t.dataset.import; save(); syncImport(); }));
   document.querySelectorAll('#importOpts .checkbox').forEach(cb => {
     const k = cb.dataset.k;
-    if (S[k] !== undefined) { cb.classList.toggle('on', !!S[k]); if (S[k]) cb.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 3.5-4" stroke="#0e0d0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+    if (S[k] !== undefined) { cb.classList.toggle('on', !!S[k]); if (S[k]) cb.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 3.5-4" stroke="#111113" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
     cb.addEventListener('click', () => { S[k] = !S[k]; save(); syncImport(); });
   });
   syncImport();

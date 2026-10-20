@@ -6,7 +6,7 @@ using StrideBrowser.ViewModels.LinkPreview;
 
 namespace StrideBrowser.Services.UI;
 
-public sealed class LinkPreviewWindowController
+public sealed class LinkPreviewWindowController : IDisposable
 {
     private readonly LinkPreviewViewModel _viewModel;
     private readonly Services.LinkPreview.ILinkPreviewService _service;
@@ -48,6 +48,30 @@ public sealed class LinkPreviewWindowController
         {
             UpdateWindowBounds();
         }
+    }
+
+    /// <summary>
+    /// Releases this window's subscriptions. The controller is scoped to one window, and
+    /// the settings and engine it listens to outlive it, so the handlers have to come off.
+    /// The stores themselves are singletons and are not touched here.
+    /// </summary>
+    public void Dispose()
+    {
+        _viewModel.PropertyChanged -= OnViewModelChanged;
+        _settings.PropertyChanged -= OnSettingsPropertyChanged;
+        _engine.ActiveTabChanged -= OnActiveTabChanged;
+        _engine.TabClosed -= OnTabClosed;
+        if (_owner is not null)
+        {
+            _owner.SizeChanged -= OnOwnerBoundsChanged;
+            _owner.LocationChanged -= OnOwnerBoundsChanged;
+            _owner = null;
+        }
+        var window = _window;
+        _window = null;
+        if (window is null) return;
+        try { window.CleanupWebView(); } catch (Exception ex) { Trace.WriteLine(ex); }
+        window.Close();
     }
 
     private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

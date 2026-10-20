@@ -17,7 +17,7 @@
         <WindowChrome CaptionHeight="36" ResizeBorderThickness="8" GlassFrameThickness="0" CornerRadius="12"/>
     </WindowChrome.WindowChrome>
     <Border Background="{DynamicResource SidebarBrush}"
-            BorderBrush="#2A2A2E"
+            BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="1"
             CornerRadius="12"
             ClipToBounds="True">

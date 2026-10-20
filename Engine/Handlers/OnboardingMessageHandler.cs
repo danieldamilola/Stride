@@ -38,7 +38,6 @@ public class OnboardingMessageHandler : IWebMessageHandler
         {
             theme = _settings.AppTheme.ToString().ToLowerInvariant(),
             accent = _settings.AccentColor,
-            floatingBar = _settings.UseFloatingCommandBar,
             adBlock = _settings.AdBlockEnabled,
             smartScreen = _settings.SmartScreenEnabled,
             httpsForce = _settings.ForceHttps,

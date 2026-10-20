@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -7,39 +7,64 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Threading;
+using StrideBrowser.Engine;
 using StrideBrowser.Models;
 
 namespace StrideBrowser.Services.UI;
 
-/// <summary>Moves a captured tab with the pointer and commits its new slot on release.</summary>
+/// <summary>
+/// Moves a tab with the pointer and commits its new slot on release. Reordering runs on
+/// mouse capture rather than the OLE drag session, because a capture drag on one strip can
+/// never be a drop target for itself, so an OLE session would silently drop every reorder.
+/// Cross-window docking and tearing off are decided on release from the captured pointer.
+/// </summary>
 public sealed class TabStripDragDropBehavior : IDisposable
 {
     private readonly ListBox _listBox;
     private readonly Action<int, int> _moveTab;
-    private readonly DispatcherTimer _scrollTimer;
     private readonly Action? _onDragStarted;
+
+    /// <summary>
+    /// The card border inside the tab item's template. Its Background is set directly during
+    /// a drag because the template's IsSelected trigger outranks the item's own Background,
+    /// so assigning ListBoxItem.Background is overwritten the moment the drag starts.
+    /// </summary>
+    private static Border? CardBorder(ListBoxItem item) =>
+        item.Template.FindName("Bd", item) as Border;
+
+    /// <summary>
+    /// An inactive tab is see-through, so a dragged one would show the page behind it.
+    /// Reuse the brush hover already paints on, falling back to the drag card colour.
+    /// </summary>
+    private static Brush OpaqueCardBrush() =>
+        Application.Current?.TryFindResource("SurfaceHoverBrush") as SolidColorBrush
+        ?? new SolidColorBrush(Color.FromArgb(235, 42, 42, 46));
+
     private BrowserTab? _pressedTab;
     private ListBoxItem? _container;
     private TabShrinkPanel? _panel;
     private int _originalZIndex;
+    private Brush? _originalBackground;
+    private Border? _cardBorder;
     private Point _pressedPoint;
     private double _grip;
     private double _width;
     private int _target;
+    private int _oldIndex = -1;
     private bool _dragging;
     private bool _ending;
-    private double _scrollStep;
     private Rect[] _slots = Array.Empty<Rect>();
+
     public bool IsDragging => _dragging;
+
+    /// <summary>Set by the window that owns this strip. Null disables tearing off.</summary>
+    public TabTransferHost? Transfer { get; set; }
 
     public TabStripDragDropBehavior(ListBox listBox, Action<int, int> moveTab, Action? onDragStarted = null)
     {
         _listBox = listBox;
         _moveTab = moveTab;
         _onDragStarted = onDragStarted;
-        _scrollTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Input, OnScrollTick, listBox.Dispatcher);
-        _scrollTimer.Stop();
         listBox.PreviewMouseLeftButtonDown += OnDown;
         listBox.PreviewMouseMove += OnMove;
         listBox.PreviewMouseLeftButtonUp += OnUp;
@@ -63,6 +88,7 @@ public sealed class TabStripDragDropBehavior : IDisposable
             e.Handled = true;
             _listBox.Focus();
             _listBox.SelectedItem = _pressedTab;
+            // Selecting rebuilds the containers, so the press would be lost. Capture first.
             if (!_listBox.CaptureMouse()) End(false);
         }
     }
@@ -96,31 +122,43 @@ public sealed class TabStripDragDropBehavior : IDisposable
                 _listBox.ItemContainerGenerator.ContainerFromItem(item) is ListBoxItem c
                     ? LayoutInformation.GetLayoutSlot(c) : Rect.Empty).ToArray();
             if (_slots.Any(r => r.IsEmpty)) { End(false); return; }
-            _target = _listBox.Items.IndexOf(_pressedTab);
+            _oldIndex = _listBox.Items.IndexOf(_pressedTab);
+            if (_oldIndex < 0) { End(false); return; }
+            _target = _oldIndex;
             _width = _slots[_target].Width;
             _grip = Math.Clamp(_grip, 0, _width);
             Panel.SetZIndex(_container, int.MaxValue);
+            _originalBackground = _container.Background;
+            _container.Background = OpaqueCardBrush();
+            // The template's IsSelected trigger repaints Bd over the item Background, so set
+            // the border itself as well. Its local value outranks the trigger.
+            _cardBorder = CardBorder(_container);
+            if (_cardBorder is not null) _cardBorder.Background = OpaqueCardBrush();
             _dragging = true;
-            if (!_listBox.CaptureMouse()) { End(false); return; }
         }
         Update(point);
+        UpdateEdgeScroll(point.X);
         e.Handled = true;
     }
 
+    /// <summary>Live reorder feedback. Follows the pointer and slides neighbours aside.</summary>
     private void Update(Point point)
     {
         var scroll = TabStripController.GetScrollViewer(_listBox);
         var offset = scroll?.HorizontalOffset ?? 0;
-        var oldIndex = _listBox.Items.IndexOf(_pressedTab);
-        if (oldIndex < 0 || oldIndex >= _slots.Length || _listBox.Items.Count != _slots.Length) { End(false); return; }
+        var oldIndex = _oldIndex;
+        if (oldIndex < 0 || oldIndex >= _slots.Length || _listBox.Items.Count != _slots.Length) return;
         var pinnedCount = _listBox.Items.Cast<BrowserTab>().Count(t => t.IsPinned);
         var min = _pressedTab!.IsPinned ? 0 : pinnedCount;
         var max = _pressedTab.IsPinned ? pinnedCount - 1 : _slots.Length - 1;
         var left = Math.Clamp(point.X + offset - _grip, _slots[min].Left,
             Math.Max(_slots[min].Left, _slots[max].Right - _width));
-        var draggedTransform = _container!.RenderTransform as TranslateTransform ?? new TranslateTransform();
-        _container.RenderTransform = draggedTransform;
-        draggedTransform.X = left - _slots[oldIndex].Left;
+        if (_container is not null)
+        {
+            var draggedTransform = _container.RenderTransform as TranslateTransform ?? new TranslateTransform();
+            _container.RenderTransform = draggedTransform;
+            draggedTransform.X = left - _slots[oldIndex].Left;
+        }
         var next = ComputeTargetIndex(_slots, oldIndex, left, min, max);
         if (next != _target)
         {
@@ -134,9 +172,16 @@ public sealed class TabStripDragDropBehavior : IDisposable
                 AnimateShift(c, shift);
             }
         }
-        _scrollStep = ComputeEdgeScroll(point.X, _listBox.ActualWidth);
-        if (_scrollStep != 0 && scroll?.ScrollableWidth > 0) _scrollTimer.Start();
-        else _scrollTimer.Stop();
+    }
+
+    private void UpdateEdgeScroll(double x)
+    {
+        var scroll = TabStripController.GetScrollViewer(_listBox);
+        if (scroll == null || scroll.ScrollableWidth <= 0) return;
+        var step = ComputeEdgeScroll(x, _listBox.ActualWidth);
+        if (step == 0) return;
+        scroll.ScrollToHorizontalOffset(Math.Clamp(scroll.HorizontalOffset + step, 0, scroll.ScrollableWidth));
+        _listBox.UpdateLayout();
     }
 
     public static int ComputeTargetIndex(IReadOnlyList<Rect> slots, int oldIndex, double left, int min, int max)
@@ -164,16 +209,6 @@ public sealed class TabStripDragDropBehavior : IDisposable
         return 0;
     }
 
-    private void OnScrollTick(object? sender, EventArgs e)
-    {
-        if (!_dragging) { _scrollTimer.Stop(); return; }
-        var scroll = TabStripController.GetScrollViewer(_listBox);
-        if (scroll == null) return;
-        scroll.ScrollToHorizontalOffset(scroll.HorizontalOffset + _scrollStep);
-        _listBox.UpdateLayout();
-        Update(Mouse.GetPosition(_listBox));
-    }
-
     private static void AnimateShift(UIElement element, double target)
     {
         var transform = element.RenderTransform as TranslateTransform ?? new TranslateTransform();
@@ -193,8 +228,49 @@ public sealed class TabStripDragDropBehavior : IDisposable
     private void OnUp(object sender, MouseButtonEventArgs e)
     {
         var hadPress = _pressedTab != null;
-        End(true);
-        if (hadPress) e.Handled = true;
+        var tab = _pressedTab;
+        var wasDragging = _dragging;
+        var screen = TabDragGeometry.CursorPosition();
+        var oldIndex = _oldIndex;
+        var target = _target;
+        var transfer = Transfer;
+        var strip = new Rect(_listBox.RenderSize);
+        var local = _listBox.PointFromScreen(screen);
+
+        End(false);
+
+        if (!hadPress) return;
+        e.Handled = true;
+        if (!wasDragging || tab is null || transfer is null) return;
+
+        // Released over this strip: reorder. Released over another window's strip: dock
+        // there. Released anywhere else: tear the tab off.
+        if (strip.Contains(local))
+        {
+            if (oldIndex >= 0 && target >= 0 && oldIndex != target)
+            {
+                _moveTab(oldIndex, target);
+                _listBox.UpdateLayout();
+            }
+            return;
+        }
+
+        var foreign = transfer.StripUnderCursor(screen);
+        if (foreign is not null)
+        {
+            var centers = new List<double>();
+            foreach (var item in foreign.Items)
+            {
+                if (foreign.ItemContainerGenerator.ContainerFromItem(item) is not ListBoxItem container) return;
+                centers.Add(container.TranslatePoint(new Point(container.ActualWidth / 2, 0), foreign).X);
+            }
+            var index = TabDragGeometry.InsertionIndex(centers, foreign.PointFromScreen(screen).X);
+            _ = transfer.DockAt(foreign, tab, index, screen);
+            return;
+        }
+
+        if (transfer.Owns(tab) && TabDragGeometry.ShouldDetach(strip, local, false, false))
+            _ = transfer.Detach(tab, screen);
     }
 
     private void OnKeyDown(object sender, KeyEventArgs e)
@@ -204,7 +280,9 @@ public sealed class TabStripDragDropBehavior : IDisposable
 
     private void OnLostCapture(object sender, MouseEventArgs e)
     {
-        if (_pressedTab != null && !_ending) End(false);
+        // Selecting a tab rebuilds the containers and WPF drops the capture it granted us.
+        // That is not a cancelled drag, so only end the press if the button is really up.
+        if (_pressedTab != null && !_ending && !_dragging && e.LeftButton != MouseButtonState.Pressed) End(false);
     }
 
     public void Cancel() => End(false);
@@ -215,23 +293,23 @@ public sealed class TabStripDragDropBehavior : IDisposable
         _ending = true;
         try
         {
-            var old = _pressedTab == null ? -1 : _listBox.Items.IndexOf(_pressedTab);
-            var target = _target;
-            var dragging = _dragging;
-            _scrollTimer.Stop();
-            if (_container != null) Panel.SetZIndex(_container, _originalZIndex);
+            if (_container != null)
+            {
+                Panel.SetZIndex(_container, _originalZIndex);
+                _container.Background = _originalBackground ?? Brushes.Transparent;
+            }
+            if (_cardBorder is not null) _cardBorder.ClearValue(Border.BackgroundProperty);
+            _cardBorder = null;
+            _originalBackground = null;
             foreach (var item in _listBox.Items)
                 if (_listBox.ItemContainerGenerator.ContainerFromItem(item) is ListBoxItem c)
                     c.ClearValue(UIElement.RenderTransformProperty);
             _dragging = false;
             _pressedTab = null;
             _container = null;
+            _oldIndex = -1;
+            _target = -1;
             if (_listBox.IsMouseCaptured) _listBox.ReleaseMouseCapture();
-            if (commit && dragging && old >= 0 && target >= 0 && target < _listBox.Items.Count && old != target)
-            {
-                _moveTab(old, target);
-                _listBox.UpdateLayout();
-            }
             if (_panel != null)
             {
                 _panel.IsDragging = false;
@@ -251,6 +329,5 @@ public sealed class TabStripDragDropBehavior : IDisposable
         _listBox.PreviewMouseLeftButtonUp -= OnUp;
         _listBox.PreviewKeyDown -= OnKeyDown;
         _listBox.LostMouseCapture -= OnLostCapture;
-        _scrollTimer.Tick -= OnScrollTick;
     }
 }

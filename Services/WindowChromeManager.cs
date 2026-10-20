@@ -3,23 +3,39 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using StrideBrowser.Interop;
+using StrideBrowser.Models;
+using StrideBrowser.Services.UI;
 
 namespace StrideBrowser.Services;
 
 /// <summary>
 /// Encapsulates native Windows API (P/Invoke) calls that manage window chrome,
 /// activation, and taskbar autohide behaviors.
+///
+/// The window carries an attached WindowChrome with CaptionHeight 0, so WPF draws
+/// the whole frame and no native sizing strip sits above the toolbar. That
+/// WindowChrome resize border is the only resize affordance; the page host inset
+/// which keeps it reachable is attached here.
 /// </summary>
 public sealed class WindowChromeManager
 {
     private readonly Window _window;
     private IntPtr _hwnd;
     private HwndSource? _source;
+    private WindowEdgeResizeInset? _resizeInset;
 
     // Optional callback for horizontal scroll wheel
     public Action<int>? OnMouseHWheel;
 
+    /// <summary>
+    /// The shared browser settings. The resize inset and the frame gap are one margin, so
+    /// the inset owner reads the frame preference itself and follows it when it changes.
+    /// </summary>
+    public BrowserSettings? Settings;
+
     private Rect _preFullscreenDipBounds;
+    private bool _isSizing;
+    private bool _inSyncLayout;
 
     public WindowChromeManager(Window window)
     {
@@ -32,7 +48,32 @@ public sealed class WindowChromeManager
         _source = HwndSource.FromHwnd(_hwnd);
         _source?.AddHook(WndProc);
 
+        _window.SizeChanged += OnWindowSizeChanged;
+
         ApplyRoundedCorners();
+
+        // The WebView2 child window covers the WindowChrome resize border below the
+        // toolbar and answers HTCLIENT there, so the page host is held clear of the
+        // border while the border is live. The helper owns that gate and drops the
+        // inset on its own when the window maximizes or the resize mode turns off.
+        // With the rounded frame on it also owns the compact frame gap, so the two
+        // gaps are added once, by one owner.
+        _resizeInset = WindowEdgeResizeInset.Attach(_window, Settings);
+    }
+
+    private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (!_isSizing || _inSyncLayout || _window.WindowState != WindowState.Normal) return;
+
+        _inSyncLayout = true;
+        try
+        {
+            _window.UpdateLayout();
+        }
+        finally
+        {
+            _inSyncLayout = false;
+        }
     }
 
     /// <summary>
@@ -125,8 +166,18 @@ public sealed class WindowChromeManager
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         const int WM_MOUSEHWHEEL = 0x020E;
+        const int WM_ENTERSIZEMOVE = 0x0231;
+        const int WM_EXITSIZEMOVE = 0x0232;
 
-        if (msg == WM_MOUSEHWHEEL)
+        if (msg == WM_ENTERSIZEMOVE)
+        {
+            _isSizing = true;
+        }
+        else if (msg == WM_EXITSIZEMOVE)
+        {
+            _isSizing = false;
+        }
+        else if (msg == WM_MOUSEHWHEEL)
         {
             int delta = (short)((wParam.ToInt64() >> 16) & 0xFFFF);
             OnMouseHWheel?.Invoke(delta);
@@ -143,6 +194,22 @@ public sealed class WindowChromeManager
     private void HandleMinMaxInfo(IntPtr hwnd, IntPtr lParam)
     {
         var mmi = Marshal.PtrToStructure<NativeMethods.MINMAXINFO>(lParam);
+
+        // This reply carries the minimum track sizes Windows clamps every
+        // interactive edge, corner and snap resize to, in device pixels. Since
+        // this hook claims the message with handled, the declared window
+        // minimums have to be answered here: WPF would otherwise write
+        // ptMinTrackSize itself and is not reached. The conversion uses the
+        // scale the window serves content at right now, which follows the
+        // monitor, and rounds each axis up so the reply never lands short of
+        // the declared floor.
+        var device = _source?.CompositionTarget.TransformToDevice;
+        mmi.ptMinTrackSize = new NativeMethods.POINT
+        {
+            X = WindowMinTrackSize.OneAxis(_window.MinWidth, device?.M11 ?? 1.0),
+            Y = WindowMinTrackSize.OneAxis(_window.MinHeight, device?.M22 ?? 1.0),
+        };
+
         var monitor = NativeMethods.MonitorFromWindow(hwnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
         if (monitor != IntPtr.Zero)
         {

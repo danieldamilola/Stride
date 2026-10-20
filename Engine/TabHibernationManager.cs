@@ -137,6 +137,18 @@ public sealed class TabHibernationManager
             Trace.WriteLine($"TrySuspendAsync failed for tab {tabId}: {ex.Message}");
         }
 
+        if (success && tab is not null && (tab.IsActive || _getTabs?.Invoke().Contains(tab) != true))
+        {
+            // A tab that has been torn into another window no longer belongs to this
+            // engine, and the destination engine cannot see this suspension. Leaving it
+            // suspended would freeze the page in its new window until something woke it,
+            // so resume it here where the suspend actually happened.
+            try { core.Resume(); }
+            catch (Exception ex) { Trace.WriteLine($"Resume after tab transfer failed: {ex.Message}"); }
+            tab.IsSleeping = false;
+            return;
+        }
+
         if (success && tab != null && !tab.IsActive && !tab.IsHibernated && _settings.TabSleepEnabled && generation == _suspensionGeneration)
             tab.IsSleeping = true;
     }

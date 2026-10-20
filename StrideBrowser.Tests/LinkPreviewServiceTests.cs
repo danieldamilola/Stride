@@ -13,7 +13,8 @@ public sealed class LinkPreviewServiceTests
     {
         private BrowserSettings _s = new();
         public BrowserSettings Load() => _s;
-        public void Save(BrowserSettings settings) => _s = settings;
+        public bool TrySave(BrowserSettings settings) { _s = settings; return true; }
+        public void Save(BrowserSettings settings) => TrySave(settings);
     }
 
     private LinkPreviewService CreateService(BrowserSettings? settings = null)

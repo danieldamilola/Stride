@@ -7,25 +7,24 @@
     <link rel="preload" as="image" href="{{BACKGROUND}}">
     <style>
         :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         html {
             height: 100%;
-            background-color: #111113;
+            background-color: var(--bg-base);
         }
 
         body {
             min-height: 100vh;
-            background-color: #111113;
+            background-color: var(--bg-base);
             background-image: url('{{BACKGROUND}}');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
             color: #E8E4DF;
-            font-family: 'Outfit', -apple-system, 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -189,7 +188,7 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: var(--border)338;
+            background: var(--border);
             border: 1px solid rgba(255,255,255,0.2);
             color: #E8E4DF;
             font-size: 14px;
@@ -422,86 +421,8 @@
             height: 16px;
         }
     </style>
-<style>
-:root, :root[data-theme="dark"] {
-    --bg-base: #0e0d0b;
-    --bg-dark: #0e0d0b;
-    --bg-surface: #141310;
-    --bg-hover: #1f1d19;
-    --border: var(--border);
-    --text-main: var(--text-main);
-    --text-bright: var(--text-bright);
-    --text-muted: var(--text-muted);
-    --text-dim: var(--text-dim);
-    --white: var(--white);
-}
-:root[data-theme="light"] {
-    --bg-base: #f8f8fa;
-    --bg-dark: #f8f8fa;
-    --bg-surface: #ffffff;
-    --bg-hover: #f4f4f6;
-    --border: #D4D4D2;
-    --text-main: #111113;
-    --text-bright: #000000;
-    --text-muted: #666461;
-    --text-dim: #A5A3A0;
-    --white: #000000;
-}
-@media (prefers-color-scheme: light) {
-    :root[data-theme="system"] {
-        --bg-base: #f8f8fa;
-        --bg-dark: #f8f8fa;
-        --bg-surface: #ffffff;
-        --bg-hover: #f4f4f6;
-        --border: #D4D4D2;
-        --text-main: #111113;
-        --text-bright: #000000;
-        --text-muted: #666461;
-        --text-dim: #A5A3A0;
-        --white: #000000;
-    }
-}
-</style>
-<style>
-:root, :root[data-theme="dark"] {
-    --bg-base: #0e0d0b;
-    --bg-dark: #0e0d0b;
-    --bg-surface: #141310;
-    --bg-hover: #1f1d19;
-    --border: var(--border)333;
-    --text-main: #E0E0E0;
-    --text-bright: #D4D4D4;
-    --text-muted: #A3A3A3;
-    --text-dim: #808080;
-    --white: #FFFFFF;
-}
-:root[data-theme="light"] {
-    --bg-base: #f8f8fa;
-    --bg-dark: #f8f8fa;
-    --bg-surface: #ffffff;
-    --bg-hover: #f4f4f6;
-    --border: #D4D4D2;
-    --text-main: #111113;
-    --text-bright: #000000;
-    --text-muted: #666461;
-    --text-dim: #A5A3A0;
-    --white: #000000;
-}
-@media (prefers-color-scheme: light) {
-    :root[data-theme="system"] {
-        --bg-base: #f8f8fa;
-        --bg-dark: #f8f8fa;
-        --bg-surface: #ffffff;
-        --bg-hover: #f4f4f6;
-        --border: #D4D4D2;
-        --text-main: #111113;
-        --text-bright: #000000;
-        --text-muted: #666461;
-        --text-dim: #A5A3A0;
-        --white: #000000;
-    }
-}
-</style>
+
+
 </head>
 <body>
     <div class="bg-overlay"></div>
@@ -536,18 +457,19 @@
             <input type="text" id="scName" placeholder="YouTube" maxlength="24" autofocus>
             <label for="scUrl">URL</label>
             <input type="text" id="scUrl" placeholder="https://youtube.com">
-            <div class="dialog-actions">
+            <p class="dialog-error" id="shortcutError" role="alert"></p><div class="dialog-actions">
                 <button onclick="closeDialog()">Cancel</button>
                 <button class="primary" onclick="saveShortcut()">Save</button>
             </div>
         </div>
     </div>
 
-    <button class="wallpapers-btn" onclick="window.chrome.webview.postMessage(__T + 'open-backgrounds-folder')">
+    <button class="wallpapers-btn" onclick="openWallpapers()">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-        Custom Wallpapers
+        Choose wallpaper
     </button>
 
+    <div class="dialog-overlay" id="wallpaperDialog"><div class="dialog"><h3>Choose wallpaper</h3><div class="wallpaper-grid" id="wallpaperGrid"></div><p class="dialog-error" id="wallpaperStatus" role="status"></p><div class="dialog-actions"><button onclick="window.chrome.webview.postMessage(__T+'open-backgrounds-folder')">Open wallpaper folder</button><button onclick="closeWallpapers()">Close</button></div></div></div>
     <script>
         const __T = '{{IPC_TOKEN}}:';
         let shortcuts = [];
@@ -567,6 +489,21 @@
             updateShortcutsFromB64('{{SHORTCUTS}}');
         } catch(e) {}
 
+        function openWallpapers() {
+            const grid = document.getElementById('wallpaperGrid');
+            grid.replaceChildren();
+            const urls = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob('{{WALLPAPERS}}'), c => c.charCodeAt(0))));
+            const status = document.getElementById('wallpaperStatus');
+            status.textContent = urls.length ? 'Select an image to preview and save it.' : 'Add images to the wallpaper folder, then reload this page.';
+            urls.forEach((url, i) => {
+                const button = document.createElement('button'); button.className = 'wallpaper-choice'; button.setAttribute('aria-label','Use wallpaper ' + (i+1));
+                const img = document.createElement('img'); img.src = url; img.alt = ''; button.append(img);
+                button.onclick = () => { document.body.style.backgroundImage = 'url("' + url.replaceAll('"','%22') + '")'; window.chrome.webview.postMessage(__T+'setting:newTabBackground:'+encodeURIComponent(url)); status.textContent = 'Wallpaper selected.'; };
+                grid.append(button);
+            });
+            document.getElementById('wallpaperDialog').classList.add('open');
+        }
+        function closeWallpapers() { document.getElementById('wallpaperDialog').classList.remove('open'); }
         function getDomain(url) {
             try { return new URL(url).hostname; } catch { return url; }
         }
@@ -592,7 +529,7 @@
                 var safeName = escapeHtml(name);
                 var safeDomain = escapeHtml(domain);
                 tile.innerHTML = `
-                    <img src="https://icons.duckduckgo.com/ip3/${safeDomain}.ico"
+                    <img ${ {{FAVICON_PROXY}} ? 'src="https://icons.duckduckgo.com/ip3/' + safeDomain + '.ico"' : '' }
                          onerror="this.style.display='none'" alt="">
                     <span class="tile-name">${safeName}</span>
                     <button class="tile-remove" data-index="${i}" onclick="event.stopPropagation();removeShortcut(${i})" tabindex="-1">&times;</button>
@@ -621,6 +558,7 @@
                 add.className = 'shortcut-add';
                 add.tabIndex = 0;
                 add.title = 'Add shortcut';
+                add.setAttribute('role', 'button'); add.setAttribute('aria-label', 'Add shortcut');
                 add.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
                 add.addEventListener('click', openDialog);
                 add.addEventListener('keydown', (e) => {
@@ -632,6 +570,7 @@
 
         function openDialog() {
             document.getElementById('scName').value = '';
+            document.getElementById('shortcutError').textContent = '';
             document.getElementById('scUrl').value = '';
             document.getElementById('dialogOverlay').classList.add('open');
             setTimeout(() => document.getElementById('scName').focus(), 100);
@@ -644,11 +583,17 @@
         function saveShortcut() {
             const name = document.getElementById('scName').value.trim();
             let url = document.getElementById('scUrl').value.trim();
-            if (!url) return;
+            const error = document.getElementById('shortcutError');
+            if (!url) { error.textContent = 'Enter a website address.'; return; }
 
             // Auto-prefix https if no protocol
             if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
+            try {
+                const parsed = new URL(url);
+                if (!['http:','https:'].includes(parsed.protocol) || !parsed.hostname || /\s/.test(parsed.hostname)) throw new Error();
+                url = parsed.href;
+            } catch { error.textContent = 'Enter a valid http or https website address.'; return; }
             const payload = JSON.stringify({ name: name || getDomain(url), url: url });
             window.chrome.webview.postMessage(__T+'shortcut-add:' + payload);
             closeDialog();
@@ -661,7 +606,7 @@
         // Dialog keyboard handling
         document.getElementById('dialogOverlay').addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeDialog();
-            if (e.key === 'Enter') saveShortcut();
+            if (e.key === 'Enter' && e.target.matches('input')) { e.preventDefault(); saveShortcut(); }
         });
 
         // Close dialog on overlay click

@@ -27,13 +27,15 @@ namespace StrideBrowser;
 /// </summary>
 public partial class MainWindow : Window
 {
+    private readonly IServiceProvider _services;
+    private readonly BrowserWindowManager _windows;
+    private readonly BrowserWindowContext _windowContext;
     private readonly BrowserViewModel _vm;
     private readonly TabEngine _engine;
     private readonly TabStripController _tabStripController;
     private readonly ToolbarDropController _toolbarDropController;
     private readonly ToolbarNavigationController _toolbarNavigationController;
     private readonly IOneTabStore _oneTabStore;
-    private readonly ISettingsStore _settingsStore;
     private readonly ISessionStore _sessionStore;
     private readonly IHistoryStore _historyStore;
     private readonly WebMessageRouter _router;
@@ -46,6 +48,9 @@ public partial class MainWindow : Window
     /// <summary>Prevents re-entrant tab selection changes when we programmatically update the ListBox selection.</summary>
     private bool _isUpdatingSelection;
     private readonly Services.UI.FullscreenController _fullscreenController;
+    private readonly ToolbarTintAdapter _tintAdapter;
+    private readonly RoundedWebContentFrameController _frameController;
+    private readonly TabActivationGuard _activationGuard = new();
 
     private const double LoadingIndicatorWidth = 100;
     private const double LoadingOvershootPx = 20;
@@ -54,15 +59,20 @@ public partial class MainWindow : Window
 
     public MainWindow(IServiceProvider services, BrowserViewModel vm)
     {
-        // We no longer need Deactivated/LocationChanged/SizeChanged hooks 
-        // since the Command Bar is integrated back into the visual tree.
-
         InitializeComponent();
 
         _fullscreenController = new Services.UI.FullscreenController(this, Toolbar);
+        _tintAdapter = new ToolbarTintAdapter(Toolbar, StandardAddressBarBorder, StandardSuggestionsPopupBorder);
 
         _vm = vm;
-        _settingsStore = services.GetRequiredService<ISettingsStore>();
+        _services = services;
+        // The frame controller owns the rounded clip on every page host in this window.
+        // It reads the frame preference from the shared settings instance and publishes
+        // the same geometry the inset owner uses, so the clip and the gap cannot drift.
+        _frameController = new RoundedWebContentFrameController(this, WebViewHost, vm.Settings, ContentFrameOutline);
+        Closed += (_, _) => _frameController.Dispose();
+        _windows = services.GetRequiredService<BrowserWindowManager>();
+        _windowContext = services.GetRequiredService<BrowserWindowContext>();
         _oneTabStore = services.GetRequiredService<IOneTabStore>();
         _sessionStore = services.GetRequiredService<ISessionStore>();
         _historyStore = services.GetRequiredService<IHistoryStore>();
@@ -79,6 +89,10 @@ public partial class MainWindow : Window
         Closed += (_, _) => _toolbarDropController.Dispose();
         _toolbarNavigationController = new ToolbarNavigationController(RefreshButton, _engine);
         Closed += (_, _) => _toolbarNavigationController.Dispose();
+        _windows.Register(this, _engine, TabList, services);
+        // Only now that the window is registered can a drag hand its tab to a peer window
+        // or tear one off, both of which look this window up by its strip and engine.
+        _tabStripController.Drag.Transfer = new Services.UI.TabTransferHost(_engine, _windows);
 
         var linkPreviewController = services.GetRequiredService<Services.UI.LinkPreviewWindowController>();
         linkPreviewController.Attach(this);
@@ -93,14 +107,18 @@ public partial class MainWindow : Window
         {
             Dispatcher.InvokeAsync(UpdateReaderOverlay);
         };
-        _engine.TabClosed += tabId => Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        _engine.TabClosed += tabId =>
+        {
+            _activationGuard.Forget(tabId);
+            Dispatcher.InvokeAsync(UpdateReaderOverlay);
+        };
         _readerService.SessionChanged += (s, tabId) => Dispatcher.InvokeAsync(UpdateReaderOverlay);
 
 
         _router = services.GetRequiredService<WebMessageRouter>();
         _router.SettingChanged += OnSettingChanged;
         var themeManager = services.GetRequiredService<ThemeManager>();
-        themeManager.ThemeChanged += () =>
+        Action onThemeChanged = () =>
         {
             var themeStr = themeManager.GetThemeString();
             var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
@@ -113,7 +131,16 @@ public partial class MainWindow : Window
             }
             _engine.ApplyAppThemeToWebViews();
             ApplyAppIcon();
+            // App theme swapped the base colors the tint builds on, so the
+            // adapter must re-resolve instead of trusting cached values.
+            _tintAdapter.Reset();
+            if (_engine.ActiveTab is not null)
+                UpdateToolbarTint(_engine.ActiveTab);
         };
+        // The theme manager is shared by every window, so this window's handler has to
+        // come off when the window does.
+        themeManager.ThemeChanged += onThemeChanged;
+        Closed += (_, _) => themeManager.ThemeChanged -= onThemeChanged;
 
         DataContext = _vm;
 
@@ -137,7 +164,10 @@ public partial class MainWindow : Window
             OnMouseHWheel = delta =>
             {
                 if (TabList.IsMouseOver) _tabStripController.ScrollWheel(-delta);
-            }
+            },
+            // The inset owner resolves the combined gap from the same shared settings
+            // instance the frame controller reads, so a live toggle moves both.
+            Settings = _vm.Settings
         };
         _chromeManager.Initialize();
 
@@ -151,45 +181,41 @@ public partial class MainWindow : Window
         try
         {
             await _engine.InitializeAsync();
+            // The window can be closed while the runtime is still starting, in which case
+            // the manager has already cancelled Ready and nothing here should run.
+            if (_windowContext.IsClosing) return;
 
             _shortcuts = BuildShortcutMap();
             _shortcuts.RebuildBindings(_vm.Settings.CustomShortcuts);
 
-            await RestoreSessionOrCreateTab();
+            // Only the startup window restores. A window torn off later must come up
+            // holding the tab it was given, not the saved session and not a fresh tab:
+            // the dock that follows this window's Ready puts that tab at slot zero.
+            if (_windowContext.RestoreStartupSession) await RestoreSessionOrCreateTab();
             SyncTabsBinding();
             ApplyAppIcon();
-            _vm.Settings.PropertyChanged += (_, args) =>
-            {
-                if (args.PropertyName == nameof(BrowserSettings.ShowTabNames))
-                    ApplyTabShrink();
-            };
             Dispatcher.BeginInvoke(new Action(ApplyTabShrink),
                 System.Windows.Threading.DispatcherPriority.Loaded);
 
-            var startupCoordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
-            await startupCoordinator.HandleCommandLineAndReleaseNotesAsync(Environment.GetCommandLineArgs().Skip(1).ToArray());
-
-            SingleInstanceManager.InstanceMessageReceived += OnInstanceMessageReceived;
-
-            if (!DefaultBrowserRegistrar.IsRegistered())
-                DefaultBrowserRegistrar.Register();
+            if (_windowContext.RestoreStartupSession)
+            {
+                var startupCoordinator = _services.GetRequiredService<Services.Startup.StartupCoordinator>();
+                await startupCoordinator.HandleCommandLineAndReleaseNotesAsync(Environment.GetCommandLineArgs().Skip(1).ToArray());
+                if (!DefaultBrowserRegistrar.IsRegistered())
+                    DefaultBrowserRegistrar.Register();
+            }
+            // Anything docking a tab into this window waits for this, so it is set only
+            // once the window can actually show a tab.
+            _windowContext.Ready.TrySetResult();
 
 
         }
         catch (Exception ex)
         {
+            // A window that never became ready would hang anything waiting to dock into it.
+            _windowContext.Ready.TrySetException(ex);
             Trace.WriteLine($"OnWindowLoaded failed: {ex}");
         }
-    }
-
-    private void OnInstanceMessageReceived(string[] args)
-    {
-        Dispatcher.InvokeAsync(async () =>
-        {
-            var coordinator = ((App)App.Current).Services.GetRequiredService<Services.Startup.StartupCoordinator>();
-            await coordinator.HandleCommandLineArgsAsync(args);
-            _chromeManager?.BringToFront();
-        });
     }
 
     private KeyboardShortcutMap BuildShortcutMap()
@@ -241,7 +267,10 @@ public partial class MainWindow : Window
             {
                 foreach (var entry in session)
                 {
-                    var tab = _engine.CreateTab(entry.Url);
+                    // Restore every saved row verbatim. Duplicates stay duplicated:
+                    // the default duplicate blocker would collapse repeat URLs,
+                    // shorten the list and misalign the saved active index.
+                    var tab = _engine.CreateTab(entry.Url, blockDuplicates: false);
                     tab.Title = entry.Title;
                     tab.IsPinned = entry.IsPinned;
                     _ = _engine.LoadFaviconAsync(tab);
@@ -275,11 +304,16 @@ public partial class MainWindow : Window
             if (tab.IsActive)
             {
                 _vm.SyncNavigationState();
-                if (TabList.SelectedItem != tab || (!StandardAddressBar.IsKeyboardFocusWithin && !_isCommandBarOpen))
+                // Display text the user never typed belongs to the old tab.
+                // Refresh it on the new tab, but never clobber real typing.
+                if (NavigationService.ShouldRefreshAddressDisplay(
+                        TabList.SelectedItem != tab,
+                        StandardAddressBar.IsKeyboardFocusWithin,
+                        _vm.IsAddressEditedSinceDisplay))
                     _vm.SyncAddressBar(tab);
                 UpdateSecurityIcon(tab.Url);
                 UpdateUrlLabel(tab);
-                UpdateToolbarTint(tab);
+                _tintAdapter.UpdateTint(tab, _vm.Settings.AdaptiveToolbarTint);
                 _isUpdatingSelection = true;
                 try
                 {
@@ -288,6 +322,13 @@ public partial class MainWindow : Window
                 }
                 finally { _isUpdatingSelection = false; }
 
+                // Metadata-only updates on the active tab carry no switch, so
+                // they must not reactivate the WebView. That path cancels any
+                // in-flight activation and resuspends background tabs. The
+                // guard decides by active tab identity: a newly active tab,
+                // including A/B/A returns and wake selections, activates.
+                // UI refresh above still runs for every event.
+                if (!_activationGuard.ShouldActivate(tab)) return;
                 try
                 {
                     await _engine.ActivateAsync(tab);
@@ -482,7 +523,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var themeManager = ((App)Application.Current).Services.GetRequiredService<ThemeManager>();
+            var themeManager = _services.GetRequiredService<ThemeManager>();
             _appIconLight = !themeManager.IsCurrentlyDark();
             Icon = new BitmapImage(new Uri(_appIconLight
                 ? "pack://application:,,,/icons/stride-light.ico"
@@ -562,6 +603,18 @@ public partial class MainWindow : Window
         await OpenDownloadsTab();
     }
 
+    /// <summary>
+    /// Opens the toolbar overflow menu under its button. The menu carries the action commands
+    /// the row drops when it runs out of width.
+    /// </summary>
+    private void ToolbarOverflow_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { ContextMenu: { } menu } button) return;
+        menu.PlacementTarget = button;
+        menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        menu.IsOpen = true;
+    }
+
 
     private void TabAudio_Click(object sender, RoutedEventArgs e)
     {
@@ -572,68 +625,6 @@ public partial class MainWindow : Window
     // ───────────────────── Navigation ─────────────────────
 
 
-
-    private void AddressBar_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Escape)
-        {
-            _vm.RestoreTypedQuery();
-            _vm.CloseSuggestions();
-            HideCommandBar();
-            e.Handled = true;
-            return;
-        }
-
-        if (e.Key == Key.Down && _vm.ShowSuggestions)
-        {
-            _vm.MoveSuggestionHighlight(1);
-            e.Handled = true;
-            return;
-        }
-
-        if (e.Key == Key.Up && _vm.ShowSuggestions)
-        {
-            _vm.MoveSuggestionHighlight(-1);
-            e.Handled = true;
-            return;
-        }
-
-        if (e.Key != Key.Enter) return;
-        e.Handled = true;
-
-        // If a suggestion is selected, use it; otherwise use typed text
-        var input = _vm.TakeHighlightedInput()
-            ?? _vm.ResolveBarInput((sender as System.Windows.Controls.TextBox)?.Text);
-
-        if (string.IsNullOrEmpty(input)) return;
-
-        var url = _vm.ResolveInput(input);
-        if (_engine.ActiveTab is { } tab)
-        {
-            tab.Url = url;
-            _vm.ShowNavigatedUrl(url);
-            _engine.Navigate(tab, url);
-        }
-
-        _vm.ShowSuggestions = false;
-        HideCommandBar();
-    }
-
-    private void AddressBar_GotFocus(object sender, RoutedEventArgs e)
-    {
-        if (sender is TextBox tb)
-            tb.SelectAll();
-    }
-
-    private void AddressBar_PreviewMouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (!AddressBar.IsKeyboardFocusWithin)
-        {
-            Keyboard.Focus(AddressBar);
-            AddressBar.SelectAll();
-            e.Handled = true;
-        }
-    }
 
     private void StandardAddressBar_PreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
@@ -646,107 +637,21 @@ public partial class MainWindow : Window
     }
 
 
-    // ───────────────────── Interop Helpers ─────────────────────
-
-    private bool _isCommandBarOpen;
+    // ───────────────────── Address Bar ─────────────────────
 
     private void FocusAddressBar()
     {
-        if (_vm.Settings.UseFloatingCommandBar)
+        StandardAddressBar.Focus();
+        if (_engine.ActiveTab is { } activeTab && !string.IsNullOrEmpty(activeTab.Url) && !InternalUrls.IsInternal(activeTab.Url))
         {
-            ShowCommandBar();
+            StandardAddressBar.Text = activeTab.Url;
         }
         else
         {
-            StandardAddressBar.Focus();
-            if (_engine.ActiveTab is { } activeTab && !string.IsNullOrEmpty(activeTab.Url) && !InternalUrls.IsInternal(activeTab.Url))
-            {
-                StandardAddressBar.Text = activeTab.Url;
-            }
-            else
-            {
-                StandardAddressBar.Text = "";
-            }
-            _vm.NoteAddressDisplayed(StandardAddressBar.Text);
-            StandardAddressBar.SelectAll();
+            StandardAddressBar.Text = "";
         }
-    }
-
-    private void ShowCommandBar()
-    {
-        if (_isCommandBarOpen) return;
-        _isCommandBarOpen = true;
-        _vm.IsFloatingBarOpen = true;
-
-        // Pre-fill with current URL
-        if (_engine.ActiveTab is { } activeTab && !string.IsNullOrEmpty(activeTab.Url)
-            && !InternalUrls.IsInternal(activeTab.Url))
-        {
-            _vm.AddressText = activeTab.Url;
-        }
-        else
-        {
-            _vm.AddressText = "";
-        }
-        _vm.NoteAddressDisplayed(_vm.AddressText);
-
-        CommandBarGrid.Visibility = Visibility.Visible;
-
-        // 80ms punchy ease-out animation
-        CommandBarGrid.Opacity = 0;
-        CommandBarPanel.RenderTransform = new TranslateTransform(0, -10);
-
-        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(80))
-        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-        var slideIn = new DoubleAnimation(-10, 0, TimeSpan.FromMilliseconds(80))
-        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-
-        CommandBarGrid.BeginAnimation(OpacityProperty, fadeIn);
-        CommandBarPanel.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slideIn);
-
-        // Focus after layout pass to ensure TextBox is in visual tree and Popup is active
-        Dispatcher.BeginInvoke(new Action(() =>
-        {
-            AddressBar.Focus();
-            Keyboard.Focus(AddressBar);
-            AddressBar.SelectAll();
-        }), System.Windows.Threading.DispatcherPriority.Input);
-    }
-
-    private void HideCommandBar()
-    {
-        if (!_isCommandBarOpen) return;
-        _isCommandBarOpen = false;
-        _vm.IsFloatingBarOpen = false;
-
-        _vm.ShowSuggestions = false;
-        _vm.Suggestions.Clear();
-
-        // 80ms ease-out dismiss animation: fade out + slide up
-        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(80))
-        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-        fadeOut.Completed += (_, _) =>
-        {
-            CommandBarGrid.Visibility = Visibility.Collapsed;
-            CommandBarGrid.BeginAnimation(OpacityProperty, null);
-
-            // Return focus to WebView
-            if (_engine.ActiveTab is not null)
-                WebViewHost.Focus();
-        };
-
-        var slideOut = new DoubleAnimation(0, -10, TimeSpan.FromMilliseconds(80))
-        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-
-        CommandBarGrid.BeginAnimation(OpacityProperty, fadeOut);
-        if (CommandBarPanel.RenderTransform is TranslateTransform tt)
-            tt.BeginAnimation(TranslateTransform.YProperty, slideOut);
-    }
-
-    private void UrlLabel_Click(object sender, MouseButtonEventArgs e)
-    {
-        FocusAddressBar();
-        e.Handled = true;
+        _vm.NoteAddressDisplayed(StandardAddressBar.Text);
+        StandardAddressBar.SelectAll();
     }
 
     private void StandardAddressBar_KeyDown(object sender, KeyEventArgs e)
@@ -842,149 +747,43 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CommandBarBackdrop_Click(object sender, MouseButtonEventArgs e)
-    {
-        HideCommandBar();
-    }
-
-    private void AddressBar_LostFocus(object sender, RoutedEventArgs e)
-    {
-        // Don't auto-close — only close on Escape, Enter, or backdrop click
-        // This prevents the race condition where it closes immediately
-    }
-
-    private void AddressBar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
-    {
-        if (sender is not TextBox tb || !tb.IsKeyboardFocusWithin) return;
-        if (_vm.SuppressSuggestionRefresh) { _vm.SuppressSuggestionRefresh = false; return; }
-        _vm.MarkAddressEdited();
-        _ = _vm.UpdateSuggestionsAsync(tb.Text);
-    }
-
-    private void SuggestionsList_MouseUp(object sender, MouseButtonEventArgs e)
-    {
-        var input = _vm.TakeHighlightedInput();
-        if (input is not null)
-        {
-            var url = _vm.ResolveInput(input);
-            if (_engine.ActiveTab is { } tab)
-            {
-                tab.Url = url;
-                _vm.ShowNavigatedUrl(url);
-                _engine.Navigate(tab, url);
-            }
-            _vm.CloseSuggestions();
-            HideCommandBar();
-        }
-    }
-
     private void UpdateUrlLabel(BrowserTab? tab)
     {
         if (tab == null) return;
-        
+
+        // Never overwrite an active edit. Metadata updates like favicon or
+        // title changes arrive through the same event as navigations.
         if (!StandardAddressBar.IsKeyboardFocusWithin)
         {
             StandardAddressBar.Text = NavigationService.ToDisplayText(tab.Url, tab.Title);
         }
-
-        if (string.IsNullOrEmpty(tab.Url) || InternalUrls.IsInternal(tab.Url))
-        {
-            UrlLabel.Text = tab.Title ?? "New Tab";
-            return;
-        }
-
-        try
-        {
-            var uri = new Uri(tab.Url);
-            var host = uri.Host;
-            if (host.StartsWith("www.")) host = host[4..];
-            UrlLabel.Text = host;
-        }
-        catch
-        {
-            UrlLabel.Text = tab.Title ?? tab.Url;
-        }
     }
 
     // ───────────────────── Adaptive Site Tinting ─────────────────────
-    // Uses the page's actual theme color (extracted by ContentScriptInjector JS)
-    // and applies it directly to the entire toolbar chrome for a seamless look.
-    // 400ms smooth QuadraticEase transition.
+    // The per-window adapter paints the toolbar, address field, suggestion
+    // popup and tab cards from the page theme color. See ToolbarTintAdapter.
 
-    private string _currentThemeColorHex = "";
-
-    private void UpdateToolbarTint(BrowserTab tab)
-    {
-        var hex = _vm.Settings.AdaptiveToolbarTint ? tab.ThemeColor ?? "" : "";
-        if (hex == _currentThemeColorHex) return;
-        _currentThemeColorHex = hex;
-
-        var baseColor = (Color)FindResource("SidebarColor");
-        var targetColor = ToolbarTintResolver.ResolveTargetColor(hex, baseColor);
-
-        var anim = new ColorAnimation
-        {
-            To = targetColor,
-            Duration = TimeSpan.FromMilliseconds(400),
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
-        };
-
-        var brush = Toolbar.Background as SolidColorBrush;
-        if (brush is null || brush.IsFrozen)
-        {
-            brush = new SolidColorBrush(baseColor);
-            Toolbar.Background = brush;
-        }
-        brush.BeginAnimation(SolidColorBrush.ColorProperty, anim);
-
-        // Dynamic Contrast: If the toolbar adapts to a light color, switch icons/text to dark
-        if (ToolbarTintResolver.IsLight(targetColor))
-        {
-            Toolbar.Resources["TextPrimary"] = new SolidColorBrush(Color.FromRgb(30, 30, 34));
-            Toolbar.Resources["TextSecondary"] = new SolidColorBrush(Color.FromRgb(70, 70, 74));
-            Toolbar.Resources["TextMuted"] = new SolidColorBrush(Color.FromRgb(100, 100, 104));
-        }
-        else
-        {
-            // Dark background -> remove local overrides so they fall back to global App.xaml theme
-            Toolbar.Resources.Remove("TextPrimary");
-            Toolbar.Resources.Remove("TextSecondary");
-            Toolbar.Resources.Remove("TextMuted");
-        }
-    }
+    private void UpdateToolbarTint(BrowserTab tab) =>
+        _tintAdapter.UpdateTint(tab, _vm.Settings.AdaptiveToolbarTint);
 
 
     private void UpdateSecurityIcon(string url)
     {
         if (string.IsNullOrEmpty(url) || InternalUrls.IsInternal(url))
         {
-            SecurityIcon.Visibility = Visibility.Collapsed;
             StandardSecurityIcon.Visibility = Visibility.Collapsed;
             return;
         }
 
-        if (_vm.Settings.UseFloatingCommandBar)
-        {
-            SecurityIcon.Visibility = Visibility.Visible;
-            StandardSecurityIcon.Visibility = Visibility.Collapsed;
-        }
-        else
-        {
-            SecurityIcon.Visibility = Visibility.Collapsed;
-            StandardSecurityIcon.Visibility = Visibility.Visible;
-        }
+        StandardSecurityIcon.Visibility = Visibility.Visible;
 
         if (url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
-            SecurityIcon.Data = (StreamGeometry)FindResource("IconLock");
-            SecurityIcon.Stroke = new SolidColorBrush(Color.FromRgb(0x6B, 0x8F, 0x71));
             StandardSecurityIcon.Data = (StreamGeometry)FindResource("IconLock");
             StandardSecurityIcon.Stroke = new SolidColorBrush(Color.FromRgb(0x6B, 0x8F, 0x71));
         }
         else
         {
-            SecurityIcon.Data = (StreamGeometry)FindResource("IconGlobe");
-            SecurityIcon.Stroke = (Brush)FindResource("TextSecondary");
             StandardSecurityIcon.Data = (StreamGeometry)FindResource("IconGlobe");
             StandardSecurityIcon.Stroke = (Brush)FindResource("TextSecondary");
         }
@@ -992,14 +791,14 @@ public partial class MainWindow : Window
 
     private void StartSecuritySpinner()
     {
-        if (SecurityIcon.Visibility != Visibility.Visible) return;
+        if (StandardSecurityIcon.Visibility != Visibility.Visible) return;
 
         StopSecuritySpinner();
-        SecurityIcon.Data = (StreamGeometry)FindResource("IconRefresh");
-        SecurityIcon.Stroke = (Brush)FindResource("Accent");
+        StandardSecurityIcon.Data = (StreamGeometry)FindResource("IconRefresh");
+        StandardSecurityIcon.Stroke = (Brush)FindResource("Accent");
         var rot = new RotateTransform();
-        SecurityIcon.RenderTransformOrigin = new Point(0.5, 0.5);
-        SecurityIcon.RenderTransform = rot;
+        StandardSecurityIcon.RenderTransformOrigin = new Point(0.5, 0.5);
+        StandardSecurityIcon.RenderTransform = rot;
         var spin = new DoubleAnimation(0, 360, TimeSpan.FromSeconds(0.9))
         {
             RepeatBehavior = RepeatBehavior.Forever
@@ -1009,9 +808,9 @@ public partial class MainWindow : Window
 
     private void StopSecuritySpinner()
     {
-        if (SecurityIcon.RenderTransform is RotateTransform rot)
+        if (StandardSecurityIcon.RenderTransform is RotateTransform rot)
             rot.BeginAnimation(RotateTransform.AngleProperty, null);
-        SecurityIcon.RenderTransform = null;
+        StandardSecurityIcon.RenderTransform = null;
     }
 
     // ───────────────────── OneTab ─────────────────────
@@ -1023,10 +822,10 @@ public partial class MainWindow : Window
         try
         {
             var tab = _engine.CreateTab(InternalUrls.OneTab);
-            tab.Title = "OneTab";
+            tab.Title = "Saved tabs";
             _engine.SwitchTo(tab);
+            // Creation serves the page through routing; no second navigation here.
             await _engine.ActivateAsync(tab);
-            _engine.NavigateToOneTab(tab, _oneTabStore.Load());
         }
         catch (Exception ex)
         {
@@ -1093,34 +892,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnSettingChanged(string key, string _)
+    private void OnSettingChanged(string key, string value)
     {
-        if (key == "darkMode")
+        if (key == "shortcutRecording" && _shortcuts is not null) _shortcuts.IsRecording = value == "true";
+        if (key is "appTheme" or "reset")
         {
-            // Native dark mode (WebContentsForceDark) takes effect at engine init — a restart is required.
-            // Show a banner on the settings page to inform the user.
-            var msg = _vm.Settings.ForceDarkMode ? "Dark mode enabled" : "Dark mode disabled";
-            var js = $@"(function() {{
-                var existing = document.getElementById('stride-restart-banner');
-                if (existing) existing.remove();
-                var banner = document.createElement('div');
-                banner.id = 'stride-restart-banner';
-                banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#e0e0e0;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 22px;font-size:14px;font-family:inherit;display:flex;align-items:center;gap:14px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
-                banner.innerHTML = '<span style=""font-size:18px"">🌙</span><span><strong>{msg}</strong> — Restart Stride to apply</span><button onclick=""this.parentElement.remove()"" style=""background:rgba(255,255,255,0.1);border:none;color:#e0e0e0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;margin-left:8px;"">Dismiss</button>';
-                document.body.appendChild(banner);
-                setTimeout(() => {{ if(banner.parentNode) banner.remove(); }}, 6000);
-            }})();";
-            foreach (var tab in _engine.Tabs)
-            {
-                if (tab.Url?.StartsWith("internal://settings") == true)
-                    _engine.ExecuteScript(tab.Id, js);
-            }
-        }
-
-
-        if (key == "appTheme")
-        {
-            var tm = ((App)Application.Current).Services.GetRequiredService<ThemeManager>();
+            var tm = _services.GetRequiredService<ThemeManager>();
             var themeStr = tm.GetThemeString();
             var js = $"document.documentElement.setAttribute('data-theme', '{themeStr}');";
             foreach (var tab in _engine.Tabs)
@@ -1131,19 +908,22 @@ public partial class MainWindow : Window
                 }
             }
             _engine.ApplyAppThemeToWebViews();
+            _tintAdapter.Reset();
+            if (_engine.ActiveTab is not null)
+                UpdateToolbarTint(_engine.ActiveTab);
         }
 
-        if (key == "accentColor")
+        if (key is "accentColor" or "reset")
             ApplyAccentColor(_vm.Settings.AccentColor);
 
         if (key == "adaptiveTint" && _engine.ActiveTab is not null)
         {
-            _currentThemeColorHex = "";
+            _tintAdapter.Reset();
             UpdateToolbarTint(_engine.ActiveTab);
         }
 
         // Live-rebuild shortcut bindings when user rebinds a key
-        if (key is "shortcut" or "shortcutReset")
+        if (key is "shortcut" or "shortcutReset" or "reset")
             _shortcuts?.RebuildBindings(_vm.Settings.CustomShortcuts);
 
         // Removed: Reloading the settings page here causes it to jump back to the General tab
@@ -1190,15 +970,16 @@ public partial class MainWindow : Window
 
     // ──── Keyboard shortcuts ────
 
-    /// <summary>True while the dropdown is open and an address box holds logical focus.</summary>
+    /// <summary>True while the dropdown is open and the address box holds logical focus.</summary>
     private bool IsAddressBoxLogicallyFocused()
     {
         var focused = FocusManager.GetFocusedElement(this);
-        return ReferenceEquals(focused, StandardAddressBar) || ReferenceEquals(focused, AddressBar);
+        return ReferenceEquals(focused, StandardAddressBar);
     }
 
     private async void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (_shortcuts?.IsRecording == true) return;
         try
         {
             if (e.Key == Key.Escape && _tabStripController.CancelDrag())
@@ -1206,7 +987,7 @@ public partial class MainWindow : Window
                 e.Handled = true;
                 return;
             }
-            if (e.Key == Key.Escape && _vm.IsLoading && !_vm.ShowSuggestions && !_isCommandBarOpen)
+            if (e.Key == Key.Escape && _vm.IsLoading && !_vm.ShowSuggestions)
             {
                 _engine.StopLoading();
             }
@@ -1217,9 +998,8 @@ public partial class MainWindow : Window
             // logical focus. Handling here also stops a double move below.
             if ((e.Key == Key.Down || e.Key == Key.Up) && _vm.ShowSuggestions && IsAddressBoxLogicallyFocused())
             {
-                var target = ReferenceEquals(FocusManager.GetFocusedElement(this), AddressBar) ? AddressBar : StandardAddressBar;
-                if (!target.IsKeyboardFocusWithin)
-                    target.Focus();
+                if (!StandardAddressBar.IsKeyboardFocusWithin)
+                    StandardAddressBar.Focus();
                 _vm.MoveSuggestionHighlight(e.Key == Key.Down ? 1 : -1);
                 e.Handled = true;
                 return;
@@ -1278,8 +1058,8 @@ public partial class MainWindow : Window
             var tab = _engine.CreateTab(InternalUrls.Settings);
             tab.Title = "Settings";
             _engine.SwitchTo(tab);
+            // Creation serves the page through routing; no second navigation here.
             await _engine.ActivateAsync(tab);
-            _engine.NavigateToSettings(tab, _vm.Settings);
         }
         catch (Exception ex)
         {
@@ -1334,9 +1114,8 @@ public partial class MainWindow : Window
             var tab = _engine.CreateTab(InternalUrls.History);
             tab.Title = "History";
             _engine.SwitchTo(tab);
+            // Creation serves the page through routing; no second navigation here.
             await _engine.ActivateAsync(tab);
-            var entries = _historyStore.Load();
-            _engine.NavigateToHistory(tab, entries);
         }
         catch (Exception ex) { Trace.WriteLine($"History open failed: {ex}"); }
     }
@@ -1348,8 +1127,8 @@ public partial class MainWindow : Window
             var tab = _engine.CreateTab(InternalUrls.Downloads);
             tab.Title = "Downloads";
             _engine.SwitchTo(tab);
+            // Creation serves the page through routing; no second navigation here.
             await _engine.ActivateAsync(tab);
-            _engine.NavigateToDownloads(tab);
         }
         catch (Exception ex) { Trace.WriteLine($"Downloads open failed: {ex}"); }
     }
@@ -1392,56 +1171,14 @@ public partial class MainWindow : Window
 
     // ───────────────────── Cleanup ─────────────────────
 
-    private bool _isShuttingDown;
-
-    protected override async void OnClosing(System.ComponentModel.CancelEventArgs e)
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
-        if (_isShuttingDown)
-        {
-            base.OnClosing(e);
-            return;
-        }
-
-        e.Cancel = true;
-        _isShuttingDown = true;
-
-        try
-        {
-            if (_vm.Settings.RestoreSessionOnStartup)
-            {
-                var tabs = _engine.Tabs
-                    .Where(t => !InternalUrls.IsInternal(t.Url))
-                    .Select(t => (t.Url, t.Title, t.IsPinned, t == _engine.ActiveTab));
-                _sessionStore.Save(tabs);
-            }
-
-            if (_vm.Settings.ClearDataOnExit)
-            {
-                try
-                {
-                    var profile = _engine.GetCoreWebView2()?.Profile;
-                    if (profile is not null)
-                    {
-                        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                        await profile.ClearBrowsingDataAsync().WaitAsync(cts.Token);
-                    }
-                }
-                catch { /* Timeout or disposal — best-effort cleanup */ }
-            }
-
-            _settingsStore.Save(_vm.Settings);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"OnClosing save failed: {ex}");
-        }
-        finally
-        {
-            try { _engine.Shutdown(); }
-            catch (Exception ex) { Trace.WriteLine($"Engine shutdown failed: {ex}"); }
-
-            Application.Current.Dispatcher.InvokeAsync(() => Close(), System.Windows.Threading.DispatcherPriority.Normal);
-        }
+        // One shutdown owner for the whole app. The manager marks this window closing,
+        // cancels anything waiting on it, saves the session across the windows that
+        // survive, hands tabs whose control is bound here to their new windows, and
+        // then closes the window for real.
+        _windows.Close(this, e);
+        base.OnClosing(e);
     }
 
     private Storyboard? _loadingStoryboard;

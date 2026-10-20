@@ -31,15 +31,15 @@ public sealed class ReleaseNotesPage
 
         foreach (var release in releases)
         {
-            logsHtml.Append("<div class=\"release-log\">");
+            logsHtml.Append("<details class=\"release-log\"" + (release == releases[0] ? " open" : "") + "><summary>");
             logsHtml.Append("<div class=\"log-header\">");
             logsHtml.Append("<div class=\"log-version\">v").Append(System.Net.WebUtility.HtmlEncode(release.Version)).Append("</div>");
             logsHtml.Append("<div class=\"log-date\">").Append(System.Net.WebUtility.HtmlEncode(release.Date)).Append("</div>");
-            logsHtml.Append("</div>");
+            logsHtml.Append("</div></summary>");
             logsHtml.Append("<ul class=\"changelog-list\">");
             logsHtml.Append(ItemsHtml(release.Features, "Added", "feature"));
             logsHtml.Append(ItemsHtml(release.Fixes, "Fixed", "fix"));
-            logsHtml.Append("</ul></div>");
+            logsHtml.Append("</ul></details>");
         }
 
         var latest = releases.Count > 0

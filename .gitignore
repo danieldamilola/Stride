@@ -43,9 +43,30 @@ Desktop.ini
 design-system/
 nul
 
+## Abandoned WPF markup compile temporaries. MSBuild writes these next to the project
+## and removes them at the end of a successful pass. An interrupted build leaves them
+## behind and they surface as untracked root files.
+*_wpftmp.csproj
+*_wpftmp/
+
 ## Throwaway investigation output
 scratch/
 tools/ToolbarProbe/
+
+## Local recovery verification evidence. Run folders under this path hold isolated
+## browser profiles, WebView2 assets, screenshots and test result files. They are local
+## diagnostics, tens of megabytes each, and are never committed. Nothing is deleted by
+## this rule: every run folder stays on disk. tools/TabTearingSmoke is source and stays
+## visible.
+tools/RecoveryVerification/
+
+## Local validation output. Test result files and hang dumps, the isolated build and
+## artifact output, and FIX-REPORT.md which is a local resize validation note. These are
+## diagnostics and never committed. Nothing is deleted by this rule.
+StrideBrowser.Tests/TestResults/
+tools/build-artifacts/
+tools/build-isolated/
+FIX-REPORT.md
 
 Output/
 publish/

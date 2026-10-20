@@ -11,7 +11,6 @@ public sealed class OnboardingPage
         {
             theme = settings.AppTheme.ToString().ToLowerInvariant(),
             accent = settings.AccentColor,
-            floatingBar = settings.UseFloatingCommandBar,
             adBlock = settings.AdBlockEnabled,
             smartScreen = settings.SmartScreenEnabled,
             httpsForce = settings.ForceHttps,

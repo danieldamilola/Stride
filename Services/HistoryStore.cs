@@ -83,7 +83,8 @@ public sealed class HistoryStore : IHistoryStore
     }
 
     /// <summary>Deletes the history file and clears in-memory entries.</summary>
-    public void Clear()
+    /// <returns>True when the file no longer exists and in-memory entries were cleared.</returns>
+    public bool Clear()
     {
         lock (_lock)
         {
@@ -92,8 +93,13 @@ public sealed class HistoryStore : IHistoryStore
                 _entries.Clear();
                 _loaded = true;
                 if (File.Exists(FilePath)) File.Delete(FilePath);
+                return !File.Exists(FilePath);
             }
-            catch (Exception ex) { Trace.WriteLine($"HistoryStore.Clear failed: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"HistoryStore.Clear failed: {ex.Message}");
+                return false;
+            }
         }
     }
 

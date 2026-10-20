@@ -28,11 +28,6 @@ public sealed class TabShrinkPanel : Panel
             new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
     public double ViewportWidth { get => (double)GetValue(ViewportWidthProperty); set => SetValue(ViewportWidthProperty, value); }
 
-    public static readonly DependencyProperty ShowTabNamesProperty =
-        DependencyProperty.Register(nameof(ShowTabNames), typeof(bool), typeof(TabShrinkPanel),
-            new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsMeasure));
-    public bool ShowTabNames { get => (bool)GetValue(ShowTabNamesProperty); set => SetValue(ShowTabNamesProperty, value); }
-
     private static readonly DependencyProperty AnimatedBoundsProperty =
         DependencyProperty.RegisterAttached("AnimatedBounds", typeof(Rect), typeof(TabShrinkPanel),
             new PropertyMetadata(Rect.Empty, (d, _) =>
@@ -44,9 +39,25 @@ public sealed class TabShrinkPanel : Panel
     private readonly Dictionary<UIElement, double> _heldWidths = new();
     private double[] _widths = Array.Empty<double>();
     private double? _heldActiveWidth;
+    private double _measuredViewport = double.NaN;
+    private double _arrangedWidth = double.NaN;
+    private double _arrangedViewport = double.NaN;
     public bool IsDragging { get; set; }
     public Rect GetTargetBounds(UIElement child) =>
         _targets.TryGetValue(child, out var bounds) ? bounds : System.Windows.Controls.Primitives.LayoutInformation.GetLayoutSlot(child as FrameworkElement);
+
+    /// <summary>
+    /// Whether a card may slide to its new bounds. A tab action keeps the viewport, so a card
+    /// that moved because a sibling opened, closed or reordered animates there. A viewport
+    /// change is a window resize: every card retargets on that pass, and animating each one
+    /// makes the strip chase the pointer for as long as the animation runs, so the resize
+    /// snaps instead. The arrangement decides this; the invariant is pinned here for tests.
+    /// </summary>
+    public static bool ShouldAnimate(bool viewportChanged, bool hasCurrent, bool dragging, bool animationsEnabled) =>
+        !viewportChanged && hasCurrent && !dragging && animationsEnabled;
+
+    private static bool Changed(double value, double previous) =>
+        double.IsNaN(previous) || Math.Abs(value - previous) > 0.01;
 
     // Keep the close button under the pointer when several neighboring tabs are closed.
     public void HoldWidths(BrowserTab? closing = null)
@@ -70,10 +81,10 @@ public sealed class TabShrinkPanel : Panel
 
     /// <summary>
     /// Splits the strip width across every tab. Tabs shrink from <see cref="MaxTabWidth"/> down and
-    /// keep their title until the strip can no longer give every tab <see cref="MinNamedTabWidth"/>.
-    /// Past that they go favicon only, and the strip scrolls once even favicons overflow.
+    /// each inactive tab keeps its title while the strip can still give it a readable card width.
+    /// Past that they ramp down to the favicon width, and the strip scrolls once even favicons overflow.
     /// </summary>
-    public static double[] ComputeWidths(double viewport, IReadOnlyList<bool> pinned, int activeIndex, bool showNames)
+    public static double[] ComputeWidths(double viewport, IReadOnlyList<bool> pinned, int activeIndex)
     {
         var widths = new double[pinned.Count];
         var total = pinned.Count;
@@ -94,15 +105,15 @@ public sealed class TabShrinkPanel : Panel
         }
 
         // The rest of the tabs split whatever the selected one leaves behind and
-        // ramp down continuously as tabs open. Icon-only mode pins them to the
-        // favicon pill; named mode lets them shrink toward it.
+        // ramp down continuously as tabs open, from a full card down to the
+        // favicon pill. There is no separate icon-only display mode.
         var rest = Math.Max(0, unpinnedCount - 1);
         var activeWidth = active
             ? Math.Clamp(available - rest * IconTabWidth, IconTabWidth, MaxTabWidth)
             : 0;
         var others = active ? rest : unpinnedCount;
         var width = others > 0
-            ? Math.Clamp((available - activeWidth) / others, IconTabWidth, showNames ? MaxTabWidth : IconTabWidth)
+            ? Math.Clamp((available - activeWidth) / others, IconTabWidth, MaxTabWidth)
             : activeWidth;
 
         for (var i = 0; i < total; i++)
@@ -112,6 +123,17 @@ public sealed class TabShrinkPanel : Panel
 
     protected override Size MeasureOverride(Size availableSize)
     {
+        var viewport = ViewportWidth > 0 ? ViewportWidth : double.IsFinite(availableSize.Width) ? availableSize.Width : 0;
+        // A held width keeps the close button under the pointer for the length of a close,
+        // which only means anything while the viewport is the one the hold was taken in. A
+        // resize is a new viewport, so the hold is dropped rather than pinning an old width.
+        if (Changed(viewport, _measuredViewport))
+        {
+            _heldWidths.Clear();
+            _heldActiveWidth = null;
+        }
+        _measuredViewport = viewport;
+
         var pinned = new bool[InternalChildren.Count];
         var active = -1;
         for (var i = 0; i < pinned.Length; i++)
@@ -122,7 +144,7 @@ public sealed class TabShrinkPanel : Panel
                 if (tab.IsActive) active = i;
             }
         }
-        _widths = ComputeWidths(ViewportWidth > 0 ? ViewportWidth : double.IsFinite(availableSize.Width) ? availableSize.Width : 0, pinned, active, ShowTabNames);
+        _widths = ComputeWidths(viewport, pinned, active);
         var height = 0.0;
         var total = 0.0;
         for (var i = 0; i < InternalChildren.Count; i++)
@@ -145,18 +167,28 @@ public sealed class TabShrinkPanel : Panel
 
     protected override Size ArrangeOverride(Size finalSize)
     {
+        // A viewport change is a resize. Every card retargets on this pass, so the whole strip
+        // is placed on the new bounds here instead of sliding there: an animated card would
+        // otherwise chase the pointer for the length of the animation while the window drags.
+        // Every card loses its clock, not just the ones whose target moved, because a card
+        // still animating toward an old target would keep chasing it.
+        var viewportChanged = Changed(finalSize.Width, _arrangedWidth) | Changed(ViewportWidth, _arrangedViewport);
+        _arrangedWidth = finalSize.Width;
+        _arrangedViewport = ViewportWidth;
+        var animationsOn = SystemParameters.ClientAreaAnimation;
+
         var x = 0.0;
         for (var i = 0; i < InternalChildren.Count; i++)
         {
             var child = InternalChildren[i];
             var width = i < _widths.Length ? _widths[i] : child.DesiredSize.Width;
             var target = new Rect(x, 0, width, finalSize.Height);
-            if (!_targets.TryGetValue(child, out var previous) || previous != target)
+            if (viewportChanged || !_targets.TryGetValue(child, out var previous) || previous != target)
             {
                 var current = (Rect)child.GetValue(AnimatedBoundsProperty);
                 child.BeginAnimation(AnimatedBoundsProperty, null);
                 child.SetValue(AnimatedBoundsProperty, target);
-                if (!current.IsEmpty && !IsDragging && SystemParameters.ClientAreaAnimation)
+                if (ShouldAnimate(viewportChanged, !current.IsEmpty, IsDragging, animationsOn))
                     child.BeginAnimation(AnimatedBoundsProperty, new RectAnimation(current, target, TimeSpan.FromMilliseconds(160))
                     {
                         EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },

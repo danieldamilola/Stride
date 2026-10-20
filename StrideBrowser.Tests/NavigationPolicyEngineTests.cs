@@ -13,7 +13,8 @@ public class NavigationPolicyEngineTests
         private BrowserSettings _settings;
         public FakeSettingsStore(BrowserSettings settings) => _settings = settings;
         public BrowserSettings Load() => _settings;
-        public void Save(BrowserSettings settings) => _settings = settings;
+        public bool TrySave(BrowserSettings settings) { _settings = settings; return true; }
+        public void Save(BrowserSettings settings) => TrySave(settings);
     }
 
     [Theory]
@@ -105,7 +106,7 @@ public class NavigationPolicyEngineTests
             FocusDomains = "twitter.com\nreddit.com\nyoutube.com"
         };
         var settingsStore = new FakeSettingsStore(settings);
-        var focusService = new FocusBlocklistService(settingsStore);
+        var focusService = new FocusBlocklistService(settingsStore, settings);
         var policyEngine = new NavigationPolicyEngine(focusService);
 
         Assert.True(policyEngine.IsBlockedFocusHost("https://twitter.com/home", out var host1));
@@ -118,5 +119,91 @@ public class NavigationPolicyEngineTests
         Assert.False(policyEngine.IsBlockedFocusHost("https://wikipedia.org", out _));
         Assert.False(policyEngine.IsBlockedFocusHost(null, out _));
         Assert.False(policyEngine.IsBlockedFocusHost("not a url", out _));
+    }
+
+    private class CountingSettingsStore : ISettingsStore
+    {
+        private BrowserSettings _settings;
+        public int LoadCount { get; private set; }
+        public CountingSettingsStore(BrowserSettings settings) => _settings = settings;
+        public BrowserSettings Load()
+        {
+            LoadCount++;
+            return _settings;
+        }
+        public bool TrySave(BrowserSettings settings) { _settings = settings; return true; }
+        public void Save(BrowserSettings settings) => TrySave(settings);
+    }
+
+    [Fact]
+    public void IsBlockedFocusHost_DoesNotReloadSettingsStoreDuringNavigation()
+    {
+        var settings = new BrowserSettings
+        {
+            FocusLocked = true,
+            FocusDomains = "blocked.com\ndistraction.org"
+        };
+        var countingStore = new CountingSettingsStore(settings);
+        var focusService = new FocusBlocklistService(countingStore, settings);
+        var policyEngine = new NavigationPolicyEngine(focusService);
+
+        Assert.Equal(0, countingStore.LoadCount);
+
+        for (int i = 0; i < 10; i++)
+        {
+            policyEngine.IsBlockedFocusHost("https://blocked.com/page" + i, out _);
+            policyEngine.IsBlockedFocusHost("https://allowed.com/page" + i, out _);
+        }
+
+        Assert.Equal(0, countingStore.LoadCount);
+    }
+
+    private static void RunInSta(System.Action action)
+    {
+        System.Exception? error = null;
+        var thread = new System.Threading.Thread(() =>
+        {
+            try
+            {
+                action();
+            }
+            catch (System.Exception ex)
+            {
+                error = ex;
+            }
+        });
+        thread.SetApartmentState(System.Threading.ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+
+        if (error != null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
+        }
+    }
+
+    [Fact]
+    public void ResolveOwnerWindow_ReturnsWindowOfHostingFrameworkElement()
+    {
+        RunInSta(() =>
+        {
+            var window = new System.Windows.Window();
+            var border = new System.Windows.Controls.Border();
+            window.Content = border;
+
+            var resolved = NavigationPolicyEngine.ResolveOwnerWindow(border);
+            Assert.Same(window, resolved);
+        });
+    }
+
+    [Fact]
+    public void ResolveOwnerWindow_ReturnsNullOrMainWindowWhenUnattached()
+    {
+        RunInSta(() =>
+        {
+            var unattachedBorder = new System.Windows.Controls.Border();
+            var resolved = NavigationPolicyEngine.ResolveOwnerWindow(unattachedBorder);
+            Assert.Same(System.Windows.Application.Current?.MainWindow, resolved);
+        });
     }
 }
