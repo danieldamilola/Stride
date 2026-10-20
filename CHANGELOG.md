@@ -1,5 +1,7 @@
 # Unreleased
 
+* The dark theme uses neutral charcoal backgrounds, gray borders and neutral text across the browser frame, address suggestions, link previews and built-in pages.
+
 * Dark internal pages use the native theme colors for backgrounds, cards, hover states and borders, replacing the brown tones.
 
 * Removed the initial "Changes save automatically" text from Settings.

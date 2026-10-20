@@ -1,8 +1,9 @@
 :root, :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg-base: #111113; --bg-dark: #111113; --bg-surface: #1a1a1e; --bg-hover: #252528;
-  --border: #2a2a2e; --text-main: #e8e4df; --text-bright: #f3f0eb;
-  --text-muted: #b7b1a9; --text-dim: #aaa39b; --white: #ffffff;
+  --bg-base: #111111; --bg-dark: #111111; --bg-surface: #222222; --bg-hover: #2a2a2a;
+  --bg-card: #222222; --card: #222222;
+  --border: #313131; --text-main: #eeeeee; --text-bright: #eeeeee;
+  --text-muted: #b4b4b4; --text-dim: #b4b4b4; --white: #ffffff;
 }
 :root[data-theme="light"] { color-scheme: light; --bg-base:#f8f8fa; --bg-dark:#f8f8fa; --bg-surface:#fff; --bg-hover:#efeff2; --border:#b6b4b0; --text-main:#111113; --text-bright:#111113; --text-muted:#595651; --text-dim:#625f59; --white:#111113; }
 @media (prefers-color-scheme: light) {

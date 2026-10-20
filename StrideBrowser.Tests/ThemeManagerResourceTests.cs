@@ -73,11 +73,11 @@ public sealed class ThemeManagerResourceTests
             // Verify effective dark theme resources are applied
             var surfaceBrush = Application.Current.FindResource("SurfaceBrush") as SolidColorBrush;
             Assert.NotNull(surfaceBrush);
-            Assert.Equal(Color.FromRgb(0x1A, 0x1A, 0x1E), surfaceBrush.Color); // Dark theme SurfaceColor = #1A1A1E
+            Assert.Equal(Color.FromRgb(0x22, 0x22, 0x22), surfaceBrush.Color); // Dark theme SurfaceColor = #222222
             
             var textPrimary = Application.Current.FindResource("TextPrimary") as SolidColorBrush;
             Assert.NotNull(textPrimary);
-            Assert.Equal(Color.FromRgb(0xE8, 0xE4, 0xDF), textPrimary.Color); // Dark theme TextPrimaryColor = #E8E4DF
+            Assert.Equal(Color.FromRgb(0xEE, 0xEE, 0xEE), textPrimary.Color); // Dark theme TextPrimaryColor = #EEEEEE
             
             // Switch to light
             settings.AppTheme = AppThemeMode.Light;
@@ -111,7 +111,7 @@ public sealed class ThemeManagerResourceTests
                 // Verify effective resource change
                 var surfaceBrush = Application.Current.FindResource("SurfaceBrush") as SolidColorBrush;
                 Assert.NotNull(surfaceBrush);
-                Assert.Equal(Color.FromRgb(0x1A, 0x1A, 0x1E), surfaceBrush.Color);
+                Assert.Equal(Color.FromRgb(0x22, 0x22, 0x22), surfaceBrush.Color);
                 
                 settingsStore.Save(settings);
                 var loadedSettings = settingsStore.Load();
@@ -178,7 +178,7 @@ public sealed class ThemeManagerResourceTests
             Assert.Equal("SentinelValue", Application.Current.Resources["ThemeManagerTestSentinel"]);
             
             var surfaceBrushDark = Application.Current.FindResource("SurfaceBrush") as SolidColorBrush;
-            Assert.Equal(Color.FromRgb(0x1A, 0x1A, 0x1E), surfaceBrushDark.Color); // Dark
+            Assert.Equal(Color.FromRgb(0x22, 0x22, 0x22), surfaceBrushDark.Color); // Dark
             
             settings.AppTheme = AppThemeMode.Light;
             themeManager.ApplyTheme();
