@@ -18,7 +18,7 @@ public sealed class OneTabPage
 
         if (groups.Count == 0)
         {
-            sb.Append("<div class='empty'>No saved tabs. Press Ctrl+Shift+S or Ctrl+Shift+1 to save all open tabs.</div>");
+            sb.Append("<div class='empty'>No saved tabs. Use Save all tabs in the browser menu to save your open pages.</div>");
         }
         else
         {
@@ -39,6 +39,7 @@ public sealed class OneTabPage
                 sb.Append("onkeydown=\"if(event.key==='Enter'){event.preventDefault();this.blur()}\">" );
                 sb.Append(safeName);
                 sb.Append("</span>");
+                sb.Append("<button class='btn' onclick=\"var name=this.parentElement.querySelector('.group-name');name.contentEditable='true';name.focus();\">Rename</button>");
                 sb.Append("<span class='group-time'>" + WebUtility.HtmlEncode(timestamp) + "</span>");
                 sb.Append("<span class='group-count'>" + group.Tabs.Count + " tabs</span>");
                 sb.Append("<button class='btn' onclick=\"if(confirm('Restore all tabs in this group?'))window.chrome.webview.postMessage('" + tok + "onetab-restore:" + jsId + "')\">Restore All</button>");
@@ -55,7 +56,7 @@ public sealed class OneTabPage
                     var starClass = tab.IsStarred ? "starred" : "";
 
                     sb.Append("<div class='tab' data-tab-index='" + ti + "' data-group-id='" + safeId + "'>");
-                    sb.Append("<span class='tab-star " + starClass + "' onclick=\"event.stopPropagation();window.chrome.webview.postMessage('" + tok + "onetab-star:" + jsId + ":" + ti + "')\" title='Star this tab'>" + (tab.IsStarred ? "★" : "☆") + "</span>");
+                    sb.Append("<span class='tab-star " + starClass + "' onclick=\"event.stopPropagation();window.chrome.webview.postMessage('" + tok + "onetab-star:" + jsId + ":" + ti + "')\" role='button' tabindex='0' title='Star this tab'>" + (tab.IsStarred ? "★" : "☆") + "</span>");
                     sb.Append("<a class='tab-title' href='#' onclick=\"event.preventDefault();window.chrome.webview.postMessage('" + tok + "onetab-open:" + jsId + ":" + jsUrl + "');return false;\">" + safeTitle + "</a>");
                     sb.Append("<span class='tab-url'>" + safeUrl + "</span>");
                     sb.Append("<button class='tab-delete' onclick=\"event.stopPropagation();window.chrome.webview.postMessage('" + tok + "onetab-delete-tab:" + jsId + ":" + jsUrl + "')\" title='Remove this tab'>×</button>");

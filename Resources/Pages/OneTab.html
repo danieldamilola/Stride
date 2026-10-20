@@ -2,7 +2,7 @@
 <html lang="en" data-theme="{{THEME}}">
 <head>
     <meta charset="UTF-8">
-    <title>OneTab - Stride</title>
+    <title>Saved tabs - Stride</title>
     <style>
         :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -35,8 +35,8 @@
             padding: 2px 4px;
             border-radius: 4px;
         }
-        .group-name:focus { outline: 1px solid var(--accent); background: var(--bg-hover)222; }
-        .group-time { color: var(--text-muted)444; font-size: 11px; }
+        .group-name:focus { outline: 1px solid var(--accent); background: var(--bg-hover); }
+        .group-time { color: var(--text-muted); font-size: 11px; }
         .group-count { color: #7A7A7A; font-size: 12px; margin-left: auto; }
         .btn {
             padding: 5px 12px;
@@ -49,7 +49,7 @@
             font-family: inherit;
             transition: all 0.15s;
         }
-        .btn:hover { background: var(--bg-hover)222; color: var(--text-bright); }
+        .btn:hover { background: var(--bg-hover); color: var(--text-bright); }
         .btn-danger:hover { background: #C4453A; border-color: #C4453A; color: white; }
         .tab-list { padding: 4px 0; }
         .tab {
@@ -59,11 +59,11 @@
             gap: 8px;
             transition: background 0.15s;
         }
-        .tab:hover { background: var(--bg-hover)222; }
+        .tab:hover { background: var(--bg-hover); }
         .tab-star {
             cursor: pointer;
             font-size: 14px;
-            color: var(--text-muted)444;
+            color: var(--text-muted);
             transition: color 0.15s;
         }
         .tab-star.starred { color: #F59E0B; }
@@ -79,7 +79,7 @@
         }
         .tab-title:hover { color: var(--accent); }
         .tab-url {
-            color: var(--text-muted)444;
+            color: var(--text-muted);
             font-size: 11px;
             max-width: 200px;
             overflow: hidden;
@@ -89,7 +89,7 @@
         .tab-delete {
             background: none;
             border: none;
-            color: var(--text-muted)444;
+            color: var(--text-muted);
             cursor: pointer;
             font-size: 16px;
             padding: 2px 4px;
@@ -100,7 +100,7 @@
         .tab:hover .tab-delete { opacity: 1; }
         .tab-delete:hover { color: #C4453A; background: #1A0000; }
         .empty {
-            color: var(--text-muted)444;
+            color: var(--text-muted);
             font-size: 14px;
             text-align: center;
             margin-top: 80px;
@@ -122,98 +122,21 @@
             transition: border-color 0.15s;
         }
         .search-bar input:focus { border-color: var(--accent); }
-        .search-bar input::placeholder { color: var(--text-muted)444; }
+        .search-bar input::placeholder { color: var(--text-muted); }
         .group.hidden, .tab.hidden { display: none !important; }
     </style>
-<style>
-:root, :root[data-theme="dark"] {
-    --bg-base: #0e0d0b;
-    --bg-dark: #0e0d0b;
-    --bg-surface: #141310;
-    --bg-hover: #1f1d19;
-    --border: var(--border);
-    --text-main: var(--text-main);
-    --text-bright: var(--text-bright);
-    --text-muted: var(--text-muted);
-    --text-dim: var(--text-dim);
-    --white: var(--white);
-}
-:root[data-theme="light"] {
-    --bg-base: #f8f8fa;
-    --bg-dark: #f8f8fa;
-    --bg-surface: #ffffff;
-    --bg-hover: #f4f4f6;
-    --border: #D4D4D2;
-    --text-main: #111113;
-    --text-bright: #000000;
-    --text-muted: #666461;
-    --text-dim: #A5A3A0;
-    --white: #000000;
-}
-@media (prefers-color-scheme: light) {
-    :root[data-theme="system"] {
-        --bg-base: #f8f8fa;
-        --bg-dark: #f8f8fa;
-        --bg-surface: #ffffff;
-        --bg-hover: #f4f4f6;
-        --border: #D4D4D2;
-        --text-main: #111113;
-        --text-bright: #000000;
-        --text-muted: #666461;
-        --text-dim: #A5A3A0;
-        --white: #000000;
-    }
-}
-</style>
-<style>
-:root, :root[data-theme="dark"] {
-    --bg-base: #0e0d0b;
-    --bg-dark: #0e0d0b;
-    --bg-surface: #141310;
-    --bg-hover: #1f1d19;
-    --border: var(--border)333;
-    --text-main: #E0E0E0;
-    --text-bright: #D4D4D4;
-    --text-muted: #A3A3A3;
-    --text-dim: #808080;
-    --white: #FFFFFF;
-}
-:root[data-theme="light"] {
-    --bg-base: #f8f8fa;
-    --bg-dark: #f8f8fa;
-    --bg-surface: #ffffff;
-    --bg-hover: #f4f4f6;
-    --border: #D4D4D2;
-    --text-main: #111113;
-    --text-bright: #000000;
-    --text-muted: #666461;
-    --text-dim: #A5A3A0;
-    --white: #000000;
-}
-@media (prefers-color-scheme: light) {
-    :root[data-theme="system"] {
-        --bg-base: #f8f8fa;
-        --bg-dark: #f8f8fa;
-        --bg-surface: #ffffff;
-        --bg-hover: #f4f4f6;
-        --border: #D4D4D2;
-        --text-main: #111113;
-        --text-bright: #000000;
-        --text-muted: #666461;
-        --text-dim: #A5A3A0;
-        --white: #000000;
-    }
-}
-</style>
+
+
 </head>
 <body>
-    <h1>OneTab</h1>
+    <h1>Saved tabs</h1>
     {{SEARCH}}
     {{CONTENT}}
     <script>
     (function() {
         var input = document.getElementById('onetab-search');
         if (!input) return;
+        var empty = document.createElement('p'); empty.className = 'no-results'; empty.setAttribute('role', 'status'); empty.hidden = true; empty.textContent = 'No saved tabs match your search.'; input.parentElement.after(empty);
         input.addEventListener('input', function() {
             var q = input.value.toLowerCase().trim();
             var groups = document.querySelectorAll('.group');
@@ -221,11 +144,12 @@
                 var g = groups[i];
                 var tabs = g.querySelectorAll('.tab');
                 var anyVisible = false;
+                var groupMatch = ((g.querySelector('.group-name') || {}).textContent || '').toLowerCase().includes(q);
                 for (var j = 0; j < tabs.length; j++) {
                     var t = tabs[j];
                     var title = (t.querySelector('.tab-title') || {}).textContent || '';
                     var url = (t.querySelector('.tab-url') || {}).textContent || '';
-                    var match = !q || title.toLowerCase().includes(q) || url.toLowerCase().includes(q);
+                    var match = !q || groupMatch || title.toLowerCase().includes(q) || url.toLowerCase().includes(q);
                     t.classList.toggle('hidden', !match);
                     if (match) anyVisible = true;
                 }
@@ -234,6 +158,7 @@
                 if (name.toLowerCase().includes(q)) anyVisible = true;
                 g.classList.toggle('hidden', !anyVisible && q.length > 0);
             }
+            empty.hidden = !q || [...groups].some(g => !g.classList.contains('hidden'));
         });
     })();
     </script>

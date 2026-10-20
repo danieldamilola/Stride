@@ -173,7 +173,7 @@ public sealed class IpcRouteCompatibilityTests
     /// <summary>The key set the real setting handler routes, read from the shipped assembly.</summary>
     private static HashSet<string> SettingKeys()
     {
-        var field = typeof(Engine.Handlers.SettingsMessageHandler)
+        var field = typeof(StrideBrowser.Services.SettingsChangePolicy)
             .GetField("SettingSetters", BindingFlags.Static | BindingFlags.NonPublic);
         Assert.NotNull(field);
 

@@ -7,14 +7,16 @@ public sealed class HealthPage
 {
     public string Render(string currentVersion, ExtensionManager.ExtensionHealth health, string ipcToken)
     {
-        var statusColor = health.HasFolder ? "#22c55e" : "#ef4444";
-        var statusText = health.HasFolder ? "Active" : "Missing";
+        var statusColor = health.HasFolder ? "#166534" : "#991b1b";
+        var statusText = health.HasFolder ? "Files present" : "Files missing";
         var zipText = health.HasZip ? "Bundled" : "Not bundled, will download";
         var hashText = health.HasHash ? "Stored" : "Not stored";
         var assetsText = health.AssetsStripped ? "Stripped" : "Not stripped";
         var html = Helpers.ResourceLoader.LoadTemplate("Resources.Pages.Health.html",
             new Dictionary<string, string>
             {
+                ["EXT_REGISTERED"] = health.Registered.HasValue ? (health.Registered.Value ? "Yes" : "No") : "Not checked",
+                ["EXT_ENABLED"] = health.Enabled.HasValue ? (health.Enabled.Value ? "Yes" : "No") : "Not checked",
                 ["CURRENT_VERSION"] = System.Web.HttpUtility.HtmlEncode(currentVersion),
                 ["EXT_VERSION"] = System.Web.HttpUtility.HtmlEncode(health.Version),
                 ["EXT_STATUS_COLOR"] = statusColor,

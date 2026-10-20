@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <title>Health - Stride</title>
 <style>
-:root { --accent: #7fb89a; --bg-base: #0f0f0f; --text-main: #e5e5e5; --card: #1a1a1a; }
+:root { --accent: #d4d4d4; --bg-base: #111113; --text-main: #e5e5e5; --card: #1a1a1e; }
 body { margin:0; padding:32px; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; background: var(--bg-base); color: var(--text-main); }
 h1 { font-size: 20px; margin-bottom: 16px; }
 .card { background: var(--card); padding: 16px; border-radius: 8px; margin-bottom: 12px; }
@@ -28,6 +28,15 @@ h1 { font-size: 20px; margin-bottom: 16px; }
 <div class="label">Assets</div>
 <div class="value">Stripped: {{ASSETS_STRIPPED}}</div>
 </div>
-<script>window.__STRIDE_IPC_TOKEN__ = "{{IPC_TOKEN}}";</script>
+<p>Registered in WebView2: {{EXT_REGISTERED}}. Enabled in profile: {{EXT_ENABLED}}.</p><button type="button" onclick="copyDiagnostics(this)">Copy diagnostics</button>
+<script>
+async function copyDiagnostics(button) {
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(document.body.innerText);
+    else { const range = document.createRange(); range.selectNodeContents(document.body); getSelection().removeAllRanges(); getSelection().addRange(range); if (!document.execCommand('copy')) throw new Error(); }
+    button.textContent = 'Diagnostics copied';
+  } catch { button.textContent = 'Select and copy the diagnostics text'; }
+}
+window.__STRIDE_IPC_TOKEN__ = "{{IPC_TOKEN}}";</script>
 </body>
 </html>

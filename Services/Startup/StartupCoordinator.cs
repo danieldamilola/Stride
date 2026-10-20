@@ -81,7 +81,6 @@ public class StartupCoordinator
             var tab = _engine.CreateTab(InternalUrls.ReleaseNotes);
             _engine.SwitchTo(tab);
             await _engine.ActivateAsync(tab);
-            _engine.NavigateToReleaseNotes(tab, currentVersion);
         }
     }
 }

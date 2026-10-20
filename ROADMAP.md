@@ -18,6 +18,7 @@ Stride is a lightweight, privacy-focused Windows desktop browser built on WPF an
 
 ## Upcoming features
 
+- **History retention settings** - Add an optional setting to keep all browsing history, keep the last 30 or 90 days, or clear history when Stride exits. Keep automatic deletion off by default. Let users clear history without deleting cookies or signing out of websites.
 - **Extensions** - Support for Chrome, Firefox, and Safari extensions. A curated set of 20 verified extensions will be included out of the box, with the engine expanding to support the standard Chromium manifest format.
 - **Vertical tree tabs** - A tree-style vertical tab layout for power users with ultrawide monitors. This replaces and expands on the existing Vertical Tabs Mode planned in the roadmap.
 - **Tab groups** - Visual tab grouping with the ability to collapse/expand groups, keeping many tabs organized without clutter.

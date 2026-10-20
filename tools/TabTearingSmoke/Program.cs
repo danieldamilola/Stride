@@ -95,7 +95,7 @@ internal static class Program
         var firstServices = Services(first);
         await firstServices.GetRequiredService<BrowserWindowContext>().Ready.Task;
         var source = Engine(first);
-        DisableExtensions(source);
+
 
         var background = source.CreateTab("about:blank", false);
         await source.ActivateAsync(background);
@@ -112,6 +112,7 @@ internal static class Program
         await core.ExecuteScriptAsync("document.getElementById('draft').value='keep this draft';history.pushState({},'', '#kept');");
         var marker = await core.ExecuteScriptAsync("window.marker");
         var ticks = int.Parse(await core.ExecuteScriptAsync("window.ticks"));
+        await VerifySelectedPageAsync(source, tab);
         var navigationCount = 0;
         core.NavigationStarting += (_, _) => navigationCount++;
         var originalControl = source.GetWebViewElement(tab.Id);
@@ -124,8 +125,11 @@ internal static class Program
         for (var attempt = 0; attempt < 8 && !suspended; attempt++)
         {
             await Task.Delay(500);
+            source.SwitchTo(background);
             await source.ActivateAsync(background);
+            source.SwitchTo(tab);
             await source.ActivateAsync(tab);
+            source.SwitchTo(background);
             await source.ActivateAsync(background);
             suspended = await FrozenAsync();
         }
@@ -134,7 +138,7 @@ internal static class Program
 
         await manager.DetachAsync(source, tab, new Point(980, 130));
         var second = Application.Current.Windows.OfType<MainWindow>().Single(w => w != first);
-        DisableExtensions(Engine(second));
+
         var destination = Engine(second);
         Require(source.Tabs.Count == 1 && destination.Tabs.Single() == tab, "Tab belongs to destination");
         Require(ReferenceEquals(originalControl, destination.GetWebViewElement(tab.Id)), "WebView control preserved");
@@ -145,7 +149,7 @@ internal static class Program
         await core.ExecuteScriptAsync("document.title='Moved title'");
         await WaitFor(() => tab.Title == "Moved title");
         await SettleThemeColorAsync();
-        await core.ExecuteScriptAsync("chrome.webview.postMessage('" + destination.IpcToken + ":THEME_COLOR:#123456')");
+        await core.ExecuteScriptAsync("chrome.webview.postMessage('" + session.TelemetryToken + ":THEME_COLOR:#123456')");
         await WaitFor(() => tab.ThemeColor == "#123456");
         Require(tab.Title == "Moved title" && tab.ThemeColor == "#123456", "Destination receives page events: " + tab.Title + " / " + tab.ThemeColor);
 
@@ -171,7 +175,7 @@ internal static class Program
         var hostEngine = source;
         await manager.DetachAsync(hostEngine, tab, new Point(980, 130));
         var moved = Application.Current.Windows.OfType<MainWindow>().Single(w => w != host);
-        DisableExtensions(Engine(moved));
+
         Require(!await FrozenAsync(), "The torn-off tab is running in its new window");
 
         // The window the tab came from must not take its page with it when it closes.
@@ -219,7 +223,7 @@ internal static class Program
             // being built the engine refuses to move it, which is shipped behaviour and
             // would let this case pass for the wrong reason.
             await Services(host).GetRequiredService<BrowserWindowContext>().Ready.Task;
-            DisableExtensions(hostEngine);
+
 
             var keeper = hostEngine.CreateTab("about:blank", false);
             // Creating a control and settling it is not instantaneous, and the engine
@@ -258,7 +262,7 @@ internal static class Program
             target.Width = 700; target.Height = 500; target.Left = 900; target.Top = 120;
             target.Show();
             await Services(target).GetRequiredService<BrowserWindowContext>().Ready.Task;
-            DisableExtensions(Engine(target));
+
 
             Require(await manager.DockAsync(hostEngine, Engine(target), keeper, 0),
                 "a later dock runs after an aborted one");
@@ -429,15 +433,70 @@ internal static class Program
     private static IServiceProvider Services(Window window) =>
         (IServiceProvider)typeof(MainWindow).GetField("_services", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window)!;
 
-    /// <summary>
-    /// Stops the extension loader. It unzips and rewrites the uBlock folder under the
-    /// profile, which is file work this probe does not measure and must not repeat for
-    /// every window it opens.
-    /// </summary>
-    private static void DisableExtensions(TabEngine engine)
+    private static async Task VerifySelectedPageAsync(TabEngine engine, BrowserTab previous)
     {
-        var factory = typeof(TabEngine).GetField("_webViewFactory", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(engine)!;
-        typeof(WebViewFactory).GetField("_extensionsLoaded", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(factory, true);
+        var settings = engine.CreateTab(InternalUrls.Settings, false);
+        Require(engine.GetWebViewElement(previous.Id)!.Visibility != Visibility.Visible,
+            "Switching to a cold Settings tab hides the previous page immediately");
+        await engine.ActivateAsync(settings);
+        await engine.ActivateAsync(previous);
+        Require(engine.ActiveTab == settings, "Settings remains selected after a stale activation");
+        Require(engine.GetWebViewElement(settings.Id)!.Visibility == Visibility.Visible &&
+            engine.GetWebViewElement(previous.Id)!.Visibility == Visibility.Collapsed,
+            "A stale background activation cannot replace the selected Settings page");
+
+        var background = engine.CreateTab("about:blank", false);
+        engine.SwitchTo(settings);
+        await engine.ActivateAsync(settings);
+        Require(await engine.EnsureTabReadyAsync(background, CancellationToken.None) is not null,
+            "Background popup readiness still creates its control");
+        Require(engine.ActiveTab == settings && engine.GetWebViewElement(settings.Id)!.IsVisible &&
+            engine.GetWebViewElement(background.Id)!.Visibility == Visibility.Collapsed,
+            "Background initialization leaves the selected Settings page visible");
+        engine.CloseTab(background);
+        foreach (var (url, title) in new[]
+        {
+            (InternalUrls.NewTab, "New Tab - Stride"),
+            (InternalUrls.Settings, "Settings - Stride"),
+            (InternalUrls.OneTab, "Saved tabs - Stride"),
+            (InternalUrls.History, "History - Stride"),
+            (InternalUrls.Downloads, "Downloads - Stride"),
+            (InternalUrls.Onboarding, "Welcome to Stride"),
+            (InternalUrls.ReleaseNotes, "What's New in Stride"),
+            (InternalUrls.Focus, "FOCUS"),
+            (InternalUrls.Health, "Health - Stride")
+        })
+        {
+            engine.SwitchTo(previous);
+            await engine.ActivateAsync(previous);
+            var page = engine.CreateTab(url, false);
+            Require(engine.GetWebViewElement(previous.Id)!.Visibility == Visibility.Collapsed,
+                "The previous page is hidden during cold creation", url);
+            await engine.ActivateAsync(page);
+            await engine.ActivateAsync(previous);
+            var core = engine.GetCoreForTab(page.Id)!;
+            async Task<string?> ReadTitleAsync() => System.Text.Json.JsonSerializer.Deserialize<string>(
+                await core.ExecuteScriptAsync("document.title"));
+            for (var attempt = 0; attempt < 100 && await ReadTitleAsync() != title; attempt++)
+                await Task.Delay(50);
+            Require(await ReadTitleAsync() == title,
+                "The selected internal document rendered", url);
+            Require(engine.ActiveTab == page && engine.GetWebViewElement(page.Id)!.IsVisible &&
+                engine.GetWebViewElement(previous.Id)!.Visibility == Visibility.Collapsed,
+                "A stale activation cannot cover the selected internal page", url);
+            engine.SwitchTo(previous);
+            await engine.ActivateAsync(previous);
+            engine.SwitchTo(page);
+            await engine.ActivateAsync(page);
+            Require(engine.GetWebViewElement(page.Id)!.IsVisible,
+                "Returning to an existing internal page shows its control", url);
+            engine.CloseTab(page);
+        }
+        Console.WriteLine("PASS: all nine internal pages render and remain visible after stale activation and return selection");
+        engine.CloseTab(settings);
+        engine.SwitchTo(previous);
+        await engine.ActivateAsync(previous);
+        Console.WriteLine("PASS: cold Settings selection, stale activation, background readiness, return to the original page");
     }
 
     private static void Require(bool value, string message, string detail = "")
@@ -461,7 +520,7 @@ internal static class Program
         public void Add(string url, string title) { }
         public List<HistoryEntry> Load() => [];
         public List<HistoryEntry> Search(string query) => [];
-        public void Clear() { }
+        public bool Clear() => true;
         public List<HistoryEntry> GetFrequentSites(int count = 8) => [];
     }
 

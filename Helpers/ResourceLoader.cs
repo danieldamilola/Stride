@@ -23,7 +23,14 @@ public static class ResourceLoader
         using var stream = Asm.GetManifestResourceStream(fullName)
             ?? throw new FileNotFoundException($"Embedded resource not found: {fullName}");
         using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
+        var content = reader.ReadToEnd();
+        if (resourceName.StartsWith("Resources.Pages.", StringComparison.Ordinal) && resourceName.EndsWith(".html", StringComparison.Ordinal))
+        {
+            var styles = Load("Resources.Pages.InternalPage.css");
+            var script = Load("Resources.Scripts.internal-page.js");
+            content = content.Replace("</head>", "<style>" + styles + "</style><script>" + script + "</script></head>");
+        }
+        return content;
     }
 
     /// <summary>

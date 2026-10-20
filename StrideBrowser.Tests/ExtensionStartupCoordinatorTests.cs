@@ -18,6 +18,7 @@ namespace StrideBrowser.Tests;
 /// run through a fake reconcile delegate, which is the same seam WebViewFactory
 /// fills with the real WebView2 calls.
 /// </summary>
+[Collection("DeadlineChecks")]
 public sealed class ExtensionStartupCoordinatorTests
 {
     private const string ProfileA = @"C:\stride-test\profile-a";
@@ -487,3 +488,6 @@ public sealed class ExtensionStartupCoordinatorTests
         };
     }
 }
+
+[CollectionDefinition("DeadlineChecks", DisableParallelization = true)]
+public sealed class DeadlineChecksCollection { }

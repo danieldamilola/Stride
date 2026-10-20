@@ -281,7 +281,7 @@ public sealed class TrackingPreventionTests : IDisposable
 
     private static Dictionary<string, Action<BrowserSettings, string>> SettingSetters()
     {
-        return typeof(Engine.Handlers.SettingsMessageHandler)
+        return typeof(StrideBrowser.Services.SettingsChangePolicy)
             .GetField("SettingSetters", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
             .GetValue(null) as Dictionary<string, Action<BrowserSettings, string>>
             ?? throw new InvalidOperationException("the setting setter table was not found");
