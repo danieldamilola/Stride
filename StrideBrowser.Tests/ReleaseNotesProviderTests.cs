@@ -72,7 +72,7 @@ public sealed class ReleaseNotesProviderTests
             ### Changed
             - <script>alert('example')</script>
             """);
-        var html = new ReleaseNotesPage().Render("0.1.0", releases, "#d4d4d4", "212,212,212", "test");
+        var html = new ReleaseNotesPage().Render("0.1.0", releases, "test");
         Assert.Contains("<h3>Changed</h3>", html);
         Assert.Contains("&lt;script&gt;", html);
         Assert.DoesNotContain("<script>alert", html);
@@ -86,7 +86,7 @@ public sealed class ReleaseNotesProviderTests
     {
         var releases = ReleaseNotesProvider.GetAllReleases();
         Assert.Empty(releases);
-        var html = new ReleaseNotesPage().Render("0.1.0", releases, "#d4d4d4", "212,212,212", "test");
+        var html = new ReleaseNotesPage().Render("0.1.0", releases, "test");
         Assert.Contains("Version 0.1.0", html);
         Assert.Contains("Unreleased", html);
         Assert.Contains("No releases have been published yet.", html);
@@ -109,7 +109,7 @@ public sealed class ReleaseNotesProviderTests
             ### Changed
             - An older change.
             """);
-        var html = new ReleaseNotesPage().Render("0.1.2", releases, "#ff00ff", "255,0,255", "test");
+        var html = new ReleaseNotesPage().Render("0.1.2", releases, "test");
         Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(html, "<h3>Added</h3>").Count);
         Assert.Contains("<li>First addition.</li>", html);
         Assert.Contains("<li>Second addition.</li>", html);

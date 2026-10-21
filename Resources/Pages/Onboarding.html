@@ -11,7 +11,7 @@
 body { margin:0; background:var(--bg-base); color:var(--text-main); font:14px "Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; }
 button,input { font:inherit; color:inherit; }
 button { cursor:pointer; }
-button:focus-visible,input:focus-visible { outline:2px solid var(--text-main); outline-offset:4px; }
+button:focus-visible,input:focus-visible { outline:2px solid var(--focus-ring); outline-offset:4px; }
 [hidden] { display:none !important; }
 .header { max-width:1160px; margin:auto; padding:28px 40px; display:flex; align-items:center; justify-content:space-between; }
 .brand { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:600; }
@@ -26,7 +26,7 @@ button:focus-visible,input:focus-visible { outline:2px solid var(--text-main); o
 .step-nav[aria-current="step"] { background:var(--bg-surface); color:var(--text-main); }
 .step-nav:hover { background:var(--bg-hover); }
 .step-number { display:grid; place-items:center; width:22px; height:22px; border:1px solid var(--border); border-radius:50%; font-size:11px; }
-.step-nav[aria-current="step"] .step-number { background:var(--solid); color:var(--on-solid); border-color:var(--solid); }
+.step-nav[aria-current="step"] .step-number { background:var(--button-bg); color:var(--button-text); border-color:var(--solid); }
 .sidebar-note { margin:30px 10px 0; color:var(--text-muted); font-size:12px; line-height:1.65; }
 .content { min-width:0; }
 .step { min-height:430px; }
@@ -50,7 +50,7 @@ legend,.field-title { margin-bottom:12px; font-size:13px; font-weight:600; paddi
 .theme-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
 .choice { position:relative; display:block; border:1px solid var(--border); border-radius:9px; background:var(--bg-surface); cursor:pointer; padding:12px; }
 .choice:has(input:checked) { border-color:var(--text-main); box-shadow:0 0 0 1px var(--text-main); }
-.choice:has(input:focus-visible) { outline:2px solid var(--text-main); outline-offset:4px; }
+.choice:has(input:focus-visible) { outline:2px solid var(--focus-ring); outline-offset:4px; }
 .choice input { position:absolute; width:1px; height:1px; clip-path:inset(50%); overflow:hidden; }
 .choice-caption { display:block; margin-top:9px; font-size:12px; }
 .theme-preview { height:64px; padding:8px; border-radius:5px; border:1px solid #525252; background:#181818; }
@@ -64,13 +64,6 @@ legend,.field-title { margin-bottom:12px; font-size:13px; font-weight:600; paddi
 .tab-sample { height:28px; display:flex; align-items:center; gap:7px; }
 .tab-sample i { width:15px; height:15px; border-radius:4px; background:var(--bg-hover); border:1px solid var(--border); }
 .tab-sample b { font-size:11px; font-weight:400; background:var(--bg-hover); border-radius:5px; padding:5px 10px; }
-.palette { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.color-choice { position:relative; width:26px; height:26px; border-radius:50%; background:var(--swatch); cursor:pointer; border:3px solid var(--bg-base); }
-.color-choice:has(input:checked) { outline:1px solid var(--text-main); outline-offset:2px; }
-.color-choice:has(input:focus-visible) { outline:2px solid var(--text-main); outline-offset:3px; }
-.color-choice input { position:absolute; width:1px; height:1px; opacity:0; }
-.custom-color { margin-left:6px; display:flex; gap:8px; align-items:center; font-size:12px; color:var(--text-muted); }
-.custom-color input { width:28px; height:28px; padding:1px; border:1px solid var(--border); border-radius:5px; background:transparent; }
 .engine-list { display:flex; flex-direction:column; gap:8px; }
 .engine-choice { display:flex; align-items:center; gap:14px; padding:15px 16px; border:1px solid var(--border); border-radius:8px; background:var(--bg-surface); cursor:pointer; }
 .engine-choice:has(input:checked) { border-color:var(--text-main); }
@@ -95,8 +88,8 @@ input[type="radio"],input[type="checkbox"] { accent-color:var(--text-main); }
 .secondary:hover { background:var(--bg-hover); }
 .footer { display:flex; align-items:center; justify-content:space-between; gap:16px; border-top:1px solid var(--border); padding:22px 0 0; margin-top:24px; }
 .footer-progress { color:var(--text-muted); font-size:12px; margin-left:auto; }
-.primary { display:flex; align-items:center; gap:12px; border:1px solid var(--solid); border-radius:7px; padding:10px 18px; background:var(--solid); color:var(--on-solid); font-weight:600; font-size:13px; white-space:nowrap; }
-.primary:hover { opacity:.88; }
+.primary { display:flex; align-items:center; gap:12px; border:1px solid var(--button-bg); border-radius:7px; padding:10px 18px; background:var(--button-bg); color:var(--button-text); font-weight:600; font-size:13px; white-space:nowrap; }
+.primary:hover { background:var(--button-hover); border-color:var(--button-hover); }
 .primary svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.5; }
 .status { font-size:12px; line-height:1.6; margin:16px 0 0; color:var(--text-muted); }
 .status[data-error="true"] { color:var(--text-main); border-left:2px solid var(--text-main); padding-left:12px; }
@@ -116,27 +109,19 @@ input[type="radio"],input[type="checkbox"] { accent-color:var(--text-main); }
 <button class="step-nav" data-nav="4"><span class="step-number">5</span><span class="step-label">Ready</span></button>
 </nav><p class="sidebar-note">Your choices are saved as you go. You can change them in Settings.</p></aside>
 <main class="content">
-<section class="step" data-step="0" aria-labelledby="welcomeTitle"><p class="eyebrow">Welcome to Stride</p><h1 id="welcomeTitle" tabindex="-1">Let's get you set up.</h1><p class="intro">Choose your look, pick a search engine, and set a few browsing preferences. Then get straight to your next page.</p>
+<section class="step" data-step="0" aria-labelledby="welcomeTitle"><p class="eyebrow">Welcome to Stride</p><h1 class="page-title" id="welcomeTitle" tabindex="-1">Let's get you set up.</h1><p class="intro">Choose your look, pick a search engine, and set a few browsing preferences. Then get straight to your next page.</p>
 <div class="browser-preview" aria-hidden="true"><div class="preview-toolbar"><i></i><i></i><i></i><div class="preview-address" id="addrStandard">Search or enter a website</div></div><div class="preview-page"><span>Search or open a website.</span><div class="preview-search"></div></div></div>
 <div class="welcome-notes"><span><svg viewBox="0 0 24 24"><path d="M3 5h18v15H3ZM3 9h18M7 5V3m4 2V3"/></svg>Tabs for your everyday</span><span><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Zm-4-10 3 3 5-6"/></svg>Built-in ad blocking</span></div></section>
-<section class="step" data-step="1" aria-labelledby="appearanceTitle" hidden><p class="eyebrow">Appearance</p><h2 id="appearanceTitle" tabindex="-1">Choose your look.</h2><p class="intro">Start with a theme and how you like your tabs.</p>
+<section class="step" data-step="1" aria-labelledby="appearanceTitle" hidden><p class="eyebrow">Appearance</p><h2 class="page-title" id="appearanceTitle" tabindex="-1">Choose your look.</h2><p class="intro">Start with a theme and how you like your tabs.</p>
 <fieldset><legend>Theme</legend><div class="theme-grid">
 <label class="choice"><input type="radio" name="theme" value="system" data-field="theme" data-setting="appTheme"><span class="theme-preview system" aria-hidden="true" style="display:block"></span><span class="choice-caption">System</span></label>
 <label class="choice"><input type="radio" name="theme" value="light" data-field="theme" data-setting="appTheme"><span class="theme-preview light" aria-hidden="true" style="display:block"></span><span class="choice-caption">Light</span></label>
 <label class="choice"><input type="radio" name="theme" value="dark" data-field="theme" data-setting="appTheme"><span class="theme-preview" aria-hidden="true" style="display:block"></span><span class="choice-caption">Dark</span></label>
 </div></fieldset>
 <fieldset><legend>Tabs</legend><div class="tab-options"><label class="choice"><input type="radio" name="tabs" value="false" data-field="showTabNames" data-setting="showTabNames"><span class="tab-sample" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="choice-caption">Icons only</span></label><label class="choice"><input type="radio" name="tabs" value="true" data-field="showTabNames" data-setting="showTabNames"><span class="tab-sample" aria-hidden="true"><b>New tab</b><i></i><i></i></span><span class="choice-caption">Icons and names</span></label></div></fieldset>
-<fieldset><legend>Accent color</legend><div class="palette">
-<label class="color-choice" style="--swatch:#d4d4d4"><input type="radio" name="accent" value="#d4d4d4" data-field="accent" data-setting="accentColor" aria-label="Gray"></label>
-<label class="color-choice" style="--swatch:#7fb89a"><input type="radio" name="accent" value="#7fb89a" data-field="accent" data-setting="accentColor" aria-label="Sage"></label>
-<label class="color-choice" style="--swatch:#c9a86c"><input type="radio" name="accent" value="#c9a86c" data-field="accent" data-setting="accentColor" aria-label="Gold"></label>
-<label class="color-choice" style="--swatch:#7c9cbf"><input type="radio" name="accent" value="#7c9cbf" data-field="accent" data-setting="accentColor" aria-label="Blue"></label>
-<label class="color-choice" style="--swatch:#9b8ec4"><input type="radio" name="accent" value="#9b8ec4" data-field="accent" data-setting="accentColor" aria-label="Violet"></label>
-<label class="color-choice" style="--swatch:#c47b6a"><input type="radio" name="accent" value="#c47b6a" data-field="accent" data-setting="accentColor" aria-label="Terracotta"></label>
-<label class="custom-color">Custom<input type="color" data-field="accent" data-setting="accentColor" aria-label="Custom accent color"></label>
-</div></fieldset></section>
-<section class="step" data-step="2" aria-labelledby="searchTitle" hidden><p class="eyebrow">Search</p><h2 id="searchTitle" tabindex="-1">Where should a search take you?</h2><p class="intro">Choose the search engine used by your address bar.</p><fieldset><legend class="field-title">Default search engine</legend><div class="engine-list" id="engineList"></div></fieldset></section>
-<section class="step" data-step="3" aria-labelledby="preferencesTitle" hidden><p class="eyebrow">Browsing preferences</p><h2 id="preferencesTitle" tabindex="-1">Set a few defaults.</h2><p class="intro">Choose the protections and tab behavior that suit you.</p><div class="preferences">
+</section>
+<section class="step" data-step="2" aria-labelledby="searchTitle" hidden><p class="eyebrow">Search</p><h2 class="page-title" id="searchTitle" tabindex="-1">Where should a search take you?</h2><p class="intro">Choose the search engine used by your address bar.</p><fieldset><legend class="field-title">Default search engine</legend><div class="engine-list" id="engineList"></div></fieldset></section>
+<section class="step" data-step="3" aria-labelledby="preferencesTitle" hidden><p class="eyebrow">Browsing preferences</p><h2 class="page-title" id="preferencesTitle" tabindex="-1">Set a few defaults.</h2><p class="intro">Choose the protections and tab behavior that suit you.</p><div class="preferences">
 <label class="preference"><span class="preference-text"><span class="preference-name">Ad and tracker blocking</span><span class="preference-description">Use the built-in uBlock Origin extension.</span></span><input class="switch" type="checkbox" data-field="adBlock" data-setting="adBlock" aria-label="Ad and tracker blocking"></label>
 <label class="preference"><span class="preference-text"><span class="preference-name">Prefer HTTPS</span><span class="preference-description">Try a secure connection when opening a website.</span></span><input class="switch" type="checkbox" data-field="httpsForce" data-setting="forceHttps" aria-label="Prefer HTTPS"></label>
 <label class="preference"><span class="preference-text"><span class="preference-name">Microsoft SmartScreen</span><span class="preference-description">Check websites and downloads with Microsoft. Changes need a restart.</span></span><input class="switch" type="checkbox" data-field="smartScreen" data-setting="smartScreen" aria-label="Microsoft SmartScreen"></label>
@@ -144,14 +129,14 @@ input[type="radio"],input[type="checkbox"] { accent-color:var(--text-main); }
 <label class="preference"><span class="preference-text"><span class="preference-name">Hibernate inactive tabs</span><span class="preference-description">Unload inactive tabs to free memory. They reload when opened.</span></span><input class="switch" type="checkbox" data-field="hibernate" data-setting="tabHibernation" aria-label="Hibernate inactive tabs"></label>
 <label class="preference"><span class="preference-text"><span class="preference-name">Clear browsing data on exit</span><span class="preference-description">Clear history, cookies and cache when you exit.</span></span><input class="switch" type="checkbox" data-field="clearOnExit" data-setting="clearOnExit" aria-label="Clear browsing data on exit"></label>
 </div></section>
-<section class="step" data-step="4" aria-labelledby="readyTitle" hidden><p class="eyebrow">You're ready</p><h2 id="readyTitle" tabindex="-1">Your next page is waiting.</h2><p class="intro">Here is how Stride is set up for you.</p><dl class="summary"><div class="summary-row"><dt>Appearance</dt><dd id="summaryTheme"></dd></div><div class="summary-row"><dt>Search</dt><dd id="summarySearch"></dd></div><div class="summary-row"><dt>Tabs</dt><dd id="summaryTabs"></dd></div><div class="summary-row"><dt>Ad blocking</dt><dd id="summaryBlocking"></dd></div></dl><div class="default-browser"><div><strong>Open your links in Stride</strong><p>Choose Stride as your default in Windows Settings.</p></div><button class="secondary" id="defaultBtn">Make default</button></div><p class="status" id="defaultStatus" role="status" hidden></p></section>
+<section class="step" data-step="4" aria-labelledby="readyTitle" hidden><p class="eyebrow">You're ready</p><h2 class="page-title" id="readyTitle" tabindex="-1">Your next page is waiting.</h2><p class="intro">Here is how Stride is set up for you.</p><dl class="summary"><div class="summary-row"><dt>Appearance</dt><dd id="summaryTheme"></dd></div><div class="summary-row"><dt>Search</dt><dd id="summarySearch"></dd></div><div class="summary-row"><dt>Tabs</dt><dd id="summaryTabs"></dd></div><div class="summary-row"><dt>Ad blocking</dt><dd id="summaryBlocking"></dd></div></dl><div class="default-browser"><div><strong>Open your links in Stride</strong><p>Choose Stride as your default in Windows Settings.</p></div><button class="secondary" id="defaultBtn">Make default</button></div><p class="status" id="defaultStatus" role="status" hidden></p></section>
 <p class="status" id="setupStatus" role="status" hidden></p>
 <footer class="footer"><button class="quiet" id="backBtn">Back</button><span class="footer-progress" id="pageNum">1 of 5</span><button class="primary" id="nextBtn"><span id="nextLabel">Get started</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button><button class="primary" id="doneBtn" hidden>Start browsing</button></footer>
 </main></div>
 <script type="application/json" id="onboardingData">{{ONBOARDING_DATA}}</script>
 <script>
 const __T = '{{IPC_TOKEN}}:';
-const defaults = {theme:'system',accent:'#d4d4d4',adBlock:true,smartScreen:true,httpsForce:true,hibernate:true,tabSleep:true,clearOnExit:false,engine:'ddg',showTabNames:false};
+const defaults = {theme:'system',adBlock:true,smartScreen:true,httpsForce:true,hibernate:true,tabSleep:true,clearOnExit:false,engine:'ddg',showTabNames:false};
 let initial = {}; try { initial = JSON.parse(document.getElementById('onboardingData').textContent || '{}'); } catch {}
 const S = Object.assign({},defaults,initial), dirty = new Set(), pending = new Map();
 const ENGINES = [{id:'ddg',name:'DuckDuckGo',setting:'DuckDuckGo',symbol:'D'},{id:'brave',name:'Brave Search',setting:'Brave',symbol:'B'},{id:'start',name:'Startpage',setting:'Startpage',symbol:'S'},{id:'google',name:'Google',setting:'Google',symbol:'G'},{id:'bing',name:'Bing',setting:'Bing',symbol:'b'}];
@@ -171,7 +156,6 @@ function syncChoices() {
     for (const input of document.querySelectorAll('input[data-field]')) {
         const value = S[input.dataset.field];
         if (input.type === 'checkbox') input.checked = !!value;
-        else if (input.type === 'color') input.value = /^#[0-9a-f]{6}$/i.test(S.accent) ? S.accent : '#d4d4d4';
         else input.checked = String(value) === input.value;
     }
     document.documentElement.dataset.theme = S.theme;

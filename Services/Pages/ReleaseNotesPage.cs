@@ -8,7 +8,7 @@ namespace StrideBrowser.Services.Pages;
 
 public sealed class ReleaseNotesPage
 {
-    public string Render(string currentVersion, IReadOnlyList<ReleaseNotesProvider.ReleaseVersion> releases, string accentColor, string accentRgb, string ipcToken)
+    public string Render(string currentVersion, IReadOnlyList<ReleaseNotesProvider.ReleaseVersion> releases, string ipcToken)
     {
         var content = new StringBuilder();
         var navigation = new StringBuilder();

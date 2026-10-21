@@ -5,9 +5,9 @@ namespace StrideBrowser.Services.Pages;
 
 public sealed class OnboardingPage
 {
-    public string Render(BrowserSettings settings, string accentColor, string accentRgb, string ipcToken)
+    public string Render(BrowserSettings settings, string ipcToken)
     {
-        var html = TemplateRenderer.RenderJsonPage("Resources.Pages.Onboarding.html", "ONBOARDING_DATA", SerializeSettings(settings), accentColor, accentRgb, ipcToken);
+        var html = TemplateRenderer.RenderJsonPage("Resources.Pages.Onboarding.html", "ONBOARDING_DATA", SerializeSettings(settings), ipcToken);
         return html.Replace("{{APP_ICON}}", PageAssets.AppIcon);
     }
 
@@ -16,7 +16,6 @@ public sealed class OnboardingPage
         var payload = new
         {
             theme = settings.AppTheme.ToString().ToLowerInvariant(),
-            accent = settings.AccentColor,
             adBlock = settings.AdBlockEnabled,
             smartScreen = settings.SmartScreenEnabled,
             httpsForce = settings.ForceHttps,

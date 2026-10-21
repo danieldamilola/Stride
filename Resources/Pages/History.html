@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="{{THEME}}">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>History - Stride</title>
     <style>
-        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
 
         :root, :root[data-theme="dark"] {
             --bg-base: #111113;
@@ -72,7 +72,7 @@
             outline: none;
             transition: border-color 150ms;
         }
-        .search-bar input:focus { border-color: rgba(var(--accent-rgb), 0.4); }
+        .search-bar input:focus { border-color: var(--focus-ring); }
         .search-bar input::placeholder { color: var(--text-dim); }
         .search-bar svg {
             position: absolute;
@@ -194,7 +194,7 @@
             white-space: nowrap;
             cursor: pointer;
         }
-        .entry-title:hover { color: var(--accent); text-decoration: underline; }
+        .entry-title:hover { color: var(--text-link); text-decoration: underline; }
         .entry-url {
             color: var(--text-dim);
             font-size: 11px;
@@ -275,20 +275,19 @@
     </style>
 </head>
 <body>
-    <div class="toolbar">
-        <h1>History</h1>
-        <div class="toolbar-spacer"></div>
-        <div class="toolbar-actions">
-            <div class="search-bar">
+    <header class="toolbar page-toolbar">
+        <h1 class="page-title">History</h1>
+        <div class="toolbar-actions page-actions">
+            <div class="search-bar page-search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <input type="text" id="searchInput" placeholder="Search history...">
+                <input type="search" id="searchInput" placeholder="Search history" aria-label="Search history" autocomplete="off">
             </div>
             <button class="icon-btn" id="collapseAllBtn">Expand all</button>
             <button class="icon-btn danger" id="clearBtn">Clear all</button>
         </div>
-    </div>
+    </header>
 
     <div class="main">
         <div class="list-inner" id="historyContent"></div>

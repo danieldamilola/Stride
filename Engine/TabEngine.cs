@@ -832,7 +832,7 @@ public sealed partial class TabEngine : IDisposable
     public void NavigateToNewTab(BrowserTab tab)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom, _settings.NewTabBackground, _settings.FaviconProxyEnabled), "newtab"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.NewTabPage(_settings.NewTabShortcuts, _ipcToken, _settings.DefaultZoom, _settings.NewTabBackground, _settings.FaviconProxyEnabled), "newtab"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToSettings(BrowserTab tab, BrowserSettings settings)
@@ -844,25 +844,25 @@ public sealed partial class TabEngine : IDisposable
     public void NavigateToOneTab(BrowserTab tab, List<OneTabGroup> groups)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.OneTabPage(_oneTabStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken), "onetab"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.OneTabPage(_oneTabStore.Load(), _ipcToken), "onetab"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToHistory(BrowserTab tab, List<Models.HistoryEntry> entries)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.HistoryPage(_historyStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.FaviconProxyEnabled), "history"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.HistoryPage(_historyStore.Load(), _ipcToken, _settings.FaviconProxyEnabled), "history"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToDownloads(BrowserTab tab)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.DownloadsPage(_downloadStore.Items.ToList(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken), "downloads"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.DownloadsPage(_downloadStore.Items.ToList(), _ipcToken), "downloads"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToOnboarding(BrowserTab tab)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.OnboardingPage(_settings, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken), "onboarding"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.OnboardingPage(_settings, _ipcToken), "onboarding"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToReleaseNotes(BrowserTab tab, string version)
@@ -870,9 +870,8 @@ public sealed partial class TabEngine : IDisposable
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
         try
         {
-            var accentRgb = InternalPages.HexToRgb(_settings.AccentColor);
             var releases = ReleaseNotesProvider.GetAllReleases();
-            var html = _pages.ReleaseNotesPage(version, releases, _settings.AccentColor, accentRgb, _ipcToken);
+            var html = _pages.ReleaseNotesPage(version, releases, _ipcToken);
             NavigateToHtmlString(tab, html, "releasenotes");
         }
         catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
@@ -1841,7 +1840,7 @@ public sealed partial class TabEngine : IDisposable
                             CoreWebView2WebErrorStatus.CertificateIsInvalid => "The site's security certificate is not trusted.",
                             _ => $"Navigation failed: {e.WebErrorStatus} (Code: {(int)e.WebErrorStatus})"
                         };
-                        try { wv.CoreWebView2.NavigateToString(_pages.ErrorPage(tab.Url, errorMsg, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor))); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+                        try { wv.CoreWebView2.NavigateToString(_pages.ErrorPage(tab.Url, errorMsg)); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
                         return;
                     }
 

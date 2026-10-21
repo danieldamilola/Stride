@@ -73,6 +73,25 @@ public sealed class LightThemePaletteTests(ThemeAppFixture fixture)
         });
     }
 
+    [Theory]
+    [InlineData(AppThemeMode.Dark)]
+    [InlineData(AppThemeMode.Light)]
+    public void ComponentRolesKeepActionTextAndFocusReadableAcrossThemes(AppThemeMode mode)
+    {
+        fixture.RunOnAppThread(() =>
+        {
+            _ = new ThemeManager(new BrowserSettings { AppTheme = mode });
+            Assert.True(Contrast(Color("PrimaryButtonText"), Color("PrimaryButtonBrush")) >= 4.5);
+            Assert.True(Contrast(Color("PrimaryButtonText"), Color("PrimaryButtonHoverBrush")) >= 4.5);
+            Assert.True(Contrast(Color("FocusRingBrush"), Color("BaseBrush")) >= 3);
+            Assert.True(Contrast(Color("FocusRingBrush"), Color("SurfaceBrush")) >= 3);
+            Assert.True(Contrast(Color("LinkBrush"), Color("SurfaceBrush")) >= 4.5);
+            Assert.True(Contrast(Color("ProgressBrush"), Color("SurfaceBrush")) >= 3);
+            Assert.Null(Application.Current.TryFindResource("AccentColor"));
+            Assert.Null(Application.Current.TryFindResource("AccentWash"));
+        });
+    }
+
     private static System.Windows.Media.Color Color(string key) => ((SolidColorBrush)Application.Current.FindResource(key)).Color;
     private static double Contrast(System.Windows.Media.Color a, System.Windows.Media.Color b)
     {

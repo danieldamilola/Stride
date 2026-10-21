@@ -155,10 +155,6 @@ public partial class MainWindow : Window
         // Attach event handlers
         WireEngineEvents();
 
-        // Apply saved accent color
-        if (_vm.Settings.AccentColor != "#D4A574")
-            ApplyAccentColor(_vm.Settings.AccentColor);
-
         Loaded += OnWindowLoaded;
     }
     private WindowChromeManager? _chromeManager;
@@ -873,9 +869,6 @@ public partial class MainWindow : Window
                 UpdateToolbarTint(_engine.ActiveTab);
         }
 
-        if (key is "accentColor" or "reset")
-            ApplyAccentColor(_vm.Settings.AccentColor);
-
         if (key == "adaptiveTint" && _engine.ActiveTab is not null)
         {
             _tintAdapter.Reset();
@@ -902,32 +895,6 @@ public partial class MainWindow : Window
                     _engine.ExecuteScript(tab.Id, js);
             }
         }
-    }
-
-    private void ApplyAccentColor(string hex)
-    {
-        try
-        {
-            var color = (Color)ColorConverter.ConvertFromString(hex);
-            var brush = new SolidColorBrush(color);
-            brush.Freeze();
-
-            // Update accent color & brush
-            Application.Current.Resources["AccentColor"] = color;
-            Application.Current.Resources["Accent"] = brush;
-
-            Application.Current.Resources["AccentWashColor"] = Color.FromArgb(0x1A, color.R, color.G, color.B);
-
-            // Update accent wash (10% opacity version)
-            var wash = new SolidColorBrush(Color.FromArgb(0x1A, color.R, color.G, color.B));
-            wash.Freeze();
-            Application.Current.Resources["AccentWash"] = wash;
-
-            // Update loading bar gradient to match accent
-            Application.Current.Resources["LoadingBarGlowColor"] = color;
-            Application.Current.Resources["LoadingBarFadeColor"] = Color.FromArgb(0x00, color.R, color.G, color.B);
-        }
-        catch { /* ignore invalid color strings */ }
     }
 
     // ──── Keyboard shortcuts ────

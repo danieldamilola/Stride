@@ -41,7 +41,8 @@ public sealed class ThemeManagerResourceTests
             // Verify specific known keys from the compiled DarkTheme.xaml
             Assert.Contains("SurfaceBrush", dict.Keys.Cast<string>());
             Assert.Contains("TextPrimary", dict.Keys.Cast<string>());
-            Assert.Contains("AccentColor", dict.Keys.Cast<string>());
+            Assert.Contains("PrimaryButtonBrush", dict.Keys.Cast<string>());
+            Assert.DoesNotContain("AccentColor", dict.Keys.Cast<string>());
         });
     }
 

@@ -10,7 +10,7 @@
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg-base); color:var(--text-main); font:14px "Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; }
 button { font:inherit; cursor:pointer; color:inherit; }
-button:focus-visible,summary:focus-visible { outline:2px solid var(--text-main); outline-offset:4px; }
+button:focus-visible,summary:focus-visible { outline:2px solid var(--focus-ring); outline-offset:4px; }
 .header { max-width:1120px; margin:auto; padding:28px 40px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
 .brand { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:600; }
 .brand img { width:28px; height:28px; }
@@ -63,8 +63,8 @@ h1 { font-weight:600; font-size:44px; line-height:1.14; letter-spacing:-1.3px; m
 .footer-actions { display:flex; align-items:center; gap:10px; }
 .secondary { padding:10px 12px; border:0; background:none; border-radius:7px; color:var(--text-muted); }
 .secondary:hover { background:var(--bg-hover); color:var(--text-main); }
-.primary { display:flex; align-items:center; gap:12px; background:var(--solid); color:var(--on-solid); border:1px solid var(--solid); border-radius:7px; padding:10px 16px; font-size:13px; font-weight:600; white-space:nowrap; }
-.primary:hover { opacity:.88; }.primary svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.5; }
+.primary { display:flex; align-items:center; gap:12px; background:var(--button-bg); color:var(--button-text); border:1px solid var(--button-bg); border-radius:7px; padding:10px 16px; font-size:13px; font-weight:600; white-space:nowrap; }
+.primary:hover { background:var(--button-hover); border-color:var(--button-hover); }.primary svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.5; }
 @media(max-width:800px) { .header { padding:22px 24px; }.shell { padding:24px 24px 32px; }.release-layout { grid-template-columns:1fr; gap:20px; }.release-sidebar { position:static; }.release-sidebar h2 { display:none; }.release-nav { flex-direction:row; flex-wrap:wrap; } h1 { font-size:36px; }.footer { align-items:flex-start; flex-direction:column; }.footer-actions { align-self:flex-end; } }
 @media(max-width:480px) { .header { padding:16px; }.shell { padding:20px 16px 28px; } h1 { font-size:32px; }.release-heading { padding:18px; align-items:flex-start; flex-direction:column; gap:8px; }.release-body { padding:0 18px 18px; }.release-log > .release-summary { padding:16px 18px; }.empty-release { padding:24px; }.footer-actions { width:100%; justify-content:space-between; }.installed { font-size:11px; } }
 @media(prefers-reduced-motion:reduce) { * { transition:none !important; } }
@@ -73,7 +73,7 @@ h1 { font-weight:600; font-size:44px; line-height:1.14; letter-spacing:-1.3px; m
 <body>
 <header class="header"><div class="brand"><img src="{{APP_ICON}}" alt="">Stride</div><span class="installed">Version {{VERSION}}</span></header>
 <div class="shell">
-<section class="hero" aria-labelledby="pageTitle"><p class="eyebrow">Updates</p><h1 id="pageTitle">What's new in Stride.</h1><p class="hero-copy">A record of the features, changes and fixes in each release.</p><div class="hero-meta"><span class="build-tag">{{RELEASE_STATUS}}</span></div></section>
+<section class="hero" aria-labelledby="pageTitle"><p class="eyebrow">Updates</p><h1 class="page-title" id="pageTitle">What's new in Stride.</h1><p class="hero-copy">A record of the features, changes and fixes in each release.</p><div class="hero-meta"><span class="build-tag">{{RELEASE_STATUS}}</span></div></section>
 <main class="release-layout"><aside class="release-sidebar"><h2>Release history</h2><nav class="release-nav" aria-label="Release history">{{RELEASE_NAV_HTML}}</nav></aside><div class="release-content">{{ALL_RELEASES_HTML}}</div></main>
 <footer class="footer"><p class="footer-note">Find this page again in Settings, under About.</p><div class="footer-actions"><button class="secondary" id="settingsBtn">Settings</button><button class="primary" id="continueBtn">Continue browsing<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div></footer>
 </div>

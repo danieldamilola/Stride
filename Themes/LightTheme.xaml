@@ -7,14 +7,12 @@
     <Color x:Key="SurfaceHoverColor">#E8E8E8</Color>
     <Color x:Key="BorderColor">#D9D9D9</Color>
     <Color x:Key="SeparatorLineColor">#CECECE</Color>
-    <Color x:Key="AccentColor">#646464</Color>
-    <Color x:Key="AccentWashColor">#20646464</Color>
     <Color x:Key="TextPrimaryColor">#202020</Color>
     <Color x:Key="TextSecondaryColor">#5F5F5F</Color>
     <Color x:Key="TextMutedColor">#5F5F5F</Color>
     <Color x:Key="DangerColor">#B42318</Color>
-    <Color x:Key="LoadingBarFadeColor">#00d4d4d4</Color>
-    <Color x:Key="LoadingBarGlowColor">#d4d4d4</Color>
+    <Color x:Key="LoadingBarFadeColor">#00646464</Color>
+    <Color x:Key="LoadingBarGlowColor">#646464</Color>
 
     <!-- Brushes -->
     <SolidColorBrush x:Key="BaseBrush"         Color="{StaticResource BaseColor}"/>
@@ -31,8 +29,6 @@
     <SolidColorBrush x:Key="SuggestionPopupBackground" Color="{StaticResource SurfaceColor}"/>
     <SolidColorBrush x:Key="SuggestionPopupBorder"    Color="{StaticResource BorderColor}"/>
     <SolidColorBrush x:Key="SuggestionHoverBackground" Color="#F0F0F0"/>
-    <SolidColorBrush x:Key="Accent"            Color="{StaticResource AccentColor}"/>
-    <SolidColorBrush x:Key="AccentWash"        Color="{StaticResource AccentWashColor}"/>
     <SolidColorBrush x:Key="TextPrimary"       Color="{StaticResource TextPrimaryColor}"/>
     <SolidColorBrush x:Key="TextSecondary"     Color="{StaticResource TextSecondaryColor}"/>
     <SolidColorBrush x:Key="TextMuted"         Color="{StaticResource TextMutedColor}"/>
@@ -51,5 +47,12 @@
     <SolidColorBrush x:Key="ScrollThumbPressedBrush" Color="#646464"/>
     <SolidColorBrush x:Key="SelectedTabBrush" Color="#E0E0E0"/>
     <SolidColorBrush x:Key="NeutralSelectedTabBrush" Color="#E0E0E0"/>
+    <!-- Component roles belong to the active theme. -->
+    <SolidColorBrush x:Key="PrimaryButtonBrush" Color="#202020"/>
+    <SolidColorBrush x:Key="PrimaryButtonText" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="PrimaryButtonHoverBrush" Color="#3A3A3A"/>
+    <SolidColorBrush x:Key="FocusRingBrush" Color="#646464"/>
+    <SolidColorBrush x:Key="LinkBrush" Color="#3A3A3A"/>
+    <SolidColorBrush x:Key="ProgressBrush" Color="#646464"/>
 </ResourceDictionary>
 

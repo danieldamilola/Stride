@@ -12,7 +12,7 @@
 body { margin:0; background:var(--bg-base); color:var(--text-main); font:13px "Segoe UI",sans-serif; }
 button,input { font:inherit; color:inherit; }
 button { cursor:pointer; }
-button:focus-visible,input:focus-visible { outline:2px solid var(--text-main); outline-offset:3px; }
+button:focus-visible,input:focus-visible { outline:2px solid var(--focus-ring); outline-offset:3px; }
 [hidden] { display:none !important; }
 .header { position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:24px; padding:20px 28px; background:var(--bg-base); }
 h1 { margin:0; font-size:20px; font-weight:600; white-space:nowrap; }
@@ -59,10 +59,11 @@ dialog p { color:var(--text-muted); line-height:1.6; margin:0 0 20px; }
 </style>
 </head>
 <body>
-<header class="header">
-    <h1>Download history</h1>
-    <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search download history" aria-label="Search download history" autocomplete="off"></label>
-    <div class="header-actions">
+<header class="header page-toolbar">
+    <h1 class="page-title">Download history</h1>
+
+    <div class="header-actions page-actions">
+        <label class="search page-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search download history" aria-label="Search download history" autocomplete="off"></label>
         <button class="icon-btn" id="clearBtn" title="Clear finished history" aria-label="Clear finished history"></button>
         <button class="icon-btn" id="clearAllBtn" title="Cancel downloads and clear history" aria-label="Cancel downloads and clear history"></button>
     </div>

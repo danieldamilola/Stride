@@ -68,7 +68,7 @@ public sealed class SiteInfoController : IDisposable
         _icon.Data = (Geometry)_button.FindResource(_loading ? "IconRefresh" :
             info.IsInsecure ? "IconConnectionWarning" : "IconSiteControls");
         _icon.SetResourceReference(Shape.StrokeProperty,
-            _loading ? "Accent" : info.IsInsecure ? "DangerBrush" : "TextMuted");
+            _loading ? "ProgressBrush" : info.IsInsecure ? "DangerBrush" : "TextMuted");
     }
 
     private void SetLoading(bool loading)

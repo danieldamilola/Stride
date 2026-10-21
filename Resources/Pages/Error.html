@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="{{THEME}}">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>Error - Stride</title>
     <style>
-        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: var(--bg-dark);
@@ -22,8 +22,8 @@
         .url { color: var(--text-muted); font-size: 12px; word-break: break-all; max-width: 500px; text-align: center; margin-bottom: 24px; }
         .retry-btn {
             padding: 10px 24px;
-            background: var(--accent);
-            color: var(--bg-dark);
+            background: var(--button-bg);
+            color: var(--button-text);
             border: none;
             border-radius: 8px;
             font-size: 14px;
@@ -31,7 +31,7 @@
             font-family: inherit;
             transition: opacity 0.2s;
         }
-        .retry-btn:hover { background: var(--accent); filter: brightness(0.9); }
+        .retry-btn:hover { background: var(--button-hover); }
     </style>
     <script>
         // Self-navigate rather than postMessage: the error page runs on about:blank,
@@ -43,7 +43,7 @@
 </head>
 <body>
     <div class="error-icon">⚠️</div>
-    <h1>This page can't be reached</h1>
+    <h1 class="page-title">This page can't be reached</h1>
     <p class="message">{{ERROR_MESSAGE}}</p>
     <p class="url">{{URL}}</p>
     <button class="retry-btn" onclick="retry()">Retry</button><button class="retry-btn" onclick="history.back()" style="margin-top:12px">Go back</button>

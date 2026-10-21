@@ -89,7 +89,7 @@ public static class IpcSecurityPolicy
                 message == OnboardingDone ||
                 message == OnboardingReady ||
                 // First run writes preferences through the same setting route the
-                // Settings page uses: theme, accent, search engine, ad blocking,
+                // Settings page uses: theme, search engine, ad blocking,
                 // SmartScreen, force HTTPS, clear on exit, hibernation, tab names.
                 message.StartsWith(WebMessagePrefix.Setting, StringComparison.Ordinal),
 

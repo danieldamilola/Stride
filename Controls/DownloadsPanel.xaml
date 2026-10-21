@@ -88,7 +88,7 @@
                                     </Button>
                                 </StackPanel>
                                 <ProgressBar Grid.Row="2" Grid.ColumnSpan="3" Height="3" Margin="0,9,6,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent, Mode=OneWay}"
-                                             IsIndeterminate="{Binding IsIndeterminate}" Foreground="{DynamicResource TextPrimary}" Background="{DynamicResource BorderBrush}"
+                                             IsIndeterminate="{Binding IsIndeterminate}" Foreground="{DynamicResource ProgressBrush}" Background="{DynamicResource BorderBrush}"
                                              AutomationProperties.Name="Download progress">
                                     <ProgressBar.Style><Style TargetType="ProgressBar"><Setter Property="Visibility" Value="Visible"/><Style.Triggers>
                                         <DataTrigger Binding="{Binding State}" Value="{x:Static models:DownloadState.Completed}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>

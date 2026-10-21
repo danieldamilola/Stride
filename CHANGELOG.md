@@ -14,6 +14,10 @@ Versioning restarts at 0.1.0. This version is in development and has not been pu
 
 ### Changed
 
+- Built-in pages share heading and search-field sizes. Download and history searches sit beside the header actions, and saved tabs uses the same header layout.
+
+- Removed custom accent colors. Light and dark themes now define button, toggle, focus, selection, link and progress colors. Older saved accents no longer override the theme.
+
 - Light mode uses a neutral gray palette with white surfaces, readable secondary text, clearer controls and matching colors across built-in pages.
 
 - Get started uses a five-step setup with native choices and a review of preferences. What's New groups published updates by release and category in a new layout for light and dark mode.
@@ -28,6 +32,10 @@ Versioning restarts at 0.1.0. This version is in development and has not been pu
 - Settings no longer shows routine save confirmations. Save errors and restart notices remain visible.
 
 ### Fixed
+
+- Header search fields show a single border only while focused, without a second outline around the input.
+
+- Settings keeps its page background when accent customization is removed.
 
 - Menus, scrollbars and toolbar fields follow live theme changes. Light mode keeps readable toolbar text when a site uses a dark theme color.
 

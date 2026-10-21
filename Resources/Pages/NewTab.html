@@ -6,7 +6,6 @@
     <title>New Tab - Stride</title>
     <link rel="preload" as="image" href="{{BACKGROUND}}">
     <style>
-        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -86,9 +85,9 @@
         }
 
         .search-input:focus {
-            border-color: rgba(var(--accent-rgb), 0.6);
+            border-color: var(--focus-ring);
             background: rgba(20, 20, 24, 0.7);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(var(--accent-rgb), 0.15);
+            box-shadow: none;
         }
 
         .search-input::placeholder {
@@ -108,7 +107,7 @@
         }
 
         .search-input:focus ~ .search-icon {
-            color: var(--accent);
+            color: var(--text-main);
         }
 
         /* ── Shortcut Tiles ── */
@@ -149,7 +148,7 @@
         }
 
         .shortcut-tile:focus-visible {
-            border-color: rgba(var(--accent-rgb), 0.7);
+            border-color: var(--focus-ring);
             background: rgba(255, 255, 255, 0.15);
             transform: translateY(-4px);
         }
@@ -210,9 +209,9 @@
         }
 
         .shortcut-tile .tile-remove:hover {
-            background: var(--accent);
-            color: #111113;
-            border-color: var(--accent);
+            background: var(--danger-surface);
+            color: var(--danger-text);
+            border-color: var(--danger-text);
         }
 
         .shortcut-add {
@@ -345,7 +344,7 @@
         }
 
         .dialog input:focus {
-            border-color: rgba(var(--accent-rgb), 0.6);
+            border-color: var(--focus-ring);
         }
 
         .dialog-actions {

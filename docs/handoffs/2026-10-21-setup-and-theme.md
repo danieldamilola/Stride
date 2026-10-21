@@ -3,14 +3,17 @@
 Date: 2026-10-21
 Repository: C:\dev\Stride
 Branch: feat/download-history
-Pushed commit: 7921626c, Improve downloads with a recent panel and dated history
+Latest pushed commit: faf29c0d, Redesign setup and updates pages and replace the light theme
+Earlier pushed commit: 7921626c, Improve downloads with a recent panel and dated history
 Upstream: origin/feat/download-history
+
+Latest follow-up: the user then requested removing custom accents entirely. See docs/handoffs/2026-10-21-theme-only.md for the new uncommitted changes and current validation. The earlier status below describes faf29c0d.
 
 ## User requests and current status
 
 The user confirmed the download popup and history redesign work and look clean. Those changes were committed and pushed to the new branch as requested. The earlier download handoff is docs/handoffs/2026-10-21-downloads.md.
 
-The user then reported a washed-out wallpaper in light mode, requested a complete redesign of Get started and What's New, and requested a researched replacement for the whole light palette. These follow-up changes are implemented and verified. The user explicitly requested commit and push after receiving the preview and validation results. This commit contains the follow-up UI changes and excludes the separate performance work.
+The user then reported a washed-out wallpaper in light mode, requested a complete redesign of Get started and What's New, and requested a researched replacement for the whole light palette. These follow-up changes are implemented and verified. The user explicitly requested commit and push after receiving the preview and validation results. Committed and pushed those changes as faf29c0d on feat/download-history. HEAD and origin/feat/download-history matched at handoff. The separate performance work remains local and uncommitted. No PR was created for this branch in this session.
 
 The user prefers neutral dark and light surfaces, and does not want every component colored with the accent. Their note about starting to use workspaces was not a request to move this thread or checkout.
 
@@ -117,10 +120,10 @@ These were already in progress and remain uncommitted. Do not discard or stage t
 - StrideBrowser.Tests/TabActivationPerformanceTests.cs
 - StrideBrowser.Tests/theme-color-performance.mjs
 
-MainWindow.xaml.cs is shared. The follow-up UI change there is the single AccentWashColor assignment and its blank line. The adaptive-tint handler refactor and the BOM were present from the performance work. Preserve them, but review the diff before staging.
+MainWindow.xaml.cs is shared. The single AccentWashColor assignment and its blank line are committed in faf29c0d. The adaptive-tint handler refactor and the BOM remain uncommitted from the performance work. Preserve them and review the diff before staging.
 
 The earlier full-worktree suite had a source-text failure in YouTubeNetworkTamperingTests.RegistrationIsAwaitedBeforeTheFirstExternalNavigationOnly. It expects `if (!ServeBuiltInPage(tab))`, which the separate activation refactor removed. The isolated UI suite passes because it excludes that refactor.
 
 ## Next session
 
-Read AGENTS.md and .opencode/skills/unslop/SKILL.md. Inspect branch and status. The user authorized committing and pushing the follow-up UI changes. Check the branch history and upstream status before any further Git action. Preserve all performance edits. Keep pending changelog entries under Unreleased and versions at 0.1.0. No release or installer was published.
+Read AGENTS.md and .opencode/skills/unslop/SKILL.md. Inspect branch and status. All requested download, wallpaper, setup, update-page and light-palette work is committed and pushed. This handoff refresh is a local documentation change after the push. No UI work remains pending from this session. Preserve the separate performance edits and wait for the next task. Do not commit or push further changes without user confirmation. Keep pending changelog entries under Unreleased and versions at 0.1.0. No release or installer was published.
