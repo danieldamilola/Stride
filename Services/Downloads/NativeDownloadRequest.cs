@@ -58,13 +58,7 @@ public sealed class NativeDownloadRequest : IDisposable
             core.NavigationCompleted += async (_, e) =>
             {
                 if (adopted || requestedNavigation == 0 || e.NavigationId != requestedNavigation) return;
-                try
-                {
-                    // Attachment navigations can finish just before DownloadStarting arrives.
-                    await Task.Delay(250, token);
-                    if (!adopted) started.TrySetResult(false);
-                }
-                catch (OperationCanceledException) { }
+                await CompleteNavigationAsync(started, () => adopted, token);
             };
             core.DownloadStarting += (_, e) =>
             {
@@ -106,6 +100,20 @@ public sealed class NativeDownloadRequest : IDisposable
         }
         catch { Close(); throw; }
     }
+    internal static async Task CompleteNavigationAsync(TaskCompletionSource<bool> started, Func<bool> isDownloadAdopted, CancellationToken token)
+    {
+        try
+        {
+            // Attachment navigations can finish just before DownloadStarting arrives.
+            await Task.Delay(250, token);
+            if (!isDownloadAdopted()) started.TrySetResult(false);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            started.TrySetCanceled(token);
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed) return;

@@ -33,6 +33,8 @@ Versioning restarts at 0.1.0. This version is in development and has not been pu
 
 ### Fixed
 
+- Cancelling a download restart explicitly cancels its pending navigation-completion task without changing an already-started transfer.
+
 - Header search fields show a single border only while focused, without a second outline around the input.
 
 - Settings keeps its page background when accent customization is removed.
