@@ -1,9 +1,10 @@
 # Changelog
 
 All notable changes to Stride are recorded here, newest first.
-Versioning restarts at 0.1.0. This version is in development and has not been published.
 
 ## [Unreleased]
+
+## [0.1.0] - 2026-10-21
 
 ### Added
 
