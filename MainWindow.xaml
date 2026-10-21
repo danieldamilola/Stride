@@ -938,12 +938,28 @@
                                          context from the button it is placed against. -->
                                     <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                         <MenuItem Header="Downloads" InputGestureText="Ctrl+J" Click="Downloads_Click"/>
+                                        <MenuItem Header="Extensions" Click="Extensions_Click"/>
                                         <MenuItem Header="Reader view" InputGestureText="Ctrl+Shift+R" Command="{Binding ToggleReaderCommand}"/>
                                         <MenuItem Header="Check for updates" Command="{Binding HandleUpdateClickCommand}"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
                             </Button>
                         </Grid>
+
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ToolbarActionVisibilityConverter}, ConverterParameter=Optional}">
+                            <ItemsControl x:Name="PinnedExtensions">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <Button Command="{Binding OpenCommand}" Style="{DynamicResource IconBtn}" Width="28" Height="28" Margin="0,0,3,0" ToolTip="{Binding Name}" AutomationProperties.Name="{Binding Name}">
+                                        <Grid Width="17" Height="17"><Path Data="M8,2 L12,2 C12,-2 18,-2 18,2 L22,2 L22,7 C18,7 18,13 22,13 L22,18 L17,18 C17,22 11,22 11,18 L6,18 L6,13 C2,13 2,7 6,7 L6,2 Z" Stroke="{DynamicResource TextSecondary}" StrokeThickness="1.5" Stretch="Uniform"><Path.Style><Style TargetType="Path"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Icon}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></Path.Style></Path><Image Source="{Binding Icon}"/></Grid>
+                                    </Button>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button x:Name="ExtensionsButton" Style="{DynamicResource IconBtn}" Width="28" Height="28" Margin="0,0,3,0" ToolTip="Extensions" AutomationProperties.Name="Extensions">
+                                <Path Data="M8,2 L12,2 C12,-2 18,-2 18,2 L22,2 L22,7 C18,7 18,13 22,13 L22,18 L17,18 C17,22 11,22 11,18 L6,18 L6,13 C2,13 2,7 6,7 L6,2 Z" Stroke="{DynamicResource TextSecondary}" StrokeThickness="1.5" Fill="Transparent" Width="16" Height="16" Stretch="Uniform"/>
+                            </Button>
+                            <Popup x:Name="ExtensionsPopup" Placement="Custom" PlacementTarget="{Binding ElementName=ExtensionsButton}" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade"><controls:ExtensionsPanel x:Name="ExtensionsPanel"/></Popup>
+                        </StackPanel>
 
                         <!-- Settings button: the action control that keeps its place longest, and
                              the one that carries the trailing margin the cluster ends with. -->

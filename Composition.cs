@@ -47,6 +47,8 @@ public static class Composition
         services.AddSingleton<ISessionStore>(sp => sp.GetRequiredService<SessionStore>());
         services.AddSingleton<IClosedTabStore, ClosedTabStore>();
         services.AddSingleton<ExtensionManager>();
+        services.AddSingleton<Services.Extensions.ExtensionLibrary>();
+        services.AddScoped<Services.UI.ExtensionActions>();
         services.AddSingleton(sp => new InternalPages(sp.GetRequiredService<ThemeManager>()));
         services.AddSingleton<YouTubeEnhancer>();
         services.AddSingleton<YouTubeUnhook>();
@@ -121,6 +123,7 @@ public static class Composition
         services.AddScoped<IWebMessageHandler, HistoryMessageHandler>();
         services.AddScoped<IWebMessageHandler, ShortcutMessageHandler>();
         services.AddScoped<IWebMessageHandler, DownloadMessageHandler>();
+        services.AddScoped<IWebMessageHandler, ExtensionMessageHandler>();
         services.AddScoped<IWebMessageHandler, OnboardingMessageHandler>();
         services.AddScoped<IWebMessageHandler, TCLensMessageHandler>();
 

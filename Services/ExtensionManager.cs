@@ -370,19 +370,14 @@ public sealed class ExtensionManager
 
         var extensions = await webview.Profile.GetBrowserExtensionsAsync();
         var ublock = FindUBlock(extensions);
-        var idm = FindLegacyDownloadManager(extensions);
 
         var decision = await DecideAsync(
             registered: ublock is not null,
-            legacyExtensionPresent: idm is not null,
+            // Users can now load their own extensions. Display names cannot prove
+            // that a download manager belongs to Stride's former bundled install.
+            legacyExtensionPresent: false,
             desiredEnabled: desiredEnabled);
         var plan = decision.Plan;
-
-        if (plan.RemoveLegacy && idm is not null)
-        {
-            Trace.WriteLine($"ExtensionManager: Removing legacy IDM extension (id={idm.Id}).");
-            await RemoveExtensionAsync(idm);
-        }
 
         if (plan.Action == ReconcileAction.FailPreservingRegistration)
         {
@@ -1013,10 +1008,6 @@ public sealed class ExtensionManager
 
     private static CoreWebView2BrowserExtension? FindUBlock(IEnumerable<CoreWebView2BrowserExtension> extensions) =>
         extensions.FirstOrDefault(e => IsUBlock(e.Name));
-
-    private static CoreWebView2BrowserExtension? FindLegacyDownloadManager(
-        IEnumerable<CoreWebView2BrowserExtension> extensions) =>
-        extensions.FirstOrDefault(e => IsLegacyDownloadManager(e.Name));
 
     /// <summary>
     /// How long a requested enable or disable is given to show up in the profile
