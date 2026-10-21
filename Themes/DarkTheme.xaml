@@ -34,5 +34,19 @@
     <SolidColorBrush x:Key="TextSecondary"     Color="{StaticResource TextSecondaryColor}"/>
     <SolidColorBrush x:Key="TextMuted"         Color="{StaticResource TextMutedColor}"/>
     <SolidColorBrush x:Key="DangerBrush"       Color="{StaticResource DangerColor}"/>
+
+    <!-- Control states follow the theme when it changes at runtime. -->
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#606060"/>
+    <SolidColorBrush x:Key="AddressFieldBackground" Color="#0DFFFFFF"/>
+    <SolidColorBrush x:Key="AddressFieldBorder" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="PinnedTabBackground" Color="#0DFFFFFF"/>
+    <SolidColorBrush x:Key="TabCloseHoverBackground" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="ToolbarHoverBrush" Color="#0AFFFFFF"/>
+    <SolidColorBrush x:Key="ToolbarPressedBrush" Color="#14FFFFFF"/>
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#26FFFFFF"/>
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#40FFFFFF"/>
+    <SolidColorBrush x:Key="ScrollThumbPressedBrush" Color="#59FFFFFF"/>
+    <SolidColorBrush x:Key="SelectedTabBrush" Color="{DynamicResource AccentWashColor}"/>
+    <SolidColorBrush x:Key="NeutralSelectedTabBrush" Color="#2A2A2A"/>
 </ResourceDictionary>
 

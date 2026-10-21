@@ -1,5 +1,7 @@
 # Stride download work handoff
 
+For the later wallpaper, setup, update-page and light-theme work, read [the follow-up handoff](2026-10-21-setup-and-theme.md).
+
 Date: 2026-10-21
 Repository: C:\dev\Stride
 Branch: feat/download-history

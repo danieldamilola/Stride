@@ -5,9 +5,9 @@
   --border: #313131; --text-main: #eeeeee; --text-bright: #eeeeee;
   --text-muted: #b4b4b4; --text-dim: #b4b4b4; --white: #ffffff;
 }
-:root[data-theme="light"] { color-scheme: light; --bg-base:#f8f8fa; --bg-dark:#f8f8fa; --bg-surface:#fff; --bg-hover:#efeff2; --border:#b6b4b0; --text-main:#111113; --text-bright:#111113; --text-muted:#595651; --text-dim:#625f59; --white:#111113; }
+:root[data-theme="light"] { color-scheme:light; --bg-base:#f9f9f9; --bg-dark:#f9f9f9; --bg-surface:#ffffff; --bg-hover:#e8e8e8; --bg-card:#ffffff; --card:#ffffff; --border:#d9d9d9; --border-subtle:#e8e8e8; --control-border:#8d8d8d; --text-main:#202020; --text-bright:#202020; --text-muted:#5f5f5f; --text-dim:#5f5f5f; --white:#202020; --solid:#202020; --on-solid:#ffffff; --text-link:#3a3a3a; --download-progress:#646464; --danger-text:#b42318; }
 @media (prefers-color-scheme: light) {
-  :root[data-theme="system"] { color-scheme: light; --bg-base:#f8f8fa; --bg-dark:#f8f8fa; --bg-surface:#fff; --bg-hover:#efeff2; --border:#b6b4b0; --text-main:#111113; --text-bright:#111113; --text-muted:#595651; --text-dim:#625f59; --white:#111113; }
+  :root[data-theme="system"] { color-scheme:light; --bg-base:#f9f9f9; --bg-dark:#f9f9f9; --bg-surface:#ffffff; --bg-hover:#e8e8e8; --bg-card:#ffffff; --card:#ffffff; --border:#d9d9d9; --border-subtle:#e8e8e8; --control-border:#8d8d8d; --text-main:#202020; --text-bright:#202020; --text-muted:#5f5f5f; --text-dim:#5f5f5f; --white:#202020; --solid:#202020; --on-solid:#ffffff; --text-link:#3a3a3a; --download-progress:#646464; --danger-text:#b42318; }
 }
 body { font-family:"Segoe UI",sans-serif; color:var(--text-main); }
 [hidden] { display:none !important; }
@@ -66,6 +66,8 @@ details.release-log > summary .log-header { display:inline-flex; gap:16px; margi
 .message, .url { color:var(--text-muted); }
 
 .bg-overlay { background:color-mix(in srgb,var(--bg-base) 55%,transparent); }
+:root[data-theme="light"] .bg-overlay { background:transparent; }
+@media (prefers-color-scheme:light) { :root[data-theme="system"] .bg-overlay { background:transparent; } }
 .search-input, .search-input:focus, .shortcut-tile, .shortcut-add, .wallpapers-btn { background:var(--bg-surface); color:var(--text-main); border-color:var(--border); box-shadow:none; }
 .search-input::placeholder, .search-icon { color:var(--text-muted); }
 .shortcut-tile .tile-name { color:var(--text-main); }
@@ -82,3 +84,21 @@ details.release-log > summary .log-header { display:inline-flex; gap:16px; margi
 
 .shortcut-add svg { color:var(--text-main); stroke:var(--text-main); opacity:1; }
 @media (prefers-reduced-motion:reduce) { .content, .shortcuts { opacity:1; transform:none; } }
+
+/* Light controls keep their boundaries and text readable on white surfaces. */
+:root[data-theme="light"], :root[data-theme="system"] { --input-surface:var(--bg-surface); }
+.search-input, .search-input:focus { border-color:var(--control-border,var(--border)); }
+:root[data-theme="light"] .search-bar { border-color:var(--control-border); }
+:root[data-theme="light"] .toggle { background:#e8e8e8; border-color:var(--control-border); }
+:root[data-theme="light"] .toggle::before { background:#646464; }
+:root[data-theme="light"] .toggle:checked { background:var(--solid); border-color:var(--solid); }
+:root[data-theme="light"] .toggle:checked::before { background:var(--on-solid); }
+:root[data-theme="light"] .shortcuts { background:rgb(255 255 255 / 92%); border:1px solid var(--border); border-radius:8px; padding:8px 14px; }
+@media(prefers-color-scheme:light) {
+  :root[data-theme="system"] .search-bar { border-color:var(--control-border); }
+  :root[data-theme="system"] .toggle { background:#e8e8e8; border-color:var(--control-border); }
+  :root[data-theme="system"] .toggle::before { background:#646464; }
+  :root[data-theme="system"] .toggle:checked { background:var(--solid); border-color:var(--solid); }
+  :root[data-theme="system"] .toggle:checked::before { background:var(--on-solid); }
+  :root[data-theme="system"] .shortcuts { background:rgb(255 255 255 / 92%); border:1px solid var(--border); border-radius:8px; padding:8px 14px; }
+}

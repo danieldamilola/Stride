@@ -89,7 +89,7 @@ public sealed class ThemeManagerResourceTests
             
             textPrimary = Application.Current.FindResource("TextPrimary") as SolidColorBrush;
             Assert.NotNull(textPrimary);
-            Assert.Equal(Color.FromRgb(0x11, 0x11, 0x13), textPrimary.Color); // Light theme TextPrimaryColor = #111113
+            Assert.Equal(Color.FromRgb(0x20, 0x20, 0x20), textPrimary.Color); // Light theme TextPrimaryColor = #202020
         });
     }
 

@@ -73,7 +73,7 @@ public sealed class ReleaseNotesProviderTests
             - <script>alert('example')</script>
             """);
         var html = new ReleaseNotesPage().Render("0.1.0", releases, "#d4d4d4", "212,212,212", "test");
-        Assert.Contains(">Changed</div>", html);
+        Assert.Contains("<h3>Changed</h3>", html);
         Assert.Contains("&lt;script&gt;", html);
         Assert.DoesNotContain("<script>alert", html);
         Assert.DoesNotContain("{{VERSION}}", html);
@@ -87,7 +87,7 @@ public sealed class ReleaseNotesProviderTests
         var releases = ReleaseNotesProvider.GetAllReleases();
         Assert.Empty(releases);
         var html = new ReleaseNotesPage().Render("0.1.0", releases, "#d4d4d4", "212,212,212", "test");
-        Assert.Contains("Current Version: v0.1.0", html);
+        Assert.Contains("Version 0.1.0", html);
         Assert.Contains("Unreleased", html);
         Assert.Contains("No releases have been published yet.", html);
         Assert.DoesNotContain("v1.2.", html);
@@ -95,4 +95,31 @@ public sealed class ReleaseNotesProviderTests
         Assert.DoesNotContain("{{DATE}}", html);
         Assert.DoesNotContain("{{ALL_RELEASES_HTML}}", html);
     }
+    [Fact]
+    public void RenderGroupsCategoriesOnceAndKeepsOlderReleasesExpandable()
+    {
+        var releases = ReleaseNotesProvider.ParseChangelog("""
+            ## [0.1.2] - 2026-10-21
+            ### Added
+            - First addition.
+            - Second addition.
+            ### Fixed
+            - A repair.
+            ## [0.1.1] - 2026-10-19
+            ### Changed
+            - An older change.
+            """);
+        var html = new ReleaseNotesPage().Render("0.1.2", releases, "#ff00ff", "255,0,255", "test");
+        Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(html, "<h3>Added</h3>").Count);
+        Assert.Contains("<li>First addition.</li>", html);
+        Assert.Contains("<li>Second addition.</li>", html);
+        Assert.Contains("<article class=\"release\" id=\"release-0\">", html);
+        Assert.Contains("<details class=\"release release-log\" id=\"release-1\">", html);
+        Assert.Contains("October 21, 2026", html);
+        Assert.DoesNotContain("You're up to date", html);
+        Assert.DoesNotContain("{{RELEASE_NAV_HTML}}", html);
+        Assert.DoesNotContain("{{RELEASE_STATUS}}", html);
+        Assert.DoesNotContain("{{APP_ICON}}", html);
+    }
+
 }

@@ -916,6 +916,8 @@ public partial class MainWindow : Window
             Application.Current.Resources["AccentColor"] = color;
             Application.Current.Resources["Accent"] = brush;
 
+            Application.Current.Resources["AccentWashColor"] = Color.FromArgb(0x1A, color.R, color.G, color.B);
+
             // Update accent wash (10% opacity version)
             var wash = new SolidColorBrush(Color.FromArgb(0x1A, color.R, color.G, color.B));
             wash.Freeze();

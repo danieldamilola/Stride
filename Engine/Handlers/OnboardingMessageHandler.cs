@@ -34,26 +34,7 @@ public class OnboardingMessageHandler : IWebMessageHandler
         var wv = _engine.GetCoreWebView2();
         if (wv == null) return Task.CompletedTask;
 
-        var payload = System.Text.Json.JsonSerializer.Serialize(new
-        {
-            theme = _settings.AppTheme.ToString().ToLowerInvariant(),
-            accent = _settings.AccentColor,
-            adBlock = _settings.AdBlockEnabled,
-            smartScreen = _settings.SmartScreenEnabled,
-            httpsForce = _settings.ForceHttps,
-            clearOnExit = _settings.ClearDataOnExit,
-            hibernate = _settings.TabHibernationEnabled,
-            tabSleep = _settings.TabSleepEnabled,
-            engine = _settings.SearchEngine switch
-            {
-                "Brave" => "brave",
-                "Startpage" => "start",
-                "Google" => "google",
-                "Bing" => "bing",
-                _ => "ddg"
-            },
-            showTabNames = _settings.ShowTabNames
-        });
+        var payload = Services.Pages.OnboardingPage.SerializeSettings(_settings);
         wv.PostWebMessageAsString(_engine.IpcToken + ":onboarding-data:" + payload);
         return Task.CompletedTask;
     }

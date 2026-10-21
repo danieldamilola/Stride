@@ -91,9 +91,11 @@ public sealed class DownloadsPanelTemplateTests(ThemeAppFixture fixture)
             _ = new ThemeManager(new BrowserSettings { AppTheme = mode });
             var resources = Application.Current.Resources;
             var previous = resources["AccentWash"];
+            var previousColor = resources["AccentWashColor"];
             try
             {
                 resources["AccentWash"] = new SolidColorBrush(Colors.Magenta);
+                resources["AccentWashColor"] = Colors.Magenta;
                 var root = new DirectoryInfo(AppContext.BaseDirectory);
                 while (root is not null && !File.Exists(Path.Combine(root.FullName, "Stride.csproj"))) root = root.Parent;
                 Assert.NotNull(root);
@@ -108,13 +110,18 @@ public sealed class DownloadsPanelTemplateTests(ThemeAppFixture fixture)
                 list.Measure(new Size(240, 40)); list.Arrange(new Rect(0, 0, 240, 40)); list.UpdateLayout();
                 var container = (ListBoxItem)list.ItemContainerGenerator.ContainerFromItem(tab);
                 var border = (Border)container.Template.FindName("Bd", container);
-                var neutral = (SolidColorBrush)Application.Current.FindResource("SurfaceHoverBrush");
+                var neutral = (SolidColorBrush)Application.Current.FindResource("NeutralSelectedTabBrush");
                 Assert.Equal(neutral.Color, ((SolidColorBrush)border.Background).Color);
                 tab.Url = "https://example.com/";
                 list.UpdateLayout();
-                Assert.Equal(Colors.Magenta, ((SolidColorBrush)border.Background).Color);
+                var selected = (SolidColorBrush)Application.Current.FindResource("SelectedTabBrush");
+                Assert.Equal(selected.Color, ((SolidColorBrush)border.Background).Color);
             }
-            finally { if (previous is null) resources.Remove("AccentWash"); else resources["AccentWash"] = previous; }
+            finally
+            {
+                if (previous is null) resources.Remove("AccentWash"); else resources["AccentWash"] = previous;
+                if (previousColor is null) resources.Remove("AccentWashColor"); else resources["AccentWashColor"] = previousColor;
+            }
         });
     }
     private static IEnumerable<DependencyObject> Descendants(DependencyObject parent)

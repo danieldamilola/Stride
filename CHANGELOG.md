@@ -14,6 +14,10 @@ Versioning restarts at 0.1.0. This version is in development and has not been pu
 
 ### Changed
 
+- Light mode uses a neutral gray palette with white surfaces, readable secondary text, clearer controls and matching colors across built-in pages.
+
+- Get started uses a five-step setup with native choices and a review of preferences. What's New groups published updates by release and category in a new layout for light and dark mode.
+
 - Download history groups files by date and uses neutral file links, Windows file icons and compact icon actions. Search filters the history without leaving the page.
 
 - The download popup shows recent downloads with compact icon actions. Full download history stays on the Downloads page.
@@ -24,6 +28,12 @@ Versioning restarts at 0.1.0. This version is in development and has not been pu
 - Settings no longer shows routine save confirmations. Save errors and restart notices remain visible.
 
 ### Fixed
+
+- Menus, scrollbars and toolbar fields follow live theme changes. Light mode keeps readable toolbar text when a site uses a dark theme color.
+
+- Setup choices follow the app settings, save the HTTPS preference and report save failures. Removed inactive import controls.
+
+- Light mode keeps new-tab wallpaper colors without a white overlay.
 
 - The Downloads tab uses a neutral selected background instead of the browser accent.
 

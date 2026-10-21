@@ -22,18 +22,7 @@
         <conv:TabWidthToVisibilityConverter x:Key="TabWidthToVisibilityConverter"/>
         <conv:TabCloseVisibilityConverter x:Key="TabCloseVisibilityConverter"/>
         <conv:TabCloseOpacityConverter x:Key="TabCloseOpacityConverter"/>
-        <!-- Per-window adaptive tint defaults. The tint adapter overrides these
-             in Toolbar.Resources on light site colors. They stay dark here so the
-             neutral toolbar renders exactly as before when tint is off.
-             The three suggestion keys are deliberately absent: they live in the
-             theme dictionaries, because one hard coded popup surface cannot serve
-             both themes. The field borrows the popup surface while suggestions are
-             open, so a popup only value that ignores the theme also made the field
-             unreadable. -->
-        <SolidColorBrush x:Key="AddressFieldBackground" Color="#0DFFFFFF"/>
-        <SolidColorBrush x:Key="AddressFieldBorder" Color="#1AFFFFFF"/>
-        <SolidColorBrush x:Key="PinnedTabBackground" Color="#0DFFFFFF"/>
-        <SolidColorBrush x:Key="TabCloseHoverBackground" Color="#1AFFFFFF"/>
+        <!-- The active site can override the theme toolbar palette within this window. -->
         <Style x:Key="SuggestionItemStyle" TargetType="ListBoxItem">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -60,7 +49,7 @@
                                 <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource SuggestionHoverBackground}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AccentWash}"/>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource SelectedTabBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -999,7 +988,7 @@
                         <Button Click="Close_Click" Style="{DynamicResource CloseTitleBtn}"
                                 Width="42" Height="38">
                             <Path Data="{StaticResource IconClose}"
-                                  Stroke="{DynamicResource TextSecondary}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                   StrokeThickness="1.2" Width="10" Height="10"
                                   Stretch="Uniform" StrokeStartLineCap="Round"
                                   StrokeEndLineCap="Round"/>
