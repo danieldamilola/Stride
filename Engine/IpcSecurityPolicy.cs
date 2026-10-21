@@ -63,7 +63,10 @@ public static class IpcSecurityPolicy
                 message == WebMessagePrefix.DownloadClearAll ||
                 message == WebMessagePrefix.DownloadRequestSync ||
                 message.StartsWith(WebMessagePrefix.DownloadPause, StringComparison.Ordinal) ||
-                message.StartsWith(WebMessagePrefix.DownloadResume, StringComparison.Ordinal),
+                message.StartsWith(WebMessagePrefix.DownloadResume, StringComparison.Ordinal) ||
+                message.StartsWith(WebMessagePrefix.DownloadRetry, StringComparison.Ordinal) ||
+                message.StartsWith(WebMessagePrefix.DownloadCopy, StringComparison.Ordinal) ||
+                message.StartsWith(WebMessagePrefix.DownloadRemove, StringComparison.Ordinal),
 
             TabEngine.InternalPageKind.NewTab =>
                 message.StartsWith(WebMessagePrefix.Open, StringComparison.Ordinal) ||

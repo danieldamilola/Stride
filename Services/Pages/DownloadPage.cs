@@ -8,7 +8,7 @@ public sealed class DownloadPage
 {
     public string Render(List<DownloadItem> items, string accentColor, string accentRgb, string ipcToken)
     {
-        var json = JsonSerializer.Serialize(items, DownloadJson.Options);
+        var json = DownloadJson.SerializeForPage(items);
         return TemplateRenderer.RenderJsonPage("Resources.Pages.Downloads.html", "DOWNLOADS", json, accentColor, accentRgb, ipcToken);
     }
 }

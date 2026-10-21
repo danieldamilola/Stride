@@ -144,6 +144,8 @@ public sealed partial class TabEngine : IDisposable
         _historyStore = deps.HistoryStore;
         _oneTabStore = deps.OneTabStore;
         _downloadStore = deps.DownloadStore;
+        Downloads = deps.Downloads ?? new Services.Downloads.DownloadCoordinator(_downloadStore);
+        _downloadRequests = deps.DownloadRequests ?? new Services.Downloads.NativeDownloadRequest(_downloadStore, deps.Session, Downloads);
         _closedTabStore = deps.ClosedTabStore;
         _focusBlocklistService = deps.FocusBlocklistService;
         _contentScriptInjector = deps.ContentScriptInjector;
@@ -168,7 +170,8 @@ public sealed partial class TabEngine : IDisposable
             closeTab: CloseTab,
             ensureTabReadyAsync: EnsureTabReadyAsync,
             removeSentinelTab: RemoveFailedSentinelTab,
-            downloadSuppressor: deps.DownloadSuppressor);
+            downloadSuppressor: deps.DownloadSuppressor,
+            downloadCoordinator: Downloads);
         _ipcBridge.WebMessageReceived += msg => WebMessageReceived?.Invoke(msg);
         _ipcBridge.FullScreenChanged += fs => FullScreenChanged?.Invoke(fs);
         _ipcBridge.TabStateChanged += tab => TabStateChanged?.Invoke(tab);
