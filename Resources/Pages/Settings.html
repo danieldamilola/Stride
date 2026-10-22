@@ -576,29 +576,30 @@ const __T = "{{IPC_TOKEN}}:";
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
             Appearance
           </button></li>
+          <li><button type="button" class="sidebar-nav-item" data-target="section-tabs">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Tabs
+          </button></li>
+          <li><button type="button" class="sidebar-nav-item" data-target="section-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Search
+          </button></li>
           <li><button type="button" class="sidebar-nav-item" data-target="section-privacy">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Privacy & Security
           </button></li>
-          <li><button type="button" class="sidebar-nav-item" data-target="section-performance">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Performance
-          </button></li>
-          <li><button type="button" class="sidebar-nav-item" data-target="section-extensions">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            Extensions
+          <li><button type="button" class="sidebar-nav-item" data-target="section-focus">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            Focus <span class="warn-dot"></span>
           </button></li>
           <li><button type="button" class="sidebar-nav-item" data-target="section-shortcuts">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M10 16h4"/></svg>
-            Keyboard Shortcuts
+            Shortcuts
           </button></li>
-          <li><button type="button" class="sidebar-nav-item" data-target="section-focus">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-            Focus Mode <span class="warn-dot"></span>
-          </button></li>
+
           <li><button type="button" class="sidebar-nav-item" data-target="section-system">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
-            About Stride
+            About
           </button></li>
         </ul>
       </aside>
@@ -612,37 +613,207 @@ const __T = "{{IPC_TOKEN}}:";
           </div>
 
 <p id="searchSummary" class="search-summary" role="status" hidden></p><p id="settingsStatus" class="settings-status" role="status" aria-live="polite" hidden></p>
-          <!-- ════════ GENERAL ════════ -->
-          <div class="section active" id="section-general">
-            <div class="section-header">General</div>
-            <div class="card">
-              <div class="setting-row">
+          <div class="section active" id="section-general" data-search-title="General">
+<div class="section-header">General</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Default browser</div>
+<div class="card">
+<div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Search engine</div>
-                  <div class="setting-desc">Used for address bar searches</div>
+                  <div class="setting-label">Set as default browser</div>
+                  <div class="setting-desc">Open web links with Stride</div>
                 </div>
                 <div class="setting-control">
-                  <select class="select" onchange="s('search', this)">
-                    <option value="DuckDuckGo" {{SEARCH_DUCKDUCKGO}}>DuckDuckGo</option>
-                    <option value="Brave" {{SEARCH_BRAVE}}>Brave</option>
-                    <option value="Google" {{SEARCH_GOOGLE}}>Google</option>
-                    <option value="Bing" {{SEARCH_BING}}>Bing</option>
-                    <option value="Yahoo" {{SEARCH_YAHOO}}>Yahoo</option>
-                    <option value="Startpage" {{SEARCH_STARTPAGE}}>Startpage</option>
+                  <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'set-default-browser')">Set Default</button>
+                </div>
+              </div>
+</div>
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Startup</div>
+<div class="card">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Restore session on startup</div>
+                  <div class="setting-desc">Reopen your tabs from last session</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_RESTORE}} onchange="s('restoreSession', this)" />
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Getting Started</div>
+                  <div class="setting-desc">Revisit the Stride onboarding guide</div>
+                </div>
+                <div class="setting-control">
+                  <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'open-onboarding')">Open</button>
+                </div>
+              </div>
+</div>
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">System</div>
+<div class="card">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Hardware Acceleration <span class="restart-tag">Restart</span></div>
+                  <div class="setting-desc">Uses GPU to render graphics. Turn off if experiencing graphical glitches.</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_HWACCEL}} onchange="s('hwAccel', this)" />
+                </div>
+              </div>
+</div>
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Reset settings</div>
+<div class="card">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label" style="color: #e53935">Reset all settings</div>
+                  <div class="setting-desc">Restore browser preferences. Locked Focus rules stay unchanged.</div>
+                </div>
+                <div class="setting-control">
+                  <button class="action-btn danger" style="color: #e53935; border-color: #e53935" onclick="if(confirm('Reset browser preferences? Locked Focus rules will remain in place. Restart Stride afterward to apply startup preferences.')) window.chrome.webview.postMessage(__T + 'reset-settings')">Reset to defaults</button>
+                </div>
+              </div>
+</div>
+</div>
+</div>
+
+<div class="section" id="section-appearance" data-search-title="Appearance">
+<div class="section-header">Appearance</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Theme</div>
+<div class="card">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">App Theme</div>
+                  <div class="setting-desc">Choose between light, dark, or system default</div>
+                </div>
+                <div class="setting-control">
+                  <select class="select" onchange="s('appTheme', this)">
+                    <option value="system" {{THEME_SYSTEM}}>System Default</option>
+                    <option value="light" {{THEME_LIGHT}}>Light Theme</option>
+                    <option value="dark" {{THEME_DARK}}>Dark Theme</option>
                   </select>
                 </div>
               </div>
-              <div class="setting-row">
+<div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Online search suggestions</div>
-                  <div class="setting-desc">Off by default. When enabled, sends search text as you type to DuckDuckGo, regardless of your search engine. History and shortcuts work locally while this is off.</div>
+                  <div class="setting-label">Accent color</div>
+                  <div class="setting-desc">Applied to toggles, buttons, and highlights</div>
                 </div>
                 <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_SEARCH_SUGGESTIONS}} onchange="s('searchSuggestions', this)" />
+                  <input type="color" id="accentPicker" value="{{ACCENT_COLOR}}" style="width: 36px; height: 36px; border: none; background: transparent; cursor: pointer; padding: 0;" oninput="setAccent(this.value)" />
                 </div>
               </div>
-
-              <div class="setting-row">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Adaptive Toolbar Color</div>
+                  <div class="setting-desc">Tint the toolbar with the active website theme color</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_ADAPTIVE_TINT}} onchange="s('adaptiveTint', this)" />
+                </div>
+              </div>
+</div>
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Layout</div>
+<div class="card">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Sidebar position</div>
+                </div>
+                <div class="setting-control">
+                  <select class="select" onchange="s('sidebarPosition', this)">
+                    <option value="left" {{SIDEBAR_LEFT}}>Left</option>
+                    <option value="right" {{SIDEBAR_RIGHT}}>Right</option>
+                  </select>
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Address Bar Position</div>
+                  <div class="setting-desc">Move the address bar and new tab button</div>
+                </div>
+                <div class="setting-control">
+                  <select class="select" onchange="s('addressBarOnLeft', this)">
+                    <option value="false" {{ADDR_RIGHT}}>Right</option>
+                    <option value="true" {{ADDR_LEFT}}>Left (Default)</option>
+                  </select>
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Rounded Web Content Frame</div>
+                  <div class="setting-desc">Show a rounded frame around web contents</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_ROUNDED_FRAME}} onchange="s('roundedFrame', this)" />
+                </div>
+              </div>
+</div>
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Toolbar buttons</div>
+<div class="card">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Show Back Arrow</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_BACKARROW}} onchange="s('showBackArrow', this)" />
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Show Forward Arrow</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_FWDARROW}} onchange="s('showForwardArrow', this)" />
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Show Refresh Button</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_REFRESH}} onchange="s('showRefreshButton', this)" />
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Show Downloads Icon</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_DOWNLOADS}} onchange="s('showDownloadsIcon', this)" />
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Show Settings Icon</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_SETTINGSICON}} onchange="s('showSettingsIcon', this)" />
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Show Reader Icon</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_READERICON}} onchange="s('showReaderIcon', this)" />
+                </div>
+              </div>
+</div>
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Website display</div>
+<div class="card">
+<div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Default zoom</div>
                 </div>
@@ -660,43 +831,6 @@ const __T = "{{IPC_TOKEN}}:";
                   </select>
                 </div>
               </div>
-
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Restore session on startup</div>
-                  <div class="setting-desc">Reopen your tabs from last session</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_RESTORE}} onchange="s('restoreSession', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Block duplicate tabs</div>
-                  <div class="setting-desc">Switch to existing tab instead of opening a new one</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_DUPES}} onchange="s('blockDupes', this)" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ════════ APPEARANCE ════════ -->
-          <div class="section" id="section-appearance" data-search-title="appearance">
-            <div class="section-header">Theme</div>
-            <div class="card">
-<div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Sidebar position</div>
-                </div>
-                <div class="setting-control">
-                  <select class="select" onchange="s('sidebarPosition', this)">
-                    <option value="left" {{SIDEBAR_LEFT}}>Left</option>
-                    <option value="right" {{SIDEBAR_RIGHT}}>Right</option>
-                  </select>
-                </div>
-              </div>
 <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Force dark mode on websites <span class="restart-tag">Restart required</span></div>
@@ -706,122 +840,134 @@ const __T = "{{IPC_TOKEN}}:";
                   <input type="checkbox" class="toggle" {{CHK_DARK}} onchange="s('darkMode', this)" />
                 </div>
               </div>
-              <div class="setting-row">
+</div>
+</div>
+</div>
+
+<div class="section" id="section-tabs" data-search-title="Tabs">
+<div class="section-header">Tabs</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Tab behavior</div>
+<div class="card">
+<div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">App Theme</div>
-                  <div class="setting-desc">Choose between light, dark, or system default</div>
+                  <div class="setting-label">Block duplicate tabs</div>
+                  <div class="setting-desc">Switch to existing tab instead of opening a new one</div>
                 </div>
                 <div class="setting-control">
-                  <select class="select" onchange="s('appTheme', this)">
-                    <option value="system" {{THEME_SYSTEM}}>System Default</option>
-                    <option value="light" {{THEME_LIGHT}}>Light Theme</option>
-                    <option value="dark" {{THEME_DARK}}>Dark Theme</option>
+                  <input type="checkbox" class="toggle" {{CHK_DUPES}} onchange="s('blockDupes', this)" />
+                </div>
+              </div>
+</div>
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Memory and battery</div>
+<div class="card">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Tab sleep</div>
+                  <div class="setting-desc">Suspend background tabs to save CPU and battery</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_TAB_SLEEP}} onchange="s('tabSleep', this)" />
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Tab hibernation</div>
+                  <div class="setting-desc">Unload inactive tabs after a few minutes to free memory</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_TAB_HIBERNATION}} onchange="s('tabHibernation', this)" />
+                </div>
+              </div>
+</div>
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Tab appearance</div>
+<div class="card">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Dim sleeping tabs</div>
+                  <div class="setting-desc">Fade icons for suspended background tabs</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_TAB_SLEEP_DIM}} onchange="toggleDim('tabSleepDim', this, 'sleepSlider')" />
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Sleeping tab opacity</div>
+                  <div class="setting-desc">Dim level for suspended background tabs</div>
+                </div>
+                <div class="setting-control" style="display:flex;align-items:center;gap:10px">
+                  <input id="sleepSlider" type="range" min="0.1" max="1" step="0.05" value="{{TAB_SLEEP_OPACITY}}" oninput="updateOpacity('tabSleepOpacity', this, 'sleepSliderVal')" style="width:120px;accent-color:var(--accent)" />
+                  <span id="sleepSliderVal" style="font-size:12px;color:var(--text-muted);min-width:32px">{{TAB_SLEEP_OPACITY_PCT}}%</span>
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Dim hibernated tabs</div>
+                  <div class="setting-desc">Fade icons for unloaded tabs</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_TAB_HIBERNATION_DIM}} onchange="toggleDim('tabHibernationDim', this, 'hibSlider')" />
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Hibernated tab opacity</div>
+                  <div class="setting-desc">Dim level for unloaded tabs</div>
+                </div>
+                <div class="setting-control" style="display:flex;align-items:center;gap:10px">
+                  <input id="hibSlider" type="range" min="0.1" max="1" step="0.05" value="{{TAB_HIBERNATION_OPACITY}}" oninput="updateOpacity('tabHibernationOpacity', this, 'hibSliderVal')" style="width:120px;accent-color:var(--accent)" />
+                  <span id="hibSliderVal" style="font-size:12px;color:var(--text-muted);min-width:32px">{{TAB_HIBERNATION_OPACITY_PCT}}%</span>
+                </div>
+              </div>
+</div>
+</div>
+
+</div>
+
+<div class="section" id="section-search" data-search-title="Search">
+<div class="section-header">Search</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Address bar</div>
+<div class="card">
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Search engine</div>
+                  <div class="setting-desc">Used for address bar searches</div>
+                </div>
+                <div class="setting-control">
+                  <select class="select" onchange="s('search', this)">
+                    <option value="DuckDuckGo" {{SEARCH_DUCKDUCKGO}}>DuckDuckGo</option>
+                    <option value="Brave" {{SEARCH_BRAVE}}>Brave</option>
+                    <option value="Google" {{SEARCH_GOOGLE}}>Google</option>
+                    <option value="Bing" {{SEARCH_BING}}>Bing</option>
+                    <option value="Yahoo" {{SEARCH_YAHOO}}>Yahoo</option>
+                    <option value="Startpage" {{SEARCH_STARTPAGE}}>Startpage</option>
                   </select>
                 </div>
               </div>
-              <div class="setting-row">
+<div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Accent color</div>
-                  <div class="setting-desc">Applied to toggles, buttons, and highlights</div>
+                  <div class="setting-label">Online search suggestions</div>
+                  <div class="setting-desc">Off by default. When enabled, sends search text as you type to DuckDuckGo, regardless of your search engine. History and shortcuts work locally while this is off.</div>
                 </div>
                 <div class="setting-control">
-                  <input type="color" id="accentPicker" value="{{ACCENT_COLOR}}" style="width: 36px; height: 36px; border: none; background: transparent; cursor: pointer; padding: 0;" oninput="setAccent(this.value)" />
+                  <input type="checkbox" class="toggle" {{CHK_SEARCH_SUGGESTIONS}} onchange="s('searchSuggestions', this)" />
                 </div>
               </div>
-              </div>
+</div>
+</div>
+</div>
 
-            <div class="section-header" style="margin-top:20px;">Layout</div>
-            <div class="card">
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Address Bar Position</div>
-                  <div class="setting-desc">Move the address bar and new tab button</div>
-                </div>
-                <div class="setting-control">
-                  <select class="select" onchange="s('addressBarOnLeft', this)">
-                    <option value="false" {{ADDR_RIGHT}}>Right</option>
-                    <option value="true" {{ADDR_LEFT}}>Left (Default)</option>
-                  </select>
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Adaptive Toolbar Color</div>
-                  <div class="setting-desc">Tint the toolbar with the active website theme color</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_ADAPTIVE_TINT}} onchange="s('adaptiveTint', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Rounded Web Content Frame</div>
-                  <div class="setting-desc">Show a rounded frame around web contents</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_ROUNDED_FRAME}} onchange="s('roundedFrame', this)" />
-                </div>
-              </div>
-            </div>
-
-            <div class="section-header" style="margin-top:20px;">Toolbar buttons</div>
-            <div class="card">
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Show Back Arrow</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_BACKARROW}} onchange="s('showBackArrow', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Show Forward Arrow</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_FWDARROW}} onchange="s('showForwardArrow', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Show Refresh Button</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_REFRESH}} onchange="s('showRefreshButton', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Show Downloads Icon</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_DOWNLOADS}} onchange="s('showDownloadsIcon', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Show Settings Icon</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_SETTINGSICON}} onchange="s('showSettingsIcon', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Show Reader Icon</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_READERICON}} onchange="s('showReaderIcon', this)" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ════════ PRIVACY & SECURITY ════════ -->
-          <div class="section" id="section-privacy" data-search-title="Privacy and security">
-            <div class="section-header">Privacy & Security</div>
-            <div class="card">
-
+<div class="section" id="section-privacy" data-search-title="Privacy &amp; Security">
+<div class="section-header">Privacy &amp; Security</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Ads and trackers</div>
+<div class="card">
 <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Ad and tracker blocking</div>
@@ -831,43 +977,7 @@ const __T = "{{IPC_TOKEN}}:";
                   <input type="checkbox" class="toggle" {{CHK_ADBLOCK}} onchange="s('adBlock', this)" />
                 </div>
               </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Force HTTPS</div>
-                  <div class="setting-desc">Upgrade insecure connections automatically</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_HTTPS}} onchange="s('forceHttps', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Microsoft Defender SmartScreen <span class="restart-tag">Restart</span></div>
-                  <div class="setting-desc">Warn about malicious sites and downloads. URLs are checked with Microsoft.</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_SMARTSCREEN}} onchange="s('smartScreen', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Clear data on exit</div>
-                  <div class="setting-desc">Remove browsing data when you close Stride</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_CLEAR}} onchange="s('clearOnExit', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Favicon network fallback</div>
-                  <div class="setting-desc">Off by default. When on, Stride may send a site's hostname to DuckDuckGo's icon service while loading a page icon. Local and private hostnames are refused. History and suggestion rows only use cached icons.</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_FAVICON_PROXY}} onchange="s('faviconProxy', this)" />
-                </div>
-              </div>
-              <div class="setting-row">
+<div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Tracking prevention</div>
                   <div class="setting-desc">Blocks cross-site trackers in the engine, alongside uBlock Origin. Strict blocks more, and Microsoft warns it can make some sites behave unexpectedly. Balanced is the default.</div>
@@ -879,99 +989,64 @@ const __T = "{{IPC_TOKEN}}:";
                   </select>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <!-- ════════ PERFORMANCE ════════ -->
-          <div class="section" id="section-performance" data-search-title="performance">
-            <div class="section-header">Performance</div>
-            <div class="card">
-              <div class="setting-row">
+</div>
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Secure browsing</div>
+<div class="card">
+<div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Hardware Acceleration <span class="restart-tag">Restart</span></div>
-                  <div class="setting-desc">Uses GPU to render graphics. Turn off if experiencing graphical glitches.</div>
+                  <div class="setting-label">Force HTTPS</div>
+                  <div class="setting-desc">Upgrade insecure connections automatically</div>
                 </div>
                 <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_HWACCEL}} onchange="s('hwAccel', this)" />
+                  <input type="checkbox" class="toggle" {{CHK_HTTPS}} onchange="s('forceHttps', this)" />
                 </div>
               </div>
-              <div class="setting-row">
+<div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Tab hibernation</div>
-                  <div class="setting-desc">Unload inactive tabs after a few minutes to free memory</div>
+                  <div class="setting-label">Microsoft Defender SmartScreen <span class="restart-tag">Restart</span></div>
+                  <div class="setting-desc">Warn about malicious sites and downloads. URLs are checked with Microsoft.</div>
                 </div>
                 <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_TAB_HIBERNATION}} onchange="s('tabHibernation', this)" />
+                  <input type="checkbox" class="toggle" {{CHK_SMARTSCREEN}} onchange="s('smartScreen', this)" />
                 </div>
               </div>
-              <div class="setting-row">
+</div>
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Browsing data</div>
+<div class="card">
+<div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Tab sleep</div>
-                  <div class="setting-desc">Suspend background tabs to save CPU and battery</div>
+                  <div class="setting-label">Clear data on exit</div>
+                  <div class="setting-desc">Remove browsing data when you close Stride</div>
                 </div>
                 <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_TAB_SLEEP}} onchange="s('tabSleep', this)" />
+                  <input type="checkbox" class="toggle" {{CHK_CLEAR}} onchange="s('clearOnExit', this)" />
                 </div>
               </div>
-            </div>
-            <div class="section-header" style="margin-top:20px;">Tab appearance</div>
-            <div class="card">
-              <div class="setting-row">
+<div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Dim sleeping tabs</div>
-                  <div class="setting-desc">Fade icons for suspended background tabs</div>
+                  <div class="setting-label">Favicon network fallback</div>
+                  <div class="setting-desc">Off by default. When on, Stride may send a site's hostname to DuckDuckGo's icon service while loading a page icon. Local and private hostnames are refused. History and suggestion rows only use cached icons.</div>
                 </div>
                 <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_TAB_SLEEP_DIM}} onchange="toggleDim('tabSleepDim', this, 'sleepSlider')" />
+                  <input type="checkbox" class="toggle" {{CHK_FAVICON_PROXY}} onchange="s('faviconProxy', this)" />
                 </div>
               </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Sleeping tab opacity</div>
-                  <div class="setting-desc">Dim level for suspended background tabs</div>
-                </div>
-                <div class="setting-control" style="display:flex;align-items:center;gap:10px">
-                  <input id="sleepSlider" type="range" min="0.1" max="1" step="0.05" value="{{TAB_SLEEP_OPACITY}}" oninput="updateOpacity('tabSleepOpacity', this, 'sleepSliderVal')" style="width:120px;accent-color:var(--accent)" />
-                  <span id="sleepSliderVal" style="font-size:12px;color:var(--text-muted);min-width:32px">{{TAB_SLEEP_OPACITY_PCT}}%</span>
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Dim hibernated tabs</div>
-                  <div class="setting-desc">Fade icons for unloaded tabs</div>
-                </div>
-                <div class="setting-control">
-                  <input type="checkbox" class="toggle" {{CHK_TAB_HIBERNATION_DIM}} onchange="toggleDim('tabHibernationDim', this, 'hibSlider')" />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Hibernated tab opacity</div>
-                  <div class="setting-desc">Dim level for unloaded tabs</div>
-                </div>
-                <div class="setting-control" style="display:flex;align-items:center;gap:10px">
-                  <input id="hibSlider" type="range" min="0.1" max="1" step="0.05" value="{{TAB_HIBERNATION_OPACITY}}" oninput="updateOpacity('tabHibernationOpacity', this, 'hibSliderVal')" style="width:120px;accent-color:var(--accent)" />
-                  <span id="hibSliderVal" style="font-size:12px;color:var(--text-muted);min-width:32px">{{TAB_HIBERNATION_OPACITY_PCT}}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ════════ YOUTUBE ════════ -->
-          <!-- ════════ EXTENSIONS ════════ -->
-          <div class="section" id="section-extensions" data-search-title="extensions">
-            <div class="section-header">Extensions</div>
+</div>
+</div>
+</div>
 
 
 
-
-
-
-            <div class="subsection-label">YouTube</div>
-
-            <p class="setting-desc">YouTube playback controls are unavailable in this build. Unhook controls below apply to open YouTube tabs.</p>
-
-            <details class="collapsible" data-collapsible="unhook">
+<div class="section" id="section-focus" data-search-title="Focus mode">
+<div class="section-header">Focus</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">YouTube</div>
+<p class="setting-desc">YouTube playback controls are unavailable in this build. Unhook controls below apply to open YouTube tabs.</p>
+<details class="collapsible" data-collapsible="unhook">
               <summary>
                 <span class="collapsible-summary-label">YouTube Unhook</span>
                 <span class="collapsible-summary-meta">
@@ -1073,15 +1148,11 @@ const __T = "{{IPC_TOKEN}}:";
               </div>
               </div>
             </details>
-          </div>
 
-          <!-- ════════ KEYBOARD SHORTCUTS ════════ -->
-          {{KEYBOARD_SHORTCUTS_HTML}}
-
-          <!-- ════════ IRREVERSIBLE FOCUS ════════ -->
-          <div class="section" id="section-focus" data-search-title="focus">
-            <div class="section-header">Irreversible Focus</div>
-            <div class="focus-warning-card">
+</div>
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Website blocking</div>
+<div class="focus-warning-card searchable-block">
               <div class="focus-warning-banner">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 Settings in this section are permanent once locked. They cannot be undone from the UI.
@@ -1113,13 +1184,14 @@ const __T = "{{IPC_TOKEN}}:";
                 </div>
               </div>
             </div>
-          </div>
+</div>
+</div>
 
-          <!-- ════════ SYSTEM ════════ -->
-          <div class="section" id="section-system" data-search-title="About Stride">
-            <div class="section-header">About Stride</div>
+{{KEYBOARD_SHORTCUTS_HTML}}
 
-            <div class="card" style="padding:0; overflow:hidden;">
+<div class="section" id="section-system" data-search-title="About Stride">
+<div class="section-header">About Stride</div>
+<div class="card searchable-block" style="padding:0; overflow:hidden;">
               <!-- Identity row -->
               <div class="about-identity">
                 <img class="about-logo" src="{{APP_ICON}}" alt="" />
@@ -1149,37 +1221,10 @@ const __T = "{{IPC_TOKEN}}:";
                 <a href="https://github.com/danieldamilola/Stride/blob/main/THIRD-PARTY-NOTICES.md" target="_blank" rel="noreferrer" style="color:var(--text-main)">open source software</a>.
               </div>
             </div>
-
-            <div class="section-header" style="margin-top:20px;">System & About</div>
-            <div class="card">
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">What's New</div>
-                  <div class="setting-desc">View the Stride release notes</div>
-                </div>
-                <div class="setting-control">
-                  <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'open-releasenotes')">Open</button>
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Getting Started</div>
-                  <div class="setting-desc">Revisit the Stride onboarding guide</div>
-                </div>
-                <div class="setting-control">
-                  <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'open-onboarding')">Open</button>
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Set as default browser</div>
-                  <div class="setting-desc">Open web links with Stride</div>
-                </div>
-                <div class="setting-control">
-                  <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'set-default-browser')">Set Default</button>
-                </div>
-              </div>
-              <div class="setting-row">
+<div class="settings-group">
+<div class="section-header" style="margin-top:20px;">Updates</div>
+<div class="card">
+<div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Auto-check for updates</div>
                   <div class="setting-desc">Quietly check for updates in the background</div>
@@ -1188,7 +1233,7 @@ const __T = "{{IPC_TOKEN}}:";
                   <input type="checkbox" class="toggle" {{CHK_AUTO_CHECK_FOR_UPDATES}} onchange="s('autoCheckForUpdates', this)" />
                 </div>
               </div>
-              <div class="setting-row">
+<div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Browser Updates</div>
                   <div class="setting-desc" id="updateStatus">Current version: {{CURRENT_VERSION}}</div>
@@ -1197,9 +1242,18 @@ const __T = "{{IPC_TOKEN}}:";
                   <button class="action-btn" id="checkUpdateBtn" onclick="if (this.innerText === 'Download & Install') { this.innerText = 'Downloading update... Stride will restart shortly.'; this.disabled = true; window.chrome.webview.postMessage(__T + 'install-update:' + currentDownloadUrl); } else { this.innerText = 'Checking...'; this.disabled = true; window.chrome.webview.postMessage(__T + 'check-for-update'); }">Check for Updates</button>
                 </div>
               </div>
-            </div>
-
-            <details class="card"><summary style="padding:16px;cursor:pointer">Technical details</summary>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">What's New</div>
+                  <div class="setting-desc">View the Stride release notes</div>
+                </div>
+                <div class="setting-control">
+                  <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'open-releasenotes')">Open</button>
+                </div>
+              </div>
+</div>
+</div>
+<details class="card"><summary style="padding:16px;cursor:pointer">Technical details</summary>
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Stride Browser</div>
@@ -1246,19 +1300,8 @@ const __T = "{{IPC_TOKEN}}:";
                 </div>
               </div>
             </details>
-<div class="card" style="margin-top: 16px">
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label" style="color: #e53935">Reset all settings</div>
-                  <div class="setting-desc">Restore browser preferences. Locked Focus rules stay unchanged.</div>
-                </div>
-                <div class="setting-control">
-                  <button class="action-btn danger" style="color: #e53935; border-color: #e53935" onclick="if(confirm('Reset browser preferences? Locked Focus rules will remain in place. Restart Stride afterward to apply startup preferences.')) window.chrome.webview.postMessage(__T + 'reset-settings')">Reset to defaults</button>
-                </div>
-              </div>
-            </div>
-
-            <script>
+</div>
+<script>
               let currentDownloadUrl = '';
               if (window.chrome && window.chrome.webview) {
                   window.chrome.webview.addEventListener('message', function(event) {
@@ -1298,8 +1341,6 @@ const __T = "{{IPC_TOKEN}}:";
                   });
               }
             </script>
-          </div>
-
         </div>
       </main>
     </div>
