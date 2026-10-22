@@ -6,6 +6,9 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Changed
 
+- Reorganized Settings into General, Appearance, Tabs, Search, Privacy & Security, Focus, Shortcuts and About. Search has its own page, YouTube Unhook is under Focus, and default browser, hardware acceleration and reset actions are under General.
+- Settings search keeps matching controls with their group headings and opens matching detail groups.
+- Settings no longer flashes routine saving text when a control changes. Save errors and restart notices remain visible.
 - The address bar selects the first suggestion automatically so Enter opens it. Typing and deleting continue to edit the text you entered.
 - Online search suggestions are now off by default, matching Helium and Zen. Existing profiles switch to local suggestions once and can opt in again in Settings.
 - The online suggestions setting explains that search text goes to DuckDuckGo. History and shortcut suggestions stay available when it is off.
