@@ -62,7 +62,7 @@
 
 </head>
 <body>
-  <main class="focus-message"><h1>Focus blocked this page</h1><p><strong>{{BLOCKED_HOST}}</strong></p><p>Your locked Focus rules block this domain. They include saved domains and the adult-content and Telegram blocklists.</p><button type="button" onclick="history.back()">Go back</button><button type="button" onclick="window.chrome.webview.postMessage('{{IPC_TOKEN}}:open:internal://newtab')">Open a new tab</button></main>
+  <main class="focus-message"><h1 class="page-title">Focus blocked this page</h1><p><strong>{{BLOCKED_HOST}}</strong></p><p>Your locked Focus rules block this domain. They include saved domains and the adult-content and Telegram blocklists.</p><button type="button" onclick="history.back()">Go back</button><button type="button" onclick="window.chrome.webview.postMessage('{{IPC_TOKEN}}:open:internal://newtab')">Open a new tab</button></main>
 </body>
 </html>
 

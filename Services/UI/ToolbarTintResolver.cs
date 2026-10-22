@@ -26,11 +26,11 @@ public static class ToolbarTintResolver
         // Reject pure/near white. Prevents a blinding toolbar when Dark Reader
         // is active but the site meta theme-color still says white.
         if (target.R > 245 && target.G > 245 && target.B > 245)
-            return Color.FromRgb(0x11, 0x11, 0x11);
+            return IsLight(baseColor) ? baseColor : Color.FromRgb(0x11, 0x11, 0x11);
 
         // Reject strong greens that clash with the dark theme.
         if (target.G > 120 && target.G > target.R + 40 && target.G > target.B + 40)
-            return Color.FromRgb(0x11, 0x11, 0x11);
+            return IsLight(baseColor) ? baseColor : Color.FromRgb(0x11, 0x11, 0x11);
 
         return target;
     }

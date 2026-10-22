@@ -125,6 +125,8 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter, IDisp
     {
         var json = System.Text.Json.JsonSerializer.Serialize(new { key, value, success, message, restartRequired = SettingsChangePolicy.RequiresRestart(key) });
         _engine.PostMessageToSettingsTabs("setting-result:" + json);
+        if (_engine.ActiveTab?.Url == InternalUrls.Onboarding)
+            _engine.PostMessageToActiveTab("setting-result:" + json);
     }
 
     /// <summary>Handles a setting change message from the settings page.</summary>

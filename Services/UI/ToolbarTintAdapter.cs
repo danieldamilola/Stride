@@ -30,7 +30,9 @@ public sealed class ToolbarTintAdapter
         "TextPrimary", "TextSecondary", "TextMuted", "SurfaceHoverBrush",
         "AddressFieldBackground", "AddressFieldBorder",
         "SuggestionPopupBackground", "SuggestionPopupBorder",
-        "SuggestionHoverBackground", "PinnedTabBackground", "TabCloseHoverBackground"
+        "SuggestionHoverBackground", "PinnedTabBackground", "TabCloseHoverBackground",
+        "SurfaceBrush", "BorderBrush", "ControlBorderBrush", "SeparatorLineBrush",
+        "ToolbarHoverBrush", "ToolbarPressedBrush", "SelectedTabBrush", "NeutralSelectedTabBrush"
     ];
 
     public ToolbarTintAdapter(Border toolbar, Border addressField, Border popup)
@@ -71,25 +73,58 @@ public sealed class ToolbarTintAdapter
         }
         brush.BeginAnimation(SolidColorBrush.ColorProperty, anim);
 
-        if (ToolbarTintResolver.IsLight(targetColor))
+        if (targetColor == baseColor)
+            ClearOverrides();
+        else if (ToolbarTintResolver.IsLight(targetColor))
             ApplyLightOverrides();
         else
-            ClearOverrides();
+            ApplyDarkOverrides();
     }
 
     private void ApplyLightOverrides()
     {
-        Set("TextPrimary", Color.FromRgb(30, 30, 34));
-        Set("TextSecondary", Color.FromRgb(70, 70, 74));
-        Set("TextMuted", Color.FromRgb(100, 100, 104));
-        Set("SurfaceHoverBrush", Color.FromArgb(0x14, 0, 0, 0));
-        Set("AddressFieldBackground", Color.FromArgb(0x0D, 0, 0, 0));
-        Set("AddressFieldBorder", Color.FromArgb(0x1F, 0, 0, 0));
-        Set("SuggestionPopupBackground", Color.FromRgb(0xF4, 0xF4, 0xF6));
-        Set("SuggestionPopupBorder", Color.FromRgb(0xD8, 0xD8, 0xDC));
-        Set("SuggestionHoverBackground", Color.FromArgb(0x0F, 0, 0, 0));
-        Set("PinnedTabBackground", Color.FromArgb(0x0A, 0, 0, 0));
-        Set("TabCloseHoverBackground", Color.FromArgb(0x14, 0, 0, 0));
+        Set("TextPrimary", Color.FromRgb(0x20, 0x20, 0x20));
+        Set("TextSecondary", Color.FromRgb(0x5F, 0x5F, 0x5F));
+        Set("TextMuted", Color.FromRgb(0x5F, 0x5F, 0x5F));
+        Set("SurfaceBrush", Colors.White);
+        Set("SurfaceHoverBrush", Color.FromRgb(0xE8, 0xE8, 0xE8));
+        Set("BorderBrush", Color.FromRgb(0xD9, 0xD9, 0xD9));
+        Set("ControlBorderBrush", Color.FromRgb(0x8D, 0x8D, 0x8D));
+        Set("SeparatorLineBrush", Color.FromRgb(0xCE, 0xCE, 0xCE));
+        Set("AddressFieldBackground", Colors.White);
+        Set("AddressFieldBorder", Color.FromRgb(0x8D, 0x8D, 0x8D));
+        Set("SuggestionPopupBackground", Colors.White);
+        Set("SuggestionPopupBorder", Color.FromRgb(0xD9, 0xD9, 0xD9));
+        Set("SuggestionHoverBackground", Color.FromRgb(0xF0, 0xF0, 0xF0));
+        Set("PinnedTabBackground", Color.FromRgb(0xE8, 0xE8, 0xE8));
+        Set("TabCloseHoverBackground", Color.FromRgb(0xD9, 0xD9, 0xD9));
+        Set("ToolbarHoverBrush", Color.FromRgb(0xE0, 0xE0, 0xE0));
+        Set("ToolbarPressedBrush", Color.FromRgb(0xD9, 0xD9, 0xD9));
+        Set("SelectedTabBrush", Color.FromRgb(0xE0, 0xE0, 0xE0));
+        Set("NeutralSelectedTabBrush", Color.FromRgb(0xE0, 0xE0, 0xE0));
+    }
+
+    private void ApplyDarkOverrides()
+    {
+        Set("TextPrimary", Color.FromRgb(0xEE, 0xEE, 0xEE));
+        Set("TextSecondary", Color.FromRgb(0xB4, 0xB4, 0xB4));
+        Set("TextMuted", Color.FromRgb(0x8A, 0x8A, 0x8A));
+        Set("SurfaceBrush", Color.FromRgb(0x22, 0x22, 0x22));
+        Set("SurfaceHoverBrush", Color.FromRgb(0x2A, 0x2A, 0x2A));
+        Set("BorderBrush", Color.FromRgb(0x31, 0x31, 0x31));
+        Set("ControlBorderBrush", Color.FromRgb(0x60, 0x60, 0x60));
+        Set("SeparatorLineBrush", Color.FromRgb(0x3C, 0x3C, 0x42));
+        Set("AddressFieldBackground", Color.FromArgb(0x0D, 255, 255, 255));
+        Set("AddressFieldBorder", Color.FromArgb(0x1A, 255, 255, 255));
+        Set("SuggestionPopupBackground", Color.FromRgb(0x22, 0x22, 0x22));
+        Set("SuggestionPopupBorder", Color.FromRgb(0x31, 0x31, 0x31));
+        Set("SuggestionHoverBackground", Color.FromRgb(0x2A, 0x2A, 0x2A));
+        Set("PinnedTabBackground", Color.FromArgb(0x0D, 255, 255, 255));
+        Set("TabCloseHoverBackground", Color.FromArgb(0x1A, 255, 255, 255));
+        Set("ToolbarHoverBrush", Color.FromArgb(0x0A, 255, 255, 255));
+        Set("ToolbarPressedBrush", Color.FromArgb(0x14, 255, 255, 255));
+        Set("SelectedTabBrush", Color.FromRgb(0x31, 0x31, 0x31));
+        Set("NeutralSelectedTabBrush", Color.FromRgb(0x2A, 0x2A, 0x2A));
     }
 
     private void ClearOverrides()

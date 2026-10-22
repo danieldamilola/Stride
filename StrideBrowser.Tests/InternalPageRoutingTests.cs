@@ -116,11 +116,11 @@ public sealed class InternalPageRoutingTests
     }
 
     [Fact]
-    public void SettingsPageRender_EmbedsAccentColorAndToken()
+    public void SettingsPageRender_EmbedsTokenWithoutAccentControls()
     {
-        var settings = new BrowserSettings { AccentColor = "#123456" };
+        var settings = new BrowserSettings();
         var html = new SettingsPage().Render(settings, "token123");
-        Assert.Contains("#123456", html);
+        Assert.DoesNotContain("accentPicker", html);
         Assert.Contains("token123", html);
     }
 }

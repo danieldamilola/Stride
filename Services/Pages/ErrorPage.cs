@@ -6,7 +6,7 @@ namespace StrideBrowser.Services.Pages;
 public sealed class ErrorPage
 {
     /// <summary>Returns the error page HTML with the failed URL and error message embedded.</summary>
-    public string Render(string failedUrl, string errorMessage, string accentColor, string accentRgb)
+    public string Render(string failedUrl, string errorMessage)
     {
         return Helpers.ResourceLoader.LoadTemplate("Resources.Pages.Error.html",
             new Dictionary<string, string>
@@ -16,8 +16,6 @@ public sealed class ErrorPage
                 // Percent-encode so the URL is safe inside a JS string literal;
                 // decodeURIComponent reverses it before navigation.
                 ["RETRY_URL_ENC"] = Uri.EscapeDataString(failedUrl),
-                ["ACCENT"] = accentColor,
-                ["ACCENT_RGB"] = accentRgb
             });
     }
 }

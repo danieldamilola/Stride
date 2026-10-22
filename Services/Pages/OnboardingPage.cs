@@ -5,12 +5,17 @@ namespace StrideBrowser.Services.Pages;
 
 public sealed class OnboardingPage
 {
-    public string Render(BrowserSettings settings, string accentColor, string accentRgb, string ipcToken)
+    public string Render(BrowserSettings settings, string ipcToken)
+    {
+        var html = TemplateRenderer.RenderJsonPage("Resources.Pages.Onboarding.html", "ONBOARDING_DATA", SerializeSettings(settings), ipcToken);
+        return html.Replace("{{APP_ICON}}", PageAssets.AppIcon);
+    }
+
+    public static string SerializeSettings(BrowserSettings settings)
     {
         var payload = new
         {
             theme = settings.AppTheme.ToString().ToLowerInvariant(),
-            accent = settings.AccentColor,
             adBlock = settings.AdBlockEnabled,
             smartScreen = settings.SmartScreenEnabled,
             httpsForce = settings.ForceHttps,
@@ -27,7 +32,6 @@ public sealed class OnboardingPage
             },
             showTabNames = settings.ShowTabNames
         };
-        var json = JsonSerializer.Serialize(payload);
-        return TemplateRenderer.RenderJsonPage("Resources.Pages.Onboarding.html", "ONBOARDING_DATA", json, accentColor, accentRgb, ipcToken);
+        return JsonSerializer.Serialize(payload);
     }
 }

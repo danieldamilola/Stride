@@ -19,8 +19,6 @@ public static class SettingsChangePolicy
         { error = "Choose a supported theme."; return false; }
         if (key == "zoom" && (!int.TryParse(value, out var zoom) || zoom < 25 || zoom > 500))
         { error = "Choose a zoom between 25 and 500 percent."; return false; }
-        if (key == "accentColor" && !System.Text.RegularExpressions.Regex.IsMatch(value, "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"))
-        { error = "Choose a valid color."; return false; }
         if (key is "tabSleepOpacity" or "tabHibernationOpacity" or "ytSpeed" &&
             (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number) || !double.IsFinite(number)))
         { error = "Choose a valid number."; return false; }
@@ -107,7 +105,6 @@ public static class SettingsChangePolicy
         ["showDownloadsIcon"] = (s, v) => s.ShowDownloadsIcon = v == "true",
         ["showSettingsIcon"] = (s, v) => s.ShowSettingsIcon = v == "true",
         ["showReaderIcon"] = (s, v) => s.ShowReaderIcon = v == "true",
-        ["accentColor"] = (s, v) => { if (v.StartsWith('#') && (v.Length == 7 || v.Length == 4)) s.AccentColor = v; },
         ["focusDomains"] = (s, v) => s.FocusDomains = System.Web.HttpUtility.UrlDecode(v),
         ["focusLocked"] = (s, v) => s.FocusLocked = v == "true",
 

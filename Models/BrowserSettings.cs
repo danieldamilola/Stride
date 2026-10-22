@@ -25,9 +25,6 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _adBlockEnabled = true;
 
     [ObservableProperty]
-    private string _accentColor = "#d4d4d4";
-
-    [ObservableProperty]
     private int _defaultZoom = 90;
 
     [ObservableProperty]
@@ -322,7 +319,6 @@ public sealed partial class BrowserSettings : ObservableObject
         IsSidebarOnRight = d.IsSidebarOnRight;
         IsCompactMode = d.IsCompactMode;
         AdBlockEnabled = d.AdBlockEnabled;
-        AccentColor = d.AccentColor;
         DefaultZoom = d.DefaultZoom;
         RestoreSessionOnStartup = d.RestoreSessionOnStartup;
         HardwareAccelerationEnabled = d.HardwareAccelerationEnabled;

@@ -25,7 +25,7 @@ public sealed class DownloadStore : IDownloadStore
                 {
                     foreach (var item in items)
                     {
-                        // InProgress downloads are marked as Paused so they can be resumed cross-session by CustomDownloadManager
+                        // A restored record has no live native operation. Its action is Restart, not Resume.
                         if (item.State == DownloadState.InProgress)
                             item.State = DownloadState.Paused;
                         
@@ -43,7 +43,7 @@ public sealed class DownloadStore : IDownloadStore
 
     private void Item_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(DownloadItem.State))
+        if (e.PropertyName is nameof(DownloadItem.State) or nameof(DownloadItem.ErrorMessage) or nameof(DownloadItem.FilePath))
         {
             Save();
         }

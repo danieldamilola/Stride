@@ -41,7 +41,8 @@ public sealed class ThemeManagerResourceTests
             // Verify specific known keys from the compiled DarkTheme.xaml
             Assert.Contains("SurfaceBrush", dict.Keys.Cast<string>());
             Assert.Contains("TextPrimary", dict.Keys.Cast<string>());
-            Assert.Contains("AccentColor", dict.Keys.Cast<string>());
+            Assert.Contains("PrimaryButtonBrush", dict.Keys.Cast<string>());
+            Assert.DoesNotContain("AccentColor", dict.Keys.Cast<string>());
         });
     }
 
@@ -89,7 +90,7 @@ public sealed class ThemeManagerResourceTests
             
             textPrimary = Application.Current.FindResource("TextPrimary") as SolidColorBrush;
             Assert.NotNull(textPrimary);
-            Assert.Equal(Color.FromRgb(0x11, 0x11, 0x13), textPrimary.Color); // Light theme TextPrimaryColor = #111113
+            Assert.Equal(Color.FromRgb(0x20, 0x20, 0x20), textPrimary.Color); // Light theme TextPrimaryColor = #202020
         });
     }
 

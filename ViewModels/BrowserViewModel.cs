@@ -76,6 +76,9 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private double _activeDownloadsProgress;
 
+    [ObservableProperty]
+    private bool _hasIndeterminateDownloads;
+
     private UpdateState _updateState = UpdateState.None;
 
     public UpdateState UpdateState
@@ -167,20 +170,18 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
         };
         _updateService.UpdateFailed += onUpdateFailed;
 
-        System.Collections.Specialized.NotifyCollectionChangedEventHandler onDownloadsChanged = (s, e) =>
+        var observedDownloads = new HashSet<DownloadItem>();
+        void ReconcileDownloads()
         {
-            if (e.NewItems != null)
-            {
-                foreach (DownloadItem item in e.NewItems)
-                    item.PropertyChanged += OnDownloadItemChanged;
-            }
-            if (e.OldItems != null)
-            {
-                foreach (DownloadItem item in e.OldItems)
-                    item.PropertyChanged -= OnDownloadItemChanged;
-            }
+            foreach (var removed in observedDownloads.Where(item => !downloadStore.Items.Contains(item)).ToArray())
+            { removed.PropertyChanged -= OnDownloadItemChanged; observedDownloads.Remove(removed); }
+            foreach (var item in downloadStore.Items)
+                if (observedDownloads.Add(item)) item.PropertyChanged += OnDownloadItemChanged;
             UpdateDownloadProgress(downloadStore.Items);
-        };
+        }
+        System.Collections.Specialized.NotifyCollectionChangedEventHandler onDownloadsChanged = (_, _) => ReconcileDownloads();
+        downloadStore.Items.CollectionChanged += onDownloadsChanged;
+        ReconcileDownloads();
 
         // One view model per window, but the update service and the download store are
         // singletons that outlive every window. Without this a closed window would keep
@@ -192,17 +193,14 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
             _updateService.DownloadCompleted -= onDownloadCompleted;
             _updateService.UpdateFailed -= onUpdateFailed;
             downloadStore.Items.CollectionChanged -= onDownloadsChanged;
-            foreach (var item in downloadStore.Items) item.PropertyChanged -= OnDownloadItemChanged;
+            foreach (var item in observedDownloads) item.PropertyChanged -= OnDownloadItemChanged;
+            observedDownloads.Clear();
         };
 
-        foreach (var item in downloadStore.Items)
-            item.PropertyChanged += OnDownloadItemChanged;
-            
-        UpdateDownloadProgress(downloadStore.Items);
 
         void OnDownloadItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName is nameof(DownloadItem.ReceivedBytes) or nameof(DownloadItem.TotalBytes) or nameof(DownloadItem.State))
+            if (e.PropertyName is nameof(DownloadItem.ReceivedBytes) or nameof(DownloadItem.TotalBytes) or nameof(DownloadItem.State) or nameof(DownloadItem.IsStarting))
             {
                 UpdateDownloadProgress(downloadStore.Items);
             }
@@ -218,44 +216,12 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
 
     private void UpdateDownloadProgress(IEnumerable<DownloadItem> items)
     {
-        var active = items.Where(i => i.State == DownloadState.InProgress).ToList();
-        HasActiveDownloads = active.Count > 0;
-
-        if (!HasActiveDownloads)
-        {
-            ActiveDownloadsProgress = 0;
-            return;
-        }
-
-        long totalBytes = 0;
-        long receivedBytes = 0;
-        bool allUnknown = true;
-
-        foreach (var item in active)
-        {
-            if (item.TotalBytes > 0)
-            {
-                totalBytes += item.TotalBytes;
-                receivedBytes += item.ReceivedBytes;
-                allUnknown = false;
-            }
-            else
-            {
-                // If we don't know the size, just add some arbitrary amount so the progress bar isn't empty
-                totalBytes += 100;
-                receivedBytes += 10; 
-            }
-        }
-
-        if (allUnknown)
-        {
-            // Indeterminate-like tiny sliver
-            ActiveDownloadsProgress = 0.1;
-        }
-        else
-        {
-            ActiveDownloadsProgress = (double)receivedBytes / totalBytes;
-        }
+        var active = items.Where(item => item.State == DownloadState.InProgress || item.IsStarting).ToArray();
+        HasActiveDownloads = active.Length > 0;
+        HasIndeterminateDownloads = active.Any(item => item.TotalBytes <= 0 || item.IsStarting);
+        var total = active.Sum(item => (double)Math.Max(0, item.TotalBytes));
+        ActiveDownloadsProgress = total > 0 && !HasIndeterminateDownloads
+            ? Math.Clamp(active.Sum(item => (double)Math.Max(0, item.ReceivedBytes)) / total, 0, 1) : 0;
     }
 
     /// <summary>Resolves a raw input string into a URL.</summary>
