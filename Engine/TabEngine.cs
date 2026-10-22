@@ -205,6 +205,11 @@ public sealed partial class TabEngine : IDisposable
 
     private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(BrowserSettings.TabSleepEnabled) or nameof(BrowserSettings.AllowPinnedTabsToSleep))
+        {
+            _dispatcher.Invoke(_hibernationManager.ApplySleepSettings);
+            return;
+        }
         if (e.PropertyName != nameof(BrowserSettings.TrackingPreventionMode)) return;
         // Raised on whichever thread assigned the property, which for a settings page is
         // not the one that owns the WebView2 controls.
@@ -2122,7 +2127,7 @@ public sealed partial class TabEngine : IDisposable
             return;
         }
 
-        if (!_settings.TabSleepEnabled) return;
+        if (!_settings.TabSleepEnabled || (tab.IsPinned && !_settings.AllowPinnedTabsToSleep)) return;
         bool suspended = false;
         try
         {
@@ -2136,7 +2141,8 @@ public sealed partial class TabEngine : IDisposable
         }
         catch (Exception ex) { Trace.WriteLine($"SuspendForPreview failed for {tabId}: {ex.Message}"); }
 
-        if (generation != _previewGeneration || _previewOriginTabId != tabId)
+        if (generation != _previewGeneration || _previewOriginTabId != tabId ||
+            !_settings.TabSleepEnabled || (tab.IsPinned && !_settings.AllowPinnedTabsToSleep))
         {
             if (suspended)
             {

@@ -4,6 +4,10 @@ All notable changes to Stride are recorded here, newest first.
 
 ## [Unreleased]
 
+### Added
+
+- Performance settings can allow pinned tabs to follow tab sleep and automatic hibernation separately.
+
 ### Changed
 
 - The address bar selects the first suggestion automatically so Enter opens it. Typing and deleting continue to edit the text you entered.
@@ -12,6 +16,8 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Fixed
 
+- Turning off tab sleep resumes sleeping pages in every open window, including suspensions that finish after the setting changes.
+- Pinned tabs stay awake when their sleep setting is off. Turning it off wakes pinned tabs that are already sleeping.
 - Online suggestions skip address and file path inputs. Turning suggestions off cancels pending requests and discards late responses.
 
 ## [0.1.0] - 2026-10-21

@@ -56,6 +56,8 @@ public sealed class SettingsPage
                 ["CHK_DUPES"] = Chk(settings.BlockDuplicateTabs),
                 ["CHK_TAB_HIBERNATION"] = Chk(settings.TabHibernationEnabled),
                 ["CHK_TAB_SLEEP"] = Chk(settings.TabSleepEnabled),
+                ["CHK_PINNED_TAB_SLEEP"] = Chk(settings.AllowPinnedTabsToSleep),
+                ["CHK_PINNED_TAB_HIBERNATION"] = Chk(settings.AllowPinnedTabsToHibernate),
                 ["TAB_SLEEP_OPACITY"] = settings.TabSleepOpacity.ToString(CultureInfo.InvariantCulture),
                 ["TAB_SLEEP_OPACITY_PCT"] = ((int)Math.Round(settings.TabSleepOpacity * 100)).ToString(CultureInfo.InvariantCulture),
                 ["TAB_HIBERNATION_OPACITY"] = settings.TabHibernationOpacity.ToString(CultureInfo.InvariantCulture),
