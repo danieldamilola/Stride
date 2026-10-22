@@ -6,7 +6,7 @@ namespace StrideBrowser.Services;
 
 public static class SettingsChangePolicy
 {
-    private static readonly HashSet<string> BooleanSettings = [ "autoCheckForUpdates", "restoreSession", "hwAccel", "darkMode", "forceHttps", "smartScreen", "adBlock", "clearOnExit", "searchSuggestions", "faviconProxy", "blockDupes", "tabHibernation", "tabSleep", "tabSleepDim", "tabHibernationDim", "addressBarOnLeft", "showTabNames", "roundedFrame", "adaptiveTint", "showBackArrow", "showForwardArrow", "showRefreshButton", "showDownloadsIcon", "showSettingsIcon", "showReaderIcon", "focusLocked", "ytEnhancerEnabled", "ytAutoplay", "ytPauseTab", "ytLoop", "unhookEnabled", "unhookHomeFeed", "unhookShorts", "unhookSidebar", "unhookLiveChat", "unhookPlaylist", "unhookFundraiser", "unhookEndFeed", "unhookEndCards", "unhookComments", "unhookMixes", "unhookMerch", "unhookVideoInfo", "unhookTopHeader", "unhookNotifications", "unhookInaptSearch", "unhookExplore", "unhookMoreYT", "unhookSubscriptions", "unhookAutoplay", "unhookAnnotations" ];
+    private static readonly HashSet<string> BooleanSettings = [ "autoCheckForUpdates", "restoreSession", "hwAccel", "darkMode", "forceHttps", "smartScreen", "adBlock", "clearOnExit", "searchSuggestions", "faviconProxy", "blockDupes", "tabHibernation", "tabSleep", "tabSleepDim", "tabHibernationDim", "addressBarOnLeft", "showTabNames", "roundedFrame", "adaptiveTint", "showBackArrow", "showForwardArrow", "showRefreshButton", "showDownloadsIcon", "showSettingsIcon", "showReaderIcon", "showExtensionsIcon", "focusLocked", "ytEnhancerEnabled", "ytAutoplay", "ytPauseTab", "ytLoop", "unhookEnabled", "unhookHomeFeed", "unhookShorts", "unhookSidebar", "unhookLiveChat", "unhookPlaylist", "unhookFundraiser", "unhookEndFeed", "unhookEndCards", "unhookComments", "unhookMixes", "unhookMerch", "unhookVideoInfo", "unhookTopHeader", "unhookNotifications", "unhookInaptSearch", "unhookExplore", "unhookMoreYT", "unhookSubscriptions", "unhookAutoplay", "unhookAnnotations" ];
 
     public static bool RequiresRestart(string key) => key is "hwAccel" or "darkMode" or "smartScreen";
 
@@ -105,6 +105,7 @@ public static class SettingsChangePolicy
         ["showDownloadsIcon"] = (s, v) => s.ShowDownloadsIcon = v == "true",
         ["showSettingsIcon"] = (s, v) => s.ShowSettingsIcon = v == "true",
         ["showReaderIcon"] = (s, v) => s.ShowReaderIcon = v == "true",
+        ["showExtensionsIcon"] = (s, v) => s.ShowExtensionsIcon = v == "true",
         ["focusDomains"] = (s, v) => s.FocusDomains = System.Web.HttpUtility.UrlDecode(v),
         ["focusLocked"] = (s, v) => s.FocusLocked = v == "true",
 

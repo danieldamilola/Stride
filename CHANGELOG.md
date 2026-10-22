@@ -18,6 +18,8 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Added
 
+- Appearance settings can show or hide the extensions toolbar icon.
+
 - Extensions toolbar panel with installed extension icons and pinned actions.
 - Dedicated Extensions page with search, details, enable controls and removal for custom extensions.
 - Developer mode for loading unpacked extension folders and reloading local extensions.

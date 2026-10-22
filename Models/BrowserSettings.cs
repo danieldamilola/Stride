@@ -147,6 +147,9 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _showReaderIcon = true;
 
     [ObservableProperty]
+    private bool _showExtensionsIcon = true;
+
+    [ObservableProperty]
     private bool _showBackArrow = true;
 
     [ObservableProperty]
@@ -340,6 +343,7 @@ public sealed partial class BrowserSettings : ObservableObject
         ShowSettingsIcon = d.ShowSettingsIcon;
         ShowDownloadsIcon = d.ShowDownloadsIcon;
         ShowReaderIcon = d.ShowReaderIcon;
+        ShowExtensionsIcon = d.ShowExtensionsIcon;
         ShowBackArrow = d.ShowBackArrow;
         ShowForwardArrow = d.ShowForwardArrow;
         ShowRefreshButton = d.ShowRefreshButton;

@@ -955,7 +955,7 @@
                                     </Button>
                                 </DataTemplate></ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Button x:Name="ExtensionsButton" Style="{DynamicResource IconBtn}" Width="28" Height="28" Margin="0,0,3,0" ToolTip="Extensions" AutomationProperties.Name="Extensions">
+                            <Button x:Name="ExtensionsButton" Visibility="{Binding Settings.ShowExtensionsIcon, Converter={StaticResource BoolToVis}}" Style="{DynamicResource IconBtn}" Width="28" Height="28" Margin="0,0,3,0" ToolTip="Extensions" AutomationProperties.Name="Extensions">
                                 <Path Data="M8,2 L12,2 C12,-2 18,-2 18,2 L22,2 L22,7 C18,7 18,13 22,13 L22,18 L17,18 C17,22 11,22 11,18 L6,18 L6,13 C2,13 2,7 6,7 L6,2 Z" Stroke="{DynamicResource TextSecondary}" StrokeThickness="1.5" Fill="Transparent" Width="16" Height="16" Stretch="Uniform"/>
                             </Button>
                             <Popup x:Name="ExtensionsPopup" Placement="Custom" PlacementTarget="{Binding ElementName=ExtensionsButton}" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade"><controls:ExtensionsPanel x:Name="ExtensionsPanel"/></Popup>
