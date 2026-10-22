@@ -274,15 +274,24 @@ public partial class MainWindow : Window
                     // Restore every saved row verbatim. Duplicates stay duplicated:
                     // the default duplicate blocker would collapse repeat URLs,
                     // shorten the list and misalign the saved active index.
-                    var tab = _engine.CreateTab(entry.Url, blockDuplicates: false);
+                    // No per-tab switch: activating each restored tab built a WebView
+                    // for all of them, and the live-WebView cap then immediately
+                    // hibernated the excess. Background tabs are restored cold and
+                    // deliberately hibernated below.
+                    var tab = _engine.CreateTab(entry.Url, blockDuplicates: false, switchTo: false);
                     tab.Title = entry.Title;
                     tab.IsPinned = entry.IsPinned;
                     _ = _engine.LoadFaviconAsync(tab);
                 }
                 var activeIndex = SessionStore.ResolveActiveIndex(session);
                 if (activeIndex >= _engine.Tabs.Count) activeIndex = 0;
-                _engine.SwitchTo(_engine.Tabs[activeIndex]);
-                await _engine.ActivateAsync(_engine.Tabs[activeIndex]);
+                var activeTab = _engine.Tabs[activeIndex];
+                _engine.SwitchTo(activeTab);
+                await _engine.ActivateAsync(activeTab);
+                // Startup hibernation is intentional. It includes pinned tabs and
+                // does not depend on the tab hibernation setting. The active tab is
+                // left loaded so the window opens with a usable page.
+                _engine.HibernateRestoredTabs(activeTab);
                 restored = true;
             }
         }

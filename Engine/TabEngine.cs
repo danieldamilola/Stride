@@ -268,7 +268,7 @@ public sealed partial class TabEngine : IDisposable
 
     // ──── Tab Lifecycle ────
 
-    public BrowserTab CreateTab(string? url = null, bool blockDuplicates = true)
+    public BrowserTab CreateTab(string? url = null, bool blockDuplicates = true, bool switchTo = true)
     {
         var resolvedUrl = url ?? InternalUrls.NewTab;
 
@@ -281,7 +281,7 @@ public sealed partial class TabEngine : IDisposable
                 string.Equals(t.Url, resolvedUrl, StringComparison.OrdinalIgnoreCase));
             if (existing is not null)
             {
-                SwitchTo(existing);
+                if (switchTo) SwitchTo(existing);
                 return existing;
             }
         }
@@ -302,7 +302,7 @@ public sealed partial class TabEngine : IDisposable
 
         var tab = new BrowserTab { Url = resolvedUrl, Title = title };
         Tabs.Add(tab);
-        SwitchTo(tab);
+        if (switchTo) SwitchTo(tab);
         TabCreated?.Invoke(tab);
         return tab;
     }
@@ -955,6 +955,17 @@ public sealed partial class TabEngine : IDisposable
         // rebuild re-serves the page through routing.
         if (InternalUrls.IsInternal(urlBefore) && InternalUrls.IsDataOrBlank(tab.Url))
             tab.Url = urlBefore;
+    }
+
+    /// <summary>
+    /// Hibernates every restored background tab at startup. This is deliberate and
+    /// does not consult the hibernation setting or the pinned tab exemptions. The
+    /// active tab stays loaded so the window opens with a usable page.
+    /// </summary>
+    public void HibernateRestoredTabs(BrowserTab activeTab)
+    {
+        if (_disposed) return;
+        _hibernationManager.HibernateRestoredTabs(activeTab);
     }
 
     public async Task FindInPageAsync()

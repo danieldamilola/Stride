@@ -275,6 +275,72 @@ public class TabHibernationManagerTests
 
         Assert.Equal(2, teardownCalls);
     }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    public void HibernateRestoredTabs_HibernatesEveryBackgroundTabRegardlessOfPreferencesOrPin(
+        bool hibernationEnabled,
+        bool allowPinnedHibernation)
+    {
+        var settings = new BrowserSettings
+        {
+            TabHibernationEnabled = hibernationEnabled,
+            AllowPinnedTabsToHibernate = allowPinnedHibernation
+        };
+        var manager = new TabHibernationManager(new FakeDownloadStore(), settings);
+        var activeTab = new BrowserTab { IsActive = true };
+        var pinnedTab = new BrowserTab { IsPinned = true };
+        var backgroundTab = new BrowserTab();
+        var tornDown = new List<Guid>();
+
+        manager.Attach(
+            () => new List<BrowserTab> { activeTab, pinnedTab, backgroundTab },
+            () => new Dictionary<Guid, dynamic>
+            {
+                [activeTab.Id] = new FakeWebView(),
+                [pinnedTab.Id] = new FakeWebView(),
+                [backgroundTab.Id] = new FakeWebView()
+            },
+            id => tornDown.Add(id),
+            10);
+
+        manager.HibernateRestoredTabs(activeTab);
+
+        Assert.False(activeTab.IsHibernated);
+        Assert.True(pinnedTab.IsHibernated);
+        Assert.True(backgroundTab.IsHibernated);
+        Assert.DoesNotContain(activeTab.Id, tornDown);
+        Assert.Contains(pinnedTab.Id, tornDown);
+        Assert.Contains(backgroundTab.Id, tornDown);
+    }
+
+    [Fact]
+    public void HibernateRestoredTabs_MarksColdTabsWithoutTouchingTheActiveTab()
+    {
+        var settings = new BrowserSettings
+        {
+            TabHibernationEnabled = false,
+            AllowPinnedTabsToHibernate = false
+        };
+        var manager = new TabHibernationManager(new FakeDownloadStore(), settings);
+        var activeTab = new BrowserTab { IsActive = true };
+        var pinnedTab = new BrowserTab { IsPinned = true };
+        var webViews = new Dictionary<Guid, dynamic>();
+
+        manager.Attach(
+            () => new List<BrowserTab> { activeTab, pinnedTab },
+            () => webViews,
+            _ => throw new Xunit.Sdk.XunitException("A cold tab has no WebView to tear down."),
+            10);
+
+        manager.HibernateRestoredTabs(activeTab);
+
+        Assert.False(activeTab.IsHibernated);
+        Assert.True(pinnedTab.IsHibernated);
+    }
 }
 
 public sealed class FakeDownloadStore : IDownloadStore

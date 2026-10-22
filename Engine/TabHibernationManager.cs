@@ -213,6 +213,39 @@ public sealed class TabHibernationManager
         }
     }
 
+    /// <summary>
+    /// Hibernates every tab except the active one after a session restore. Startup is
+    /// deliberate: it ignores the hibernation setting and both pinned tab exemptions
+    /// so a restored window starts with every background tab unloaded. Tabs that
+    /// never received a WebView still get the hibernated state, because the strip
+    /// and the wake path both use that flag.
+    /// </summary>
+    public void HibernateRestoredTabs(BrowserTab activeTab)
+    {
+        if (_getTabs is null) return;
+
+        var webViews = _getWebViews?.Invoke();
+        var hibernated = 0;
+        foreach (var tab in _getTabs().ToList())
+        {
+            if (tab.Id == activeTab.Id || tab.IsHibernated) continue;
+
+            if (webViews is not null && webViews.ContainsKey(tab.Id) && _teardownWebView is not null)
+            {
+                HibernateTab(tab, webViews);
+            }
+            else
+            {
+                tab.IsHibernated = true;
+                tab.IsSleeping = false;
+            }
+            hibernated++;
+        }
+
+        Trace.WriteLine(
+            $"HibernateRestoredTabs hibernated={hibernated} active='{activeTab.Title}'");
+    }
+
     public static BrowserTab[] GetManualHibernateTargets(IEnumerable<BrowserTab> tabs, BrowserTab contextTab)
     {
         var snapshot = tabs.ToArray();

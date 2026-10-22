@@ -10,6 +10,7 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Changed
 
+- Restored sessions now start with every background tab hibernated, including pinned tabs, regardless of the tab hibernation and pinned tab settings. The saved active tab stays loaded.
 - The address bar selects the first suggestion automatically so Enter opens it. Typing and deleting continue to edit the text you entered.
 - Online search suggestions are now off by default, matching Helium and Zen. Existing profiles switch to local suggestions once and can opt in again in Settings.
 - The online suggestions setting explains that search text goes to DuckDuckGo. History and shortcut suggestions stay available when it is off.
