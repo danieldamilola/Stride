@@ -40,6 +40,7 @@ public sealed class IpcRouteCompatibilityTests
     private static readonly (string Url, string Resource, TabEngine.InternalPageKind Kind)[] InternalPages =
     {
         (InternalUrls.NewTab, "Resources.Pages.NewTab.html", TabEngine.InternalPageKind.NewTab),
+        (InternalUrls.Extensions, "Resources.Pages.Extensions.html", TabEngine.InternalPageKind.Extensions),
         (InternalUrls.Settings, "Resources.Pages.Settings.html", TabEngine.InternalPageKind.Settings),
         (InternalUrls.History, "Resources.Pages.History.html", TabEngine.InternalPageKind.History),
         (InternalUrls.Downloads, "Resources.Pages.Downloads.html", TabEngine.InternalPageKind.Downloads),
@@ -71,6 +72,7 @@ public sealed class IpcRouteCompatibilityTests
         foreach (var (_, resource, kind) in InternalPages)
         {
             var html = ResourceLoader.Load(resource);
+            if (kind == TabEngine.InternalPageKind.Extensions) html += ResourceLoader.Load("Resources.Scripts.extensions-page.js");
             foreach (var route in HostMessagesIn(html))
                 yield return new object[] { resource, kind, route };
         }
@@ -110,7 +112,7 @@ public sealed class IpcRouteCompatibilityTests
     {
         var routable = new[]
         {
-            InternalUrls.NewTab, InternalUrls.Settings, InternalUrls.History, InternalUrls.Downloads,
+            InternalUrls.NewTab, InternalUrls.Settings, InternalUrls.History, InternalUrls.Downloads, InternalUrls.Extensions,
             InternalUrls.Onboarding, InternalUrls.ReleaseNotes, InternalUrls.Focus, InternalUrls.Health,
         };
 

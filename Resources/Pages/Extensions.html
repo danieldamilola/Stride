@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{THEME}}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Extensions - Stride</title>
+  <style>
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg-base); color:var(--text-main); font:13px/1.5 "Segoe UI",sans-serif; }
+    button,input { font:inherit; color:inherit; }
+    button { cursor:pointer; }
+    [hidden] { display:none !important; }
+    .page-toolbar { border-bottom:1px solid var(--border); }
+    .developer-control { display:flex; align-items:center; gap:10px; white-space:nowrap; cursor:pointer; font-size:13px; }
+    .extension-toggle { position:relative; appearance:none; width:36px; height:20px; margin:0; border:1px solid var(--control-border); border-radius:12px; background:var(--bg-hover); cursor:pointer; flex-shrink:0; }
+    .extension-toggle::before { content:""; position:absolute; top:3px; left:3px; width:12px; height:12px; border-radius:50%; background:var(--text-muted); }
+    .extension-toggle:checked { background:var(--toggle-on); border-color:var(--toggle-on); }
+    .extension-toggle:checked::before { background:var(--toggle-knob); transform:translateX(16px); }
+    .developer-tools { display:flex; flex-wrap:wrap; gap:10px; padding:16px 28px; border-bottom:1px solid var(--border); }
+    .developer-help { flex-basis:100%; margin:2px 0 0; color:var(--text-muted); font-size:12px; }
+    .extension-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:34px; padding:6px 12px; border:1px solid var(--control-border); border-radius:6px; background:transparent; color:var(--text-main); }
+    .extension-button:hover { background:var(--bg-hover); }
+    .extension-button.primary { background:var(--button-bg); color:var(--button-text); border-color:var(--button-bg); }
+    .extension-button.primary:hover { background:var(--button-hover); border-color:var(--button-hover); }
+    .extension-button.danger { color:var(--danger-text); }
+    .extension-button.danger:hover { background:var(--danger-surface); }
+    .content { max-width:1224px; margin:0 auto; padding:28px; }
+    .section-heading { margin:0 0 18px; font-size:14px; font-weight:500; }
+    .extension-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+    .extension-card { display:flex; flex-direction:column; min-width:0; padding:20px; background:var(--bg-surface); border:1px solid var(--border); border-radius:9px; }
+    .card-summary { display:flex; align-items:flex-start; gap:16px; flex:1; }
+    .extension-icon { display:grid; place-items:center; width:40px; height:40px; flex:0 0 40px; color:var(--text-muted); }
+    .extension-icon img,.extension-icon svg { width:36px; height:36px; object-fit:contain; }
+    .card-info { min-width:0; }
+    .extension-name { margin:0; color:var(--text-main); font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+    .extension-description { margin:7px 0 0; color:var(--text-muted); overflow-wrap:anywhere; font-size:12px; line-height:1.6; }
+    .extension-meta { display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:12px; font-size:11px; color:var(--text-muted); }
+    .extension-error { margin:12px 0 0; color:var(--danger-text); font-size:12px; overflow-wrap:anywhere; }
+    .card-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:22px; }
+    .card-actions .enable-control { display:flex; align-items:center; gap:8px; margin-left:auto; cursor:pointer; }
+    .enable-control span { font-size:12px; color:var(--text-muted); }
+    .icon-button { display:grid; place-items:center; width:34px; height:34px; padding:8px; border:0; border-radius:6px; background:transparent; color:var(--text-muted); }
+    .icon-button:hover { background:var(--bg-hover); color:var(--text-main); }
+    .icon-button[aria-pressed="true"] { color:var(--text-main); background:var(--bg-hover); }
+    .icon-button svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+    .status { margin:0; padding:0 28px; font-size:13px; }
+    .status:not(:empty) { padding-top:16px; }
+    .status[data-error="true"] { color:var(--danger-text); }
+    .empty-state { text-align:center; padding:64px 16px; }
+    .empty-state h2 { font-size:18px; font-weight:600; margin:0 0 8px; }
+    .empty-state p { margin:0; color:var(--text-muted); }
+    .extension-dialog { width:min(560px,calc(100vw - 40px)); max-height:calc(100vh - 48px); overflow:auto; padding:24px; border:1px solid var(--border); border-radius:12px; background:var(--bg-surface); color:var(--text-main); }
+    .extension-dialog::backdrop { background:rgb(0 0 0 / 55%); }
+    .dialog-heading { display:flex; align-items:flex-start; gap:16px; }
+    .dialog-heading h2 { margin:0; font-size:20px; font-weight:600; overflow-wrap:anywhere; }
+    .dialog-heading .icon-button { margin-left:auto; flex-shrink:0; }
+    .detail-description { color:var(--text-muted); overflow-wrap:anywhere; }
+    .detail-list { margin:20px 0; }
+    .detail-list dt { margin-top:16px; font-size:12px; font-weight:600; }
+    .detail-list dd { margin:5px 0 0; color:var(--text-muted); overflow-wrap:anywhere; user-select:text; }
+    .permission-list { padding-left:18px; margin:0; }
+    .dialog-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:24px; }
+    @media(max-width:900px) { .page-toolbar { flex-wrap:wrap; } .page-toolbar .page-actions { flex-wrap:wrap; } }
+    @media(max-width:700px) { .developer-tools { padding:12px 16px; } .content { padding:24px 16px; } .status { padding-left:16px; padding-right:16px; } .extension-grid { grid-template-columns:1fr; } }
+    @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; } }
+  </style>
+</head>
+<body>
+  <header class="page-toolbar">
+    <h1 class="page-title">Extensions</h1>
+    <div class="page-actions">
+      <label class="page-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+        <input id="extensionSearch" type="search" placeholder="Search extensions" aria-label="Search extensions" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="developer-control" for="developerMode">Developer mode<input class="extension-toggle" type="checkbox" id="developerMode"></label>
+    </div>
+  </header>
+  <div id="developerTools" class="developer-tools" hidden>
+    <button type="button" id="loadExtension" class="extension-button">Load extension</button>
+    <button type="button" id="reloadExtensions" class="extension-button">Reload extensions</button>
+    <p class="developer-help">Load an unpacked folder containing manifest.json and keep the folder in place. Reloading reinstalls the extension.</p>
+  </div>
+  <p id="extensionStatus" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
+  <main class="content" id="extensionsContent">
+    <h2 id="extensionCount" class="section-heading">All extensions</h2>
+    <div id="extensionGrid" class="extension-grid"></div>
+    <div id="extensionEmpty" class="empty-state" hidden><h2 id="emptyHeading"></h2><p id="emptyDescription"></p></div>
+  </main>
+  <dialog id="extensionDetails" class="extension-dialog" aria-labelledby="detailName">
+    <div class="dialog-heading"><div id="detailIcon" class="extension-icon" aria-hidden="true"></div><h2 id="detailName"></h2><button type="button" id="closeDetails" class="icon-button" aria-label="Close extension details"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <p id="detailDescription" class="detail-description"></p>
+    <dl class="detail-list"><dt>Version</dt><dd id="detailVersion"></dd><dt>Source</dt><dd id="detailSource"></dd><dt>Extension ID</dt><dd id="detailId"></dd><dt id="detailPathLabel">Folder</dt><dd id="detailPath"></dd><dt>Permissions</dt><dd><ul id="detailPermissions" class="permission-list"></ul></dd></dl>
+    <p id="detailError" class="extension-error" hidden></p>
+    <div id="detailActions" class="dialog-actions"></div>
+  </dialog>
+  <script type="application/json" id="extensionsData">{{EXTENSIONS_DATA}}</script>
+  <script>
+const __T = '{{IPC_TOKEN}}:';
+{{EXTENSIONS_SCRIPT}}
+  </script>
+</body>
+</html>

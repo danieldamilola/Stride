@@ -562,9 +562,9 @@ const __T = "{{IPC_TOKEN}}:";
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             Performance
           </button></li>
-          <li><button type="button" class="sidebar-nav-item" data-target="section-extensions">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            Extensions
+          <li><button type="button" class="sidebar-nav-item" data-target="section-youtube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="m10 9 5 3-5 3z"/></svg>
+            YouTube
           </button></li>
           <li><button type="button" class="sidebar-nav-item" data-target="section-shortcuts">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M10 16h4"/></svg>
@@ -783,6 +783,14 @@ const __T = "{{IPC_TOKEN}}:";
                   <input type="checkbox" class="toggle" {{CHK_READERICON}} onchange="s('showReaderIcon', this)" />
                 </div>
               </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Show extensions icon</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_EXTENSIONSICON}} onchange="s('showExtensionsIcon', this)" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -927,9 +935,8 @@ const __T = "{{IPC_TOKEN}}:";
           </div>
 
           <!-- ════════ YOUTUBE ════════ -->
-          <!-- ════════ EXTENSIONS ════════ -->
-          <div class="section" id="section-extensions" data-search-title="extensions">
-            <div class="section-header">Extensions</div>
+          <div class="section" id="section-youtube" data-search-title="youtube unhook">
+            <div class="section-header">YouTube</div>
 
 
 

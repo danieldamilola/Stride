@@ -290,6 +290,7 @@ public sealed partial class TabEngine : IDisposable
             InternalUrls.Settings => "Settings",
             InternalUrls.OneTab => "OneTab",
             InternalUrls.History => "History",
+            InternalUrls.Extensions => "Extensions",
             InternalUrls.Downloads => "Downloads",
             InternalUrls.Onboarding => "Welcome to Stride",
             InternalUrls.ReleaseNotes => "What's New in Stride",
@@ -603,6 +604,7 @@ public sealed partial class TabEngine : IDisposable
         OneTab,
         History,
         Downloads,
+        Extensions,
         Onboarding,
         ReleaseNotes,
         Focus,
@@ -622,6 +624,7 @@ public sealed partial class TabEngine : IDisposable
         if (url == InternalUrls.Settings) return InternalPageKind.Settings;
         if (url == InternalUrls.OneTab) return InternalPageKind.OneTab;
         if (url == InternalUrls.History) return InternalPageKind.History;
+        if (url == InternalUrls.Extensions) return InternalPageKind.Extensions;
         if (url == InternalUrls.Downloads) return InternalPageKind.Downloads;
         if (url == InternalUrls.Onboarding) return InternalPageKind.Onboarding;
         if (url == InternalUrls.ReleaseNotes) return InternalPageKind.ReleaseNotes;
@@ -772,6 +775,9 @@ public sealed partial class TabEngine : IDisposable
                 return true;
             case InternalPageKind.History:
                 NavigateToHistory(tab, _historyStore.Load());
+                return true;
+            case InternalPageKind.Extensions:
+                NavigateToExtensions(tab);
                 return true;
             case InternalPageKind.Downloads:
                 NavigateToDownloads(tab);
@@ -2039,6 +2045,7 @@ public sealed partial class TabEngine : IDisposable
             InternalUrls.NewTab => "New Tab",
             InternalUrls.Settings => "Settings",
             InternalUrls.OneTab => "OneTab",
+            InternalUrls.Extensions => "Extensions",
             InternalUrls.Downloads => "Downloads",
             InternalUrls.Focus => "Focus Locked",
             InternalUrls.Health => "Health",

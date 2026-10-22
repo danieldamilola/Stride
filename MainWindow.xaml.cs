@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     private readonly ToolbarNavigationController _toolbarNavigationController;
     private readonly SiteInfoController _siteInfoController;
     private readonly DownloadsPopupController _downloadsController;
+    private readonly ExtensionsPopupController _extensionsController;
     private readonly IOneTabStore _oneTabStore;
     private readonly ISessionStore _sessionStore;
     private readonly IHistoryStore _historyStore;
@@ -95,6 +96,10 @@ public partial class MainWindow : Window
         _downloadsController = new DownloadsPopupController(this, DownloadsButton, Toolbar, DownloadsPopup,
             DownloadsPanel, _engine, services.GetRequiredService<IDownloadStore>(), _vm.CloseSuggestions, DownloadsStatusDot);
         Closed += (_, _) => _downloadsController.Dispose();
+        _extensionsController = new ExtensionsPopupController(this, ExtensionsButton, ExtensionsPopup, ExtensionsPanel,
+            PinnedExtensions, _engine, services.GetRequiredService<Services.Extensions.ExtensionLibrary>(),
+            services.GetRequiredService<ExtensionActions>(), _vm.CloseSuggestions);
+        Closed += (_, _) => _extensionsController.Dispose();
         _toolbarNavigationController = new ToolbarNavigationController(RefreshButton, _engine);
         Closed += (_, _) => _toolbarNavigationController.Dispose();
         _windows.Register(this, _engine, TabList, services);
@@ -125,6 +130,9 @@ public partial class MainWindow : Window
 
         _router = services.GetRequiredService<WebMessageRouter>();
         _router.SettingChanged += OnSettingChanged;
+        var extensionActions = services.GetRequiredService<ExtensionActions>();
+        extensionActions.SettingChanged += OnSettingChanged;
+        Closed += (_, _) => extensionActions.SettingChanged -= OnSettingChanged;
         var themeManager = services.GetRequiredService<ThemeManager>();
         Action onThemeChanged = () =>
         {
@@ -609,6 +617,10 @@ public partial class MainWindow : Window
     /// Opens the toolbar overflow menu under its button. The menu carries the action commands
     /// the row drops when it runs out of width.
     /// </summary>
+    private void Extensions_Click(object sender, RoutedEventArgs e) => _ = OpenExtensionsAsync();
+    private async Task OpenExtensionsAsync()
+    { try { await _engine.OpenExtensionsAsync(); } catch (Exception ex) { Trace.WriteLine(ex); } }
+
     private void ToolbarOverflow_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { ContextMenu: { } menu } button) return;

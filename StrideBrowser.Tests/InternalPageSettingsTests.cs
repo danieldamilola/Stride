@@ -33,6 +33,7 @@ public sealed class InternalPageSettingsTests
         yield return new object[] { "showDownloadsIcon", nameof(BrowserSettings.ShowDownloadsIcon) };
         yield return new object[] { "showSettingsIcon", nameof(BrowserSettings.ShowSettingsIcon) };
         yield return new object[] { "showReaderIcon", nameof(BrowserSettings.ShowReaderIcon) };
+        yield return new object[] { "showExtensionsIcon", nameof(BrowserSettings.ShowExtensionsIcon) };
         yield return new object[] { "roundedFrame", nameof(BrowserSettings.RoundedWebContentFrameEnabled) };
         yield return new object[] { "autoCheckForUpdates", nameof(BrowserSettings.AutoCheckForUpdates) };
         yield return new object[] { "unhookEnabled", nameof(BrowserSettings.UnhookEnabled) };

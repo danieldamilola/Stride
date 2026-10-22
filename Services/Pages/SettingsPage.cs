@@ -74,6 +74,7 @@ public sealed class SettingsPage
                 ["CHK_DOWNLOADS"] = Chk(settings.ShowDownloadsIcon),
                 ["CHK_SETTINGSICON"] = Chk(settings.ShowSettingsIcon),
                 ["CHK_READERICON"] = Chk(settings.ShowReaderIcon),
+                ["CHK_EXTENSIONSICON"] = Chk(settings.ShowExtensionsIcon),
                 ["CHK_AUTO_CHECK_FOR_UPDATES"] = Chk(settings.AutoCheckForUpdates),
                 ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "unknown",
                 // The WebView2 SDK assembly version, labelled "SDK" in the About card because the

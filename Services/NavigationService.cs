@@ -85,6 +85,7 @@ public sealed class NavigationService
         InternalUrls.Settings => "Settings",
         InternalUrls.OneTab => "OneTab",
         InternalUrls.History => "History",
+        InternalUrls.Extensions => "Extensions",
         InternalUrls.Downloads => "Downloads",
         InternalUrls.Focus => "Focus Locked",
         InternalUrls.Health => "Health",
