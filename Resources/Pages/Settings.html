@@ -858,6 +858,24 @@ const __T = "{{IPC_TOKEN}}:";
                   <input type="checkbox" class="toggle" {{CHK_TAB_HIBERNATION}} onchange="s('tabHibernation', this)" />
                 </div>
               </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Allow pinned tabs to sleep</div>
+                  <div class="setting-desc">Pinned tabs follow Tab sleep when it is on. Turn off to keep them awake.</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_PINNED_TAB_SLEEP}} onchange="s('allowPinnedTabsToSleep', this)" />
+                </div>
+              </div>
+<div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Allow pinned tabs to hibernate</div>
+                  <div class="setting-desc">Pinned tabs follow Tab hibernation when it is on. Tabs playing audio stay loaded.</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_PINNED_TAB_HIBERNATION}} onchange="s('allowPinnedTabsToHibernate', this)" />
+                </div>
+              </div>
 </div>
 </div>
 <div class="settings-group">

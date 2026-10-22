@@ -208,6 +208,11 @@ public sealed partial class TabEngine : IDisposable
 
     private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(BrowserSettings.TabSleepEnabled) or nameof(BrowserSettings.AllowPinnedTabsToSleep))
+        {
+            _dispatcher.Invoke(_hibernationManager.ApplySleepSettings);
+            return;
+        }
         if (e.PropertyName != nameof(BrowserSettings.TrackingPreventionMode)) return;
         // Raised on whichever thread assigned the property, which for a settings page is
         // not the one that owns the WebView2 controls.
@@ -266,7 +271,7 @@ public sealed partial class TabEngine : IDisposable
 
     // ──── Tab Lifecycle ────
 
-    public BrowserTab CreateTab(string? url = null, bool blockDuplicates = true)
+    public BrowserTab CreateTab(string? url = null, bool blockDuplicates = true, bool switchTo = true)
     {
         var resolvedUrl = url ?? InternalUrls.NewTab;
 
@@ -279,7 +284,7 @@ public sealed partial class TabEngine : IDisposable
                 string.Equals(t.Url, resolvedUrl, StringComparison.OrdinalIgnoreCase));
             if (existing is not null)
             {
-                SwitchTo(existing);
+                if (switchTo) SwitchTo(existing);
                 return existing;
             }
         }
@@ -301,7 +306,7 @@ public sealed partial class TabEngine : IDisposable
 
         var tab = new BrowserTab { Url = resolvedUrl, Title = title };
         Tabs.Add(tab);
-        SwitchTo(tab);
+        if (switchTo) SwitchTo(tab);
         TabCreated?.Invoke(tab);
         return tab;
     }
@@ -958,6 +963,17 @@ public sealed partial class TabEngine : IDisposable
         // rebuild re-serves the page through routing.
         if (InternalUrls.IsInternal(urlBefore) && InternalUrls.IsDataOrBlank(tab.Url))
             tab.Url = urlBefore;
+    }
+
+    /// <summary>
+    /// Hibernates every restored background tab at startup. This is deliberate and
+    /// does not consult the hibernation setting or the pinned tab exemptions. The
+    /// active tab stays loaded so the window opens with a usable page.
+    /// </summary>
+    public void HibernateRestoredTabs(BrowserTab activeTab)
+    {
+        if (_disposed) return;
+        _hibernationManager.HibernateRestoredTabs(activeTab);
     }
 
     public async Task FindInPageAsync()
@@ -2131,7 +2147,7 @@ public sealed partial class TabEngine : IDisposable
             return;
         }
 
-        if (!_settings.TabSleepEnabled) return;
+        if (!_settings.TabSleepEnabled || (tab.IsPinned && !_settings.AllowPinnedTabsToSleep)) return;
         bool suspended = false;
         try
         {
@@ -2145,7 +2161,8 @@ public sealed partial class TabEngine : IDisposable
         }
         catch (Exception ex) { Trace.WriteLine($"SuspendForPreview failed for {tabId}: {ex.Message}"); }
 
-        if (generation != _previewGeneration || _previewOriginTabId != tabId)
+        if (generation != _previewGeneration || _previewOriginTabId != tabId ||
+            !_settings.TabSleepEnabled || (tab.IsPinned && !_settings.AllowPinnedTabsToSleep))
         {
             if (suspended)
             {

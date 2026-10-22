@@ -4,8 +4,13 @@ All notable changes to Stride are recorded here, newest first.
 
 ## [Unreleased]
 
+### Added
+
+- Performance settings can allow pinned tabs to follow tab sleep and automatic hibernation separately.
+
 ### Changed
 
+- Restored sessions now start with every background tab hibernated, including pinned tabs, regardless of the tab hibernation and pinned tab settings. The saved active tab stays loaded.
 - Reorganized Settings into General, Appearance, Tabs, Search, Privacy & Security, Focus, Shortcuts and About. Search has its own page, YouTube Unhook is under Focus, and default browser, hardware acceleration and reset actions are under General.
 - Settings search keeps matching controls with their group headings and opens matching detail groups.
 - Settings no longer flashes routine saving text when a control changes. Save errors and restart notices remain visible.
@@ -15,6 +20,8 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Fixed
 
+- Turning off tab sleep resumes sleeping pages in every open window, including suspensions that finish after the setting changes.
+- Pinned tabs stay awake when their sleep setting is off. Turning it off wakes pinned tabs that are already sleeping.
 - Online suggestions skip address and file path inputs. Turning suggestions off cancels pending requests and discards late responses.
 
 ## [0.1.0] - 2026-10-21

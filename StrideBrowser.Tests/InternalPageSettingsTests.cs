@@ -24,6 +24,8 @@ public sealed class InternalPageSettingsTests
         yield return new object[] { "faviconProxy", nameof(BrowserSettings.FaviconProxyEnabled) };
         yield return new object[] { "tabHibernation", nameof(BrowserSettings.TabHibernationEnabled) };
         yield return new object[] { "tabSleep", nameof(BrowserSettings.TabSleepEnabled) };
+        yield return new object[] { "allowPinnedTabsToSleep", nameof(BrowserSettings.AllowPinnedTabsToSleep) };
+        yield return new object[] { "allowPinnedTabsToHibernate", nameof(BrowserSettings.AllowPinnedTabsToHibernate) };
         yield return new object[] { "tabSleepDim", nameof(BrowserSettings.TabSleepDimEnabled) };
         yield return new object[] { "tabHibernationDim", nameof(BrowserSettings.TabHibernationDimEnabled) };
         yield return new object[] { "adaptiveTint", nameof(BrowserSettings.AdaptiveToolbarTint) };
@@ -114,6 +116,8 @@ public sealed class InternalPageSettingsTests
 
     [Theory]
     [InlineData("autoCheckForUpdates", "maybe")]
+    [InlineData("allowPinnedTabsToSleep", "maybe")]
+    [InlineData("allowPinnedTabsToHibernate", "maybe")]
     [InlineData("appTheme", "unknown")]
     [InlineData("accentColor", "#broken")]
     [InlineData("tabSleepOpacity", "NaN")]
