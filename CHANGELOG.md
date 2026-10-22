@@ -21,6 +21,11 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Added
 
+- Appearance settings can show or hide the extensions toolbar icon.
+
+- Extensions toolbar panel with installed extension icons and pinned actions.
+- Dedicated Extensions page with search, details, enable controls and removal for custom extensions.
+- Developer mode for loading unpacked extension folders and reloading local extensions.
 - Downloads now opens a compact toolbar panel with progress and file actions while the current page stays open.
 - Added optional history retention and clearing on exit to the roadmap.
 - Added a focused performance review with isolated Release measurements and a T3 orchestration prompt.
@@ -28,6 +33,9 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Changed
 
+- Extensions includes YouTube tools, adaptive toolbar color, Focus and forced dark websites with their existing settings. The toolbar menu uses the same controls and spacing as Downloads.
+
+- Moved extension management out of Settings. YouTube controls now have their own Settings category.
 - Built-in pages share heading and search-field sizes. Download and history searches sit beside the header actions, and saved tabs uses the same header layout.
 
 - Removed custom accent colors. Light and dark themes now define button, toggle, focus, selection, link and progress colors. Older saved accents no longer override the theme.
@@ -46,6 +54,10 @@ All notable changes to Stride are recorded here, newest first.
 - Settings no longer shows routine save confirmations. Save errors and restart notices remain visible.
 
 ### Fixed
+
+- Extension action panels open beneath their toolbar icon, size to their content and dismiss on outside clicks, Escape or tab changes.
+
+- User-installed download manager extensions are no longer removed by the former bundled-extension cleanup.
 
 - Cancelling a download restart explicitly cancels its pending navigation-completion task without changing an already-started transfer.
 

@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let selected = navItems[0].dataset.target;
   try {
     const saved = localStorage.getItem('stride_active_settings_tab');
-    const target = { 'section-performance':'section-tabs', 'section-extensions':'section-focus' }[saved] || saved;
+    const target = { 'section-performance':'section-tabs', 'section-extensions':'section-focus', 'section-youtube':'section-focus' }[saved] || saved;
     if (sections.some(s => s.id === target)) selected = target;
   } catch {}
   const openBeforeSearch = new Map();

@@ -13,6 +13,7 @@ public sealed class SettingsOrganizationTests
     [InlineData("appearance", "zoom")]
     [InlineData("appearance", "sidebarPosition")]
     [InlineData("appearance", "darkMode")]
+    [InlineData("appearance", "showExtensionsIcon")]
     [InlineData("search", "search")]
     [InlineData("search", "searchSuggestions")]
     [InlineData("tabs", "blockDupes")]
