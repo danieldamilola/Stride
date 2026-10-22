@@ -87,8 +87,10 @@ public sealed class DownloadsPopupController : IDisposable
         }
     }
     private void CloseClicked(object sender, RoutedEventArgs e) { _popup.IsOpen = false; _button.Focus(); }
-    private async void ViewAll(object sender, RoutedEventArgs e)
-    { _popup.IsOpen = false; try { await _engine.OpenDownloadsAsync(); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } }
+    private void ViewAll(object sender, RoutedEventArgs e)
+    { _popup.IsOpen = false; _ = OpenDownloadsAsync(); }
+    private async Task OpenDownloadsAsync()
+    { try { await _engine.OpenDownloadsAsync(); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); } }
     private void OnKey(object sender, KeyEventArgs e)
     { if (e.Key == Key.Escape) { _popup.IsOpen = false; _button.Focus(); e.Handled = true; } }
     private void ActiveTabChanged(BrowserTab? tab) => _popup.IsOpen = false;
