@@ -25,9 +25,6 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _adBlockEnabled = true;
 
     [ObservableProperty]
-    private string _accentColor = "#d4d4d4";
-
-    [ObservableProperty]
     private int _defaultZoom = 90;
 
     [ObservableProperty]
@@ -148,6 +145,9 @@ public sealed partial class BrowserSettings : ObservableObject
 
     [ObservableProperty]
     private bool _showReaderIcon = true;
+
+    [ObservableProperty]
+    private bool _showExtensionsIcon = true;
 
     [ObservableProperty]
     private bool _showBackArrow = true;
@@ -322,7 +322,6 @@ public sealed partial class BrowserSettings : ObservableObject
         IsSidebarOnRight = d.IsSidebarOnRight;
         IsCompactMode = d.IsCompactMode;
         AdBlockEnabled = d.AdBlockEnabled;
-        AccentColor = d.AccentColor;
         DefaultZoom = d.DefaultZoom;
         RestoreSessionOnStartup = d.RestoreSessionOnStartup;
         HardwareAccelerationEnabled = d.HardwareAccelerationEnabled;
@@ -344,6 +343,7 @@ public sealed partial class BrowserSettings : ObservableObject
         ShowSettingsIcon = d.ShowSettingsIcon;
         ShowDownloadsIcon = d.ShowDownloadsIcon;
         ShowReaderIcon = d.ShowReaderIcon;
+        ShowExtensionsIcon = d.ShowExtensionsIcon;
         ShowBackArrow = d.ShowBackArrow;
         ShowForwardArrow = d.ShowForwardArrow;
         ShowRefreshButton = d.ShowRefreshButton;

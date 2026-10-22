@@ -36,6 +36,8 @@ public partial class MainWindow : Window
     private readonly ToolbarDropController _toolbarDropController;
     private readonly ToolbarNavigationController _toolbarNavigationController;
     private readonly SiteInfoController _siteInfoController;
+    private readonly DownloadsPopupController _downloadsController;
+    private readonly ExtensionsPopupController _extensionsController;
     private readonly IOneTabStore _oneTabStore;
     private readonly ISessionStore _sessionStore;
     private readonly IHistoryStore _historyStore;
@@ -91,6 +93,13 @@ public partial class MainWindow : Window
         _siteInfoController = new SiteInfoController(SiteInfoButton, StandardSecurityIcon, SiteInfoPopup,
             SiteInfoHost, SiteInfoConnection, SiteInfoDescription, _vm.CloseSuggestions);
         Closed += (_, _) => _siteInfoController.Dispose();
+        _downloadsController = new DownloadsPopupController(this, DownloadsButton, Toolbar, DownloadsPopup,
+            DownloadsPanel, _engine, services.GetRequiredService<IDownloadStore>(), _vm.CloseSuggestions, DownloadsStatusDot);
+        Closed += (_, _) => _downloadsController.Dispose();
+        _extensionsController = new ExtensionsPopupController(this, ExtensionsButton, ExtensionsPopup, ExtensionsPanel,
+            PinnedExtensions, _engine, services.GetRequiredService<Services.Extensions.ExtensionLibrary>(),
+            services.GetRequiredService<ExtensionActions>(), _vm.CloseSuggestions);
+        Closed += (_, _) => _extensionsController.Dispose();
         _toolbarNavigationController = new ToolbarNavigationController(RefreshButton, _engine);
         Closed += (_, _) => _toolbarNavigationController.Dispose();
         _windows.Register(this, _engine, TabList, services);
@@ -121,6 +130,9 @@ public partial class MainWindow : Window
 
         _router = services.GetRequiredService<WebMessageRouter>();
         _router.SettingChanged += OnSettingChanged;
+        var extensionActions = services.GetRequiredService<ExtensionActions>();
+        extensionActions.SettingChanged += OnSettingChanged;
+        Closed += (_, _) => extensionActions.SettingChanged -= OnSettingChanged;
         var themeManager = services.GetRequiredService<ThemeManager>();
         Action onThemeChanged = () =>
         {
@@ -150,10 +162,6 @@ public partial class MainWindow : Window
 
         // Attach event handlers
         WireEngineEvents();
-
-        // Apply saved accent color
-        if (_vm.Settings.AccentColor != "#D4A574")
-            ApplyAccentColor(_vm.Settings.AccentColor);
 
         Loaded += OnWindowLoaded;
     }
@@ -618,6 +626,10 @@ public partial class MainWindow : Window
     /// Opens the toolbar overflow menu under its button. The menu carries the action commands
     /// the row drops when it runs out of width.
     /// </summary>
+    private void Extensions_Click(object sender, RoutedEventArgs e) => _ = OpenExtensionsAsync();
+    private async Task OpenExtensionsAsync()
+    { try { await _engine.OpenExtensionsAsync(); } catch (Exception ex) { Trace.WriteLine(ex); } }
+
     private void ToolbarOverflow_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { ContextMenu: { } menu } button) return;
@@ -878,9 +890,6 @@ public partial class MainWindow : Window
                 UpdateToolbarTint(_engine.ActiveTab);
         }
 
-        if (key is "accentColor" or "reset")
-            ApplyAccentColor(_vm.Settings.AccentColor);
-
         if (key == "adaptiveTint" && _engine.ActiveTab is not null)
         {
             _tintAdapter.Reset();
@@ -907,30 +916,6 @@ public partial class MainWindow : Window
                     _engine.ExecuteScript(tab.Id, js);
             }
         }
-    }
-
-    private void ApplyAccentColor(string hex)
-    {
-        try
-        {
-            var color = (Color)ColorConverter.ConvertFromString(hex);
-            var brush = new SolidColorBrush(color);
-            brush.Freeze();
-
-            // Update accent color & brush
-            Application.Current.Resources["AccentColor"] = color;
-            Application.Current.Resources["Accent"] = brush;
-
-            // Update accent wash (10% opacity version)
-            var wash = new SolidColorBrush(Color.FromArgb(0x1A, color.R, color.G, color.B));
-            wash.Freeze();
-            Application.Current.Resources["AccentWash"] = wash;
-
-            // Update loading bar gradient to match accent
-            Application.Current.Resources["LoadingBarGlowColor"] = color;
-            Application.Current.Resources["LoadingBarFadeColor"] = Color.FromArgb(0x00, color.R, color.G, color.B);
-        }
-        catch { /* ignore invalid color strings */ }
     }
 
     // ──── Keyboard shortcuts ────
@@ -1085,18 +1070,7 @@ public partial class MainWindow : Window
         catch (Exception ex) { Trace.WriteLine($"History open failed: {ex}"); }
     }
 
-    private async Task OpenDownloadsTab()
-    {
-        try
-        {
-            var tab = _engine.CreateTab(InternalUrls.Downloads);
-            tab.Title = "Downloads";
-            _engine.SwitchTo(tab);
-            // Creation serves the page through routing; no second navigation here.
-            await _engine.ActivateAsync(tab);
-        }
-        catch (Exception ex) { Trace.WriteLine($"Downloads open failed: {ex}"); }
-    }
+    private Task OpenDownloadsTab() => _engine.OpenDownloadsAsync();
 
     private System.Windows.Threading.DispatcherTimer? _copyTimer;
 

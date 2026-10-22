@@ -41,6 +41,16 @@ public static class IpcSecurityPolicy
                 // exact match. Without it the Set Default button reaches nothing.
                 message == WebMessagePrefix.SetDefaultBrowser,
 
+            TabEngine.InternalPageKind.Extensions =>
+                message == "extensions-sync" || message == "extensions-load" || message == "extensions-reload-all" ||
+                message.StartsWith("extensions-developer:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-toggle:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-pin:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-remove:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-reload:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-open-options:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-open-popup:", StringComparison.Ordinal),
+
             TabEngine.InternalPageKind.History =>
                 message.StartsWith(WebMessagePrefix.HistoryOpen, StringComparison.Ordinal) ||
                 message == WebMessagePrefix.HistoryClear,
@@ -63,7 +73,10 @@ public static class IpcSecurityPolicy
                 message == WebMessagePrefix.DownloadClearAll ||
                 message == WebMessagePrefix.DownloadRequestSync ||
                 message.StartsWith(WebMessagePrefix.DownloadPause, StringComparison.Ordinal) ||
-                message.StartsWith(WebMessagePrefix.DownloadResume, StringComparison.Ordinal),
+                message.StartsWith(WebMessagePrefix.DownloadResume, StringComparison.Ordinal) ||
+                message.StartsWith(WebMessagePrefix.DownloadRetry, StringComparison.Ordinal) ||
+                message.StartsWith(WebMessagePrefix.DownloadCopy, StringComparison.Ordinal) ||
+                message.StartsWith(WebMessagePrefix.DownloadRemove, StringComparison.Ordinal),
 
             TabEngine.InternalPageKind.NewTab =>
                 message.StartsWith(WebMessagePrefix.Open, StringComparison.Ordinal) ||
@@ -86,7 +99,7 @@ public static class IpcSecurityPolicy
                 message == OnboardingDone ||
                 message == OnboardingReady ||
                 // First run writes preferences through the same setting route the
-                // Settings page uses: theme, accent, search engine, ad blocking,
+                // Settings page uses: theme, search engine, ad blocking,
                 // SmartScreen, force HTTPS, clear on exit, hibernation, tab names.
                 message.StartsWith(WebMessagePrefix.Setting, StringComparison.Ordinal),
 

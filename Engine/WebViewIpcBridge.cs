@@ -32,6 +32,7 @@ public sealed class WebViewIpcBridge
     private readonly Dispatcher _dispatcher;
     private readonly BrowserSettings _settings;
     private readonly IDownloadStore _downloadStore;
+    private readonly Services.Downloads.DownloadCoordinator? _downloadCoordinator;
     private readonly Dictionary<string, Microsoft.Web.WebView2.Core.CoreWebView2DownloadOperation> _activeNativeDownloads;
     private readonly string _ipcToken;
     private readonly string _telemetryToken;
@@ -58,7 +59,8 @@ public sealed class WebViewIpcBridge
         Action<BrowserTab> closeTab,
         Func<BrowserTab, CancellationToken, Task<CoreWebView2?>> ensureTabReadyAsync,
         Action<BrowserTab> removeSentinelTab,
-        Services.LinkPreview.ILinkPreviewDownloadSuppressor downloadSuppressor)
+        Services.LinkPreview.ILinkPreviewDownloadSuppressor downloadSuppressor,
+        Services.Downloads.DownloadCoordinator? downloadCoordinator = null)
     {
         _dispatcher = dispatcher;
         _settings = settings;
@@ -74,6 +76,7 @@ public sealed class WebViewIpcBridge
         _ensureTabReadyAsync = ensureTabReadyAsync;
         _removeSentinelTab = removeSentinelTab;
         _downloadSuppressor = downloadSuppressor;
+        _downloadCoordinator = downloadCoordinator;
     }
 
     public WebViewIpcBridge(
@@ -143,7 +146,7 @@ public sealed class WebViewIpcBridge
     public void WireLifetimeEvents(dynamic wv, BrowserTab tab)
     {
         CoreWebView2 core = wv.CoreWebView2;
-        Handlers.TabDownloadHandler.Wire(core, _dispatcher, _downloadStore, _activeNativeDownloads, _downloadSuppressor);
+        Handlers.TabDownloadHandler.Wire(core, _dispatcher, _downloadStore, _activeNativeDownloads, _downloadSuppressor, _downloadCoordinator, tab.Id);
         Handlers.TabDialogHandler.Wire(core, _dispatcher, _settings, () => Window.GetWindow((FrameworkElement)wv));
     }
 

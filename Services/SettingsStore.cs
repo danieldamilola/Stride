@@ -61,7 +61,6 @@ public sealed class SettingsStore : ISettingsStore
             // would NRE in the settings page, new tab page, and shortcut handlers.
             loaded.NewTabShortcuts ??= new();
             loaded.CustomShortcuts ??= new();
-            loaded.AccentColor = NormalizeAccentColor(loaded.AccentColor);
 
             // One-time repairs for files an older build wrote. The result is saved, so a
             // repair runs once and a later choice the user makes is not undone on the
@@ -75,30 +74,6 @@ public sealed class SettingsStore : ISettingsStore
             return new BrowserSettings();
         }
     }
-
-    /// <summary>
-    /// Forces AccentColor to a hex literal, falling back to the default otherwise.
-    /// <para>
-    /// AccentColor reaches the settings page as a raw CSS custom property and as a value
-    /// inside a JavaScript string literal. The IPC setter checks the shape when the user
-    /// changes it, but a hand-edited or tampered settings.json is deserialized straight into
-    /// the model, so the check has to be repeated where the file is read.
-    /// </para>
-    /// </summary>
-    internal static string NormalizeAccentColor(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value)) return DefaultAccentColor;
-        var trimmed = value.Trim();
-        if (trimmed.Length is 4 or 7 && trimmed[0] == '#' && trimmed.Skip(1).All(Uri.IsHexDigit))
-        {
-            if (trimmed.Length == 4)
-                return $"#{trimmed[1]}{trimmed[1]}{trimmed[2]}{trimmed[2]}{trimmed[3]}{trimmed[3]}";
-            return trimmed;
-        }
-        return DefaultAccentColor;
-    }
-
-    private const string DefaultAccentColor = "#d4d4d4";
 
     /// <summary>
     /// Writes the settings and reports whether the file now holds them. The answer

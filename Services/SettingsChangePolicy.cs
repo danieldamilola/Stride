@@ -6,7 +6,7 @@ namespace StrideBrowser.Services;
 
 public static class SettingsChangePolicy
 {
-    private static readonly HashSet<string> BooleanSettings = [ "autoCheckForUpdates", "restoreSession", "hwAccel", "darkMode", "forceHttps", "smartScreen", "adBlock", "clearOnExit", "searchSuggestions", "faviconProxy", "blockDupes", "tabHibernation", "tabSleep", "allowPinnedTabsToSleep", "allowPinnedTabsToHibernate", "tabSleepDim", "tabHibernationDim", "addressBarOnLeft", "showTabNames", "roundedFrame", "adaptiveTint", "showBackArrow", "showForwardArrow", "showRefreshButton", "showDownloadsIcon", "showSettingsIcon", "showReaderIcon", "focusLocked", "ytEnhancerEnabled", "ytAutoplay", "ytPauseTab", "ytLoop", "unhookEnabled", "unhookHomeFeed", "unhookShorts", "unhookSidebar", "unhookLiveChat", "unhookPlaylist", "unhookFundraiser", "unhookEndFeed", "unhookEndCards", "unhookComments", "unhookMixes", "unhookMerch", "unhookVideoInfo", "unhookTopHeader", "unhookNotifications", "unhookInaptSearch", "unhookExplore", "unhookMoreYT", "unhookSubscriptions", "unhookAutoplay", "unhookAnnotations" ];
+    private static readonly HashSet<string> BooleanSettings = [ "autoCheckForUpdates", "restoreSession", "hwAccel", "darkMode", "forceHttps", "smartScreen", "adBlock", "clearOnExit", "searchSuggestions", "faviconProxy", "blockDupes", "tabHibernation", "tabSleep", "allowPinnedTabsToSleep", "allowPinnedTabsToHibernate", "tabSleepDim", "tabHibernationDim", "addressBarOnLeft", "showTabNames", "roundedFrame", "adaptiveTint", "showBackArrow", "showForwardArrow", "showRefreshButton", "showDownloadsIcon", "showSettingsIcon", "showReaderIcon", "showExtensionsIcon", "focusLocked", "ytEnhancerEnabled", "ytAutoplay", "ytPauseTab", "ytLoop", "unhookEnabled", "unhookHomeFeed", "unhookShorts", "unhookSidebar", "unhookLiveChat", "unhookPlaylist", "unhookFundraiser", "unhookEndFeed", "unhookEndCards", "unhookComments", "unhookMixes", "unhookMerch", "unhookVideoInfo", "unhookTopHeader", "unhookNotifications", "unhookInaptSearch", "unhookExplore", "unhookMoreYT", "unhookSubscriptions", "unhookAutoplay", "unhookAnnotations" ];
 
     public static bool RequiresRestart(string key) => key is "hwAccel" or "darkMode" or "smartScreen";
 
@@ -19,8 +19,6 @@ public static class SettingsChangePolicy
         { error = "Choose a supported theme."; return false; }
         if (key == "zoom" && (!int.TryParse(value, out var zoom) || zoom < 25 || zoom > 500))
         { error = "Choose a zoom between 25 and 500 percent."; return false; }
-        if (key == "accentColor" && !System.Text.RegularExpressions.Regex.IsMatch(value, "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"))
-        { error = "Choose a valid color."; return false; }
         if (key is "tabSleepOpacity" or "tabHibernationOpacity" or "ytSpeed" &&
             (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number) || !double.IsFinite(number)))
         { error = "Choose a valid number."; return false; }
@@ -109,7 +107,7 @@ public static class SettingsChangePolicy
         ["showDownloadsIcon"] = (s, v) => s.ShowDownloadsIcon = v == "true",
         ["showSettingsIcon"] = (s, v) => s.ShowSettingsIcon = v == "true",
         ["showReaderIcon"] = (s, v) => s.ShowReaderIcon = v == "true",
-        ["accentColor"] = (s, v) => { if (v.StartsWith('#') && (v.Length == 7 || v.Length == 4)) s.AccentColor = v; },
+        ["showExtensionsIcon"] = (s, v) => s.ShowExtensionsIcon = v == "true",
         ["focusDomains"] = (s, v) => s.FocusDomains = System.Web.HttpUtility.UrlDecode(v),
         ["focusLocked"] = (s, v) => s.FocusLocked = v == "true",
 

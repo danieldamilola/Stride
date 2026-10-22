@@ -20,6 +20,7 @@ public sealed class InternalPageRoutingTests
     [InlineData("internal://settings", TabEngine.InternalPageKind.Settings)]
     [InlineData("internal://onetab", TabEngine.InternalPageKind.OneTab)]
     [InlineData("internal://history", TabEngine.InternalPageKind.History)]
+    [InlineData("internal://extensions", TabEngine.InternalPageKind.Extensions)]
     [InlineData("internal://downloads", TabEngine.InternalPageKind.Downloads)]
     [InlineData("internal://onboarding", TabEngine.InternalPageKind.Onboarding)]
     [InlineData("internal://releasenotes", TabEngine.InternalPageKind.ReleaseNotes)]
@@ -68,6 +69,7 @@ public sealed class InternalPageRoutingTests
     [InlineData("internal://settings")]
     [InlineData("internal://onetab")]
     [InlineData("internal://history")]
+    [InlineData("internal://extensions")]
     [InlineData("internal://downloads")]
     [InlineData("internal://onboarding")]
     [InlineData("internal://releasenotes")]
@@ -116,11 +118,11 @@ public sealed class InternalPageRoutingTests
     }
 
     [Fact]
-    public void SettingsPageRender_EmbedsAccentColorAndToken()
+    public void SettingsPageRender_EmbedsTokenWithoutAccentControls()
     {
-        var settings = new BrowserSettings { AccentColor = "#123456" };
+        var settings = new BrowserSettings();
         var html = new SettingsPage().Render(settings, "token123");
-        Assert.Contains("#123456", html);
+        Assert.DoesNotContain("accentPicker", html);
         Assert.Contains("token123", html);
     }
 }

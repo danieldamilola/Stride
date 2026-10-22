@@ -144,6 +144,8 @@ public sealed partial class TabEngine : IDisposable
         _historyStore = deps.HistoryStore;
         _oneTabStore = deps.OneTabStore;
         _downloadStore = deps.DownloadStore;
+        Downloads = deps.Downloads ?? new Services.Downloads.DownloadCoordinator(_downloadStore);
+        _downloadRequests = deps.DownloadRequests ?? new Services.Downloads.NativeDownloadRequest(_downloadStore, deps.Session, Downloads);
         _closedTabStore = deps.ClosedTabStore;
         _focusBlocklistService = deps.FocusBlocklistService;
         _contentScriptInjector = deps.ContentScriptInjector;
@@ -168,7 +170,8 @@ public sealed partial class TabEngine : IDisposable
             closeTab: CloseTab,
             ensureTabReadyAsync: EnsureTabReadyAsync,
             removeSentinelTab: RemoveFailedSentinelTab,
-            downloadSuppressor: deps.DownloadSuppressor);
+            downloadSuppressor: deps.DownloadSuppressor,
+            downloadCoordinator: Downloads);
         _ipcBridge.WebMessageReceived += msg => WebMessageReceived?.Invoke(msg);
         _ipcBridge.FullScreenChanged += fs => FullScreenChanged?.Invoke(fs);
         _ipcBridge.TabStateChanged += tab => TabStateChanged?.Invoke(tab);
@@ -292,6 +295,7 @@ public sealed partial class TabEngine : IDisposable
             InternalUrls.Settings => "Settings",
             InternalUrls.OneTab => "OneTab",
             InternalUrls.History => "History",
+            InternalUrls.Extensions => "Extensions",
             InternalUrls.Downloads => "Downloads",
             InternalUrls.Onboarding => "Welcome to Stride",
             InternalUrls.ReleaseNotes => "What's New in Stride",
@@ -605,6 +609,7 @@ public sealed partial class TabEngine : IDisposable
         OneTab,
         History,
         Downloads,
+        Extensions,
         Onboarding,
         ReleaseNotes,
         Focus,
@@ -624,6 +629,7 @@ public sealed partial class TabEngine : IDisposable
         if (url == InternalUrls.Settings) return InternalPageKind.Settings;
         if (url == InternalUrls.OneTab) return InternalPageKind.OneTab;
         if (url == InternalUrls.History) return InternalPageKind.History;
+        if (url == InternalUrls.Extensions) return InternalPageKind.Extensions;
         if (url == InternalUrls.Downloads) return InternalPageKind.Downloads;
         if (url == InternalUrls.Onboarding) return InternalPageKind.Onboarding;
         if (url == InternalUrls.ReleaseNotes) return InternalPageKind.ReleaseNotes;
@@ -775,6 +781,9 @@ public sealed partial class TabEngine : IDisposable
             case InternalPageKind.History:
                 NavigateToHistory(tab, _historyStore.Load());
                 return true;
+            case InternalPageKind.Extensions:
+                NavigateToExtensions(tab);
+                return true;
             case InternalPageKind.Downloads:
                 NavigateToDownloads(tab);
                 return true;
@@ -834,7 +843,7 @@ public sealed partial class TabEngine : IDisposable
     public void NavigateToNewTab(BrowserTab tab)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom, _settings.NewTabBackground, _settings.FaviconProxyEnabled), "newtab"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.NewTabPage(_settings.NewTabShortcuts, _ipcToken, _settings.DefaultZoom, _settings.NewTabBackground, _settings.FaviconProxyEnabled), "newtab"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToSettings(BrowserTab tab, BrowserSettings settings)
@@ -846,25 +855,25 @@ public sealed partial class TabEngine : IDisposable
     public void NavigateToOneTab(BrowserTab tab, List<OneTabGroup> groups)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.OneTabPage(_oneTabStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken), "onetab"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.OneTabPage(_oneTabStore.Load(), _ipcToken), "onetab"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToHistory(BrowserTab tab, List<Models.HistoryEntry> entries)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.HistoryPage(_historyStore.Load(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.FaviconProxyEnabled), "history"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.HistoryPage(_historyStore.Load(), _ipcToken, _settings.FaviconProxyEnabled), "history"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToDownloads(BrowserTab tab)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.DownloadsPage(_downloadStore.Items.ToList(), _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken), "downloads"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.DownloadsPage(_downloadStore.Items.ToList(), _ipcToken), "downloads"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToOnboarding(BrowserTab tab)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.OnboardingPage(_settings, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken), "onboarding"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.OnboardingPage(_settings, _ipcToken), "onboarding"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToReleaseNotes(BrowserTab tab, string version)
@@ -872,9 +881,8 @@ public sealed partial class TabEngine : IDisposable
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
         try
         {
-            var accentRgb = InternalPages.HexToRgb(_settings.AccentColor);
             var releases = ReleaseNotesProvider.GetAllReleases();
-            var html = _pages.ReleaseNotesPage(version, releases, _settings.AccentColor, accentRgb, _ipcToken);
+            var html = _pages.ReleaseNotesPage(version, releases, _ipcToken);
             NavigateToHtmlString(tab, html, "releasenotes");
         }
         catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
@@ -1854,7 +1862,7 @@ public sealed partial class TabEngine : IDisposable
                             CoreWebView2WebErrorStatus.CertificateIsInvalid => "The site's security certificate is not trusted.",
                             _ => $"Navigation failed: {e.WebErrorStatus} (Code: {(int)e.WebErrorStatus})"
                         };
-                        try { wv.CoreWebView2.NavigateToString(_pages.ErrorPage(tab.Url, errorMsg, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor))); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+                        try { wv.CoreWebView2.NavigateToString(_pages.ErrorPage(tab.Url, errorMsg)); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
                         return;
                     }
 
@@ -2053,6 +2061,7 @@ public sealed partial class TabEngine : IDisposable
             InternalUrls.NewTab => "New Tab",
             InternalUrls.Settings => "Settings",
             InternalUrls.OneTab => "OneTab",
+            InternalUrls.Extensions => "Extensions",
             InternalUrls.Downloads => "Downloads",
             InternalUrls.Focus => "Focus Locked",
             InternalUrls.Health => "Health",

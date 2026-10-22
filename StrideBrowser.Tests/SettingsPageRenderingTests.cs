@@ -137,8 +137,7 @@ public sealed class SettingsPageRenderingTests
         var html = new SettingsPage().Render(settings, ipcToken);
 
         Assert.Contains("onchange=\"s('appTheme', this)\"", html);
-        // Accent color uses setAccent function via color picker oninput
-        Assert.Contains("oninput=\"setAccent(this.value)\"", html);
+        Assert.DoesNotContain("accentPicker", html);
         Assert.Contains("onchange=\"s('addressBarOnLeft', this)\"", html);
         Assert.Contains("onchange=\"s('adaptiveTint', this)\"", html);
         Assert.Contains("onchange=\"s('roundedFrame', this)\"", html);
@@ -167,16 +166,17 @@ public sealed class SettingsPageRenderingTests
     }
 
     [Fact]
-    public void SettingsPage_ColorPicker_UsesSetAccentFunction()
+    public void SettingsPage_UsesThemesWithoutCustomAccentControls()
     {
         var settings = new BrowserSettings();
         var ipcToken = "test-token";
         var html = new SettingsPage().Render(settings, ipcToken);
 
-        // Accent color picker should use setAccent function
-        Assert.Contains("oninput=\"setAccent(this.value)\"", html);
-        Assert.Contains("function setAccent(hex)", html);
-        Assert.Contains("postSetting('accentColor', hex", html);
+        Assert.Contains("onchange=\"s('appTheme', this)\"", html);
+        Assert.DoesNotContain("accentPicker", html);
+        Assert.DoesNotContain("setAccent", html);
+        Assert.DoesNotContain("setting:accentColor", html);
+
     }
 
     [Fact]

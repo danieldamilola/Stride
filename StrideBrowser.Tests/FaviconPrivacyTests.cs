@@ -107,7 +107,7 @@ public sealed class FaviconPrivacyTests : IDisposable
         // Nothing else was touched.
         Assert.Equal("Brave", loaded.SearchEngine);
         Assert.Equal(125, loaded.DefaultZoom);
-        Assert.Equal("#ff8800", loaded.AccentColor);
+        Assert.DoesNotContain("accentColor", System.Text.Json.JsonSerializer.Serialize(loaded), StringComparison.OrdinalIgnoreCase);
         // And the new version is on disk, so the repair does not run again next start.
         Assert.Equal(BrowserSettings.CurrentSchemaVersion, loaded.SettingsSchemaVersion);
         var written = System.Text.Json.JsonDocument.Parse(File.ReadAllText(file)).RootElement;

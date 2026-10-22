@@ -22,18 +22,7 @@
         <conv:TabWidthToVisibilityConverter x:Key="TabWidthToVisibilityConverter"/>
         <conv:TabCloseVisibilityConverter x:Key="TabCloseVisibilityConverter"/>
         <conv:TabCloseOpacityConverter x:Key="TabCloseOpacityConverter"/>
-        <!-- Per-window adaptive tint defaults. The tint adapter overrides these
-             in Toolbar.Resources on light site colors. They stay dark here so the
-             neutral toolbar renders exactly as before when tint is off.
-             The three suggestion keys are deliberately absent: they live in the
-             theme dictionaries, because one hard coded popup surface cannot serve
-             both themes. The field borrows the popup surface while suggestions are
-             open, so a popup only value that ignores the theme also made the field
-             unreadable. -->
-        <SolidColorBrush x:Key="AddressFieldBackground" Color="#0DFFFFFF"/>
-        <SolidColorBrush x:Key="AddressFieldBorder" Color="#1AFFFFFF"/>
-        <SolidColorBrush x:Key="PinnedTabBackground" Color="#0DFFFFFF"/>
-        <SolidColorBrush x:Key="TabCloseHoverBackground" Color="#1AFFFFFF"/>
+        <!-- The active site can override the theme toolbar palette within this window. -->
         <Style x:Key="SuggestionItemStyle" TargetType="ListBoxItem">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -60,7 +49,7 @@
                                 <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource SuggestionHoverBackground}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AccentWash}"/>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource SelectedTabBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -777,26 +766,39 @@
                                         <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ToolbarActionVisibilityConverter}, ConverterParameter=Optional}" Value="Collapsed">
                                             <Setter Property="Visibility" Value="Collapsed"/>
                                         </DataTrigger>
+                                        <DataTrigger Binding="{Binding HasActiveDownloads}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Grid.Style>
                             <Ellipse Width="24" Height="24" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" 
                                      Visibility="{Binding HasActiveDownloads, Converter={StaticResource BoolToVis}}" />
-                            <Ellipse Width="24" Height="24" Stroke="#10B981" StrokeThickness="2" 
-                                     StrokeDashArray="{Binding ActiveDownloadsProgress, Converter={StaticResource ProgressToDashArray}}"
+                            <Ellipse x:Name="DownloadsProgressRing" Width="24" Height="24" Stroke="{DynamicResource TextPrimary}" StrokeThickness="2"
                                      StrokeDashCap="Round"
                                      RenderTransformOrigin="0.5,0.5" 
                                      Visibility="{Binding HasActiveDownloads, Converter={StaticResource BoolToVis}}">
+                                <Ellipse.Style><Style TargetType="Ellipse"><Setter Property="StrokeDashArray" Value="{Binding ActiveDownloadsProgress, Converter={StaticResource ProgressToDashArray}}"/><Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasIndeterminateDownloads}" Value="True">
+                                        <Setter Property="StrokeDashArray" Value="3,9"/>
+                                        <DataTrigger.EnterActions><BeginStoryboard x:Name="DownloadIndeterminateSpin"><Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)" From="0" To="360" Duration="0:0:1" RepeatBehavior="Forever"/>
+                                        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions><StopStoryboard BeginStoryboardName="DownloadIndeterminateSpin"/></DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers></Style></Ellipse.Style>
                                 <Ellipse.RenderTransform>
                                     <RotateTransform Angle="-90"/>
                                 </Ellipse.RenderTransform>
                             </Ellipse>
-                            <Button Click="Downloads_Click" Style="{DynamicResource IconBtn}" Width="28" Height="28" FocusVisualStyle="{x:Null}">
+                            <Button x:Name="DownloadsButton" Style="{DynamicResource IconBtn}" Foreground="{DynamicResource TextSecondary}" ToolTip="Downloads" AutomationProperties.Name="Downloads" Width="28" Height="28" FocusVisualStyle="{x:Null}">
                                 <Path Data="{StaticResource IconDownload}" 
-                                      Stroke="{DynamicResource TextSecondary}" Fill="Transparent"
+                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Fill="Transparent"
                                       StrokeThickness="1.4" Width="12" Height="12" 
                                       Stretch="Uniform" StrokeStartLineCap="Round" StrokeLineJoin="Round" />
                             </Button>
+                            <Ellipse x:Name="DownloadsStatusDot" Width="5" Height="5" Fill="{DynamicResource TextPrimary}" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Top" IsHitTestVisible="False"/>
+                            <Popup x:Name="DownloadsPopup" Placement="Custom" PlacementTarget="{Binding ElementName=DownloadsButton}" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
+                                <controls:DownloadsPanel x:Name="DownloadsPanel"/>
+                            </Popup>
                         </Grid>
                         <Grid Margin="0,0,3,0">
                             <Grid.Style>
@@ -936,12 +938,28 @@
                                          context from the button it is placed against. -->
                                     <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                         <MenuItem Header="Downloads" InputGestureText="Ctrl+J" Click="Downloads_Click"/>
+                                        <MenuItem Header="Extensions" Click="Extensions_Click"/>
                                         <MenuItem Header="Reader view" InputGestureText="Ctrl+Shift+R" Command="{Binding ToggleReaderCommand}"/>
                                         <MenuItem Header="Check for updates" Command="{Binding HandleUpdateClickCommand}"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
                             </Button>
                         </Grid>
+
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ToolbarActionVisibilityConverter}, ConverterParameter=Optional}">
+                            <ItemsControl x:Name="PinnedExtensions">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <Button Command="{Binding OpenCommand}" Style="{DynamicResource IconBtn}" Width="28" Height="28" Margin="0,0,3,0" ToolTip="{Binding Name}" AutomationProperties.Name="{Binding Name}">
+                                        <Grid Width="17" Height="17"><Path Data="M8,2 L12,2 C12,-2 18,-2 18,2 L22,2 L22,7 C18,7 18,13 22,13 L22,18 L17,18 C17,22 11,22 11,18 L6,18 L6,13 C2,13 2,7 6,7 L6,2 Z" Stroke="{DynamicResource TextSecondary}" StrokeThickness="1.5" Stretch="Uniform"><Path.Style><Style TargetType="Path"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Icon}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></Path.Style></Path><Image Source="{Binding Icon}"/></Grid>
+                                    </Button>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button x:Name="ExtensionsButton" Visibility="{Binding Settings.ShowExtensionsIcon, Converter={StaticResource BoolToVis}}" Style="{DynamicResource IconBtn}" Width="28" Height="28" Margin="0,0,3,0" ToolTip="Extensions" AutomationProperties.Name="Extensions">
+                                <Path Data="M8,2 L12,2 C12,-2 18,-2 18,2 L22,2 L22,7 C18,7 18,13 22,13 L22,18 L17,18 C17,22 11,22 11,18 L6,18 L6,13 C2,13 2,7 6,7 L6,2 Z" Stroke="{DynamicResource TextSecondary}" StrokeThickness="1.5" Fill="Transparent" Width="16" Height="16" Stretch="Uniform"/>
+                            </Button>
+                            <Popup x:Name="ExtensionsPopup" Placement="Custom" PlacementTarget="{Binding ElementName=ExtensionsButton}" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade"><controls:ExtensionsPanel x:Name="ExtensionsPanel"/></Popup>
+                        </StackPanel>
 
                         <!-- Settings button: the action control that keeps its place longest, and
                              the one that carries the trailing margin the cluster ends with. -->
@@ -986,7 +1004,7 @@
                         <Button Click="Close_Click" Style="{DynamicResource CloseTitleBtn}"
                                 Width="42" Height="38">
                             <Path Data="{StaticResource IconClose}"
-                                  Stroke="{DynamicResource TextSecondary}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                   StrokeThickness="1.2" Width="10" Height="10"
                                   Stretch="Uniform" StrokeStartLineCap="Round"
                                   StrokeEndLineCap="Round"/>
