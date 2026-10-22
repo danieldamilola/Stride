@@ -150,7 +150,6 @@ public sealed class IpcRouteCompatibilityTests
     /// </summary>
     [Theory]
     [InlineData("setting:appTheme:light")]
-    [InlineData("setting:accentColor:#7fb89a")]
     [InlineData("setting:search:Brave")]
     [InlineData("setting:showTabNames:true")]
     [InlineData("setting:adBlock:false")]

@@ -38,6 +38,15 @@ public sealed class ToolbarTintResolverTests
             ToolbarTintResolver.ResolveTargetColor("#00C853", Base));
     }
 
+    [Theory]
+    [InlineData("#ffffff")]
+    [InlineData("#00c853")]
+    public void RejectedSiteColors_KeepTheLightBaseWhenTheAppIsLight(string siteColor)
+    {
+        var lightBase = Color.FromRgb(0xF0, 0xF0, 0xF0);
+        Assert.Equal(lightBase, ToolbarTintResolver.ResolveTargetColor(siteColor, lightBase));
+    }
+
     [Fact]
     public void ResolveTargetColor_BadHex_ReturnsBase()
     {

@@ -8,10 +8,9 @@ namespace StrideBrowser.Services.Pages;
 /// <summary>Generates the OneTab page HTML showing saved tab groups.</summary>
 public sealed class OneTabPage
 {
-    public string Render(List<OneTabGroup> groups, string accentColor, string accentRgb, string ipcToken)
+    public string Render(List<OneTabGroup> groups, string ipcToken)
     {
         var sb = new StringBuilder();
-        var search = "";
         // All postMessage calls embed the per-session token so the C# host can
         // reject messages from untrusted pages that don't know the token.
         var tok = ipcToken + ":";
@@ -22,8 +21,6 @@ public sealed class OneTabPage
         }
         else
         {
-            search = "<div class='search-bar'><input id='onetab-search' type='text' placeholder='Search saved tabs...' autocomplete='off' spellcheck='false'></div>";
-
             for (int gi = 0; gi < groups.Count; gi++)
             {
                 var group = groups[gi];
@@ -72,9 +69,6 @@ public sealed class OneTabPage
             new Dictionary<string, string>
             {
                 ["CONTENT"] = sb.ToString(),
-                ["SEARCH"] = search,
-                ["ACCENT"] = accentColor,
-                ["ACCENT_RGB"] = accentRgb
             });
     }
 }

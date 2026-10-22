@@ -63,7 +63,10 @@ public static class IpcSecurityPolicy
                 message == WebMessagePrefix.DownloadClearAll ||
                 message == WebMessagePrefix.DownloadRequestSync ||
                 message.StartsWith(WebMessagePrefix.DownloadPause, StringComparison.Ordinal) ||
-                message.StartsWith(WebMessagePrefix.DownloadResume, StringComparison.Ordinal),
+                message.StartsWith(WebMessagePrefix.DownloadResume, StringComparison.Ordinal) ||
+                message.StartsWith(WebMessagePrefix.DownloadRetry, StringComparison.Ordinal) ||
+                message.StartsWith(WebMessagePrefix.DownloadCopy, StringComparison.Ordinal) ||
+                message.StartsWith(WebMessagePrefix.DownloadRemove, StringComparison.Ordinal),
 
             TabEngine.InternalPageKind.NewTab =>
                 message.StartsWith(WebMessagePrefix.Open, StringComparison.Ordinal) ||
@@ -86,7 +89,7 @@ public static class IpcSecurityPolicy
                 message == OnboardingDone ||
                 message == OnboardingReady ||
                 // First run writes preferences through the same setting route the
-                // Settings page uses: theme, accent, search engine, ad blocking,
+                // Settings page uses: theme, search engine, ad blocking,
                 // SmartScreen, force HTTPS, clear on exit, hibernation, tab names.
                 message.StartsWith(WebMessagePrefix.Setting, StringComparison.Ordinal),
 

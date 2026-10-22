@@ -29,6 +29,9 @@ public static class WebMessagePrefix
     public const string DownloadRequest = "download-request:";
     public const string DownloadPause = "download-pause:";
     public const string DownloadResume = "download-resume:";
+    public const string DownloadCopy = "download-copy:";
+    public const string DownloadRemove = "download-remove:";
+    public const string DownloadRetry = "download-retry:";
     public const string FocusSettings = "focus-settings";
     public const string TCLensGetText = "tclens-get-text:";
     public const string OpenBackgroundsFolder = "open-backgrounds-folder";

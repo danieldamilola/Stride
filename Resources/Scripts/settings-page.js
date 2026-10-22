@@ -25,12 +25,6 @@ function s(key, el) {
   const val = el.type === "checkbox" ? el.checked : el.value;
   postSetting(key, val, el);
 }
-function setAccent(hex) {
-  document.documentElement.style.setProperty('--accent', hex);
-  const rgb = hex.match(/[a-f\d]{2}/gi)?.map(x => parseInt(x, 16)).join(',');
-  if (rgb) document.documentElement.style.setProperty('--accent-rgb', rgb);
-  postSetting('accentColor', hex, document.getElementById('accentPicker'));
-}
 function updateOpacity(key, el, labelId) {
   document.getElementById(labelId).textContent = Math.round(parseFloat(el.value) * 100) + '%';
   postSetting(key, el.value, el);

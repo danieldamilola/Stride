@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en" data-theme="{{THEME}}">
   <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8" />
     <title>Settings - Stride</title>
     <style>
-      :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
 
       body {
@@ -64,13 +64,13 @@
           opacity: 1;
       }
       .sidebar-nav-item.active {
-          background: rgba(var(--accent-rgb), 0.15);
-          color: var(--accent);
+          background: var(--selection-bg);
+          color: var(--selection-text);
           font-weight: 600;
       }
       .sidebar-nav-item.active svg {
           opacity: 1;
-          color: var(--accent);
+          color: var(--text-main);
       }
 
       .content-area {
@@ -150,7 +150,7 @@
           width: 18px;
           height: 18px;
           flex-shrink: 0;
-          color: var(--accent);
+          color: var(--text-main);
       }
       .about-credits {
           padding: 12px 16px;
@@ -219,11 +219,11 @@
           transition: transform 0.2s, background 0.2s;
       }
       .toggle:checked {
-          background: var(--accent);
+          background: var(--toggle-on);
       }
       .toggle:checked::before {
           transform: translateX(16px);
-          background: var(--bg-dark);
+          background: var(--toggle-knob);
       }
 
       /* ── Select dropdown ── */
@@ -248,7 +248,7 @@
           border-color: var(--border);
       }
       .select:focus {
-          border-color: var(--accent);
+          border-color: var(--focus-ring);
       }
 
       /* ── Number input ── */
@@ -266,15 +266,15 @@
           transition: border-color 0.15s;
       }
       .input-number:focus {
-          border-color: var(--accent);
+          border-color: var(--focus-ring);
       }
 
       /* ── Action button ── */
       .action-btn {
           padding: 9px 20px;
           background: transparent;
-          color: var(--accent);
-          border: 1px solid var(--accent);
+          color: var(--text-main);
+          border: 1px solid var(--text-main);
           border-radius: 8px;
           font-size: 13px;
           font-weight: 500;
@@ -283,8 +283,8 @@
           transition: background 0.15s, color 0.15s;
       }
       .action-btn:hover {
-          background: var(--accent);
-          color: var(--bg-dark);
+          background: var(--button-hover);
+          color: var(--button-text);
       }
 
       /* ── Subsection label inside a card ── */
@@ -323,7 +323,7 @@
       .collapsible > summary::-webkit-details-marker { display: none; }
       .collapsible > summary:hover { background: var(--bg-hover); }
       .collapsible > summary:focus-visible {
-          outline: 2px solid var(--accent);
+          outline: 2px solid var(--focus-ring);
           outline-offset: -2px;
       }
       .collapsible-summary-label {
@@ -424,9 +424,9 @@
           background: var(--bg-hover);
       }
       .shortcut-badge.recording {
-          border-color: var(--accent);
+          border-color: var(--focus-ring);
           background: var(--bg-hover);
-          color: var(--accent);
+          color: var(--text-main);
           animation: pulse 1.5s ease-in-out infinite;
       }
       @keyframes pulse {
@@ -445,7 +445,7 @@
           font-family: inherit;
       }
       .shortcut-reset:hover {
-          color: var(--accent);
+          color: var(--text-main);
       }
       .shortcut-controls {
           display: flex;
@@ -470,31 +470,9 @@ const __T = "{{IPC_TOKEN}}:";
     --text-dim: #808080;
     --white: #FFFFFF;
 }
-:root[data-theme="light"] {
-    --bg-base: #f8f8fa;
-    --bg-dark: #f8f8fa;
-    --bg-surface: #ffffff;
-    --bg-hover: #f4f4f6;
-    --border: #D4D4D2;
-    --text-main: #111113;
-    --text-bright: #000000;
-    --text-muted: #666461;
-    --text-dim: #A5A3A0;
-    --white: #000000;
-}
+:root[data-theme="light"] { color-scheme:light; --bg-base:#f9f9f9; --bg-dark:#f9f9f9; --bg-surface:#ffffff; --bg-hover:#e8e8e8; --bg-card:#ffffff; --card:#ffffff; --border:#d9d9d9; --border-subtle:#e8e8e8; --control-border:#8d8d8d; --text-main:#202020; --text-bright:#202020; --text-muted:#5f5f5f; --text-dim:#5f5f5f; --white:#202020; --solid:#202020; --on-solid:#ffffff; --text-link:#3a3a3a; --download-progress:#646464; --danger-text:#b42318; }
 @media (prefers-color-scheme: light) {
-    :root[data-theme="system"] {
-        --bg-base: #f8f8fa;
-        --bg-dark: #f8f8fa;
-        --bg-surface: #ffffff;
-        --bg-hover: #f4f4f6;
-        --border: #D4D4D2;
-        --text-main: #111113;
-        --text-bright: #000000;
-        --text-muted: #666461;
-        --text-dim: #A5A3A0;
-        --white: #000000;
-    }
+    :root[data-theme="system"] { color-scheme:light; --bg-base:#f9f9f9; --bg-dark:#f9f9f9; --bg-surface:#ffffff; --bg-hover:#e8e8e8; --bg-card:#ffffff; --card:#ffffff; --border:#d9d9d9; --border-subtle:#e8e8e8; --control-border:#8d8d8d; --text-main:#202020; --text-bright:#202020; --text-muted:#5f5f5f; --text-dim:#5f5f5f; --white:#202020; --solid:#202020; --on-solid:#ffffff; --text-link:#3a3a3a; --download-progress:#646464; --danger-text:#b42318; }
 }
 
       .search-bar {
@@ -565,7 +543,7 @@ const __T = "{{IPC_TOKEN}}:";
     <div class="settings-layout">
       <aside class="sidebar">
         <div class="page-header">
-          <h1>Settings</h1>
+          <h1 class="page-title">Settings</h1>
         </div>
         <ul class="nav">
           <li><button type="button" class="sidebar-nav-item active" data-target="section-general">
@@ -606,7 +584,7 @@ const __T = "{{IPC_TOKEN}}:";
         <div class="settings-container">
 
           <!-- Search -->
-          <div class="search-bar">
+          <div class="search-bar page-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input type="search" id="searchInput" aria-label="Search settings" placeholder="Search settings..." /><button type="button" id="clearSearch" class="search-clear" hidden>Clear</button>
           </div>
@@ -717,15 +695,6 @@ const __T = "{{IPC_TOKEN}}:";
                     <option value="light" {{THEME_LIGHT}}>Light Theme</option>
                     <option value="dark" {{THEME_DARK}}>Dark Theme</option>
                   </select>
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-label">Accent color</div>
-                  <div class="setting-desc">Applied to toggles, buttons, and highlights</div>
-                </div>
-                <div class="setting-control">
-                  <input type="color" id="accentPicker" value="{{ACCENT_COLOR}}" style="width: 36px; height: 36px; border: none; background: transparent; cursor: pointer; padding: 0;" oninput="setAccent(this.value)" />
                 </div>
               </div>
               </div>
@@ -931,7 +900,7 @@ const __T = "{{IPC_TOKEN}}:";
                   <div class="setting-desc">Dim level for suspended background tabs</div>
                 </div>
                 <div class="setting-control" style="display:flex;align-items:center;gap:10px">
-                  <input id="sleepSlider" type="range" min="0.1" max="1" step="0.05" value="{{TAB_SLEEP_OPACITY}}" oninput="updateOpacity('tabSleepOpacity', this, 'sleepSliderVal')" style="width:120px;accent-color:var(--accent)" />
+                  <input id="sleepSlider" type="range" min="0.1" max="1" step="0.05" value="{{TAB_SLEEP_OPACITY}}" oninput="updateOpacity('tabSleepOpacity', this, 'sleepSliderVal')" style="width:120px;accent-color:var(--progress-fill)" />
                   <span id="sleepSliderVal" style="font-size:12px;color:var(--text-muted);min-width:32px">{{TAB_SLEEP_OPACITY_PCT}}%</span>
                 </div>
               </div>
@@ -950,7 +919,7 @@ const __T = "{{IPC_TOKEN}}:";
                   <div class="setting-desc">Dim level for unloaded tabs</div>
                 </div>
                 <div class="setting-control" style="display:flex;align-items:center;gap:10px">
-                  <input id="hibSlider" type="range" min="0.1" max="1" step="0.05" value="{{TAB_HIBERNATION_OPACITY}}" oninput="updateOpacity('tabHibernationOpacity', this, 'hibSliderVal')" style="width:120px;accent-color:var(--accent)" />
+                  <input id="hibSlider" type="range" min="0.1" max="1" step="0.05" value="{{TAB_HIBERNATION_OPACITY}}" oninput="updateOpacity('tabHibernationOpacity', this, 'hibSliderVal')" style="width:120px;accent-color:var(--progress-fill)" />
                   <span id="hibSliderVal" style="font-size:12px;color:var(--text-muted);min-width:32px">{{TAB_HIBERNATION_OPACITY_PCT}}%</span>
                 </div>
               </div>
@@ -1100,7 +1069,7 @@ const __T = "{{IPC_TOKEN}}:";
                   >{{FOCUS_DOMAINS}}</textarea>
                   <div style="display: flex; gap: 10px; justify-content: flex-end">
                     <button class="action-btn" onclick="saveFocusDomains()">Save domains</button>
-                    <button class="action-btn" style="background: #e53935; color: white; border-color: #e53935" onclick="lockFocus()">Lock Focus permanently</button>
+                    <button class="action-btn danger-action" onclick="lockFocus()">Lock Focus permanently</button>
                   </div>
                 </div>
                 <div id="focusLockedSection" style="display: {{FOCUS_LOCKED_DISPLAY}}; text-align: center; padding: 20px 0;">

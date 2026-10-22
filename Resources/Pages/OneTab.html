@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="{{THEME}}">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>Saved tabs - Stride</title>
     <style>
-        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: var(--bg-dark);
@@ -35,7 +35,7 @@
             padding: 2px 4px;
             border-radius: 4px;
         }
-        .group-name:focus { outline: 1px solid var(--accent); background: var(--bg-hover); }
+        .group-name:focus { outline: 1px solid var(--focus-ring); background: var(--bg-hover); }
         .group-time { color: var(--text-muted); font-size: 11px; }
         .group-count { color: #7A7A7A; font-size: 12px; margin-left: auto; }
         .btn {
@@ -77,7 +77,7 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        .tab-title:hover { color: var(--accent); }
+        .tab-title:hover { color: var(--text-link); text-decoration: underline; }
         .tab-url {
             color: var(--text-muted);
             font-size: 11px;
@@ -121,24 +121,27 @@
             outline: none;
             transition: border-color 0.15s;
         }
-        .search-bar input:focus { border-color: var(--accent); }
+        .search-bar input:focus { border-color: var(--focus-ring); }
         .search-bar input::placeholder { color: var(--text-muted); }
         .group.hidden, .tab.hidden { display: none !important; }
     </style>
 
 
 </head>
-<body>
-    <h1>Saved tabs</h1>
-    {{SEARCH}}
-    {{CONTENT}}
+<body class="saved-tabs-page">
+    <header class="page-toolbar">
+        <h1 class="page-title">Saved tabs</h1>
+        <div class="page-actions"><div class='search-bar page-search'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' aria-hidden='true'><circle cx='10.5' cy='10.5' r='6.5'/><path d='m16 16 5 5'/></svg><input id='onetab-search' type='search' placeholder='Search saved tabs' aria-label='Search saved tabs' autocomplete='off' spellcheck='false'></div></div>
+    </header>
+    <main class="saved-tabs-content">{{CONTENT}}</main>
     <script>
     (function() {
         var input = document.getElementById('onetab-search');
         if (!input) return;
-        var empty = document.createElement('p'); empty.className = 'no-results'; empty.setAttribute('role', 'status'); empty.hidden = true; empty.textContent = 'No saved tabs match your search.'; input.parentElement.after(empty);
+        var empty = document.createElement('p'); empty.className = 'no-results'; empty.setAttribute('role', 'status'); empty.hidden = true; empty.textContent = 'No saved tabs match your search.'; document.querySelector('.saved-tabs-content').prepend(empty);
         input.addEventListener('input', function() {
             var q = input.value.toLowerCase().trim();
+            var initialEmpty = document.querySelector('.empty'); if (initialEmpty) initialEmpty.hidden = !!q;
             var groups = document.querySelectorAll('.group');
             for (var i = 0; i < groups.length; i++) {
                 var g = groups[i];

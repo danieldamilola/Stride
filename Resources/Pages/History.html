@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="{{THEME}}">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>History - Stride</title>
     <style>
-        :root { --accent: {{ACCENT}}; --accent-rgb: {{ACCENT_RGB}}; }
 
         :root, :root[data-theme="dark"] {
             --bg-base: #111113;
@@ -17,29 +17,9 @@
             --text-muted: #a1a1aa;
             --text-dim: #71717a;
         }
-        :root[data-theme="light"] {
-            --bg-base: #f8f8fa;
-            --bg-surface: #ffffff;
-            --bg-hover: #f4f4f6;
-            --border: rgba(0, 0, 0, 0.08);
-            --border-subtle: rgba(0, 0, 0, 0.04);
-            --text-bright: #111113;
-            --text-main: #1a1a1e;
-            --text-muted: #71717a;
-            --text-dim: #a1a1aa;
-        }
+        :root[data-theme="light"] { color-scheme:light; --bg-base:#f9f9f9; --bg-dark:#f9f9f9; --bg-surface:#ffffff; --bg-hover:#e8e8e8; --bg-card:#ffffff; --card:#ffffff; --border:#d9d9d9; --border-subtle:#e8e8e8; --control-border:#8d8d8d; --text-main:#202020; --text-bright:#202020; --text-muted:#5f5f5f; --text-dim:#5f5f5f; --white:#202020; --solid:#202020; --on-solid:#ffffff; --text-link:#3a3a3a; --download-progress:#646464; --danger-text:#b42318; }
         @media (prefers-color-scheme: light) {
-            :root[data-theme="system"] {
-                --bg-base: #f8f8fa;
-                --bg-surface: #ffffff;
-                --bg-hover: #f4f4f6;
-                --border: rgba(0, 0, 0, 0.08);
-                --border-subtle: rgba(0, 0, 0, 0.04);
-                --text-bright: #111113;
-                --text-main: #1a1a1e;
-                --text-muted: #71717a;
-                --text-dim: #a1a1aa;
-            }
+            :root[data-theme="system"] { color-scheme:light; --bg-base:#f9f9f9; --bg-dark:#f9f9f9; --bg-surface:#ffffff; --bg-hover:#e8e8e8; --bg-card:#ffffff; --card:#ffffff; --border:#d9d9d9; --border-subtle:#e8e8e8; --control-border:#8d8d8d; --text-main:#202020; --text-bright:#202020; --text-muted:#5f5f5f; --text-dim:#5f5f5f; --white:#202020; --solid:#202020; --on-solid:#ffffff; --text-link:#3a3a3a; --download-progress:#646464; --danger-text:#b42318; }
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -92,7 +72,7 @@
             outline: none;
             transition: border-color 150ms;
         }
-        .search-bar input:focus { border-color: rgba(var(--accent-rgb), 0.4); }
+        .search-bar input:focus { border-color: var(--focus-ring); }
         .search-bar input::placeholder { color: var(--text-dim); }
         .search-bar svg {
             position: absolute;
@@ -214,7 +194,7 @@
             white-space: nowrap;
             cursor: pointer;
         }
-        .entry-title:hover { color: var(--accent); text-decoration: underline; }
+        .entry-title:hover { color: var(--text-link); text-decoration: underline; }
         .entry-url {
             color: var(--text-dim);
             font-size: 11px;
@@ -295,20 +275,19 @@
     </style>
 </head>
 <body>
-    <div class="toolbar">
-        <h1>History</h1>
-        <div class="toolbar-spacer"></div>
-        <div class="toolbar-actions">
-            <div class="search-bar">
+    <header class="toolbar page-toolbar">
+        <h1 class="page-title">History</h1>
+        <div class="toolbar-actions page-actions">
+            <div class="search-bar page-search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <input type="text" id="searchInput" placeholder="Search history...">
+                <input type="search" id="searchInput" placeholder="Search history" aria-label="Search history" autocomplete="off">
             </div>
             <button class="icon-btn" id="collapseAllBtn">Expand all</button>
             <button class="icon-btn danger" id="clearBtn">Clear all</button>
         </div>
-    </div>
+    </header>
 
     <div class="main">
         <div class="list-inner" id="historyContent"></div>

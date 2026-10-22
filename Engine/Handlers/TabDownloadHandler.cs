@@ -1,211 +1,152 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
+using StrideBrowser.Services.Downloads;
 
 namespace StrideBrowser.Engine.Handlers;
 
 public static class TabDownloadHandler
 {
-    public static void Wire(
-        CoreWebView2 core, 
-        Dispatcher dispatcher, 
-        IDownloadStore downloadStore,
+    public static void Wire(CoreWebView2 core, Dispatcher dispatcher, IDownloadStore downloadStore,
         Dictionary<string, CoreWebView2DownloadOperation> activeNativeDownloads,
-        Services.LinkPreview.ILinkPreviewDownloadSuppressor downloadSuppressor)
+        Services.LinkPreview.ILinkPreviewDownloadSuppressor downloadSuppressor,
+        DownloadCoordinator? coordinator = null, Guid originTabId = default)
     {
+        var actions = coordinator ?? new DownloadCoordinator(downloadStore);
         core.IsDefaultDownloadDialogOpenChanged += (_, _) =>
         {
-            try
-            {
-                if (core.IsDefaultDownloadDialogOpen) core.CloseDefaultDownloadDialog();
-            }
-            catch (Exception ex) { Trace.WriteLine($"CloseDefaultDownloadDialog failed: {ex.Message}"); }
+            try { if (core.IsDefaultDownloadDialogOpen) core.CloseDefaultDownloadDialog(); }
+            catch (Exception ex) { Trace.WriteLine(ex); }
         };
-
-        // Sync lambda on purpose. An async void handler turns any slip into a
-        // process kill, while a sync handler with guards keeps a bad download
-        // from closing the browser. Every COM read below can throw once the
-        // tab is closing or the WebView is disposed, so each one is guarded.
         core.DownloadStarting += (_, e) =>
         {
-            try { Trace.WriteLine("DownloadStarting enter"); Trace.Flush(); }
-            catch { }
             try
             {
-                string? url = null;
-                try { url = e.DownloadOperation.Uri; }
-                catch (Exception ex) { Trace.WriteLine($"DownloadStarting Uri read failed: {ex.Message}"); }
-                try { Trace.WriteLine($"DownloadStarting url={url}"); Trace.Flush(); }
-                catch { }
-
-                if (!string.IsNullOrWhiteSpace(url) && downloadSuppressor.ShouldSuppress(url))
-                {
-                    e.Cancel = true;
-                    e.Handled = true;
-                    return;
-                }
                 e.Handled = true;
                 var op = e.DownloadOperation;
-
-                string? resultPath = null;
-                try { resultPath = op.ResultFilePath; }
-                catch (Exception ex) { Trace.WriteLine($"DownloadStarting ResultFilePath read failed: {ex.Message}"); }
-
-                ulong? totalBytes = null;
-                try { totalBytes = op.TotalBytesToReceive; }
-                catch (Exception ex) { Trace.WriteLine($"DownloadStarting TotalBytes read failed: {ex.Message}"); }
-
-                var item = CreateDownloadItem(resultPath, url, totalBytes);
-                try { Trace.WriteLine($"DownloadStarting item={item.Id} file={item.FileName} path={resultPath}"); Trace.Flush(); }
-                catch { }
-                activeNativeDownloads[item.Id] = op;
-                dispatcher.InvokeAsync(() =>
-                {
-                    try { downloadStore.Add(item); try { Trace.WriteLine($"Add done id={item.Id}"); Trace.Flush(); } catch { } }
-                    catch (Exception ex) { Trace.WriteLine($"DownloadStore Add failed: {ex.Message}"); }
-                });
-
-                WireProgressEvents(op, item, dispatcher);
-                WireStateEvents(op, item, dispatcher, activeNativeDownloads);
-                WireUICommands(op, item);
-                try { Trace.WriteLine($"DownloadStarting wired done id={item.Id}"); Trace.Flush(); }
-                catch { }
+                if (downloadSuppressor.ShouldSuppress(op.Uri)) { e.Cancel = true; return; }
+                e.ResultFilePath = DownloadDestination.Reserve(e.ResultFilePath, downloadStore);
+                var item = CreateDownloadItem(e.ResultFilePath, op.Uri, op.TotalBytesToReceive);
+                Track(op, item, dispatcher, downloadStore, activeNativeDownloads, actions, originTabId);
             }
             catch (Exception ex)
             {
                 Trace.WriteLine($"DownloadStarting failed: {ex}");
-                Trace.Flush();
-                try { e.Cancel = true; e.Handled = true; }
-                catch (Exception cancelEx) { Trace.WriteLine($"DownloadStarting cancel failed: {cancelEx.Message}"); }
+                try { e.Cancel = true; e.Handled = true; } catch (Exception cancel) { Trace.WriteLine(cancel); }
             }
         };
     }
-
-    /// <summary>Resolves a safe file name from the native result path, falling back to the URL.</summary>
     public static string ResolveDownloadFileName(string? resultFilePath, string? url)
     {
-        var fromPath = SafeGetFileName(resultFilePath);
-        if (!string.IsNullOrWhiteSpace(fromPath))
-            return fromPath;
-
-        if (!string.IsNullOrWhiteSpace(url) && Uri.TryCreate(url, UriKind.Absolute, out var uri)
-            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
-        {
-            var fromUrl = SafeGetFileName(uri.LocalPath);
-            if (!string.IsNullOrWhiteSpace(fromUrl))
-                return fromUrl;
-        }
-
+        var file = SafeFileName(resultFilePath);
+        if (!string.IsNullOrWhiteSpace(file)) return file;
+        if (DownloadItem.IsRestartableUrl(url)) return SafeFileName(new Uri(url!).LocalPath) is { Length: > 0 } name ? name : "download";
         return "download";
     }
-
-    private static string? SafeGetFileName(string? path)
+    private static string? SafeFileName(string? path)
     {
-        if (string.IsNullOrWhiteSpace(path)) return null;
-        try { return System.IO.Path.GetFileName(path); }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"GetFileName failed for path: {ex.Message}");
-            return null;
-        }
+        try { return string.IsNullOrWhiteSpace(path) ? null : Path.GetFileName(path); }
+        catch (Exception ex) { Trace.WriteLine(ex); return null; }
     }
-
-    /// <summary>Builds a tracked download item from plain values, never touching the native op.</summary>
     public static DownloadItem CreateDownloadItem(string? resultFilePath, string? url, ulong? totalBytesToReceive)
-    {
-        var fileName = ResolveDownloadFileName(resultFilePath, url);
-        long totalBytes = 0;
-        if (totalBytesToReceive.HasValue && totalBytesToReceive.Value <= long.MaxValue)
-            totalBytes = (long)totalBytesToReceive.Value;
+        => new() { FileName = ResolveDownloadFileName(resultFilePath, url), FilePath = resultFilePath ?? "", Url = url ?? "",
+            TotalBytes = totalBytesToReceive is <= long.MaxValue ? (long)totalBytesToReceive.Value : 0 };
 
-        return new DownloadItem
-        {
-            FileName = fileName,
-            Url = url ?? "",
-            FilePath = resultFilePath ?? "",
-            State = DownloadState.InProgress,
-            TotalBytes = totalBytes,
-            ReceivedBytes = 0
-        };
-    }
-
-    private static void WireProgressEvents(CoreWebView2DownloadOperation op, DownloadItem item, Dispatcher dispatcher)
+    public static void Track(CoreWebView2DownloadOperation op, DownloadItem item, Dispatcher dispatcher,
+        IDownloadStore store, Dictionary<string, CoreWebView2DownloadOperation> native, DownloadCoordinator actions, Guid originTabId)
     {
-        op.BytesReceivedChanged += (s, args) =>
+        native[item.Id] = op;
+        var clock = Stopwatch.StartNew();
+        var tracker = new DownloadProgressTracker();
+        tracker.Reset(op.BytesReceived, clock.Elapsed);
+        item.ReceivedBytes = op.BytesReceived;
+        item.CompletedAt = null;
+        actions.Attach(item, new NativeTransfer(op), originTabId);
+        bool OwnsOperation() => native.TryGetValue(item.Id, out var current) && ReferenceEquals(current, op) && store.Get(item.Id) == item;
+        void UpdateProgress()
         {
-            dispatcher.InvokeAsync(() =>
+            item.ReceivedBytes = op.BytesReceived;
+            if (op.TotalBytesToReceive is <= long.MaxValue and > 0) item.TotalBytes = (long)op.TotalBytesToReceive.Value;
+            var sample = tracker.Sample(item.ReceivedBytes, item.TotalBytes, clock.Elapsed);
+            item.SpeedBytesPerSec = sample.Speed; item.EstimatedTimeRemaining = sample.Remaining;
+        }
+        EventHandler<object>? progress = null;
+        EventHandler<object>? state = null;
+        void Finish()
+        {
+            op.BytesReceivedChanged -= progress;
+            op.StateChanged -= state;
+            if (native.TryGetValue(item.Id, out var current) && ReferenceEquals(current, op))
+            { native.Remove(item.Id); actions.Detach(item.Id); }
+        }
+        progress = (_, _) => dispatcher.InvokeAsync(() =>
+        {
+            try { if (OwnsOperation()) UpdateProgress(); }
+            catch (Exception ex) { Trace.WriteLine(ex); }
+        });
+        state = (_, _) => dispatcher.InvokeAsync(() =>
+        {
+            try
             {
-                try
+                if (!OwnsOperation()) { Finish(); return; }
+                UpdateProgress();
+                item.CanResumeNative = op.CanResume;
+                if (op.State == CoreWebView2DownloadState.InProgress)
                 {
-                    var before = item.ReceivedBytes;
-                    item.ReceivedBytes = op.BytesReceived;
-                    if (before == 0 && item.ReceivedBytes > 0)
-                    { try { Trace.WriteLine($"first bytes id={item.Id} n={item.ReceivedBytes}"); Trace.Flush(); } catch { } }
-                    if (item.TotalBytes <= 0 && op.TotalBytesToReceive.HasValue && op.TotalBytesToReceive.Value > 0
-                        && op.TotalBytesToReceive.Value <= long.MaxValue)
-                        item.TotalBytes = (long)op.TotalBytesToReceive.Value;
+                    item.ErrorMessage = ""; item.State = DownloadState.InProgress;
+                    tracker.Reset(item.ReceivedBytes, clock.Elapsed);
                 }
-                catch (Exception ex) { Trace.WriteLine($"Download progress read failed: {ex.Message}"); }
-            });
-        };
-    }
-
-    private static void WireStateEvents(CoreWebView2DownloadOperation op, DownloadItem item, Dispatcher dispatcher, Dictionary<string, CoreWebView2DownloadOperation> activeNativeDownloads)
-    {
-        op.StateChanged += (s, args) =>
-        {
-            dispatcher.InvokeAsync(() =>
-            {
-                try
+                else if (op.State == CoreWebView2DownloadState.Completed)
                 {
-                    var old = item.State;
-                    switch (op.State)
+                    item.CompletedAt = DateTime.UtcNow; item.CanResumeNative = false;
+                    item.State = DownloadState.Completed; Finish();
+                }
+                else
+                {
+                    item.SpeedBytesPerSec = 0; item.EstimatedTimeRemaining = null;
+                    if (op.InterruptReason == CoreWebView2DownloadInterruptReason.UserPaused)
+                        item.State = DownloadState.Paused;
+                    else
                     {
-                        case CoreWebView2DownloadState.InProgress:
-                            item.State = DownloadState.InProgress;
-                            break;
-                        case CoreWebView2DownloadState.Interrupted:
-                            item.State = op.InterruptReason switch
-                            {
-                                CoreWebView2DownloadInterruptReason.UserPaused => DownloadState.Paused,
-                                CoreWebView2DownloadInterruptReason.UserCanceled => DownloadState.Cancelled,
-                                _ => DownloadState.Failed
-                            };
-                            if (item.State == DownloadState.Failed || item.State == DownloadState.Cancelled)
-                            {
-                                activeNativeDownloads.Remove(item.Id);
-                            }
-                            break;
-                        case CoreWebView2DownloadState.Completed:
-                            item.State = DownloadState.Completed;
-                            activeNativeDownloads.Remove(item.Id);
-                            break;
+                        item.ErrorMessage = op.InterruptReason == CoreWebView2DownloadInterruptReason.UserCanceled ? "" : DescribeFailure(op.InterruptReason.ToString());
+                        item.RetryAllowed = !IsSecurityBlock(op.InterruptReason.ToString());
+                        item.CanResumeNative = false;
+                        item.State = op.InterruptReason == CoreWebView2DownloadInterruptReason.UserCanceled ? DownloadState.Cancelled : DownloadState.Failed;
+                        Finish();
                     }
-                    try { Trace.WriteLine($"state id={item.Id} {old}->{item.State} native={op.State}"); Trace.Flush(); } catch { }
                 }
-                catch (Exception ex) { Trace.WriteLine($"Download state read failed: {ex.Message}"); }
-            });
-        };
-    }
-
-    private static void WireUICommands(CoreWebView2DownloadOperation op, DownloadItem item)
-    {
-        item.PropertyChanged += (s, args) =>
-        {
-            if (args.PropertyName == nameof(DownloadItem.State))
-            {
-                try 
-                {
-                    if (item.State == DownloadState.Cancelled) op.Cancel();
-                    else if (item.State == DownloadState.Paused) op.Pause();
-                    else if (item.State == DownloadState.InProgress) op.Resume();
-                } 
-                catch (Exception ex) { Trace.WriteLine(ex); }
             }
-        };
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex); item.ErrorMessage = "The download stopped. Try the website's download link again.";
+                item.State = DownloadState.Failed; Finish();
+            }
+        });
+        op.BytesReceivedChanged += progress;
+        op.StateChanged += state;
+    }
+    public static bool IsSecurityBlock(string reason) => reason is "FileMalicious" or "FileBlocked" or "FileSecurityCheckFailed" or "FileVirusInfected";
+    public static string DescribeFailure(string reason) => reason switch
+    {
+        "FileAccessDenied" or "FileFailed" => "Stride could not save the file. Check that the download folder is available and writable.",
+        "FileNoSpace" => "There is not enough free space to save this file.",
+        "FileNameTooLong" => "The file name or download folder path is too long.",
+        "NetworkDisconnected" or "NetworkFailed" or "NetworkServerDown" => "The connection was lost. Check your internet connection and retry.",
+        "NetworkTimeout" => "The connection timed out. Retry the download.",
+        "ServerUnauthorized" or "ServerForbidden" => "This download needs permission. Sign in on the website and download the file again.",
+        "ServerBadContent" or "ServerFailed" or "ServerNoRange" => "The server could not provide the file. Try the website's download link again.",
+        "FileMalicious" or "FileVirusInfected" => "Windows blocked this file because it may be harmful.",
+        "FileBlocked" or "FileSecurityCheckFailed" => "Windows blocked this file during its security check.",
+        _ => "The download was interrupted. Retry, or use the download link on the website again."
+    };
+    private sealed class NativeTransfer(CoreWebView2DownloadOperation op) : IDownloadTransfer
+    {
+        public bool CanResume => op.State == CoreWebView2DownloadState.Interrupted && op.CanResume;
+        public void Pause() { if (op.State == CoreWebView2DownloadState.InProgress) op.Pause(); }
+        public void Resume() { if (CanResume) op.Resume(); }
+        public void Cancel() { if (op.State != CoreWebView2DownloadState.Completed) op.Cancel(); }
     }
 }

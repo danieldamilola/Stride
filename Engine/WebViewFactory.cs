@@ -372,7 +372,7 @@ public sealed class WebViewFactory
         if (tab.Url == InternalUrls.NewTab || string.IsNullOrEmpty(tab.Url))
         {
             tab.ActiveInternalDocument = new InternalDocumentIdentity(tab.Id, TabEngine.InternalPageKind.NewTab, _ipcToken, 1);
-            try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom)); } catch (Exception ex) { Trace.WriteLine(ex); }
+            try { wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _ipcToken, _settings.DefaultZoom)); } catch (Exception ex) { Trace.WriteLine(ex); }
             return;
         }
 
@@ -382,7 +382,7 @@ public sealed class WebViewFactory
             try
             {
                 tab.ActiveInternalDocument = new InternalDocumentIdentity(tab.Id, TabEngine.InternalPageKind.NewTab, _ipcToken, 1);
-                wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _settings.AccentColor, InternalPages.HexToRgb(_settings.AccentColor), _ipcToken, _settings.DefaultZoom));
+                wv.CoreWebView2.NavigateToString(_pages.NewTabPage(_settings.NewTabShortcuts, _ipcToken, _settings.DefaultZoom));
             }
             catch (Exception ex) { Trace.WriteLine(ex); }
         }

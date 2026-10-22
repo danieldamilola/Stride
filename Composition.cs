@@ -53,6 +53,9 @@ public static class Composition
         services.AddSingleton<FocusBlocklistService>();
         services.AddSingleton<Engine.ContentScriptInjector>();
         services.AddSingleton<CustomDownloadManager>();
+        services.AddSingleton<Services.Downloads.DownloadFileInfoService>();
+        services.AddSingleton<Services.Downloads.DownloadCoordinator>();
+        services.AddSingleton<Services.Downloads.NativeDownloadRequest>();
         services.AddSingleton<UpdateService>();
         // Scoped: the hibernation manager caches per tab suspensions for one engine.
         services.AddScoped<TabHibernationManager>();
@@ -95,6 +98,8 @@ public static class Composition
             HistoryStore = sp.GetRequiredService<IHistoryStore>(),
             OneTabStore = sp.GetRequiredService<IOneTabStore>(),
             DownloadStore = sp.GetRequiredService<IDownloadStore>(),
+            Downloads = sp.GetRequiredService<Services.Downloads.DownloadCoordinator>(),
+            DownloadRequests = sp.GetRequiredService<Services.Downloads.NativeDownloadRequest>(),
             ClosedTabStore = sp.GetRequiredService<IClosedTabStore>(),
             FocusBlocklistService = sp.GetRequiredService<FocusBlocklistService>(),
             ContentScriptInjector = sp.GetRequiredService<ContentScriptInjector>(),

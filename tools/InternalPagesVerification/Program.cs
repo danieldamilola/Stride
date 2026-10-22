@@ -102,15 +102,15 @@ internal static class Verification
             settings.AppTheme=mode;
             var html = new Dictionary<string,string> {
                 ["settings"]=pages.SettingsPage(settings,"verification"),
-                ["newtab"]=pages.NewTabPage([],settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification",100,"",false),
-                ["history"]=pages.HistoryPage(history,settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification",false),
-                ["downloads"]=pages.DownloadsPage([],settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification"),
-                ["saved-tabs"]=pages.OneTabPage(saved,settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification"),
-                ["onboarding"]=pages.OnboardingPage(settings,settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification"),
-                ["release-notes"]=pages.ReleaseNotesPage("0.1.0",ReleaseNotesProvider.GetAllReleases(),settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor),"verification"),
+                ["newtab"]=pages.NewTabPage([],"verification",100,"",false),
+                ["history"]=pages.HistoryPage(history,"verification",false),
+                ["downloads"]=pages.DownloadsPage([],"verification"),
+                ["saved-tabs"]=pages.OneTabPage(saved,"verification"),
+                ["onboarding"]=pages.OnboardingPage(settings,"verification"),
+                ["release-notes"]=pages.ReleaseNotesPage("0.1.0",ReleaseNotesProvider.GetAllReleases(),"verification"),
                 ["focus"]=pages.FocusPage("blocked.example", "verification"),
                 ["health"]=pages.HealthPage("0.1.0",new ExtensionManager.ExtensionHealth(true,true,true,false,"test"),"verification"),
-                ["error"]=pages.ErrorPage("https://offline.example","The connection could not be completed.",settings.AccentColor,InternalPages.HexToRgb(settings.AccentColor))
+                ["error"]=pages.ErrorPage("https://offline.example","The connection could not be completed.")
             };
             foreach (var (name, content) in html)
                 File.WriteAllText(Path.Combine(output,name+"-"+mode.ToString().ToLowerInvariant()+".html"),content);

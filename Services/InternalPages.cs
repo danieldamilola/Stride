@@ -28,39 +28,39 @@ public sealed class InternalPages
     private string ApplyTheme(string html) => html.Replace("{{THEME}}", _themeManager.GetThemeString());
 
     /// <summary>Returns the new tab page HTML.</summary>
-    public string NewTabPage(List<ShortcutItem> shortcuts, string accentColor, string accentRgb, string ipcToken, int zoom, string backgroundPath = "", bool faviconProxyEnabled = true) =>
-        ApplyTheme(_newTab.Render(shortcuts, accentColor, accentRgb, ipcToken, zoom, backgroundPath, faviconProxyEnabled));
+    public string NewTabPage(List<ShortcutItem> shortcuts, string ipcToken, int zoom, string backgroundPath = "", bool faviconProxyEnabled = true) =>
+        ApplyTheme(_newTab.Render(shortcuts, ipcToken, zoom, backgroundPath, faviconProxyEnabled));
 
     /// <summary>Returns a minimal blank dark page.</summary>
     public string BlankPage() =>
         ApplyTheme("""<html data-theme="{{THEME}}"><body style="background:var(--bg-base)"></body></html>""");
 
     /// <summary>Returns the OneTab page HTML.</summary>
-    public string OneTabPage(List<OneTabGroup> groups, string accentColor, string accentRgb, string ipcToken) =>
-        ApplyTheme(_oneTab.Render(groups, accentColor, accentRgb, ipcToken));
+    public string OneTabPage(List<OneTabGroup> groups, string ipcToken) =>
+        ApplyTheme(_oneTab.Render(groups, ipcToken));
 
     /// <summary>Returns the settings page HTML.</summary>
     public string SettingsPage(BrowserSettings settings, string ipcToken) => ApplyTheme(_settings.Render(settings, ipcToken));
 
     /// <summary>Returns the history page HTML.</summary>
-    public string HistoryPage(List<HistoryEntry> entries, string accentColor, string accentRgb, string ipcToken, bool faviconProxyEnabled = true) =>
-        ApplyTheme(_history.Render(entries, accentColor, accentRgb, ipcToken, faviconProxyEnabled));
+    public string HistoryPage(List<HistoryEntry> entries, string ipcToken, bool faviconProxyEnabled = true) =>
+        ApplyTheme(_history.Render(entries, ipcToken, faviconProxyEnabled));
 
     /// <summary>Returns the downloads page HTML.</summary>
-    public string DownloadsPage(List<DownloadItem> items, string accentColor, string accentRgb, string ipcToken) =>
-        ApplyTheme(_downloads.Render(items, accentColor, accentRgb, ipcToken));
+    public string DownloadsPage(List<DownloadItem> items, string ipcToken) =>
+        ApplyTheme(_downloads.Render(items, ipcToken));
 
     /// <summary>Returns the onboarding page HTML.</summary>
-    public string OnboardingPage(BrowserSettings settings, string accentColor, string accentRgb, string ipcToken) =>
-        ApplyTheme(_onboarding.Render(settings, accentColor, accentRgb, ipcToken));
+    public string OnboardingPage(BrowserSettings settings, string ipcToken) =>
+        ApplyTheme(_onboarding.Render(settings, ipcToken));
 
     /// <summary>Returns the release notes page HTML.</summary>
-    public string ReleaseNotesPage(string currentVersion, IReadOnlyList<Engine.ReleaseNotesProvider.ReleaseVersion> releases, string accentColor, string accentRgb, string ipcToken) =>
-        ApplyTheme(_releaseNotes.Render(currentVersion, releases, accentColor, accentRgb, ipcToken));
+    public string ReleaseNotesPage(string currentVersion, IReadOnlyList<Engine.ReleaseNotesProvider.ReleaseVersion> releases, string ipcToken) =>
+        ApplyTheme(_releaseNotes.Render(currentVersion, releases, ipcToken));
 
     /// <summary>Returns the error page HTML.</summary>
-    public string ErrorPage(string url, string errorMessage, string accentColor, string accentRgb) =>
-        ApplyTheme(_error.Render(url, errorMessage, accentColor, accentRgb));
+    public string ErrorPage(string url, string errorMessage) =>
+        ApplyTheme(_error.Render(url, errorMessage));
 
     /// <summary>Returns the focus block page HTML.</summary>
     public string FocusPage(string blockedHost = "", string ipcToken = "") => ApplyTheme(Helpers.ResourceLoader.LoadTemplate("Resources.Pages.Focus.html", new Dictionary<string, string> { ["BLOCKED_HOST"] = System.Net.WebUtility.HtmlEncode(blockedHost), ["IPC_TOKEN"] = ipcToken }));
@@ -69,19 +69,4 @@ public sealed class InternalPages
     public string HealthPage(string currentVersion, ExtensionManager.ExtensionHealth health, string ipcToken) =>
         ApplyTheme(_health.Render(currentVersion, health, ipcToken));
 
-    /// <summary>Converts a hex color like #d4d4d4 to an RGB triplet like 212,212,212.</summary>
-    public static string HexToRgb(string hex)
-    {
-        hex = hex.TrimStart('#');
-        if (hex.Length != 6) return "212,212,212";
-        try
-        {
-            var r = Convert.ToInt32(hex[..2], 16);
-            var g = Convert.ToInt32(hex[2..4], 16);
-            var b = Convert.ToInt32(hex[4..6], 16);
-            return $"{r},{g},{b}";
-        }
-        catch (FormatException) { return "212,212,212"; }
-        catch (OverflowException) { return "212,212,212"; }
-    }
 }
