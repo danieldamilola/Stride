@@ -4,6 +4,16 @@ All notable changes to Stride are recorded here, newest first.
 
 ## [Unreleased]
 
+### Changed
+
+- The address bar selects the first suggestion automatically so Enter opens it. Typing and deleting continue to edit the text you entered.
+- Online search suggestions are now off by default, matching Helium and Zen. Existing profiles switch to local suggestions once and can opt in again in Settings.
+- The online suggestions setting explains that search text goes to DuckDuckGo. History and shortcut suggestions stay available when it is off.
+
+### Fixed
+
+- Online suggestions skip address and file path inputs. Turning suggestions off cancels pending requests and discards late responses.
+
 ## [0.1.0] - 2026-10-21
 
 ### Added

@@ -24,8 +24,8 @@ public static class SettingsMigration
     /// defaulted <see cref="BrowserSettings.FaviconProxyEnabled"/> to true, so a profile
     /// written by one of them carries a saved true that says nothing about what the user
     /// wanted. It is switched off once here. The version is then written back, so the
-    /// repair does not run again and a later choice the user makes is left alone. No
-    /// other preference is touched.
+    /// repair does not run again and a later choice the user makes is left alone.
+    /// Version 2: online search suggestions become opt-in for the same reason.
     /// </summary>
     public static bool Apply(BrowserSettings settings, bool schemaVersionWasRecorded)
     {
@@ -33,7 +33,11 @@ public static class SettingsMigration
         if (schemaVersionWasRecorded && settings.SettingsSchemaVersion >= BrowserSettings.CurrentSchemaVersion)
             return false;
 
-        settings.FaviconProxyEnabled = false;
+        var previousVersion = schemaVersionWasRecorded ? settings.SettingsSchemaVersion : 0;
+        if (previousVersion < BrowserSettings.FaviconConsentSchemaVersion)
+            settings.FaviconProxyEnabled = false;
+        if (previousVersion < BrowserSettings.SearchSuggestionsConsentSchemaVersion)
+            settings.SearchSuggestionsEnabled = false;
         settings.SettingsSchemaVersion = BrowserSettings.CurrentSchemaVersion;
         return true;
     }

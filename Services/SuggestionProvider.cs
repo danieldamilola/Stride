@@ -84,21 +84,26 @@ public sealed class SuggestionProvider : ISuggestionProvider
 
     public async Task<List<SuggestionItem>> GetWebSuggestionsAsync(string query, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(query))
+        if (!_settings.SearchSuggestionsEnabled || !IsSearchText(query))
             return [];
 
-        // Privacy: network autocomplete can be disabled. When off, nothing returns.
-        if (!_settings.SearchSuggestionsEnabled)
-            return [];
-
-        // Debounce before hitting the network
-        await Task.Delay(150, ct);
+        using var pending = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        void OnSettingsChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName == nameof(BrowserSettings.SearchSuggestionsEnabled) && !_settings.SearchSuggestionsEnabled)
+                pending.Cancel();
+        }
+        _settings.PropertyChanged += OnSettingsChanged;
 
         var results = new List<SuggestionItem>();
         try
         {
+            await Task.Delay(150, pending.Token);
+            if (!_settings.SearchSuggestionsEnabled) return [];
+
             var url = "https://duckduckgo.com/ac/?q=" + Uri.EscapeDataString(query);
-            var response = await _http.GetStringAsync(url, ct);
+            var response = await _http.GetStringAsync(url, pending.Token);
+            if (pending.IsCancellationRequested || !_settings.SearchSuggestionsEnabled) return [];
 
             using var doc = JsonDocument.Parse(response);
             foreach (var element in doc.RootElement.EnumerateArray())
@@ -121,10 +126,29 @@ public sealed class SuggestionProvider : ISuggestionProvider
         catch (OperationCanceledException) { /* expected on rapid typing */ }
         catch (Exception ex)
         {
-            System.Diagnostics.Trace.WriteLine($"SuggestionProvider error: {ex}");
+            // Exceptions from HTTP requests can contain the query URL.
+            System.Diagnostics.Trace.WriteLine($"SuggestionProvider error: {ex.GetType().Name}");
+        }
+        finally
+        {
+            _settings.PropertyChanged -= OnSettingsChanged;
         }
 
         return results.Take(MaxSuggestions).ToList();
+    }
+
+    private static bool IsSearchText(string? query)
+    {
+        if (string.IsNullOrWhiteSpace(query)) return false;
+        var text = query.Trim();
+        // Keep schemes, paths, email addresses and credentials on the machine.
+        // This is deliberately conservative, including for searches containing a URL.
+        if (text.IndexOfAny([':', '/', '\\', '@']) >= 0) return false;
+        if (Uri.TryCreate(text, UriKind.Absolute, out _)) return false;
+        if (!text.Any(char.IsWhiteSpace) &&
+            (text.Contains('.') || text.StartsWith('[') ||
+             string.Equals(text, "localhost", StringComparison.OrdinalIgnoreCase))) return false;
+        return true;
     }
 
     private static string HostOf(string url) =>
