@@ -10,10 +10,10 @@ namespace StrideBrowser.Tests;
 
 public class SuggestionProviderTests
 {
-    private static readonly HttpClient MockHttp = new()
+    private static readonly HttpClient MockHttp = new(new StubHandler(new HttpResponseMessage(HttpStatusCode.OK)
     {
-        BaseAddress = new Uri("https://duckduckgo.com")
-    };
+        Content = new StringContent("[]")
+    }));
 
     private sealed class StubHistoryStore : IHistoryStore
     {
@@ -46,16 +46,7 @@ public class SuggestionProviderTests
 
         var provider = CreateProvider(settings);
 
-        using var cts = new CancellationTokenSource(50);
-        List<SuggestionItem> results;
-        try
-        {
-            results = await provider.GetSuggestionsAsync("git", cts.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            results = [new SuggestionItem { DisplayText = "GitHub", Url = "https://github.com", Kind = SuggestionKind.Shortcut }];
-        }
+        var results = await provider.GetSuggestionsAsync("git", CancellationToken.None);
 
         Assert.Contains(results, r => r.Url == "https://github.com");
         Assert.DoesNotContain(results, r => r.Url == "https://youtube.com");

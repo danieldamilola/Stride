@@ -671,7 +671,7 @@ public partial class MainWindow : Window
         // The arrow keys can move the highlight into the list, which puts a
         // suggestion in the box that the user never typed. A delete must hand
         // the typed query back rather than start eating the suggestion.
-        if (e.Key is Key.Back or Key.Delete && _vm.IsRowHighlighted)
+        if (e.Key is Key.Back or Key.Delete && _vm.IsSuggestionTextDisplayed)
         {
             _vm.RestoreTypedQuery();
             _vm.ShowSuggestions = true;

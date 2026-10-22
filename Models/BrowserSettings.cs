@@ -54,12 +54,11 @@ public sealed partial class BrowserSettings : ObservableObject
     private bool _clearDataOnExit;
 
     /// <summary>
-    /// When true, the address bar sends query text to DuckDuckGo for autocomplete.
-    /// Off by default would be safest, but we preserve current behavior;
-    /// the toggle lets privacy-sensitive users disable it.
+    /// Opts in to sending search text to DuckDuckGo for autocomplete.
+    /// Local history and shortcut suggestions work with this disabled.
     /// </summary>
     [ObservableProperty]
-    private bool _searchSuggestionsEnabled = true;
+    private bool _searchSuggestionsEnabled;
 
     /// <summary>
     /// When true, a page with no engine favicon and no cached icon asks the DuckDuckGo
@@ -96,7 +95,10 @@ public sealed partial class BrowserSettings : ObservableObject
     private int _settingsSchemaVersion = CurrentSchemaVersion;
 
     /// <summary>The newest settings schema this build understands.</summary>
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
+
+    /// <summary>The version at which online search suggestions became opt-in.</summary>
+    public const int SearchSuggestionsConsentSchemaVersion = 2;
 
     /// <summary>
     /// The version at which the third-party favicon fallback became an explicit opt-in.

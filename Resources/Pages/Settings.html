@@ -632,6 +632,15 @@ const __T = "{{IPC_TOKEN}}:";
                   </select>
                 </div>
               </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Online search suggestions</div>
+                  <div class="setting-desc">Off by default. When enabled, sends search text as you type to DuckDuckGo, regardless of your search engine. History and shortcuts work locally while this is off.</div>
+                </div>
+                <div class="setting-control">
+                  <input type="checkbox" class="toggle" {{CHK_SEARCH_SUGGESTIONS}} onchange="s('searchSuggestions', this)" />
+                </div>
+              </div>
 
               <div class="setting-row">
                 <div class="setting-info">
@@ -813,7 +822,6 @@ const __T = "{{IPC_TOKEN}}:";
             <div class="section-header">Privacy & Security</div>
             <div class="card">
 
-<div class="setting-row"><div class="setting-info"><div class="setting-label">Search suggestions</div><div class="setting-desc">Send address bar search text to DuckDuckGo for suggestions</div></div><div class="setting-control"><input type="checkbox" class="toggle" {{CHK_SEARCH_SUGGESTIONS}} onchange="s('searchSuggestions', this)" /></div></div>
 <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Ad and tracker blocking</div>
