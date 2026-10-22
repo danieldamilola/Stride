@@ -37,7 +37,8 @@ public sealed class ExtensionsPopupController : IDisposable
             var item = _vm.PinnedExtensions.FirstOrDefault(x => x.Extension.Id == id);
             if (item is not null && pins.ItemContainerGenerator.ContainerFromItem(item) is FrameworkElement container && container.IsVisible)
                 return container;
-            return _button.IsVisible ? _button : (FrameworkElement)_window.FindName("ToolbarOverflowButton");
+            var overflow = (FrameworkElement)_window.FindName("ToolbarOverflowButton");
+            return _button.IsVisible ? _button : overflow.IsVisible ? overflow : (FrameworkElement)_window.FindName("Toolbar");
         };
         _vm.Dismiss += Close;
         _popup.CustomPopupPlacementCallback = Place;
@@ -58,7 +59,12 @@ public sealed class ExtensionsPopupController : IDisposable
         _opening = false;
         _popup.IsOpen = true; _panel.ManageButton.Focus();
     }
-    private async void Toggle(object sender, RoutedEventArgs e) { if (_popup.IsOpen || _opening) Close(); else await OpenAsync(); }
+    private void Toggle(object sender, RoutedEventArgs e) { if (_popup.IsOpen || _opening) Close(); else _ = OpenFromClickAsync(); }
+    private async Task OpenFromClickAsync()
+    {
+        try { await OpenAsync(); }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+    }
     private void Close() { ++_openVersion; _opening = false; _popup.IsOpen = false; }
     private void CloseClicked(object sender, RoutedEventArgs e) { Close(); _button.Focus(); }
     private void KeyDown(object sender, KeyEventArgs e) { if (e.Key == Key.Escape) { Close(); _button.Focus(); e.Handled = true; } }

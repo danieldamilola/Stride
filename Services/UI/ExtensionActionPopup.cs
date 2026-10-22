@@ -38,7 +38,7 @@ public sealed class ExtensionActionPopup : IDisposable
         };
         _popup.CustomPopupPlacementCallback = (size, target, _) => DownloadsPopupController.GetPlacements(
             size, target, anchor.TranslatePoint(new Point(), owner).X, owner.ActualWidth);
-        _sizeTimer.Tick += Measure;
+        _sizeTimer.Tick += OnTick;
         _popup.Closed += Closed;
         _popup.PreviewKeyDown += KeyDown;
         owner.Deactivated += Deactivated; owner.SizeChanged += Resized; owner.LocationChanged += Moved;
@@ -83,7 +83,7 @@ public sealed class ExtensionActionPopup : IDisposable
                     if (_disposed) return;
                     await core.ExecuteScriptAsync("document.documentElement.style.width='fit-content';document.documentElement.style.height='fit-content';document.body.style.width='fit-content'");
                     _sizeTimer.Start();
-                    Measure(null, EventArgs.Empty);
+                    _ = MeasureAsync();
                 }
                 catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
             };
@@ -99,7 +99,8 @@ public sealed class ExtensionActionPopup : IDisposable
         }
         catch { Dispose(); throw; }
     }
-    private async void Measure(object? sender, EventArgs e)
+    private void OnTick(object? sender, EventArgs e) => _ = MeasureAsync();
+    private async Task MeasureAsync()
     {
         if (_disposed || _measuring || _view.CoreWebView2 is null) return;
         _measuring = true;
@@ -155,7 +156,7 @@ public sealed class ExtensionActionPopup : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _disposed = true; _sizeTimer.Stop(); _sizeTimer.Tick -= Measure; _popup.Closed -= Closed; _popup.IsOpen = false; _popup.PreviewKeyDown -= KeyDown;
+        _disposed = true; _sizeTimer.Stop(); _sizeTimer.Tick -= OnTick; _popup.Closed -= Closed; _popup.IsOpen = false; _popup.PreviewKeyDown -= KeyDown;
         _popup.CustomPopupPlacementCallback = null;
         _owner.Deactivated -= Deactivated; _owner.SizeChanged -= Resized; _owner.LocationChanged -= Moved;
         _owner.Closed -= OwnerClosed; _engine.ActiveTabChanged -= ActiveTabChanged;

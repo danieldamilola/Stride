@@ -140,7 +140,8 @@ public sealed class ExtensionActions(TabEngine engine, ExtensionLibrary library,
         }
         catch { window.Close(); throw; }
     }
-    private async void OpenExternal(string url)
+    private void OpenExternal(string url) => _ = OpenExternalAsync(url);
+    private async Task OpenExternalAsync(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http")) return;
         try { var tab = engine.CreateTab(url); engine.SwitchTo(tab); await engine.ActivateAsync(tab); }

@@ -55,6 +55,15 @@ public sealed partial class ExtensionsPanelViewModel : ObservableObject
         catch (Exception ex) { Error = ex.Message; }
         await RefreshAsync();
     }
+
+    /// <summary>Returns the base64 payload of an extension icon data URI.</summary>
+    internal static byte[] IconBytes(string dataUri)
+    {
+        var comma = dataUri.IndexOf(',');
+        if (comma < 0 || comma == dataUri.Length - 1)
+            throw new FormatException("The extension icon data URI has no base64 payload.");
+        return Convert.FromBase64String(dataUri[(comma + 1)..]);
+    }
     public sealed class ExtensionToolbarItem
     {
         public InstalledExtension Extension { get; }
@@ -86,11 +95,11 @@ public sealed partial class ExtensionsPanelViewModel : ObservableObject
             if (!string.IsNullOrEmpty(extension.IconDataUri))
                 try
                 {
-                    using var stream = new MemoryStream(Convert.FromBase64String(extension.IconDataUri.Split(',')[1]));
+                    using var stream = new MemoryStream(IconBytes(extension.IconDataUri));
                     var image = new BitmapImage(); image.BeginInit(); image.CacheOption = BitmapCacheOption.OnLoad;
                     image.DecodePixelWidth = 32; image.StreamSource = stream; image.EndInit(); image.Freeze(); Icon = image;
                 }
-                catch { }
+                catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Extension icon for {extension.Name} could not be read: {ex.Message}"); }
             OpenCommand = new AsyncRelayCommand(() => vm.Run(async () =>
             {
                 vm.Dismiss?.Invoke();

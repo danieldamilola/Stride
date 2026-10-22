@@ -617,7 +617,8 @@ public partial class MainWindow : Window
     /// Opens the toolbar overflow menu under its button. The menu carries the action commands
     /// the row drops when it runs out of width.
     /// </summary>
-    private async void Extensions_Click(object sender, RoutedEventArgs e)
+    private void Extensions_Click(object sender, RoutedEventArgs e) => _ = OpenExtensionsAsync();
+    private async Task OpenExtensionsAsync()
     { try { await _engine.OpenExtensionsAsync(); } catch (Exception ex) { Trace.WriteLine(ex); } }
 
     private void ToolbarOverflow_Click(object sender, RoutedEventArgs e)
