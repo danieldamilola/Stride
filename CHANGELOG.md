@@ -22,6 +22,10 @@ Versioning restarts at 0.1.0. This version is in development and has not been pu
 
 - The window icon now decodes the .ico frame that matches the window DPI instead of always the smallest 16px frame. The taskbar button no longer upscales the 16px frame, so the mark keeps its drawn size on the taskbar.
 
+### Fixed
+
+- The wallpaper downloader saved nothing whenever the wallpaper host served the image to render instead of as an attachment. URLs that never raise a download event now fall back to a direct HTTP transfer that carries the profile cookies, supports pause, resume and cancel, and refuses to save rendered pages such as error documents. Downloads from wallhaven previously always ended as "Failed, Size unknown".
+
 - Renamed the product to Umber. The namespaces are UmberBrowser, the application project is Umber.csproj, the executable is Umber.exe, the updater project is Umber.Updater and the test project is UmberBrowser.Tests. Data lives in %LocalAppData%\UmberBrowser with umber.log and background images in %AppData%\Umber, and UMBER_DATA_DIR relocates the data tree. The registry keys are Umber, UmberHTML and UmberURL, the icon files use the umber- prefix, and the installer and update package are Umber-win-Setup.exe and Umber-win-x64.zip.
 
 - Restored sessions now start with every background tab hibernated, including pinned tabs, regardless of the tab hibernation setting. The saved active tab stays loaded.
