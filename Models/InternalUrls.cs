@@ -4,6 +4,7 @@ namespace UmberBrowser.Models;
 public static class InternalUrls
 {
     public const string NewTab = "internal://newtab";
+    public const string Extensions = "internal://extensions";
     public const string Settings = "internal://settings";
     public const string OneTab = "internal://onetab";
     public const string History = "internal://history";

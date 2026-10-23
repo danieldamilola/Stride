@@ -41,6 +41,16 @@ public static class IpcSecurityPolicy
                 // exact match. Without it the Set Default button reaches nothing.
                 message == WebMessagePrefix.SetDefaultBrowser,
 
+            TabEngine.InternalPageKind.Extensions =>
+                message == "extensions-sync" || message == "extensions-load" || message == "extensions-reload-all" ||
+                message.StartsWith("extensions-developer:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-toggle:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-pin:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-remove:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-reload:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-open-options:", StringComparison.Ordinal) ||
+                message.StartsWith("extensions-open-popup:", StringComparison.Ordinal),
+
             TabEngine.InternalPageKind.History =>
                 message.StartsWith(WebMessagePrefix.HistoryOpen, StringComparison.Ordinal) ||
                 message == WebMessagePrefix.HistoryClear,

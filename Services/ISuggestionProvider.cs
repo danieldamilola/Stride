@@ -24,7 +24,7 @@ public interface ISuggestionProvider
 
     /// <summary>
     /// Returns web autocomplete phrases after a short debounce. Honors the
-    /// search suggestions privacy toggle: empty when the user opts out.
+    /// online suggestions opt-in. Address and file path inputs stay local.
     /// </summary>
     Task<List<SuggestionItem>> GetWebSuggestionsAsync(string query, CancellationToken ct);
 }

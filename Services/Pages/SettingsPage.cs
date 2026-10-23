@@ -57,6 +57,8 @@ public sealed class SettingsPage
                 ["CHK_DUPES"] = Chk(settings.BlockDuplicateTabs),
                 ["CHK_TAB_HIBERNATION"] = Chk(settings.TabHibernationEnabled),
                 ["CHK_TAB_SLEEP"] = Chk(settings.TabSleepEnabled),
+                ["CHK_PINNED_TAB_SLEEP"] = Chk(settings.AllowPinnedTabsToSleep),
+                ["CHK_PINNED_TAB_HIBERNATION"] = Chk(settings.AllowPinnedTabsToHibernate),
                 ["TAB_SLEEP_OPACITY"] = settings.TabSleepOpacity.ToString(CultureInfo.InvariantCulture),
                 ["TAB_SLEEP_OPACITY_PCT"] = ((int)Math.Round(settings.TabSleepOpacity * 100)).ToString(CultureInfo.InvariantCulture),
                 ["TAB_HIBERNATION_OPACITY"] = settings.TabHibernationOpacity.ToString(CultureInfo.InvariantCulture),
@@ -75,6 +77,7 @@ public sealed class SettingsPage
                 ["CHK_DOWNLOADS"] = Chk(settings.ShowDownloadsIcon),
                 ["CHK_SETTINGSICON"] = Chk(settings.ShowSettingsIcon),
                 ["CHK_READERICON"] = Chk(settings.ShowReaderIcon),
+                ["CHK_EXTENSIONSICON"] = Chk(settings.ShowExtensionsIcon),
                 ["CHK_AUTO_CHECK_FOR_UPDATES"] = Chk(settings.AutoCheckForUpdates),
                 ["CURRENT_VERSION"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "unknown",
                 // The WebView2 SDK assembly version, labelled "SDK" in the About card because the

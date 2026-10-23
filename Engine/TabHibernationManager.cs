@@ -105,6 +105,8 @@ public sealed class TabHibernationManager
         foreach (var (id, wv) in _getWebViews())
         {
             if (id == activeTab.Id) continue;
+            if (!tabsById.TryGetValue(id, out var tab) || tab.IsActive || tab.IsHibernated) continue;
+            if (tab.IsPinned && !_settings.AllowPinnedTabsToSleep) continue;
 
             dynamic core;
             try { core = wv.CoreWebView2; }
@@ -114,8 +116,6 @@ public sealed class TabHibernationManager
                 continue;
             }
             if (core is null) continue;
-
-            BrowserTab? tab = tabsById.TryGetValue(id, out var known) ? known : null;
 
             if (IsConfirmedSleeping(id, (object)core, tab))
             {
@@ -146,14 +146,48 @@ public sealed class TabHibernationManager
         }
     }
 
-    /// <summary>Clears the sleeping flag on all tabs.</summary>
+    /// <summary>Resumes live WebViews and clears their sleeping flags.</summary>
     public void ClearSleepingState()
     {
         _suspensionGeneration++;
         ForgetAllSuspensionState();
         if (_getTabs is null) return;
         foreach (var tab in _getTabs())
-            tab.IsSleeping = false;
+            ResumeTab(tab);
+    }
+
+    /// <summary>Applies sleep preferences to the live tabs in this window.</summary>
+    public void ApplySleepSettings()
+    {
+        if (!_settings.TabSleepEnabled)
+        {
+            ClearSleepingState();
+            return;
+        }
+        if (_getTabs is null) return;
+        var tabs = _getTabs();
+        foreach (var tab in tabs.Where(t => t.IsPinned && !_settings.AllowPinnedTabsToSleep))
+            ResumeTab(tab);
+        var activeTab = tabs.FirstOrDefault(t => t.IsActive);
+        if (activeTab is not null) SuspendBackgroundTabs(activeTab);
+    }
+
+    private void ResumeTab(BrowserTab tab)
+    {
+        if (_getWebViews?.Invoke().TryGetValue(tab.Id, out var wv) == true)
+        {
+            try
+            {
+                var core = wv.CoreWebView2;
+                if (core is not null)
+                {
+                    core.Resume();
+                    core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+                }
+            }
+            catch (Exception ex) { Trace.WriteLine($"Resume failed for tab {tab.Id}: {ex.Message}"); }
+        }
+        tab.IsSleeping = false;
     }
 
     private bool IsConfirmedSleeping(Guid tabId, object core, BrowserTab? tab)
@@ -270,14 +304,18 @@ public sealed class TabHibernationManager
             Trace.WriteLine($"TrySuspendAsync failed for tab {tabId}: {ex.Message}");
         }
 
-        if (success && tab is not null && (tab.IsActive || _getTabs?.Invoke().Contains(tab) != true))
+        if (success && tab is not null && (tab.IsActive || _getTabs?.Invoke().Contains(tab) != true ||
+            generation != _suspensionGeneration || !_settings.TabSleepEnabled ||
+            (tab.IsPinned && !_settings.AllowPinnedTabsToSleep)))
         {
-            // A tab that has been torn into another window no longer belongs to this
-            // engine, and the destination engine cannot see this suspension. Leaving it
-            // suspended would freeze the page in its new window until something woke it,
-            // so resume it here where the suspend actually happened.
-            try { core.Resume(); }
-            catch (Exception ex) { Trace.WriteLine($"Resume after tab transfer failed: {ex.Message}"); }
+            // Selection, transfer and settings can change while suspension is pending.
+            // Undo the completed suspension when the page must now stay awake.
+            try
+            {
+                core.Resume();
+                core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+            }
+            catch (Exception ex) { Trace.WriteLine($"Resume after pending suspension failed: {ex.Message}"); }
             tab.IsSleeping = false;
             ForgetConfirmedSleeping(tabId);
             return;
@@ -366,10 +404,10 @@ public sealed class TabHibernationManager
 
     /// <summary>
     /// Hibernates every tab except the active one after a session restore. Startup is
-    /// deliberate: it ignores the hibernation setting and the pinned tab exemption so
-    /// a restored window starts with every background tab unloaded. Tabs that never
-    /// received a WebView still get the hibernated state, because the strip and the
-    /// wake path both use that flag.
+    /// deliberate: it ignores the hibernation setting and both pinned tab exemptions
+    /// so a restored window starts with every background tab unloaded. Tabs that
+    /// never received a WebView still get the hibernated state, because the strip
+    /// and the wake path both use that flag.
     /// </summary>
     public void HibernateRestoredTabs(BrowserTab activeTab)
     {
@@ -463,7 +501,7 @@ public sealed class TabHibernationManager
     {
         if (tab.IsActive || tab.IsHibernated) return false;
         if (_isPreviewOrigin != null && _isPreviewOrigin(tab.Id)) return false;
-        if (tab.IsPinned) return false;
+        if (tab.IsPinned && !_settings.AllowPinnedTabsToHibernate) return false;
         if (InternalUrls.IsInternal(tab.Url)) return false;
 
         // Check if tab is playing audio

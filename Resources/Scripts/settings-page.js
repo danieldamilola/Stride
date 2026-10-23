@@ -1,4 +1,4 @@
-const pendingSettings = new Map();
+﻿const pendingSettings = new Map();
 let activeRecorder = null;
 let recorderTimer = null;
 function showSettingStatus(message, error = false) {
@@ -17,7 +17,6 @@ function postSetting(key, val, el) {
     showSettingStatus('The browser did not confirm this change. Reload Settings and try again.', true);
   }, 5000);
   pendingSettings.set(key, pending);
-  showSettingStatus('Saving...');
   try { window.chrome.webview.postMessage(__T + "setting:" + key + ":" + val); }
   catch { clearTimeout(pending.timer); pendingSettings.delete(key); showSettingStatus('Settings cannot connect to the browser. Reopen Settings to try again.', true); }
 }
@@ -87,32 +86,55 @@ document.addEventListener('DOMContentLoaded', () => {
   const summary = document.getElementById('searchSummary');
   const clear = document.getElementById('clearSearch');
   let selected = navItems[0].dataset.target;
-  try { const saved = localStorage.getItem('umber_active_settings_tab'); if (sections.some(s => s.id === saved)) selected = saved; } catch {}
+  try {
+    const saved = localStorage.getItem('umber_active_settings_tab');
+    const target = { 'section-performance':'section-tabs', 'section-extensions':'section-focus', 'section-youtube':'section-focus' }[saved] || saved;
+    if (sections.some(s => s.id === target)) selected = target;
+  } catch {}
   const openBeforeSearch = new Map();
+  // Include the group headings when searching for a control.
+  const searchEntries = new Map(sections.map(section => [section,
+    [...section.querySelectorAll('.setting-row, .searchable-block')].map(element => {
+      const groupTitle = element.closest('.settings-group')?.querySelector('.section-header')?.textContent || '';
+      const detailsTitle = element.closest('details')?.querySelector('summary')?.textContent || '';
+      let subsection = element.previousElementSibling;
+      while (subsection && !subsection.classList.contains('subsection-label')) subsection = subsection.previousElementSibling;
+      const context = [section.dataset.searchTitle, groupTitle, detailsTitle, subsection?.textContent].join(' ').toLowerCase();
+      return { element, context };
+    })
+  ]));
   function render() {
     const query = search.value.trim().toLowerCase();
     let count = 0;
+    if (activeRecorder) stopRecording(activeRecorder, false);
     navItems.forEach(item => {
       const active = !query && item.dataset.target === selected;
       item.classList.toggle('active', active);
       if (active) item.setAttribute('aria-current','page'); else item.removeAttribute('aria-current');
     });
     sections.forEach(section => {
-      const categoryMatch = query && section.dataset.searchTitle?.toLowerCase().includes(query);
-      const rows = [...section.querySelectorAll('.setting-row')];
       let found = 0;
-      rows.forEach(row => {
-        const match = !query || categoryMatch || row.textContent.toLowerCase().includes(query);
-        row.hidden = !match; if (match) found++;
+      searchEntries.get(section).forEach(({ element, context }) => {
+        const match = !query || (context + ' ' + element.textContent.toLowerCase()).includes(query);
+        element.hidden = !match; if (match) found++;
       });
-      section.querySelectorAll('.card').forEach(card => { card.hidden = !!query && ![...card.querySelectorAll('.setting-row')].some(r => !r.hidden); });
-      section.querySelectorAll('.subsection-label').forEach(label => { label.hidden = !!query; });
-      if (!rows.length && query && section.textContent.toLowerCase().includes(query)) found = 1;
+      section.querySelectorAll('.settings-group').forEach(group => {
+        group.hidden = !!query && ![...group.querySelectorAll('.setting-row, .searchable-block')].some(row => !row.hidden);
+      });
+      section.querySelectorAll('.subsection-label').forEach(label => {
+        let row = label.nextElementSibling;
+        let visible = false;
+        while (row && !row.classList.contains('subsection-label')) {
+          if (row.classList.contains('setting-row') && !row.hidden) visible = true;
+          row = row.nextElementSibling;
+        }
+        label.hidden = !!query && !visible;
+      });
       const visible = query ? found > 0 : section.id === selected;
       section.hidden = !visible; section.classList.toggle('active', visible);
       section.style.removeProperty('display');
       if (query) count += found;
-      section.querySelectorAll('.collapsible').forEach(group => {
+      section.querySelectorAll('details').forEach(group => {
         group.hidden = !!query && ![...group.querySelectorAll('.setting-row')].some(r => !r.hidden);
         if (query) { if (!openBeforeSearch.has(group)) openBeforeSearch.set(group, group.open); group.open = !group.hidden; }
         else if (openBeforeSearch.has(group)) { group.open = openBeforeSearch.get(group); openBeforeSearch.delete(group); }
@@ -120,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     clear.hidden = !query;
     summary.hidden = !query;
-    summary.textContent = query ? (count ? count + ' matching settings' : 'No settings match. Try another search.') : '';
+    summary.textContent = query ? (count ? count + (count === 1 ? ' matching setting' : ' matching settings') : 'No settings match. Try another search.') : '';
     document.getElementById('settingsContent').scrollTop = 0;
   }
   navItems.forEach(item => item.addEventListener('click', () => {
@@ -155,7 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pending && pending.value !== result.value) return;
     if (pending) { clearTimeout(pending.timer); pendingSettings.delete(result.key); }
     const message = result.success ? (result.restartRequired ? 'Restart Umber to apply this change.' : '') : result.message;
-    showSettingStatus(message, !result.success);
+    if (!result.success || result.restartRequired || document.getElementById('settingsStatus')?.dataset.error === 'true')
+      showSettingStatus(message, !result.success);
     if (!result.success) { const el = pending?.el; if (el?.dataset.savedValue !== undefined) { if (el.type === 'checkbox') el.checked = el.dataset.savedValue === 'true'; else el.value = el.dataset.savedValue; } return; }
     document.querySelectorAll('[data-setting-key="'+result.key+'"]').forEach(el => {
       if (el.type === 'checkbox') el.checked = result.value === 'true'; else el.value = result.value;

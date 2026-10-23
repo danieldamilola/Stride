@@ -12,6 +12,19 @@ namespace UmberBrowser.Tests;
 public sealed class BrowserSettingsDefaultsTests
 {
     [Fact]
+    public void PinnedTabs_StayAwakeByDefaultAndAfterReset()
+    {
+        var settings = JsonSerializer.Deserialize<BrowserSettings>("{}")!;
+        Assert.False(settings.AllowPinnedTabsToSleep);
+        Assert.False(settings.AllowPinnedTabsToHibernate);
+        settings.AllowPinnedTabsToSleep = true;
+        settings.AllowPinnedTabsToHibernate = true;
+        settings.ResetToDefaults();
+        Assert.False(settings.AllowPinnedTabsToSleep);
+        Assert.False(settings.AllowPinnedTabsToHibernate);
+    }
+
+    [Fact]
     public void AddressBar_StartsOnTheLeft()
     {
         Assert.True(new BrowserSettings().AddressBarOnLeft);

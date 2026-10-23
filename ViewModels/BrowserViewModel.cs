@@ -51,8 +51,11 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
     /// <summary>Set while the box text comes from a programmatic write, not typing.</summary>
     public bool SuppressSuggestionRefresh { get; set; }
 
-    /// <summary>True while a suggestion row owns the box through the arrow keys.</summary>
+    /// <summary>True while a suggestion row is selected.</summary>
     public bool IsRowHighlighted => SelectedSuggestionIndex >= 0;
+
+    /// <summary>True after arrow navigation puts a suggestion's text in the address box.</summary>
+    public bool IsSuggestionTextDisplayed { get; private set; }
 
     private string _typedQuery = "";
 
@@ -297,6 +300,9 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
         _suggestionCts?.Cancel();
         _suggestionCts = new CancellationTokenSource();
         var token = _suggestionCts.Token;
+        _typedQuery = query;
+        IsSuggestionTextDisplayed = false;
+        SelectedSuggestionIndex = -1;
 
         if (string.IsNullOrWhiteSpace(query))
         {
@@ -304,8 +310,6 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
             ShowSuggestions = false;
             return;
         }
-
-        _typedQuery = query;
 
         try
         {
@@ -315,7 +319,7 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
             foreach (var r in _suggestionProvider.GetLocalSuggestions(query))
                 Suggestions.Add(r);
 
-            SelectedSuggestionIndex = -1;
+            SelectedSuggestionIndex = Suggestions.Count > 0 ? 0 : -1;
             ShowSuggestions = Suggestions.Count > 0;
 
             // Icons resolve in the background from the favicon cache; rows
@@ -332,7 +336,12 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
                 if (query != _typedQuery) return;
                 if (Suggestions.Count >= SuggestionProvider.MaxSuggestions) break;
                 if (!Suggestions.Any(r => string.Equals(r.DisplayText, item.DisplayText, StringComparison.OrdinalIgnoreCase)))
+                {
                     Suggestions.Add(item);
+                    // Select the first web result when there were no local matches.
+                    // Later results must not replace a selection made with the arrows.
+                    if (Suggestions.Count == 1) SelectedSuggestionIndex = 0;
+                }
             }
 
             if (!token.IsCancellationRequested)
@@ -352,6 +361,8 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
         _suggestionCts?.Cancel();
         _suggestionCts = null;
         ShowSuggestions = false;
+        SelectedSuggestionIndex = -1;
+        IsSuggestionTextDisplayed = false;
     }
 
     /// <summary>
@@ -394,6 +405,7 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
             _typedQuery = AddressText;
 
         SelectedSuggestionIndex = next;
+        IsSuggestionTextDisplayed = next >= 0;
         SuppressSuggestionRefresh = true;
         AddressText = next == -1 ? _typedQuery : Suggestions[next].DisplayText;
         return true;
@@ -403,6 +415,7 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
     public void RestoreTypedQuery()
     {
         SelectedSuggestionIndex = -1;
+        IsSuggestionTextDisplayed = false;
         SuppressSuggestionRefresh = true;
         AddressText = _typedQuery;
         NoteAddressDisplayed(AddressText);

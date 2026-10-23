@@ -25,8 +25,7 @@ public sealed class SettingsHandlerLifetimeTests
             (TabEngine)RuntimeHelpers.GetUninitializedObject(typeof(TabEngine)),
             new BrowserSettings(),
             new NullSettingsStore(),
-            update,
-            (TabHibernationManager)RuntimeHelpers.GetUninitializedObject(typeof(TabHibernationManager)));
+            update);
 
         Assert.Single(Subscribers(update, nameof(UpdateService.UpdateFailed)));
         Assert.Single(Subscribers(update, nameof(UpdateService.DownloadProgressChanged)));

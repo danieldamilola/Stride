@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using UmberBrowser.Models;
 using UmberBrowser.Services.Pages;
 using Xunit;
@@ -10,6 +11,25 @@ namespace UmberBrowser.Tests;
 /// </summary>
 public sealed class SettingsPageRenderingTests
 {
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void PinnedTabToggles_RenderTheirIndependentSavedValues(bool sleep, bool hibernate)
+    {
+        var html = new SettingsPage().Render(new BrowserSettings
+        {
+            AllowPinnedTabsToSleep = sleep, AllowPinnedTabsToHibernate = hibernate
+        }, "test-token");
+        foreach (var (key, expected) in new[] { ("allowPinnedTabsToSleep", sleep), ("allowPinnedTabsToHibernate", hibernate) })
+        {
+            var control = Regex.Match(html, "<input[^>]*onchange=\"s\\('" + key + "', this\\)\"[^>]*>");
+            Assert.True(control.Success, key);
+            Assert.Equal(expected, control.Value.Contains(" checked"));
+        }
+    }
+
     [Fact]
     public void SettingsPage_IncludesCorrectTokenFormat()
     {

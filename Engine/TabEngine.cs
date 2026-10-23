@@ -209,6 +209,11 @@ public sealed partial class TabEngine : IDisposable
 
     private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(BrowserSettings.TabSleepEnabled) or nameof(BrowserSettings.AllowPinnedTabsToSleep))
+        {
+            _dispatcher.Invoke(_hibernationManager.ApplySleepSettings);
+            return;
+        }
         if (e.PropertyName != nameof(BrowserSettings.TrackingPreventionMode)) return;
         // Raised on whichever thread assigned the property, which for a settings page is
         // not the one that owns the WebView2 controls.
@@ -291,6 +296,7 @@ public sealed partial class TabEngine : IDisposable
             InternalUrls.Settings => "Settings",
             InternalUrls.OneTab => "OneTab",
             InternalUrls.History => "History",
+            InternalUrls.Extensions => "Extensions",
             InternalUrls.Downloads => "Downloads",
             InternalUrls.Onboarding => "Welcome to Umber",
             InternalUrls.ReleaseNotes => "What's New in Umber",
@@ -592,6 +598,7 @@ public sealed partial class TabEngine : IDisposable
         OneTab,
         History,
         Downloads,
+        Extensions,
         Onboarding,
         ReleaseNotes,
         Focus,
@@ -611,6 +618,7 @@ public sealed partial class TabEngine : IDisposable
         if (url == InternalUrls.Settings) return InternalPageKind.Settings;
         if (url == InternalUrls.OneTab) return InternalPageKind.OneTab;
         if (url == InternalUrls.History) return InternalPageKind.History;
+        if (url == InternalUrls.Extensions) return InternalPageKind.Extensions;
         if (url == InternalUrls.Downloads) return InternalPageKind.Downloads;
         if (url == InternalUrls.Onboarding) return InternalPageKind.Onboarding;
         if (url == InternalUrls.ReleaseNotes) return InternalPageKind.ReleaseNotes;
@@ -761,6 +769,9 @@ public sealed partial class TabEngine : IDisposable
                 return true;
             case InternalPageKind.History:
                 NavigateToHistory(tab, _historyStore.Load());
+                return true;
+            case InternalPageKind.Extensions:
+                NavigateToExtensions(tab);
                 return true;
             case InternalPageKind.Downloads:
                 NavigateToDownloads(tab);
@@ -945,7 +956,7 @@ public sealed partial class TabEngine : IDisposable
 
     /// <summary>
     /// Hibernates every restored background tab at startup. This is deliberate and
-    /// does not consult the hibernation setting or the pinned tab exemption. The
+    /// does not consult the hibernation setting or the pinned tab exemptions. The
     /// active tab stays loaded so the window opens with a usable page.
     /// </summary>
     public void HibernateRestoredTabs(BrowserTab activeTab)
@@ -2008,7 +2019,7 @@ public sealed partial class TabEngine : IDisposable
         EventHandler<CoreWebView2ProcessFailedEventArgs> onProcessFailed = (_, e) =>
         {
             try { Trace.WriteLine($"ProcessFailed kind={e.ProcessFailedKind} tab={tab.Title}"); Trace.Flush(); }
-            catch { }
+            catch (Exception ex) { Trace.WriteLine($"ProcessFailed trace failed: {ex}"); }
             _dispatcher.Invoke(() =>
             {
                 try
@@ -2108,6 +2119,7 @@ public sealed partial class TabEngine : IDisposable
             InternalUrls.NewTab => "New Tab",
             InternalUrls.Settings => "Settings",
             InternalUrls.OneTab => "OneTab",
+            InternalUrls.Extensions => "Extensions",
             InternalUrls.Downloads => "Downloads",
             InternalUrls.Focus => "Focus Locked",
             InternalUrls.Health => "Health",
@@ -2193,7 +2205,7 @@ public sealed partial class TabEngine : IDisposable
             return;
         }
 
-        if (!_settings.TabSleepEnabled) return;
+        if (!_settings.TabSleepEnabled || (tab.IsPinned && !_settings.AllowPinnedTabsToSleep)) return;
         bool suspended = false;
         try
         {
@@ -2207,7 +2219,8 @@ public sealed partial class TabEngine : IDisposable
         }
         catch (Exception ex) { Trace.WriteLine($"SuspendForPreview failed for {tabId}: {ex.Message}"); }
 
-        if (generation != _previewGeneration || _previewOriginTabId != tabId)
+        if (generation != _previewGeneration || _previewOriginTabId != tabId ||
+            !_settings.TabSleepEnabled || (tab.IsPinned && !_settings.AllowPinnedTabsToSleep))
         {
             if (suspended)
             {

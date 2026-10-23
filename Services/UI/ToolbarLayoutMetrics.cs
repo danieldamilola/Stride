@@ -78,8 +78,8 @@ public static class ToolbarLayoutMetrics
     /// <summary>The new tab button and one tab card: the strip never goes below this.</summary>
     public const double MinTabStrip = NewTabWidth + NewTabMargin + TabShrinkPanel.IconTabWidth;
 
-    /// <summary>Downloads and reader at full size. The update button is transient and not budgeted.</summary>
-    public const double OptionalActionsWidth = ActionButton * 2 + ActionGap * 2;
+    /// <summary>Downloads, reader, extensions and up to three pinned extensions. The update button is transient.</summary>
+    public const double OptionalActionsWidth = (ActionButton + ActionGap) * (3 + Extensions.ExtensionLibrary.MaxPinnedExtensions);
 
     /// <summary>The overflow button that stands in for the optional buttons.</summary>
     public const double OverflowButtonWidth = ActionButton + ActionGap;

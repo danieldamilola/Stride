@@ -24,6 +24,8 @@ public sealed class InternalPageSettingsTests
         yield return new object[] { "faviconProxy", nameof(BrowserSettings.FaviconProxyEnabled) };
         yield return new object[] { "tabHibernation", nameof(BrowserSettings.TabHibernationEnabled) };
         yield return new object[] { "tabSleep", nameof(BrowserSettings.TabSleepEnabled) };
+        yield return new object[] { "allowPinnedTabsToSleep", nameof(BrowserSettings.AllowPinnedTabsToSleep) };
+        yield return new object[] { "allowPinnedTabsToHibernate", nameof(BrowserSettings.AllowPinnedTabsToHibernate) };
         yield return new object[] { "tabSleepDim", nameof(BrowserSettings.TabSleepDimEnabled) };
         yield return new object[] { "tabHibernationDim", nameof(BrowserSettings.TabHibernationDimEnabled) };
         yield return new object[] { "adaptiveTint", nameof(BrowserSettings.AdaptiveToolbarTint) };
@@ -33,6 +35,7 @@ public sealed class InternalPageSettingsTests
         yield return new object[] { "showDownloadsIcon", nameof(BrowserSettings.ShowDownloadsIcon) };
         yield return new object[] { "showSettingsIcon", nameof(BrowserSettings.ShowSettingsIcon) };
         yield return new object[] { "showReaderIcon", nameof(BrowserSettings.ShowReaderIcon) };
+        yield return new object[] { "showExtensionsIcon", nameof(BrowserSettings.ShowExtensionsIcon) };
         yield return new object[] { "roundedFrame", nameof(BrowserSettings.RoundedWebContentFrameEnabled) };
         yield return new object[] { "autoCheckForUpdates", nameof(BrowserSettings.AutoCheckForUpdates) };
         yield return new object[] { "unhookEnabled", nameof(BrowserSettings.UnhookEnabled) };
@@ -113,6 +116,8 @@ public sealed class InternalPageSettingsTests
 
     [Theory]
     [InlineData("autoCheckForUpdates", "maybe")]
+    [InlineData("allowPinnedTabsToSleep", "maybe")]
+    [InlineData("allowPinnedTabsToHibernate", "maybe")]
     [InlineData("appTheme", "unknown")]
     [InlineData("accentColor", "#broken")]
     [InlineData("tabSleepOpacity", "NaN")]

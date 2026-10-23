@@ -15,7 +15,6 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter, IDisp
     private readonly BrowserSettings _settings;
     private readonly ISettingsStore _settingsStore;
     private readonly UpdateService _updateService;
-    private readonly TabHibernationManager _hibernationManager;
     private readonly EventHandler<string> _onUpdateFailed;
     private readonly EventHandler<double> _onDownloadProgress;
     private bool _disposed;
@@ -23,13 +22,12 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter, IDisp
     public event Action<string, string>? SettingChanged;
 
     /// <summary>Initializes a new instance of the SettingsMessageHandler.</summary>
-    public SettingsMessageHandler(TabEngine engine, BrowserSettings settings, ISettingsStore settingsStore, UpdateService updateService, TabHibernationManager hibernationManager)
+    public SettingsMessageHandler(TabEngine engine, BrowserSettings settings, ISettingsStore settingsStore, UpdateService updateService)
     {
         _engine = engine;
         _settings = settings;
         _settingsStore = settingsStore;
         _updateService = updateService;
-        _hibernationManager = hibernationManager;
         // UpdateService is a singleton and this handler is scoped to one window, so the
         // callbacks have to be released when that window's scope ends or every window
         // ever opened stays reachable through the updater.
@@ -154,9 +152,6 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter, IDisp
         SendResult(key, value, true, SettingsChangePolicy.RequiresRestart(key) ? "Saved. Restart Umber to apply this change." : "Saved.");
 
         if (key == "zoom") _engine.ApplyDefaultZoom();
-
-        if (key == "tabSleep" && value == "false")
-            _hibernationManager.ClearSleepingState();
 
         // uBlock is a native extension, so the preference has to reach the profile
         // now rather than at the next page load. The coordinator enables or disables

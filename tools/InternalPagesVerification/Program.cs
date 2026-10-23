@@ -48,7 +48,7 @@ internal static class Verification
             CustomDownloadManager=new CustomDownloadManager(), HibernationManager=hibernation,
             NavigationPolicyEngine=new NavigationPolicyEngine(focus), DownloadSuppressor=new LinkPreviewDownloadSuppressor()
         });
-        var handler = new SettingsMessageHandler(engine, settings, store, new UpdateService(new System.Net.Http.HttpClient()), hibernation);
+        var handler = new SettingsMessageHandler(engine, settings, store, new UpdateService(new System.Net.Http.HttpClient()));
         var router = new WebMessageRouter(new[] { handler });
         engine.WebMessageReceived += async message => await router.RouteAsync(message);
         var webview = new WebView2();

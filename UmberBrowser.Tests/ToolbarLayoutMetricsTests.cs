@@ -109,7 +109,7 @@ public sealed class ToolbarLayoutMetricsTests
     [Fact]
     public void ActionColumns_AreBuiltFromTheButtonWidths()
     {
-        var optional = ToolbarLayoutMetrics.ActionButton * 2 + ToolbarLayoutMetrics.ActionGap * 2;
+        var optional = (ToolbarLayoutMetrics.ActionButton + ToolbarLayoutMetrics.ActionGap) * 6;
         var settings = ToolbarLayoutMetrics.ActionButton + ToolbarLayoutMetrics.ActionsTrailingMargin;
         var overflow = ToolbarLayoutMetrics.ActionButton + ToolbarLayoutMetrics.ActionGap;
 
@@ -136,7 +136,7 @@ public sealed class ToolbarLayoutMetricsTests
     [InlineData(400, 100)]
     [InlineData(434, 100)]
     [InlineData(465, 100)]
-    [InlineData(496, 100)]
+    [InlineData(620, 100)]
     [InlineData(596, 200)]
     [InlineData(760, 200)]
     [InlineData(1920, 200)]
@@ -158,8 +158,8 @@ public sealed class ToolbarLayoutMetricsTests
     [Theory]
     [InlineData(400, 434)]
     [InlineData(434, 465)]
-    [InlineData(465, 496)]
-    [InlineData(496, 2400)]
+    [InlineData(465, 620)]
+    [InlineData(620, 2400)]
     public void AddressWidth_IsMonotonicInsideEachLadderStep(double from, double to)
     {
         // The field only ever widens as the window widens, except where the row has just won

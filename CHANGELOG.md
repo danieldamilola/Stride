@@ -1,12 +1,48 @@
 # Changelog
 
 All notable changes to Umber are recorded here, newest first.
-Versioning restarts at 0.1.0. This version is in development and has not been published.
 
 ## [Unreleased]
 
 ### Added
 
+- Performance settings can allow pinned tabs to follow tab sleep and automatic hibernation separately.
+
+### Changed
+
+- Replaced the placeholder ghost icon with the Umber tree-ring mark. Debug builds use the violet dev colorway, release builds use the neutral colorway, and both share the same ring geometry.
+- Tabs without a site favicon use the transparent Umber ring mark at the full favicon size. Window, taskbar and About icons keep the tiled artwork.
+- The window, taskbar and About tile icons draw the ring mark larger inside the same rounded tile. The 32px executable icon mark now spans 28px instead of 25px.
+- The window icon now decodes the .ico frame that matches the window DPI instead of always the smallest 16px frame. The taskbar button no longer upscales the 16px frame, so the mark keeps its drawn size on the taskbar.
+- Renamed the product to Umber. The namespaces are UmberBrowser, the application project is Umber.csproj, the executable is Umber.exe, the updater project is Umber.Updater and the test project is UmberBrowser.Tests. Data lives in %LocalAppData%\UmberBrowser with umber.log and background images in %AppData%\Umber, and UMBER_DATA_DIR relocates the data tree. The registry keys are Umber, UmberHTML and UmberURL, the icon files use the umber- prefix, and the installer and update package are Umber-win-Setup.exe and Umber-win-x64.zip.
+- Restored sessions now start with every background tab hibernated, including pinned tabs, regardless of the tab hibernation and pinned tab settings. The saved active tab stays loaded.
+- Reorganized Settings into General, Appearance, Tabs, Search, Privacy & Security, Focus, Shortcuts and About. Search has its own page, YouTube Unhook is under Focus, and default browser, hardware acceleration and reset actions are under General.
+- Settings search keeps matching controls with their group headings and opens matching detail groups.
+- Settings no longer flashes routine saving text when a control changes. Save errors and restart notices remain visible.
+- The address bar selects the first suggestion automatically so Enter opens it. Typing and deleting continue to edit the text you entered.
+- Online search suggestions are now off by default, matching Helium and Zen. Existing profiles switch to local suggestions once and can opt in again in Settings.
+- The online suggestions setting explains that search text goes to DuckDuckGo. History and shortcut suggestions stay available when it is off.
+
+### Fixed
+
+- The wallpaper downloader saved nothing whenever the wallpaper host served the image to render instead of as an attachment. URLs that never raise a download event now fall back to a direct HTTP transfer that carries the profile cookies, supports pause, resume and cancel, and refuses to save rendered pages such as error documents. Downloads from wallhaven previously always ended as "Failed, Size unknown".
+- Turning off tab sleep resumes sleeping pages in every open window, including suspensions that finish after the setting changes.
+- Pinned tabs stay awake when their sleep setting is off. Turning it off wakes pinned tabs that are already sleeping.
+- Online suggestions skip address and file path inputs. Turning suggestions off cancels pending requests and discards late responses.
+
+### Removed
+
+- The new tab page no longer shows its own search field. The toolbar address field is the only address input.
+
+## [0.1.0] - 2026-10-21
+
+### Added
+
+- Appearance settings can show or hide the extensions toolbar icon.
+
+- Extensions toolbar panel with installed extension icons and pinned actions.
+- Dedicated Extensions page with search, details, enable controls and removal for custom extensions.
+- Developer mode for loading unpacked extension folders and reloading local extensions.
 - Downloads now opens a compact toolbar panel with progress and file actions while the current page stays open.
 - Added optional history retention and clearing on exit to the roadmap.
 - Added a focused performance review with isolated Release measurements and a T3 orchestration prompt.
@@ -14,22 +50,10 @@ Versioning restarts at 0.1.0. This version is in development and has not been pu
 
 ### Changed
 
-- Replaced the placeholder ghost icon with the Umber tree-ring mark. Debug builds use the violet dev colorway, release builds use the neutral colorway, and both share the same ring geometry.
+### Changed
 
-- Tabs without a site favicon use the transparent Umber ring mark at the full favicon size. Window, taskbar and About icons keep the tiled artwork.
-
-- The window, taskbar and About tile icons draw the ring mark larger inside the same rounded tile. The 32px executable icon mark now spans 28px instead of 25px.
-
-- The window icon now decodes the .ico frame that matches the window DPI instead of always the smallest 16px frame. The taskbar button no longer upscales the 16px frame, so the mark keeps its drawn size on the taskbar.
-
-### Fixed
-
-- The wallpaper downloader saved nothing whenever the wallpaper host served the image to render instead of as an attachment. URLs that never raise a download event now fall back to a direct HTTP transfer that carries the profile cookies, supports pause, resume and cancel, and refuses to save rendered pages such as error documents. Downloads from wallhaven previously always ended as "Failed, Size unknown".
-
-- Renamed the product to Umber. The namespaces are UmberBrowser, the application project is Umber.csproj, the executable is Umber.exe, the updater project is Umber.Updater and the test project is UmberBrowser.Tests. Data lives in %LocalAppData%\UmberBrowser with umber.log and background images in %AppData%\Umber, and UMBER_DATA_DIR relocates the data tree. The registry keys are Umber, UmberHTML and UmberURL, the icon files use the umber- prefix, and the installer and update package are Umber-win-Setup.exe and Umber-win-x64.zip.
-
-- Restored sessions now start with every background tab hibernated, including pinned tabs, regardless of the tab hibernation setting. The saved active tab stays loaded.
-
+- Extensions includes YouTube tools, adaptive toolbar color, Focus and forced dark websites with their existing settings. The toolbar menu uses the same controls and spacing as Downloads.
+- Moved extension management out of Settings. YouTube controls now have their own Settings category.
 - Built-in pages share heading and search-field sizes. Download and history searches sit beside the header actions, and saved tabs uses the same header layout.
 
 - Removed custom accent colors. Light and dark themes now define button, toggle, focus, selection, link and progress colors. Older saved accents no longer override the theme.
@@ -52,6 +76,10 @@ Versioning restarts at 0.1.0. This version is in development and has not been pu
 - The new tab page no longer shows its own search field. The toolbar address field is the only address input.
 
 ### Fixed
+
+- Extension action panels open beneath their toolbar icon, size to their content and dismiss on outside clicks, Escape or tab changes.
+
+- User-installed download manager extensions are no longer removed by the former bundled-extension cleanup.
 
 - Cancelling a download restart explicitly cancels its pending navigation-completion task without changing an already-started transfer.
 
