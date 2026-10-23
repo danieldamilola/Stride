@@ -82,10 +82,21 @@ public sealed class ReleaseNotesProviderTests
     }
 
     [Fact]
-    public void DevelopmentBuild_HasNoInventedReleaseHistory()
+    public void EmbeddedHistoryIncludesPublishedChangelogAndExcludesUnreleased()
     {
         var releases = ReleaseNotesProvider.GetAllReleases();
-        Assert.Empty(releases);
+        Assert.Contains(releases, release => release.Version == "0.1.0" && release.Date == "2026-10-21");
+        Assert.DoesNotContain(releases, release => release.Version == "Unreleased");
+        var html = new ReleaseNotesPage().Render("0.1.0", releases, "test");
+        Assert.Contains("Version 0.1.0", html);
+        Assert.DoesNotContain("No releases have been published yet.", html);
+        Assert.DoesNotContain("{{ALL_RELEASES_HTML}}", html);
+    }
+
+    [Fact]
+    public void EmptyReleaseHistoryShowsUnreleasedState()
+    {
+        IReadOnlyList<ReleaseNotesProvider.ReleaseVersion> releases = [];
         var html = new ReleaseNotesPage().Render("0.1.0", releases, "test");
         Assert.Contains("Version 0.1.0", html);
         Assert.Contains("Unreleased", html);

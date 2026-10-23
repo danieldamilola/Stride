@@ -142,6 +142,23 @@ public sealed class IpcSecurityTests
     }
 
     [Fact]
+    public void ThemeTelemetryOnlyNotifiesForChangedEnabledValues()
+    {
+        var settings = new BrowserSettings();
+        var (bridge, _, changes, _) = CreateBridge("internal-token", "telemetry-token", settings);
+        var tab = new BrowserTab("https://example.com");
+        foreach (var value in new[] { "#abcdef", "#abcdef", "#ABCDEF", "", "" })
+            Assert.True(bridge.ProcessIncomingWebMessage(tab, tab.Url, "THEME_COLOR:" + value, tab.Url));
+        Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+        Assert.Equal(new[] { "#abcdef", "" }, changes);
+        settings.AdaptiveToolbarTint = false;
+        Assert.True(bridge.ProcessIncomingWebMessage(tab, tab.Url, "THEME_COLOR:#123456", tab.Url));
+        Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+        Assert.Equal(2, changes.Count);
+        Assert.Equal("", tab.ThemeColor);
+    }
+
+    [Fact]
     public void InternalSettingsPage_WithValidIdentityAndToken_CanInvokeSetting()
     {
         var ipcToken = "trusted-internal-token-12345";

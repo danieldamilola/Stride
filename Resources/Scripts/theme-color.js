@@ -3,14 +3,29 @@
     // before it accepts a THEME_COLOR value, and everything this script computes comes from
     // the page's own computed styles, so the page could send it unauthenticated anyway.
     // Publishing the token into this closure only widened the set of pages that could read it.
-    var t = function(m) { window.chrome.webview.postMessage('THEME_COLOR:' + m); };
+    var initialEnabled = typeof __STRIDE_THEME_ENABLED__ === 'undefined' ? true : __STRIDE_THEME_ENABLED__;
+    if (window.top && window.top !== window) return;
+    if (window.__strideThemeColor) {
+        window.__strideThemeColor.setEnabled(initialEnabled);
+        return;
+    }
+    var enabled = false, lastColor;
+    var canvas, context;
+    var t = function(value) {
+        if (!enabled || value === lastColor) return;
+        lastColor = value;
+        window.chrome.webview.postMessage('THEME_COLOR:' + value);
+    };
 
     function colorToHex(color, baseColor) {
         if (!color || color === 'rgba(0, 0, 0, 0)' || color === 'transparent') return '';
-        var canvas = document.createElement('canvas');
-        canvas.width = 1;
-        canvas.height = 1;
-        var ctx = canvas.getContext('2d');
+        if (!context) {
+            canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 1;
+            context = canvas.getContext('2d');
+        }
+        var ctx = context;
+        if (!ctx) return '';
 
         ctx.fillStyle = '#000000';
         ctx.fillStyle = color;
@@ -22,11 +37,13 @@
         if (parsed1 === '#000000' && parsed2 === '#ffffff') return '';
 
         var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        ctx.clearRect(0, 0, 1, 1);
         ctx.fillStyle = isDark ? '#121212' : '#ffffff';
+        ctx.fillRect(0, 0, 1, 1);
         if (baseColor && baseColor !== 'rgba(0, 0, 0, 0)' && baseColor !== 'transparent') {
             ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, 1, 1);
         }
-        ctx.fillRect(0, 0, 1, 1);
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, 1, 1);
 
@@ -109,15 +126,23 @@
         t('');
     }
 
-    let dispatchTimeout;
+    let dispatchTimeout, observeTimeout, observer, observedBody;
     let lastSentAt = 0;
+    const scheme = window.matchMedia?.('(prefers-color-scheme: dark)');
+    const dynamicEvents = ['click', 'resize', 'scroll', 'visibilitychange', 'DOMContentLoaded', 'load'];
+    const animationEvents = ['transitionend', 'transitioncancel', 'animationend', 'animationcancel'];
     const throttleIntervalMs = 250;
 
     function sendColour() {
+        if (!enabled) return;
+        if (observer && document.body && document.body !== observedBody) {
+            observedBody = document.body;
+            observer.observe(observedBody, { attributes:true, attributeFilter:['class','style'] });
+        }
         clearTimeout(dispatchTimeout);
         const remaining = throttleIntervalMs + lastSentAt - Date.now();
         const dispatch = function() {
-            if (document.visibilityState !== 'visible') return;
+            if (!enabled || document.visibilityState !== 'visible') return;
             lastSentAt = Date.now();
             extractThemeColor();
         };
@@ -133,29 +158,40 @@
     }
 
     function enableDynamic() {
-        ['click', 'resize', 'scroll', 'visibilitychange', 'DOMContentLoaded', 'load'].forEach(function(event) {
-            window.addEventListener(event, sendColour);
-        });
-
-        ['transitionend', 'transitioncancel', 'animationend', 'animationcancel'].forEach(function(event) {
-            window.addEventListener(event, sendColourRequiresFocus);
-        });
-
-        var observer = new MutationObserver(function(mutations) {
-            sendColour();
-        });
-
+        dynamicEvents.forEach(event => window.addEventListener(event, sendColour));
+        animationEvents.forEach(event => window.addEventListener(event, sendColourRequiresFocus));
+        scheme?.addEventListener?.('change', sendColour);
+        observer = new MutationObserver(sendColour);
         function tryObserve() {
+            if (!enabled) return;
             if (document.head && document.documentElement) {
-                observer.observe(document.head, { childList: true, subtree: true, attributes: true, attributeFilter: ['content'] });
-                observer.observe(document.documentElement, { childList: true, attributes: false });
+                observer.observe(document.head, { childList:true, subtree:true, attributes:true, attributeFilter:['content','media'] });
+                observer.observe(document.documentElement, { childList:true, attributes:true, attributeFilter:['class','style'] });
                 sendColour();
             } else {
-                setTimeout(tryObserve, 50);
+                observeTimeout = setTimeout(tryObserve,50);
             }
         }
         tryObserve();
     }
-
-    enableDynamic();
+    function setEnabled(value) {
+        value = !!value;
+        if (enabled === value) return;
+        enabled = value;
+        if (enabled) {
+            lastColor = undefined;
+            lastSentAt = 0;
+            enableDynamic();
+        } else {
+            clearTimeout(dispatchTimeout);
+            clearTimeout(observeTimeout);
+            observer?.disconnect();
+            observedBody = null;
+            dynamicEvents.forEach(event => window.removeEventListener(event,sendColour));
+            animationEvents.forEach(event => window.removeEventListener(event,sendColourRequiresFocus));
+            scheme?.removeEventListener?.('change',sendColour);
+        }
+    }
+    window.__strideThemeColor = { setEnabled };
+    setEnabled(initialEnabled);
 })();

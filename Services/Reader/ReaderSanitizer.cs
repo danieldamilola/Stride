@@ -1,199 +1,156 @@
+using System.Diagnostics;
+using System.Net;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace StrideBrowser.Services.Reader;
 
-/// <summary>
-/// Sanitizes untrusted article HTML. Contract pinned in ADR v4.
-/// Allow-list tags only, drop style/srcset/on*/xmlns, validate href and src to http or https only, block javascript: and data:.
-/// CSP is emitted by the template renderer, not here.
-/// </summary>
+/// <summary>Rebuilds untrusted article HTML using only allowed tags and attributes.</summary>
 public sealed class ReaderSanitizer : IReaderSanitizer
 {
+    internal const int MaxInputCharacters = 2_000_000;
+    private static readonly TimeSpan ExecutionBudget = TimeSpan.FromMilliseconds(500);
     private static readonly HashSet<string> AllowedTags = new(StringComparer.OrdinalIgnoreCase)
     {
         "p", "h1", "h2", "h3", "blockquote", "ul", "ol", "li", "pre", "code", "figure", "figcaption", "img", "a", "strong", "em", "hr", "br"
     };
-
     private static readonly HashSet<string> DropEntirelyTags = new(StringComparer.OrdinalIgnoreCase)
     {
         "script", "style", "iframe", "object", "embed", "form", "link", "meta", "noscript", "template", "svg", "math", "canvas", "video", "audio", "picture", "source", "track", "frame", "frameset", "applet", "base",
         "nav", "aside", "header", "footer", "button", "select", "textarea", "input", "label", "menu", "dialog"
     };
-
-    private static readonly Regex TagRegex = new(@"<\s*(/?)\s*([a-zA-Z0-9]+)([^>]*?)(/?)\s*>", RegexOptions.Compiled);
-    private static readonly Regex AttrRegex = new(@"([a-zA-Z_:][a-zA-Z0-9:_\-\.]*)\s*=\s*(?:""([^""]*)""|'([^']*)'|([^\s""'`=<>]+))", RegexOptions.Compiled);
-    private static readonly Regex CommentRegex = new(@"<!--.*?-->", RegexOptions.Compiled | RegexOptions.Singleline);
-    private static readonly Regex DropEntirelyRegex = new(@"<\s*(script|style|iframe|object|embed|form|link|meta|noscript|template|svg|math|canvas|video|audio|picture|source|track|frame|frameset|applet|base|nav|aside|header|footer|button|select|textarea|input|label|menu|dialog)\b[^>]*>.*?<\s*/\s*\1\s*>", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
-
-    // Self-closing drop-entirely without closing tag, e.g. <link ...> or <meta ...>
-    private static readonly Regex DropEntirelySelfClosingRegex = new(@"<\s*(link|meta|base|source|track|frame)\b[^>]*/?\s*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly HashSet<string> VoidTags = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "embed", "link", "meta", "source", "track", "frame", "base", "input", "img", "hr", "br"
+    };
 
     public string Sanitize(string untrustedHtml, string documentBaseUrl)
     {
         if (string.IsNullOrEmpty(untrustedHtml)) return string.Empty;
-
-        var html = untrustedHtml;
-
-        html = CommentRegex.Replace(html, string.Empty);
-        html = DropEntirelyRegex.Replace(html, string.Empty);
-        html = DropEntirelySelfClosingRegex.Replace(html, string.Empty);
-
-        var sb = new StringBuilder(html.Length);
-        var lastIndex = 0;
-
-        foreach (Match match in TagRegex.Matches(html))
+        if (untrustedHtml.Length > MaxInputCharacters)
+            throw new InvalidOperationException("Reader article exceeds the sanitization size limit.");
+        var started = Stopwatch.GetTimestamp();
+        var output = new StringBuilder(untrustedHtml.Length);
+        var dropped = new Stack<string>();
+        var position = 0;
+        while (position < untrustedHtml.Length)
         {
-            sb.Append(html, lastIndex, match.Index - lastIndex);
-            lastIndex = match.Index + match.Length;
-
-            var isClosing = match.Groups[1].Value == "/";
-            var tagName = match.Groups[2].Value;
-            var attrText = match.Groups[3].Value;
-            var selfClose = match.Groups[4].Value == "/";
-
-            var lowerTag = tagName.ToLowerInvariant();
-
-            if (DropEntirelyTags.Contains(lowerTag))
+            CheckBudget(started);
+            if (untrustedHtml[position] != '<')
             {
+                var end = untrustedHtml.IndexOf('<', position);
+                if (end < 0) end = untrustedHtml.Length;
+                if (dropped.Count == 0) output.Append(untrustedHtml, position, end - position);
+                position = end;
                 continue;
             }
-
-            if (isClosing)
+            if (untrustedHtml.AsSpan(position).StartsWith("<!--"))
             {
-                if (AllowedTags.Contains(lowerTag))
-                {
-                    sb.Append("</").Append(lowerTag).Append('>');
-                }
-
+                var end = untrustedHtml.IndexOf("-->", position + 4, StringComparison.Ordinal);
+                position = end < 0 ? untrustedHtml.Length : end + 3;
                 continue;
             }
-
-            if (!AllowedTags.Contains(lowerTag))
+            var cursor = position + 1;
+            SkipWhiteSpace(untrustedHtml, ref cursor);
+            var closing = cursor < untrustedHtml.Length && untrustedHtml[cursor] == '/';
+            if (closing) { cursor++; SkipWhiteSpace(untrustedHtml, ref cursor); }
+            var nameStart = cursor;
+            while (cursor < untrustedHtml.Length && char.IsAsciiLetterOrDigit(untrustedHtml[cursor])) cursor++;
+            if (cursor == nameStart)
             {
+                if (dropped.Count == 0) output.Append("&lt;");
+                position++;
                 continue;
             }
-
-            var filteredAttrs = FilterAttributes(lowerTag, attrText, documentBaseUrl);
-
-            sb.Append('<').Append(lowerTag);
-            if (filteredAttrs.Length > 0)
+            var name = untrustedHtml[nameStart..cursor].ToLowerInvariant();
+            var attrStart = cursor;
+            char quote = '\0';
+            // Consume each character once, including malformed attributes. A missing quote
+            // discards the unfinished token rather than exposing its contents as markup.
+            for (; cursor < untrustedHtml.Length; cursor++)
             {
-                sb.Append(' ').Append(filteredAttrs);
+                if ((cursor & 1023) == 0) CheckBudget(started);
+                var c = untrustedHtml[cursor];
+                if (quote != '\0') { if (c == quote) quote = '\0'; }
+                else if (c is '\'' or '"') quote = c;
+                else if (c == '>') break;
             }
-
-            if (selfClose && (lowerTag == "img" || lowerTag == "hr" || lowerTag == "br"))
+            if (cursor == untrustedHtml.Length) break;
+            var selfClosing = cursor > attrStart && untrustedHtml[cursor - 1] == '/';
+            position = cursor + 1;
+            if (dropped.Count > 0)
             {
-                sb.Append(" />");
+                if (closing && name == dropped.Peek()) dropped.Pop();
+                else if (!closing && DropEntirelyTags.Contains(name) && !VoidTags.Contains(name) && !selfClosing) dropped.Push(name);
+                continue;
             }
-            else
+            if (DropEntirelyTags.Contains(name))
             {
-                sb.Append('>');
+                if (!closing && !VoidTags.Contains(name) && !selfClosing) dropped.Push(name);
+                continue;
             }
+            if (!AllowedTags.Contains(name)) continue;
+            if (closing) { output.Append("</").Append(name).Append('>'); continue; }
+            output.Append('<').Append(name);
+            AppendAttributes(output, untrustedHtml, attrStart, cursor, documentBaseUrl, started);
+            output.Append(selfClosing && VoidTags.Contains(name) ? " />" : ">");
         }
-
-        sb.Append(html, lastIndex, html.Length - lastIndex);
-
-        var result = sb.ToString();
-        result = CommentRegex.Replace(result, string.Empty);
-        return result;
+        CheckBudget(started);
+        return output.ToString();
     }
 
-    private static string FilterAttributes(string tag, string attrText, string baseUrl)
+    private static void AppendAttributes(StringBuilder output, string html, int position, int end, string baseUrl, long started)
     {
-        if (string.IsNullOrWhiteSpace(attrText)) return string.Empty;
-
-        var parts = new List<string>();
-
-        foreach (Match m in AttrRegex.Matches(attrText))
+        while (position < end)
         {
-            var name = m.Groups[1].Value;
-            var value = m.Groups[2].Success ? m.Groups[2].Value : m.Groups[3].Success ? m.Groups[3].Value : m.Groups[4].Value;
-            var lowerName = name.ToLowerInvariant();
-
-            if (lowerName.StartsWith("on", StringComparison.OrdinalIgnoreCase))
-                continue;
-            if (lowerName is "style" or "srcset" or "xmlns" or "srcdoc")
-                continue;
-
-            if (lowerName is "href" or "src" or "cite" or "poster" or "data")
+            CheckBudget(started);
+            SkipWhiteSpace(html, ref position);
+            if (position >= end) break;
+            var nameStart = position;
+            if (!(char.IsAsciiLetter(html[position]) || html[position] is '_' or ':')) { position++; continue; }
+            while (position < end && (char.IsAsciiLetterOrDigit(html[position]) || html[position] is '_' or ':' or '-' or '.')) position++;
+            var name = html[nameStart..position].ToLowerInvariant();
+            SkipWhiteSpace(html, ref position);
+            if (position >= end || html[position] != '=') continue;
+            position++;
+            SkipWhiteSpace(html, ref position);
+            if (position >= end) break;
+            var quote = html[position] is '\'' or '"' ? html[position++] : '\0';
+            var valueStart = position;
+            if (quote != '\0') while (position < end && html[position] != quote) position++;
+            else while (position < end && !char.IsWhiteSpace(html[position]) && html[position] is not ('"' or '\'' or '`' or '=' or '<' or '>')) position++;
+            var value = WebUtility.HtmlDecode(html[valueStart..position]);
+            if (quote != '\0' && position < end) position++;
+            if (position == valueStart && quote == '\0') { position++; continue; }
+            if (name is "href" or "src" or "cite" or "poster" or "data")
             {
-                var sanitized = SanitizeUrl(value, baseUrl);
-                if (sanitized is null) continue;
-
-                // The renderer fetches these with the user's cookie jar. An article is
-                // remote content, so a src aimed at 127.0.0.1 or 169.254.169.254 would be a
-                // blind authenticated request against the user's own network. Script cannot
-                // read the response under the template's script-src 'none', but the request
-                // itself still fires. Refuse the private and local targets.
-                if (lowerName == "src" && Helpers.NetworkTargetGuard.IsPrivateHost(UriHost(sanitized)))
-                {
-                    continue;
-                }
-
-                parts.Add($"{lowerName}=\"{EscapeAttribute(sanitized)}\"");
-                continue;
+                var url = SanitizeUrl(value, baseUrl);
+                if (url is null || (name == "src" && Helpers.NetworkTargetGuard.IsPrivateHost(new Uri(url).Host))) continue;
+                value = url;
             }
-
-            if (lowerName is "alt" or "title")
-            {
-                parts.Add($"{lowerName}=\"{EscapeAttribute(value)}\"");
-                continue;
-            }
-
-            // Drop all other attributes including class, id, width, height, target, rel, etc.
+            else if (name is not ("alt" or "title")) continue;
+            output.Append(' ').Append(name).Append("=\"").Append(EscapeAttribute(value)).Append('"');
         }
-
-        return string.Join(" ", parts);
     }
 
+    private static void SkipWhiteSpace(string text, ref int position)
+    {
+        while (position < text.Length && char.IsWhiteSpace(text[position])) position++;
+    }
+    private static void CheckBudget(long started)
+    {
+        if (Stopwatch.GetElapsedTime(started) > ExecutionBudget)
+            throw new TimeoutException("Reader sanitization exceeded its execution budget.");
+    }
     private static string? SanitizeUrl(string raw, string baseUrl)
     {
         if (string.IsNullOrWhiteSpace(raw)) return null;
-
         var trimmed = raw.Trim();
-
-        if (trimmed.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
-            return null;
-        if (trimmed.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
-            return null;
-        if (trimmed.StartsWith("vbscript:", StringComparison.OrdinalIgnoreCase))
-            return null;
-        if (trimmed.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
-            return null;
-
-        // Protocol-relative //example.com/foo
-        if (trimmed.StartsWith("//", StringComparison.Ordinal))
-        {
-            trimmed = "https:" + trimmed;
-        }
-
-        if (Uri.TryCreate(trimmed, UriKind.Absolute, out var abs))
-        {
-            if (abs.Scheme is "http" or "https")
-                return abs.ToString();
-            return null;
-        }
-
-        if (!string.IsNullOrEmpty(baseUrl) && Uri.TryCreate(baseUrl, UriKind.Absolute, out var baseUri))
-        {
-            if (Uri.TryCreate(baseUri, trimmed, out var resolved))
-            {
-                if (resolved.Scheme is "http" or "https")
-                    return resolved.ToString();
-            }
-        }
-
+        if (trimmed.StartsWith("//", StringComparison.Ordinal)) trimmed = "https:" + trimmed;
+        if (Uri.TryCreate(trimmed, UriKind.Absolute, out var absolute))
+            return absolute.Scheme is "http" or "https" ? absolute.ToString() : null;
+        if (Uri.TryCreate(baseUrl, UriKind.Absolute, out var origin) && Uri.TryCreate(origin, trimmed, out var resolved))
+            return resolved.Scheme is "http" or "https" ? resolved.ToString() : null;
         return null;
     }
-
-    private static string? UriHost(string url)
-    {
-        return Uri.TryCreate(url, UriKind.Absolute, out var parsed) ? parsed.Host : null;
-    }
-
-    private static string EscapeAttribute(string value)
-    {
-        return value.Replace("&", "&amp;").Replace("\"", "&quot;").Replace("<", "&lt;").Replace(">", "&gt;");
-    }
+    private static string EscapeAttribute(string value) => value.Replace("&", "&amp;").Replace("\"", "&quot;").Replace("<", "&lt;").Replace(">", "&gt;");
 }

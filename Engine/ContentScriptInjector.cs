@@ -31,6 +31,42 @@ public sealed class ContentScriptInjector
     /// and a tab that moves between windows keeps the same core and the same record.
     /// </summary>
     private readonly ConditionalWeakTable<CoreWebView2, StrongBox<string?>> _youTubeScriptIds = new();
+    private sealed class ThemeScriptState
+    {
+        public readonly SemaphoreSlim Gate = new(1, 1);
+        public string? Id;
+        public bool? Enabled;
+    }
+    private readonly ConditionalWeakTable<CoreWebView2, ThemeScriptState> _themeScripts = new();
+
+    internal static string ThemeColorBootstrap(bool enabled) =>
+        ResourceLoader.Load("Resources.Scripts.theme-color.js")
+            .Replace("__STRIDE_THEME_ENABLED__", enabled ? "true" : "false");
+
+    /// <summary>Updates both future documents and the current document on one core.</summary>
+    public async Task UpdateThemeColorScriptAsync(CoreWebView2 core, BrowserSettings settings)
+    {
+        var state = _themeScripts.GetValue(core, _ => new ThemeScriptState());
+        await state.Gate.WaitAsync();
+        try
+        {
+            do
+            {
+                var enabled = settings.AdaptiveToolbarTint;
+                if (state.Enabled != enabled || state.Id is null)
+                {
+                    if (state.Id is not null) core.RemoveScriptToExecuteOnDocumentCreated(state.Id);
+                    state.Id = null;
+                    state.Id = await core.AddScriptToExecuteOnDocumentCreatedAsync(ThemeColorBootstrap(enabled));
+                    state.Enabled = enabled;
+                }
+                // This setting contains no secret. The public setter only controls style extraction.
+                await core.ExecuteScriptAsync("window.__strideThemeColor?.setEnabled(" + (enabled ? "true" : "false") + ");");
+            } while (state.Enabled != settings.AdaptiveToolbarTint);
+        }
+        catch (Exception ex) { Trace.WriteLine($"ContentScriptInjector: theme color update failed: {ex.Message}"); }
+        finally { state.Gate.Release(); }
+    }
 
     public ContentScriptInjector(YouTubeUnhook youtubeUnhook)
     {
@@ -105,8 +141,7 @@ public sealed class ContentScriptInjector
             ResourceLoader.Load("Resources.Scripts.wallhaven-downloader.js"));
 
         // Adaptive Theme Color Extractor (Ported from Adaptive-Tab-Bar-Colour Extension)
-        await core.AddScriptToExecuteOnDocumentCreatedAsync(
-            ResourceLoader.Load("Resources.Scripts.theme-color.js"));
+        await UpdateThemeColorScriptAsync(core, settings);
 
         // Link Preview - Alt plus click, on demand, no background timer
         if (settings.LinkPreviewEnabled)

@@ -11,4 +11,12 @@ public interface IDownloadStore
     void ClearCompleted();
     void ClearAll();
     DownloadItem? Get(string id);
+    Task<bool> FlushAsync(CancellationToken cancellationToken = default) => Task.FromResult(true);
+    IDisposable BeginUpdate() => EmptyDownloadUpdate.Instance;
+}
+
+internal sealed class EmptyDownloadUpdate : IDisposable
+{
+    public static readonly EmptyDownloadUpdate Instance = new();
+    public void Dispose() { }
 }

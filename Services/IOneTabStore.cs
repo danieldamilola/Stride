@@ -13,4 +13,12 @@ public interface IOneTabStore
     void ToggleStar(string groupId, int tabIndex);
     void ReorderGroup(int oldIndex, int newIndex);
     void ReorderTab(string groupId, int oldIndex, int newIndex);
+    void RenameGroup(string groupId, string name)
+    {
+        var groups = Load();
+        if (groups.FirstOrDefault(group => group.Id == groupId) is not { } group) return;
+        group.Name = name;
+        Save(groups);
+    }
+    Task<bool> FlushAsync(CancellationToken cancellationToken = default) => Task.FromResult(true);
 }

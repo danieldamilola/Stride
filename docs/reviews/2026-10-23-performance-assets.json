@@ -1,0 +1,117 @@
+{
+  "capturedUtc": "2026-10-23T09:05:05.79122Z",
+  "runtime": "9.0.20",
+  "os": "Microsoft Windows NT 10.0.26200.0",
+  "processors": 8,
+  "mode": "Release recommended; synthetic data; no production profile",
+  "results": [
+    {
+      "name": "webview-runtime",
+      "version": "154.0.4258.62"
+    },
+    {
+      "name": "wallpaper-decode",
+      "totalBytes": 80661686,
+      "rows": [
+        {
+          "name": "alexander-slattery-LI748t0BK8w-unsplash.jpg",
+          "ok": false,
+          "ms": 111.60000002384186
+        },
+        {
+          "name": "benjamin-voros-phIFdC6lA4E-unsplash.jpg",
+          "ok": true,
+          "width": 4096,
+          "height": 2733,
+          "ms": 111.69999992847443
+        },
+        {
+          "name": "casey-horner-O0R5XZfKUGQ-unsplash.jpg",
+          "ok": false,
+          "ms": 111.19999992847443
+        },
+        {
+          "name": "clay-banks-u27Rrbs9Dwc-unsplash.jpg",
+          "ok": true,
+          "width": 3000,
+          "height": 2002,
+          "ms": 111.39999997615814
+        },
+        {
+          "name": "hrvoje_photography-pdRsf77OBoo-unsplash.jpg",
+          "ok": false,
+          "ms": 111.39999997615814
+        },
+        {
+          "name": "jms-kFHz9Xh3PPU-unsplash.jpg",
+          "ok": true,
+          "width": 5580,
+          "height": 3720,
+          "ms": 112
+        },
+        {
+          "name": "john-cobb-IE_sifhay7o-unsplash.jpg",
+          "ok": true,
+          "width": 5726,
+          "height": 3818,
+          "ms": 111.79999995231628
+        },
+        {
+          "name": "john-fowler-03Pv2Ikm5Hk-unsplash.jpg",
+          "ok": true,
+          "width": 6448,
+          "height": 4559,
+          "ms": 112
+        },
+        {
+          "name": "john-towner-JgOeRuGD_Y4-unsplash.jpg",
+          "ok": false,
+          "ms": 111.40000009536743
+        },
+        {
+          "name": "jonas-leupe-896EmUa8ZHM-unsplash.jpg",
+          "ok": true,
+          "width": 6240,
+          "height": 4160,
+          "ms": 111.70000004768372
+        },
+        {
+          "name": "jonatan-pie-3l3RwQdHRHg-unsplash.jpg",
+          "ok": true,
+          "width": 4017,
+          "height": 2683,
+          "ms": 111.30000007152557
+        },
+        {
+          "name": "joshua-sortino-xZqr8WtYEJ0-unsplash.jpg",
+          "ok": true,
+          "width": 7568,
+          "height": 5048,
+          "ms": 111.80000007152557
+        },
+        {
+          "name": "kace-rodriguez-p3OzJuT_Dks-unsplash.jpg",
+          "ok": true,
+          "width": 4276,
+          "height": 2851,
+          "ms": 111.30000007152557
+        },
+        {
+          "name": "luca-bravo-ii5JY_46xH0-unsplash.jpg",
+          "ok": true,
+          "width": 6000,
+          "height": 4000,
+          "ms": 111.80000007152557
+        }
+      ]
+    },
+    {
+      "name": "downloads-large-navigation",
+      "rows": 5000,
+      "utf8Bytes": 3576209,
+      "accepted": false,
+      "errorType": "ArgumentException",
+      "error": "Value does not fall within the expected range."
+    }
+  ]
+}

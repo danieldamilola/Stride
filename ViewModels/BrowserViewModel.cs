@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
+using StrideBrowser.Services.Downloads;
 
 using StrideBrowser.Services.Reader;
 using StrideBrowser.ViewModels.Reader;
@@ -170,18 +171,10 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
         };
         _updateService.UpdateFailed += onUpdateFailed;
 
-        var observedDownloads = new HashSet<DownloadItem>();
-        void ReconcileDownloads()
-        {
-            foreach (var removed in observedDownloads.Where(item => !downloadStore.Items.Contains(item)).ToArray())
-            { removed.PropertyChanged -= OnDownloadItemChanged; observedDownloads.Remove(removed); }
-            foreach (var item in downloadStore.Items)
-                if (observedDownloads.Add(item)) item.PropertyChanged += OnDownloadItemChanged;
-            UpdateDownloadProgress(downloadStore.Items);
-        }
-        System.Collections.Specialized.NotifyCollectionChangedEventHandler onDownloadsChanged = (_, _) => ReconcileDownloads();
-        downloadStore.Items.CollectionChanged += onDownloadsChanged;
-        ReconcileDownloads();
+        var downloadActivity = new DownloadActivityTracker(downloadStore.Items);
+        void UpdateDownloads() => UpdateDownloadProgress(downloadActivity.ActiveItems);
+        downloadActivity.Changed += UpdateDownloads;
+        UpdateDownloads();
 
         // One view model per window, but the update service and the download store are
         // singletons that outlive every window. Without this a closed window would keep
@@ -192,19 +185,9 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
             _updateService.DownloadProgressChanged -= onDownloadProgressChanged;
             _updateService.DownloadCompleted -= onDownloadCompleted;
             _updateService.UpdateFailed -= onUpdateFailed;
-            downloadStore.Items.CollectionChanged -= onDownloadsChanged;
-            foreach (var item in observedDownloads) item.PropertyChanged -= OnDownloadItemChanged;
-            observedDownloads.Clear();
+            downloadActivity.Changed -= UpdateDownloads;
+            downloadActivity.Dispose();
         };
-
-
-        void OnDownloadItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName is nameof(DownloadItem.ReceivedBytes) or nameof(DownloadItem.TotalBytes) or nameof(DownloadItem.State) or nameof(DownloadItem.IsStarting))
-            {
-                UpdateDownloadProgress(downloadStore.Items);
-            }
-        }
     }
 
     public void Dispose()

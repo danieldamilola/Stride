@@ -56,7 +56,7 @@ public static class TabDownloadHandler
             TotalBytes = totalBytesToReceive is <= long.MaxValue ? (long)totalBytesToReceive.Value : 0 };
 
     public static void Track(CoreWebView2DownloadOperation op, DownloadItem item, Dispatcher dispatcher,
-        IDownloadStore store, Dictionary<string, CoreWebView2DownloadOperation> native, DownloadCoordinator actions, Guid originTabId)
+        IDownloadStore store, Dictionary<string, CoreWebView2DownloadOperation> native, DownloadCoordinator actions, Guid originTabId, bool dependsOnOriginTab = true)
     {
         native[item.Id] = op;
         var clock = Stopwatch.StartNew();
@@ -64,7 +64,7 @@ public static class TabDownloadHandler
         tracker.Reset(op.BytesReceived, clock.Elapsed);
         item.ReceivedBytes = op.BytesReceived;
         item.CompletedAt = null;
-        actions.Attach(item, new NativeTransfer(op), originTabId);
+        actions.Attach(item, new NativeTransfer(op), originTabId, dependsOnOriginTab);
         bool OwnsOperation() => native.TryGetValue(item.Id, out var current) && ReferenceEquals(current, op) && store.Get(item.Id) == item;
         void UpdateProgress()
         {

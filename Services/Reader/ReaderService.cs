@@ -17,7 +17,8 @@ public sealed class ReaderService : IReaderService
     private readonly IReaderExtractor _extractor;
     private readonly IReaderSanitizer _sanitizer;
     private readonly IReaderTemplateRenderer _renderer;
-    private readonly TabEngine _engine;
+    private readonly Func<Guid, string?> _getTabUrl;
+    private readonly Dictionary<Guid, object> _requests = new();
     private readonly Dictionary<Guid, ReaderSession> _sessions = new();
     private readonly Dictionary<Guid, ArticleResult> _articleCache = new();
     private ReaderOptions _options;
@@ -29,13 +30,18 @@ public sealed class ReaderService : IReaderService
         IReaderSanitizer sanitizer,
         IReaderTemplateRenderer renderer,
         TabEngine engine)
+        : this(settings, settingsStore, extractor, sanitizer, renderer, engine.GetTabUrl) { }
+
+    internal ReaderService(
+        BrowserSettings settings, ISettingsStore settingsStore, IReaderExtractor extractor,
+        IReaderSanitizer sanitizer, IReaderTemplateRenderer renderer, Func<Guid, string?> getTabUrl)
     {
         _settings = settings;
         _settingsStore = settingsStore;
         _extractor = extractor;
         _sanitizer = sanitizer;
         _renderer = renderer;
-        _engine = engine;
+        _getTabUrl = getTabUrl;
         _options = new ReaderOptions(
             FontScale: _settings.ReaderFontScale,
             Theme: _settings.ReaderTheme ?? "system",
@@ -56,6 +62,8 @@ public sealed class ReaderService : IReaderService
     public void TransferSessionTo(ReaderService destination, Guid tabId)
     {
         if (destination is null || ReferenceEquals(destination, this)) return;
+        _requests.Remove(tabId);
+        destination._requests.Remove(tabId);
         if (_sessions.Remove(tabId, out var session)) destination._sessions[tabId] = session;
         if (_articleCache.Remove(tabId, out var article)) destination._articleCache[tabId] = article;
     }
@@ -73,7 +81,7 @@ public sealed class ReaderService : IReaderService
 
     public async Task<ReaderContent> EnterReaderAsync(Guid tabId)
     {
-        var url = _engine.GetTabUrl(tabId) ?? string.Empty;
+        var url = _getTabUrl(tabId) ?? string.Empty;
         if (string.IsNullOrWhiteSpace(url) || InternalUrls.IsInternal(url))
         {
             throw new InvalidOperationException("Reader mode is not available for internal pages");
@@ -85,35 +93,53 @@ public sealed class ReaderService : IReaderService
             return existing.Current;
         }
 
-        var extractTask = _extractor.ExtractAsync(tabId);
-        var timeoutTask = Task.Delay(4000);
-        var completed = await Task.WhenAny(extractTask, timeoutTask);
-        if (completed == timeoutTask)
-            throw new TimeoutException("Reader extraction timed out. The page may have been hibernated or is not responding.");
-        var article = await extractTask;
-        // Revalidate that the tab hasn't navigated or been closed during extraction
-        var currentUrl = _engine.GetTabUrl(tabId);
-        if (currentUrl != url)
+        var request = new object();
+        _requests[tabId] = request;
+        try
         {
-            System.Diagnostics.Trace.WriteLine($"Reader extraction aborted for tab {tabId}: navigated from '{url}' to '{currentUrl}'");
-            return new ReaderContent(article.Title ?? "Reader", string.Empty, url, DateTime.UtcNow);
+            var article = await _extractor.ExtractAsync(tabId).WaitAsync(TimeSpan.FromSeconds(4));
+            if (!IsCurrentRequest(tabId, request, url)) return AbortedContent(article.Title, url);
+            var content = await PrepareContentAsync(tabId, request, article, url);
+            if (!IsCurrentRequest(tabId, request, url)) return AbortedContent(article.Title, url);
+            _sessions[tabId] = new ReaderSession(tabId, true, content, url, 0);
+            _articleCache[tabId] = article;
+            SessionChanged?.Invoke(this, tabId);
+            return content;
         }
-        var baseUrl = url;
-        var sanitized = _sanitizer.Sanitize(article.ContentHtml ?? string.Empty, baseUrl);
+        finally
+        {
+            CompleteRequest(tabId, request);
+        }
+    }
 
-        var rendered = _renderer.Render(article, sanitized, _options, baseUrl);
-        var content = new ReaderContent(article.Title ?? "Reader", rendered, baseUrl, DateTime.UtcNow);
+    private bool IsCurrentRequest(Guid tabId, object request, string url) =>
+        _requests.TryGetValue(tabId, out var current) && ReferenceEquals(current, request) && _getTabUrl(tabId) == url;
 
-        // Write only into per-tab session keyed by the tabId the call was made with
-        var session = new ReaderSession(tabId, IsInReader: true, Current: content, OriginalUrl: url, ScrollOffset: 0);
-        _sessions[tabId] = session;
-        _articleCache[tabId] = article;
-        SessionChanged?.Invoke(this, tabId);
-        return content;
+    private void CompleteRequest(Guid tabId, object request)
+    {
+        if (_requests.TryGetValue(tabId, out var current) && ReferenceEquals(current, request)) _requests.Remove(tabId);
+    }
+
+    private static ReaderContent AbortedContent(string? title, string url) => new(title ?? "Reader", string.Empty, url, DateTime.UtcNow);
+
+    private async Task<ReaderContent> PrepareContentAsync(Guid tabId, object request, ArticleResult article, string url)
+    {
+        var sanitized = await Task.Run(() => _sanitizer.Sanitize(article.ContentHtml ?? string.Empty, url));
+        while (IsCurrentRequest(tabId, request, url))
+        {
+            var options = _options;
+            var rendered = await Task.Run(() => _renderer.Render(article, sanitized, options, url));
+            if (!IsCurrentRequest(tabId, request, url)) break;
+            // An option update can arrive while a worker renders. Never publish the old theme.
+            if (options != _options) continue;
+            return new ReaderContent(article.Title ?? "Reader", rendered, url, DateTime.UtcNow);
+        }
+        return AbortedContent(article.Title, url);
     }
 
     public Task ExitReaderAsync(Guid tabId)
     {
+        _requests.Remove(tabId);
         if (_sessions.TryGetValue(tabId, out var session) && session.IsInReader)
         {
             var exited = session with { IsInReader = false };
@@ -132,21 +158,22 @@ public sealed class ReaderService : IReaderService
             return await EnterReaderAsync(tabId);
         }
 
-        // If options changed, re-render from cached article without re-extracting
-        if (_articleCache.TryGetValue(tabId, out var cached))
+        if (!_articleCache.TryGetValue(tabId, out var cached) || !session.IsInReader)
+            return session.Current;
+        var url = _getTabUrl(tabId);
+        if (url is null || url != session.OriginalUrl) return session.Current;
+        var request = new object();
+        _requests[tabId] = request;
+        try
         {
-            var url = _engine.GetTabUrl(tabId) ?? session.OriginalUrl ?? string.Empty;
-            var sanitized = _sanitizer.Sanitize(cached.ContentHtml ?? string.Empty, url);
-            var rendered = _renderer.Render(cached, sanitized, _options, url);
-            var refreshed = new ReaderContent(cached.Title ?? session.Current.Title, rendered, url, DateTime.UtcNow);
-            var updated = session with { Current = refreshed };
-            _sessions[tabId] = updated;
+            var refreshed = await PrepareContentAsync(tabId, request, cached, url);
+            if (!IsCurrentRequest(tabId, request, url) || !_sessions.TryGetValue(tabId, out var current) || !current.IsInReader)
+                return session.Current;
+            _sessions[tabId] = current with { Current = refreshed };
             SessionChanged?.Invoke(this, tabId);
             return refreshed;
         }
-
-        // Fallback: re-extract
-        return await EnterReaderAsync(tabId);
+        finally { CompleteRequest(tabId, request); }
     }
 
     public Task UpdateOptionsAsync(ReaderOptions options)
@@ -164,12 +191,7 @@ public sealed class ReaderService : IReaderService
 
         // Re-render all active reader sessions
         var activeIds = _sessions.Where(kvp => kvp.Value.IsInReader).Select(kvp => kvp.Key).ToList();
-        foreach (var id in activeIds)
-        {
-            _ = RefreshAsync(id);
-        }
-
-        return Task.CompletedTask;
+        return Task.WhenAll(activeIds.Select(RefreshAsync));
     }
 
     public ReaderSession? GetSession(Guid tabId)
@@ -180,6 +202,7 @@ public sealed class ReaderService : IReaderService
 
     public void RemoveSession(Guid tabId)
     {
+        _requests.Remove(tabId);
         var removed = _sessions.Remove(tabId);
         _articleCache.Remove(tabId);
         if (removed)

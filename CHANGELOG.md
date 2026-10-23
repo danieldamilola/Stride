@@ -6,10 +6,16 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Added
 
+- Added a project performance audit with Release measurements, WebView2 page and asset checks, and a repeatable isolated diagnostic tool. The tool modes reproduce the delayed extension activation case and sample native suspension latency.
 - Performance settings can allow pinned tabs to follow tab sleep and automatic hibernation separately.
 
 ### Changed
 
+- History and Downloads use pages of results. Download updates keep unchanged controls and send only changed visible rows.
+- History, download history and saved tabs coalesce ordinary file writes in the background and flush pending writes before the last window closes.
+- Saved-tab edits update the current page without reloading it.
+- Bundled wallpapers use smaller screen-sized images and lazy picker thumbnails.
+- Favicon responses and disk storage have size and retention limits.
 - Restored sessions now start with every background tab hibernated, including pinned tabs, regardless of the tab hibernation and pinned tab settings. The saved active tab stays loaded.
 - Reorganized Settings into General, Appearance, Tabs, Search, Privacy & Security, Focus, Shortcuts and About. Search has its own page, YouTube Unhook is under Focus, and default browser, hardware acceleration and reset actions are under General.
 - Settings search keeps matching controls with their group headings and opens matching detail groups.
@@ -20,6 +26,14 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Fixed
 
+- Performance verification checks actual Downloads rendering during extension startup. The tab-transfer tool uses the browser navigation path and current page and message contracts.
+- Downloads opens with large retained histories, and unchanged records no longer rebuild the full list on each update.
+- A tab waiting for extension startup no longer blocks creation of another tab.
+- Background tabs avoid duplicate suspension requests, and downloads protect the tab that owns their native transfer.
+- Toolbar color messages skip unchanged colors and stop extraction while adaptive tint is disabled.
+- Reader sanitization bounds malformed-input work and prepares article content off the UI thread.
+- Recovered four bundled wallpapers damaged by an earlier encoding conversion.
+- Download toolbar progress tracks active transfers without rescanning completed history on each progress update.
 - Turning off tab sleep resumes sleeping pages in every open window, including suspensions that finish after the setting changes.
 - Pinned tabs stay awake when their sleep setting is off. Turning it off wakes pinned tabs that are already sleeping.
 - Online suggestions skip address and file path inputs. Turning suggestions off cancels pending requests and discards late responses.

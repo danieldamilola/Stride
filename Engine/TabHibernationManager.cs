@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
@@ -29,6 +30,11 @@ public sealed class TabHibernationManager
     private Func<Guid, bool>? _isPreviewOrigin;
     private int _maxLiveWebViews = 10;
     private int _suspensionGeneration;
+    private Func<Guid, bool>? _isDownloadProtected;
+    // Weak keys let a closed control go away even if its manager survives. Sharing the
+    // table also coalesces a native suspension while a tab moves between windows.
+    private static readonly ConditionalWeakTable<object, object> PendingSuspensions = new();
+    private static readonly object PendingSuspensionLock = new();
 
     /// <summary>Initializes a new instance of the TabHibernationManager.</summary>
     public TabHibernationManager(IDownloadStore downloadStore, BrowserSettings settings)
@@ -46,6 +52,7 @@ public sealed class TabHibernationManager
         Action<Guid> teardownWebView,
         int maxLiveWebViews)
     {
+        _suspensionGeneration++;
         _getTabs = getTabs;
         _getWebViews = getWebViews;
         _teardownWebView = teardownWebView;
@@ -54,6 +61,8 @@ public sealed class TabHibernationManager
     }
 
     public void SetPreviewOriginCheck(Func<Guid, bool> isPreviewOrigin) => _isPreviewOrigin = isPreviewOrigin;
+
+    public void SetDownloadProtectionCheck(Func<Guid, bool> isDownloadProtected) => _isDownloadProtected = isDownloadProtected;
 
     /// <summary>Detaches the manager and stops the timer.</summary>
     public void Detach()
@@ -64,6 +73,7 @@ public sealed class TabHibernationManager
         _getWebViews = null;
         _teardownWebView = null;
         _isPreviewOrigin = null;
+        _isDownloadProtected = null;
     }
 
     /// <summary>Suspends background tabs to save CPU by setting low memory target and calling TrySuspendAsync. Only tabs where suspend succeeds are marked sleeping.</summary>
@@ -82,6 +92,7 @@ public sealed class TabHibernationManager
             if (id == activeTab.Id) continue;
             if (!tabsById.TryGetValue(id, out var tab) || tab.IsActive || tab.IsHibernated) continue;
             if (tab.IsPinned && !_settings.AllowPinnedTabsToSleep) continue;
+            if (tab.IsSleeping || IsDownloadProtected(tab.Id)) continue;
 
             dynamic core;
             try { core = wv.CoreWebView2; }
@@ -92,6 +103,13 @@ public sealed class TabHibernationManager
             }
             if (core is null) continue;
 
+            var coreIdentity = (object)core;
+            var request = new object();
+            lock (PendingSuspensionLock)
+            {
+                if (PendingSuspensions.TryGetValue(coreIdentity, out _)) continue;
+                PendingSuspensions.Add(coreIdentity, request);
+            }
             try
             {
                 core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
@@ -99,10 +117,11 @@ public sealed class TabHibernationManager
             catch (Exception ex)
             {
                 Trace.WriteLine($"SuspendBackgroundTabs MemoryUsageTargetLevel failed for tab {id}: {ex.Message}");
+                CompleteSuspension(coreIdentity, request);
                 continue;
             }
 
-            _ = TrySuspendSafeAsync(core, id, tab, generation);
+            _ = TrySuspendSafeAsync(coreIdentity, id, tab, generation, request);
         }
     }
 
@@ -149,45 +168,56 @@ public sealed class TabHibernationManager
         tab.IsSleeping = false;
     }
 
-    /// <summary>Calls TrySuspendAsync and marks the tab sleeping only when suspend returns true and sleep is still enabled.</summary>
-    private async Task TrySuspendSafeAsync(dynamic core, Guid tabId, BrowserTab? tab, int generation)
+    private static void CompleteSuspension(object core, object request)
     {
-        bool success = false;
+        lock (PendingSuspensionLock)
+        {
+            if (PendingSuspensions.TryGetValue(core, out var current) && ReferenceEquals(current, request))
+                PendingSuspensions.Remove(core);
+        }
+    }
+
+    private bool StillOwnsCore(Guid tabId, object core)
+    {
         try
         {
-            success = await core.TrySuspendAsync();
+            return _getWebViews?.Invoke().TryGetValue(tabId, out var view) == true &&
+                ReferenceEquals((object?)view.CoreWebView2, core);
         }
-        catch (InvalidOperationException ex)
-        {
-            Trace.WriteLine($"TrySuspendAsync skipped for disposed tab {tabId}: {ex.Message}");
-        }
-        catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x8007139F)
-        {
-            Trace.WriteLine($"TrySuspendAsync not in correct state for tab {tabId}: {ex.Message}");
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"TrySuspendAsync failed for tab {tabId}: {ex.Message}");
-        }
+        catch { return false; }
+    }
 
-        if (success && tab is not null && (tab.IsActive || _getTabs?.Invoke().Contains(tab) != true ||
-            generation != _suspensionGeneration || !_settings.TabSleepEnabled ||
-            (tab.IsPinned && !_settings.AllowPinnedTabsToSleep)))
+    /// <summary>Marks sleep only after native suspension succeeds and ownership still matches.</summary>
+    private async Task TrySuspendSafeAsync(object coreIdentity, Guid tabId, BrowserTab tab, int generation, object request)
+    {
+        dynamic core = coreIdentity;
+        try
         {
-            // Selection, transfer and settings can change while suspension is pending.
-            // Undo the completed suspension when the page must now stay awake.
-            try
+            bool success;
+            try { success = await core.TrySuspendAsync(); }
+            catch (Exception ex)
             {
-                core.Resume();
-                core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+                Trace.WriteLine($"TrySuspendAsync failed for tab {tabId}: {ex.Message}");
+                return;
             }
-            catch (Exception ex) { Trace.WriteLine($"Resume after pending suspension failed: {ex.Message}"); }
-            tab.IsSleeping = false;
-            return;
-        }
-
-        if (success && tab != null && !tab.IsActive && !tab.IsHibernated && _settings.TabSleepEnabled && generation == _suspensionGeneration)
+            if (!success) return;
+            if (tab.IsActive || tab.IsHibernated || _getTabs?.Invoke().Contains(tab) != true ||
+                !StillOwnsCore(tabId, coreIdentity) || generation != _suspensionGeneration ||
+                !_settings.TabSleepEnabled || (tab.IsPinned && !_settings.AllowPinnedTabsToSleep) || IsDownloadProtected(tabId))
+            {
+                // Selection, transfer, teardown and settings can change during native work.
+                try
+                {
+                    core.Resume();
+                    core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+                }
+                catch (Exception ex) { Trace.WriteLine($"Resume after pending suspension failed: {ex.Message}"); }
+                tab.IsSleeping = false;
+                return;
+            }
             tab.IsSleeping = true;
+        }
+        finally { CompleteSuspension(coreIdentity, request); }
     }
 
     /// <summary>Evicts least recently used tabs when the live WebView count exceeds the limit.</summary>
@@ -305,6 +335,20 @@ public sealed class TabHibernationManager
         }
     }
 
+    private bool IsDownloadProtected(Guid tabId)
+    {
+        try
+        {
+            return _isDownloadProtected?.Invoke(tabId) ?? _downloadStore.Items.Any(d =>
+                d.State == DownloadState.InProgress || d.State == DownloadState.Paused && d.CanResumeNative);
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Download protection check failed: {ex.Message}");
+            return true;
+        }
+    }
+
     /// <summary>Checks if a tab can be hibernated without losing important state.</summary>
     private bool IsTabSafeToHibernate(BrowserTab tab, IReadOnlyDictionary<Guid, dynamic> webViews)
     {
@@ -324,10 +368,7 @@ public sealed class TabHibernationManager
             catch (Exception ex) { Trace.WriteLine(ex); }
         }
 
-        // If there are ANY active downloads, disable all hibernation to be safe,
-        // because destroying a WebView might abort downloads originating from it.
-        if (_downloadStore.Items.Any(d => d.State == DownloadState.InProgress))
-            return false;
+        if (IsDownloadProtected(tab.Id)) return false;
 
         return true;
     }

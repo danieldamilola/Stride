@@ -29,7 +29,7 @@ We set out to build a browser that rethinks desktop tab management, respects you
 - **Favicon Pill Tabs**: A unique "Stride Signature" UI that compresses inactive tabs into clean icons and expands active ones, saving vertical and horizontal screen real estate.
 - **Command Bar Navigation**: Say goodbye to the permanent, bulky URL bar. Press `Ctrl+L` to invoke a floating, intelligent command bar with instant local history and autocomplete.
 - **Native Ad & Tracker Blocking**: Built-in network-level blocking capabilities with native support for parsing and applying **uBlock Origin** rules, enhanced with custom cosmetic filters.
-- **Smart Memory Management**: Intelligent tab hibernation and LRU (Least Recently Used) eviction algorithms to keep memory usage strictly bounded, no matter how many tabs you open.
+- **Smart Memory Management**: Tab hibernation and least recently used eviction reduce live WebView controls within each window. The configured control budget is a soft limit. Pinned tabs, audio, internal pages, previews and tabs that own live downloads can stay loaded. It does not cap total process or renderer memory.
 - **Force Dark Mode**: Integrated Dark Reader functionality to seamlessly force dark mode on websites that lack native dark themes.
 - **Adaptive Tab Bar**: The browser UI intelligently adapts its color palette based on the active website's theme.
 - **Focus Mode**: Distraction-free browsing modes with built-in domain blocklists to keep you on track.

@@ -185,19 +185,7 @@ public sealed partial class TabEngine : IDisposable
         );
         _hibernationManager.SetPreviewOriginCheck(id => _previewOriginTabId == id);
 
-        foreach (var item in _downloadStore.Items)
-        {
-            // No-op: WebView2 handles download resume natively;
-            // no need to attach custom resume handlers.
-        }
-
-        _downloadStore.Items.CollectionChanged += (s, e) =>
-        {
-            if (e.NewItems != null)
-            {
-                // No-op: no custom resume handler needed.
-            }
-        };
+        _hibernationManager.SetDownloadProtectionCheck(Downloads.IsTabProtectedByDownload);
 
         // BrowserSettings is a process singleton shared by every window, and each window
         // has its own engine and its own live profiles. Subscribing here is what makes a
@@ -208,6 +196,16 @@ public sealed partial class TabEngine : IDisposable
 
     private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(BrowserSettings.AdaptiveToolbarTint))
+        {
+            _dispatcher.Invoke(() =>
+            {
+                foreach (var id in _webViews.Keys.ToArray())
+                    if (TryGetCore(id, out var core) && core is not null)
+                        _ = _contentScriptInjector.UpdateThemeColorScriptAsync(core, _settings);
+            });
+            return;
+        }
         if (e.PropertyName is nameof(BrowserSettings.TabSleepEnabled) or nameof(BrowserSettings.AllowPinnedTabsToSleep))
         {
             _dispatcher.Invoke(_hibernationManager.ApplySleepSettings);
@@ -489,40 +487,19 @@ public sealed partial class TabEngine : IDisposable
             return;
         }
 
-        // WebView needs creation - creator acquires gate to serialize runtime creation.
-        // Gate wait is owned by engine lifecycle (_shutdownCts), NOT display activation (cts).
-        // A tab switch cancels display continuation (cts) but must not abort shared creation that other waiters depend on.
+        // Only runtime creation holds the shared gate. Per-tab extension readiness
+        // continues after release and belongs to engine lifetime, not display selection.
         try
         {
-            await _activationGate.WaitAsync(_shutdownCts.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            _readinessCoordinator.TryCancel(tab.Id);
-            return;
-        }
-        catch (Exception ex)
-        {
-            _readinessCoordinator.TrySetException(tab.Id, ex);
-            throw;
-        }
-
-        try
-        {
-            if (_disposed || !Tabs.Contains(tab))
+            Func<Task>? firstNavigation = null;
+            await CreateThenNavigateAsync(_activationGate, async () =>
             {
-                _readinessCoordinator.TryCancel(tab.Id);
-                return;
-            }
-
-            if (!_webViews.ContainsKey(tab.Id) || tab.IsHibernated)
-            {
-                await CreateWebViewForTab(tab);
-            }
-            else
-            {
-                _readinessCoordinator.TrySetResult(tab.Id, _webViews[tab.Id]);
-            }
+                if (_disposed || !Tabs.Contains(tab)) throw new OperationCanceledException();
+                if (!_webViews.ContainsKey(tab.Id) || tab.IsHibernated)
+                    firstNavigation = await CreateWebViewForTab(tab);
+                else
+                    _readinessCoordinator.TrySetResult(tab.Id, _webViews[tab.Id]);
+            }, () => firstNavigation?.Invoke() ?? Task.CompletedTask, _shutdownCts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -536,10 +513,6 @@ public sealed partial class TabEngine : IDisposable
             Trace.WriteLine($"ActivateAsync failed for tab {tab.Title}: {ex.Message}");
             return;
         }
-        finally
-        {
-            _activationGate.Release();
-        }
 
         if (cts is null || cts.IsCancellationRequested || _disposed || ActiveTab != tab || !Tabs.Contains(tab)) return;
 
@@ -548,6 +521,16 @@ public sealed partial class TabEngine : IDisposable
 
         _hibernationManager.SuspendBackgroundTabs(tab);
         _hibernationManager.EvictExcessWebViews(tab);
+    }
+
+    internal static async Task CreateThenNavigateAsync(SemaphoreSlim gate,
+        Func<Task> create, Func<Task> navigate, CancellationToken shutdown)
+    {
+        await gate.WaitAsync(shutdown);
+        try { await create(); }
+        finally { gate.Release(); }
+        shutdown.ThrowIfCancellationRequested();
+        await navigate();
     }
 
     /// <summary>
@@ -867,7 +850,7 @@ public sealed partial class TabEngine : IDisposable
     public void NavigateToDownloads(BrowserTab tab)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.DownloadsPage(_downloadStore.Items.ToList(), _ipcToken), "downloads"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.DownloadsPage([], _ipcToken), "downloads"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToOnboarding(BrowserTab tab)
@@ -1119,7 +1102,7 @@ public sealed partial class TabEngine : IDisposable
     /// is written to the trace. This is what identifies which step owns a stall,
     /// rather than inferring it from a timer gap alone.
     /// </summary>
-    private async Task CreateWebViewForTab(BrowserTab tab)
+    private async Task<Func<Task>> CreateWebViewForTab(BrowserTab tab)
     {
         var overall = System.Diagnostics.Stopwatch.StartNew();
         var isInternal = tab.Url?.StartsWith("internal://") ?? true;
@@ -1176,6 +1159,9 @@ public sealed partial class TabEngine : IDisposable
                 await _contentScriptInjector.InjectAsync(wv.CoreWebView2, _settings, _telemetryToken);
                 var injectMs = injectSw.ElapsedMilliseconds;
 
+                if (_disposed || !Tabs.Contains(tab) || !_webViews.TryGetValue(tab.Id, out var owned) || !ReferenceEquals((object)owned, (object)wv))
+                    throw new OperationCanceledException();
+
                 _readinessCoordinator.TrySetResult(tab.Id, wv);
 
                 System.Diagnostics.Trace.WriteLine(
@@ -1193,7 +1179,22 @@ public sealed partial class TabEngine : IDisposable
                 throw;
             }
 
-            if (_disposed || !Tabs.Contains(tab))
+            // Core readiness lets popup adoption and A/B/A switching share this
+            // configured control. First navigation remains a separate owned operation.
+            return () => CompleteInitialNavigationAsync(tab, wv, intent);
+        }
+        catch
+        {
+            _creatingTabs.Remove(tab.Id);
+            throw;
+        }
+    }
+
+    private async Task CompleteInitialNavigationAsync(BrowserTab tab, dynamic wv, long intent)
+    {
+        try
+        {
+            if (_disposed || !Tabs.Contains(tab) || !_webViews.TryGetValue(tab.Id, out var owned) || !ReferenceEquals((object)owned, (object)wv))
             {
                 AbandonControl(tab, wv);
                 return;
@@ -1246,7 +1247,7 @@ public sealed partial class TabEngine : IDisposable
                     return;
                 }
 
-                if (_disposed || !Tabs.Contains(tab))
+                if (_disposed || !Tabs.Contains(tab) || !_webViews.TryGetValue(tab.Id, out var current) || !ReferenceEquals((object)current, (object)wv))
                 {
                     AbandonControl(tab, wv);
                     return;
@@ -1270,7 +1271,11 @@ public sealed partial class TabEngine : IDisposable
                 _webViewFactory.NavigateInitialUrl(wv, tab);
             }
         }
-        finally { _creatingTabs.Remove(tab.Id); }
+        finally
+        {
+            if (!_webViews.TryGetValue(tab.Id, out var current) || ReferenceEquals((object)current, (object)wv))
+                _creatingTabs.Remove(tab.Id);
+        }
     }
 
     /// <summary>What the extension gate decided the caller should do next.</summary>
@@ -1398,11 +1403,14 @@ public sealed partial class TabEngine : IDisposable
     /// </summary>
     private void AbandonControl(BrowserTab tab, dynamic wv)
     {
-        _readinessCoordinator.TryCancel(tab.Id);
-        UnwireTabEvents(tab.Id);
-        _webViews.Remove(tab.Id);
-        _controlHosts.Remove(tab.Id);
-        ForgetNavigationIntent(tab.Id);
+        if (_webViews.TryGetValue(tab.Id, out var current) && ReferenceEquals((object)current, (object)wv))
+        {
+            _readinessCoordinator.TryCancel(tab.Id);
+            UnwireTabEvents(tab.Id);
+            _webViews.Remove(tab.Id);
+            _controlHosts.Remove(tab.Id);
+            ForgetNavigationIntent(tab.Id);
+        }
         _webViewHost?.Children.Remove((FrameworkElement)wv);
         try { wv.Dispose(); } catch (Exception ex) { Trace.WriteLine(ex); }
     }
@@ -1826,6 +1834,7 @@ public sealed partial class TabEngine : IDisposable
 
             _dispatcher.InvokeAsync(() =>
             {
+                if (WebViewIpcBridge.TryApplyThemeColor(tab, "", true)) TabStateChanged?.Invoke(tab);
                 tab.IsLoading = true;
                 LoadingStateChanged?.Invoke(tab, true);
             });

@@ -1,14 +1,12 @@
-using System.Text.Json;
 using StrideBrowser.Models;
 
 namespace StrideBrowser.Services.Pages;
 
-/// <summary>Generates the downloads page HTML. Download items are passed as JSON for client-side rendering.</summary>
+/// <summary>Generates a small shell. The document requests bounded download pages from the host.</summary>
 public sealed class DownloadPage
 {
     public string Render(List<DownloadItem> items, string ipcToken)
     {
-        var json = DownloadJson.SerializeForPage(items);
-        return TemplateRenderer.RenderJsonPage("Resources.Pages.Downloads.html", "DOWNLOADS", json, ipcToken);
+        return TemplateRenderer.RenderJsonPage("Resources.Pages.Downloads.html", "DOWNLOADS", "[]", ipcToken);
     }
 }

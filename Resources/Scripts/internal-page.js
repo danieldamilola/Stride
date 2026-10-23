@@ -3,8 +3,13 @@
   let activeDialog = null;
   let previousFocus = null;
   const inertState = new Map();
-  function enhance() {
-    document.querySelectorAll('.setting-row').forEach(row => {
+  function elements(root, selector) {
+    const matches = [...root.querySelectorAll(selector)];
+    if (root.matches?.(selector)) matches.unshift(root);
+    return matches;
+  }
+  function enhance(root) {
+    elements(root, '.setting-row').forEach(row => {
       const label = row.querySelector('.setting-label');
       const description = row.querySelector('.setting-desc');
       if (!label) return;
@@ -15,7 +20,7 @@
         if (description) control.setAttribute('aria-describedby', description.id);
       });
     });
-    document.querySelectorAll('.date-header,.domain-header,.group-name,.tab-star,a.entry-title:not([href])').forEach(el => {
+    elements(root, '.date-header,.domain-header,.group-name,.tab-star,a.entry-title:not([href])').forEach(el => {
       if (el.dataset.keyboardReady) return;
       el.dataset.keyboardReady = 'true';
       el.tabIndex = 0;
@@ -27,15 +32,16 @@
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
       });
     });
-    document.querySelectorAll('.date-header,.domain-header').forEach(el => {
+    elements(root, '.date-header,.domain-header').forEach(el => {
       el.setAttribute('aria-expanded', String(!el.parentElement.classList.contains('collapsed')));
       const body = el.nextElementSibling;
       if (body) { if (!body.id) body.id = 'expanded-content-' + ++serial; el.setAttribute('aria-controls', body.id); }
     });
-    document.querySelectorAll('input[placeholder]').forEach(el => {
-      if (!el.hasAttribute('aria-label') && !el.hasAttribute('aria-labelledby') && !document.querySelector('label[for="' + el.id + '"]')) el.setAttribute('aria-label', el.placeholder);
+    elements(root, 'input[placeholder]').forEach(el => {
+      if (!el.hasAttribute('aria-label') && !el.hasAttribute('aria-labelledby') && !el.labels?.length) el.setAttribute('aria-label', el.placeholder);
     });
-    const overlay = document.querySelector('.dialog-overlay.open');
+  }
+  function syncDialog(overlay) {
     if (overlay === activeDialog) return;
     if (activeDialog) {
       inertState.forEach((value, el) => el.inert = value);
@@ -69,7 +75,32 @@
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
   }, true);
   document.addEventListener('DOMContentLoaded', () => {
-    enhance();
-    new MutationObserver(enhance).observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
+    enhance(document.body);
+    syncDialog(document.querySelector('.dialog-overlay.open'));
+    new MutationObserver(records => {
+      const added = new Set();
+      for (const record of records) {
+        if (record.type === 'childList') {
+          for (const node of record.addedNodes) if (node.nodeType === 1) added.add(node);
+        } else {
+          const target = record.target;
+          // Expanded state changes need only their own heading.
+          if (target.matches('.date-section,.domain-group')) {
+            const heading = target.querySelector(':scope > .date-header,:scope > .domain-header');
+            if (heading) heading.setAttribute('aria-expanded',String(!target.classList.contains('collapsed')));
+          }
+          if (target.matches('.dialog-overlay')) syncDialog(target.classList.contains('open') ? target : null);
+        }
+      }
+      for (const node of added) {
+        if (!node.isConnected || [...added].some(parent => parent !== node && parent.contains(node))) continue;
+        enhance(node);
+        const row = node.closest('.setting-row');
+        if (row && row !== node) enhance(row);
+        const overlay = node.matches('.dialog-overlay.open') ? node : node.querySelector('.dialog-overlay.open');
+        if (overlay) syncDialog(overlay);
+      }
+      if (activeDialog && !activeDialog.isConnected) syncDialog(null);
+    }).observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
   });
 })();
