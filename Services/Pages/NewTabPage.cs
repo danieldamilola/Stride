@@ -1,11 +1,11 @@
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 /// <summary>Generates the new tab page HTML.</summary>
 public sealed class NewTabPage
@@ -23,7 +23,7 @@ public sealed class NewTabPage
         string[] backgroundUrls = Array.Empty<string>();
         
         // 1. Check AppData folder for user custom backgrounds
-        var userBgFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
+        var userBgFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Umber", "Backgrounds");
         if (Directory.Exists(userBgFolder))
         {
             var userFiles = Directory.GetFiles(userBgFolder)

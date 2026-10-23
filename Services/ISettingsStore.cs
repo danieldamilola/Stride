@@ -1,6 +1,6 @@
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>Interface for persisting browser settings.</summary>
 public interface ISettingsStore

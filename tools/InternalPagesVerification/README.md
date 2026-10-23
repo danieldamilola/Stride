@@ -4,15 +4,15 @@ The Windows harness loads the compiled Settings page in an isolated WebView2 pro
 
 The harness exports all ten internal pages in both themes. The browser check uses those rendered files to test search, keyboard editing, update error recovery, contrast, narrow layouts, and dialogs. It saves screenshots beside the HTML files.
 
-Run from the repository root in PowerShell. Keep the output in a dedicated temporary directory so the build can run while Stride is open.
+Run from the repository root in PowerShell. Keep the output in a dedicated temporary directory so the build can run while Umber is open.
 
 ```powershell
-$verificationOutput = Join-Path $env:TEMP 'StridePagesVerification'
+$verificationOutput = Join-Path $env:TEMP 'UmberPagesVerification'
 dotnet build tools/InternalPagesVerification/InternalPagesVerification.csproj '-p:DefaultItemExcludesInProjectFolder=tools/**' "-p:OutDir=$verificationOutput/app/"
 & "$verificationOutput/app/InternalPagesVerification.exe" "$verificationOutput/evidence"
 ```
 
-The browser check requires an existing Playwright installation. Set `STRIDE_PLAYWRIGHT` to its module path if it is outside Node's module search path.
+The browser check requires an existing Playwright installation. Set `UMBER_PLAYWRIGHT` to its module path if it is outside Node's module search path.
 
 ```powershell
 node tools/InternalPagesVerification/browser-check.cjs "$verificationOutput/evidence"

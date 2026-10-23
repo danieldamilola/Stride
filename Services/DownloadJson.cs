@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Shared JSON contract for download items. The persisted store, the page

@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models.Reader;
+namespace UmberBrowser.Models.Reader;
 
 /// <summary>
 /// Raw result returned by the JS extractor running inside the page WebView2.

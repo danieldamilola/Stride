@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace StrideBrowser.Models;
+namespace UmberBrowser.Models;
 
 public enum AppThemeMode { System, Light, Dark }
 
@@ -72,7 +72,7 @@ public sealed partial class BrowserSettings : ObservableObject
 
     /// <summary>
     /// How hard WebView2 tracking prevention works. Balanced unless the user asks for
-    /// Strict. The level is written to every profile Stride creates, and to the live ones
+    /// Strict. The level is written to every profile Umber creates, and to the live ones
     /// when this changes, so the setting and the engine cannot drift apart.
     /// </summary>
     private TrackingPreventionMode _trackingPreventionMode = TrackingPreventionModes.Default;

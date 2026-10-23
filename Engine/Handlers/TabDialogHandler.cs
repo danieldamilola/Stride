@@ -1,9 +1,9 @@
 using System;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Engine.Handlers;
+namespace UmberBrowser.Engine.Handlers;
 
 public static class TabDialogHandler
 {

@@ -1,6 +1,6 @@
-using StrideBrowser.Models.LinkPreview;
+using UmberBrowser.Models.LinkPreview;
 
-namespace StrideBrowser.Services.LinkPreview;
+namespace UmberBrowser.Services.LinkPreview;
 
 /// <summary>Pure policy. No WPF, no WebView2. Testable without UI.</summary>
 public interface ILinkPreviewPolicy

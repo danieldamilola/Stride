@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Net;
 using System.Text;
-using StrideBrowser.Engine;
-using StrideBrowser.Helpers;
+using UmberBrowser.Engine;
+using UmberBrowser.Helpers;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 public sealed class ReleaseNotesPage
 {

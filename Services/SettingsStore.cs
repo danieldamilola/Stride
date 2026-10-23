@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Persists <see cref="BrowserSettings"/> to disk as JSON.

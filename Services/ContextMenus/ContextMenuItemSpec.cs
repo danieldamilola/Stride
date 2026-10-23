@@ -1,6 +1,6 @@
 using System;
 
-namespace StrideBrowser.Services.ContextMenus;
+namespace UmberBrowser.Services.ContextMenus;
 
 /// <summary>
 /// One entry in a rendered context menu. A closed set: commands and separators.

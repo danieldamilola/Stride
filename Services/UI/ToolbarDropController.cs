@@ -5,9 +5,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>Opens dropped links and files in the tab under the pointer, or in a new tab.</summary>
 public sealed class ToolbarDropController : IDisposable

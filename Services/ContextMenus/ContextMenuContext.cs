@@ -1,6 +1,6 @@
 using System;
 
-namespace StrideBrowser.Services.ContextMenus;
+namespace UmberBrowser.Services.ContextMenus;
 
 /// <summary>What the user right-clicked on.</summary>
 public enum ContextMenuMediaKind

@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models.Reader;
+namespace UmberBrowser.Models.Reader;
 
 /// <summary>
 /// Per-tab reader state. Owned by <see cref="Services.Reader.IReaderService"/>.

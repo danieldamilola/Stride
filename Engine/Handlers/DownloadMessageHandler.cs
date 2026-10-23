@@ -1,8 +1,8 @@
 using System.Text.Json;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Engine.Handlers;
+namespace UmberBrowser.Engine.Handlers;
 
 public sealed class DownloadMessageHandler(TabEngine engine, IDownloadStore downloadStore) : IWebMessageHandler
 {

@@ -1,4 +1,4 @@
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Thread-safe transfer buffer for TCLens payloads.

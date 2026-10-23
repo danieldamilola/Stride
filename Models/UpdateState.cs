@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models;
+namespace UmberBrowser.Models;
 
 public enum UpdateState
 {

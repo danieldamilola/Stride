@@ -5,9 +5,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>Sizes tabs for the viewport and scrolls once their minimum widths no longer fit.</summary>
 public sealed class TabShrinkPanel : Panel

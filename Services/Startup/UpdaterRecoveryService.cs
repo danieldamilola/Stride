@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
-namespace StrideBrowser.Services.Startup;
+namespace UmberBrowser.Services.Startup;
 
 public sealed class UpdaterRecoveryService
 {
@@ -11,7 +11,7 @@ public sealed class UpdaterRecoveryService
         try
         {
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            foreach (var pending in Directory.GetFiles(baseDir, "Stride.Updater*.new"))
+            foreach (var pending in Directory.GetFiles(baseDir, "Umber.Updater*.new"))
             {
                 var target = pending.Substring(0, pending.Length - 4);
                 try

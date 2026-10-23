@@ -1,4 +1,4 @@
-namespace StrideBrowser.Services.Reader;
+namespace UmberBrowser.Services.Reader;
 
 /// <summary>
 /// Sanitizes untrusted ArticleResult.ContentHtml into display-safe HTML.

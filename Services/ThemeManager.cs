@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Windows;
 using Microsoft.Win32;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 public sealed class ThemeManager
 {

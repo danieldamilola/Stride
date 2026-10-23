@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models;
+namespace UmberBrowser.Models;
 
 /// <summary>
 /// A named group of tabs saved via OneTab.

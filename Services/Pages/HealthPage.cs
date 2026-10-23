@@ -1,7 +1,7 @@
 using System.Text;
-using StrideBrowser.Services;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 public sealed class HealthPage
 {
@@ -34,7 +34,7 @@ public sealed class HealthPage
         {
             var sb = new StringBuilder();
             sb.AppendLine($"<html><body style='font-family:sans-serif;padding:24px'>");
-            sb.AppendLine($"<h1>Stride Health</h1>");
+            sb.AppendLine($"<h1>Umber Health</h1>");
             sb.AppendLine($"<p>Version: {System.Web.HttpUtility.HtmlEncode(currentVersion)}</p>");
             sb.AppendLine($"<p>uBlock {System.Web.HttpUtility.HtmlEncode(health.Version)}: <span style='color:{statusColor}'>{statusText}</span></p>");
             sb.AppendLine($"<p>Folder: {health.HasFolder} Zip: {health.HasZip} Hash: {health.HasHash} Assets: {assetsText}</p>");

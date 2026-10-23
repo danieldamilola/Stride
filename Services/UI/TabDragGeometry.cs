@@ -2,9 +2,9 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
-using StrideBrowser.Interop;
+using UmberBrowser.Interop;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 public static class TabDragGeometry
 {

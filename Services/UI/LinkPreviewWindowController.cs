@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using System.Windows;
-using StrideBrowser.Controls;
-using StrideBrowser.Engine;
-using StrideBrowser.ViewModels.LinkPreview;
+using UmberBrowser.Controls;
+using UmberBrowser.Engine;
+using UmberBrowser.ViewModels.LinkPreview;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 public sealed class LinkPreviewWindowController : IDisposable
 {

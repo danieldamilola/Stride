@@ -7,10 +7,10 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// Manages the tab strip UI: selection changes, mouse-wheel scrolling,

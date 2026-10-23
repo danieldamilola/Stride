@@ -3,10 +3,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using StrideBrowser.Engine;
-using StrideBrowser.Services;
+using UmberBrowser.Engine;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// Handles launching the T&amp;C Lens extension options page and capturing

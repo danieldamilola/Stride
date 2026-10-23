@@ -1,0 +1,179 @@
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using Microsoft.Web.WebView2.Core;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using Xunit;
+
+namespace UmberBrowser.Tests;
+
+public class TabHibernationManagerTests
+{
+    [Fact]
+    public void SuspendBackgroundTabs_WhenSleepDisabled_DoesNotTouchWebViews()
+    {
+        var settings = new BrowserSettings { TabSleepEnabled = false };
+        var manager = new TabHibernationManager(new FakeDownloadStore(), settings);
+        var activeTab = new BrowserTab();
+        manager.Attach(
+            () => new List<BrowserTab> { activeTab },
+            () => new Dictionary<System.Guid, dynamic> { [activeTab.Id] = new BrokenWebView() },
+            _ => { },
+            10);
+
+        manager.SuspendBackgroundTabs(activeTab);
+    }
+
+    [Fact]
+    public void SuspendBackgroundTabs_WhenSleepEnabled_SuspendsBackgroundTabs()
+    {
+        var settings = new BrowserSettings { TabSleepEnabled = true };
+        var manager = new TabHibernationManager(new FakeDownloadStore(), settings);
+        var activeTab = new BrowserTab();
+        var backgroundTab = new BrowserTab();
+        var backgroundWv = new FakeWebView();
+        manager.Attach(
+            () => new List<BrowserTab> { activeTab, backgroundTab },
+            () => new Dictionary<System.Guid, dynamic> { [activeTab.Id] = new FakeWebView(), [backgroundTab.Id] = backgroundWv },
+            _ => { },
+            10);
+
+        manager.SuspendBackgroundTabs(activeTab);
+
+        Assert.Equal(1, backgroundWv.CoreWebView2.SuspendCount);
+    }
+
+    [Fact]
+    public void EvictExcessWebViews_WhenHibernationDisabled_DoesNotTeardown()
+    {
+        var settings = new BrowserSettings { TabHibernationEnabled = false };
+        var manager = new TabHibernationManager(new FakeDownloadStore(), settings);
+        var activeTab = new BrowserTab { IsActive = true };
+        var tabs = new List<BrowserTab> { activeTab };
+        var webViews = new Dictionary<System.Guid, dynamic> { [activeTab.Id] = new BrokenWebView() };
+        for (var i = 0; i < 11; i++)
+        {
+            var tab = new BrowserTab();
+            tabs.Add(tab);
+            webViews[tab.Id] = new BrokenWebView();
+        }
+
+        var teardownCalls = 0;
+        manager.Attach(() => tabs, () => webViews, _ => teardownCalls++, 10);
+
+        manager.EvictExcessWebViews(activeTab);
+
+        Assert.Equal(0, teardownCalls);
+        Assert.All(tabs, t => Assert.False(t.IsHibernated));
+    }
+
+    [Fact]
+    public void EvictExcessWebViews_WhenHibernationEnabled_EvictsDownToLimit()
+    {
+        var settings = new BrowserSettings { TabHibernationEnabled = true };
+        var manager = new TabHibernationManager(new FakeDownloadStore(), settings);
+        var activeTab = new BrowserTab { IsActive = true };
+        var tabs = new List<BrowserTab> { activeTab };
+        var webViews = new Dictionary<System.Guid, dynamic> { [activeTab.Id] = new FakeWebView() };
+        for (var i = 0; i < 11; i++)
+        {
+            var tab = new BrowserTab();
+            tabs.Add(tab);
+            webViews[tab.Id] = new FakeWebView();
+        }
+
+        var teardownCalls = 0;
+        manager.Attach(() => tabs, () => webViews, _ => teardownCalls++, 10);
+
+        manager.EvictExcessWebViews(activeTab);
+
+        Assert.Equal(2, teardownCalls);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void HibernateRestoredTabs_HibernatesEveryBackgroundTabRegardlessOfSettingOrPin(
+        bool hibernationEnabled)
+    {
+        var settings = new BrowserSettings { TabHibernationEnabled = hibernationEnabled };
+        var manager = new TabHibernationManager(new FakeDownloadStore(), settings);
+        var activeTab = new BrowserTab { IsActive = true };
+        var pinnedTab = new BrowserTab { IsPinned = true };
+        var backgroundTab = new BrowserTab();
+        var tornDown = new List<System.Guid>();
+
+        manager.Attach(
+            () => new List<BrowserTab> { activeTab, pinnedTab, backgroundTab },
+            () => new Dictionary<System.Guid, dynamic>
+            {
+                [activeTab.Id] = new FakeWebView(),
+                [pinnedTab.Id] = new FakeWebView(),
+                [backgroundTab.Id] = new FakeWebView()
+            },
+            id => tornDown.Add(id),
+            10);
+
+        manager.HibernateRestoredTabs(activeTab);
+
+        Assert.False(activeTab.IsHibernated);
+        Assert.True(pinnedTab.IsHibernated);
+        Assert.True(backgroundTab.IsHibernated);
+        Assert.DoesNotContain(activeTab.Id, tornDown);
+        Assert.Contains(pinnedTab.Id, tornDown);
+        Assert.Contains(backgroundTab.Id, tornDown);
+    }
+
+    [Fact]
+    public void HibernateRestoredTabs_MarksColdTabsWithoutTouchingTheActiveTab()
+    {
+        var settings = new BrowserSettings { TabHibernationEnabled = false };
+        var manager = new TabHibernationManager(new FakeDownloadStore(), settings);
+        var activeTab = new BrowserTab { IsActive = true };
+        var pinnedTab = new BrowserTab { IsPinned = true };
+        var webViews = new Dictionary<System.Guid, dynamic>();
+
+        manager.Attach(
+            () => new List<BrowserTab> { activeTab, pinnedTab },
+            () => webViews,
+            _ => throw new Xunit.Sdk.XunitException("A cold tab has no WebView to tear down."),
+            10);
+
+        manager.HibernateRestoredTabs(activeTab);
+
+        Assert.False(activeTab.IsHibernated);
+        Assert.True(pinnedTab.IsHibernated);
+    }
+}
+
+public sealed class FakeDownloadStore : IDownloadStore
+{
+    public ObservableCollection<DownloadItem> Items { get; } = new();
+    public void Add(DownloadItem item) => Items.Add(item);
+    public void Remove(string id) { }
+    public void ClearCompleted() { }
+    public void ClearAll() { }
+    public DownloadItem? Get(string id) => null;
+}
+
+public sealed class FakeCoreWebView
+{
+    public bool IsDocumentPlayingAudio { get; set; }
+    public CoreWebView2MemoryUsageTargetLevel MemoryUsageTargetLevel { get; set; }
+    public int SuspendCount { get; private set; }
+    public Task<bool> TrySuspendAsync() { SuspendCount++; return Task.FromResult(true); }
+}
+
+public sealed class FakeWebView
+{
+    public FakeCoreWebView CoreWebView2 { get; } = new();
+    public Uri? Source { get; set; }
+}
+
+public sealed class BrokenWebView
+{
+    public object CoreWebView2 => throw new System.InvalidOperationException("CoreWebView2 should not be accessed");
+    public Uri? Source => throw new System.InvalidOperationException("Source should not be accessed");
+}

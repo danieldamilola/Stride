@@ -6,10 +6,10 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Web.WebView2.Wpf;
-using StrideBrowser.Interop;
-using StrideBrowser.Models;
+using UmberBrowser.Interop;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// The native boundary the clip pass drives. The product uses

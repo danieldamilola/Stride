@@ -1,20 +1,21 @@
 using System;
 using System.IO;
 
-namespace StrideBrowser.Helpers;
+namespace UmberBrowser.Helpers;
 
 /// <summary>
-/// Provides standard paths for Stride's data files.
-/// All files are stored in %LocalAppData%\StrideBrowser.
-/// Set the STRIDE_DATA_DIR environment variable to point the whole data tree
+/// Provides standard paths for Umber's data files.
+/// All files are stored in %LocalAppData%\UmberBrowser.
+/// Set the UMBER_DATA_DIR environment variable to point the whole data tree
 /// somewhere else. That is how the recovery verification harness runs the real
 /// app against an isolated profile without touching the installed browser's data.
-/// With the variable unset, every path is exactly what it was before.
 /// </summary>
 public static class AppPaths
 {
     /// <summary>Environment variable that relocates the whole data tree.</summary>
-    public const string DataDirectoryOverrideVariable = "STRIDE_DATA_DIR";
+    public const string DataDirectoryOverrideVariable = "UMBER_DATA_DIR";
+
+    private const string ProductionDataFolderName = "UmberBrowser";
 
     private static readonly string Base = ResolveDataDirectory(
         Environment.GetEnvironmentVariable(DataDirectoryOverrideVariable),
@@ -32,7 +33,7 @@ public static class AppPaths
     /// <summary>The path used when no override is set.</summary>
     public static string ProductionDataDirectory => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "StrideBrowser");
+        ProductionDataFolderName);
 
     public static string SettingsFile => Path.Combine(Base, "settings.json");
     public static string HistoryFile => Path.Combine(Base, "history.json");
@@ -44,7 +45,7 @@ public static class AppPaths
     public static string ExtensionsDir => Path.Combine(Base, "extensions");
     public static string WebViewDataDir => Path.Combine(Base, "WebView2");
     public static string WebView2Dir => WebViewDataDir;
-    public static string LogFile => Path.Combine(Base, "stride.log");
+    public static string LogFile => Path.Combine(Base, "umber.log");
     public static string CrashLogFile => Path.Combine(Base, "crash.log");
     public static string UBlockHashFile => Path.Combine(Base, "ublock.sha256");
     public static string FocusCacheDir => Path.Combine(Base, "focus_cache");
@@ -57,7 +58,7 @@ public static class AppPaths
     /// </summary>
     public static string ResolveDataDirectory(string? overrideValue, string localApplicationDataPath)
     {
-        var production = NormalizeDirectoryPath(Path.Combine(localApplicationDataPath, "StrideBrowser"));
+        var production = NormalizeDirectoryPath(Path.Combine(localApplicationDataPath, ProductionDataFolderName));
         if (string.IsNullOrWhiteSpace(overrideValue)) return production;
 
         var candidateText = overrideValue.Trim().Trim('"').Trim();
@@ -75,7 +76,7 @@ public static class AppPaths
         if (PathEquals(candidate, production)) return production;
         if (File.Exists(candidate)) return production;
 
-        // An override that contains the real profile would scatter Stride's files
+        // An override that contains the real profile would scatter Umber's files
         // next to it and make "delete the profile" ambiguous. Refuse.
         if (IsSameOrAncestor(candidate, production)) return production;
 

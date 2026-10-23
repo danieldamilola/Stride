@@ -5,9 +5,9 @@ using System.Windows;
 using System.Windows.Input;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using StrideBrowser.Engine;
+using UmberBrowser.Engine;
 
-namespace StrideBrowser.Controls;
+namespace UmberBrowser.Controls;
 
 public partial class LinkPreviewWindow : Window
 {

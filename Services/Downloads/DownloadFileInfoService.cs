@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.Downloads;
+namespace UmberBrowser.Services.Downloads;
 
 public sealed class DownloadFileInfoService
 {

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 using System.Diagnostics;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 public static class DataImporter
 {

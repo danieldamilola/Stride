@@ -1,8 +1,8 @@
 using System.Windows;
-using StrideBrowser.Models;
-using StrideBrowser.Models.LinkPreview;
+using UmberBrowser.Models;
+using UmberBrowser.Models.LinkPreview;
 
-namespace StrideBrowser.Services.LinkPreview;
+namespace UmberBrowser.Services.LinkPreview;
 
 public sealed class LinkPreviewPolicy : ILinkPreviewPolicy
 {

@@ -1,7 +1,7 @@
 using System.Windows;
-using StrideBrowser.Models.LinkPreview;
+using UmberBrowser.Models.LinkPreview;
 
-namespace StrideBrowser.Services.LinkPreview;
+namespace UmberBrowser.Services.LinkPreview;
 
 public interface ILinkPreviewService
 {

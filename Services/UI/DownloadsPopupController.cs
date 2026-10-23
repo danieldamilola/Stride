@@ -4,12 +4,12 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using StrideBrowser.Controls;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.ViewModels;
+using UmberBrowser.Controls;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.ViewModels;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 public sealed class DownloadsPopupController : IDisposable
 {

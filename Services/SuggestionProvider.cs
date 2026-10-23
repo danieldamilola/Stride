@@ -1,8 +1,8 @@
 using System.Net.Http;
 using System.Text.Json;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Merges local history and shortcut matches with DuckDuckGo autocomplete results.

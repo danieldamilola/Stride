@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace StrideBrowser.Converters;
+namespace UmberBrowser.Converters;
 
 /// <summary>
 /// Fades the tab close button in on hover and keeps it lit on the active tab.

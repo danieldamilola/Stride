@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 public interface IDownloadStore
 {

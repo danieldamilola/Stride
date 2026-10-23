@@ -2,9 +2,9 @@ using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
-using StrideBrowser.Services.UI;
+using UmberBrowser.Services.UI;
 
-namespace StrideBrowser.Converters;
+namespace UmberBrowser.Converters;
 
 /// <summary>
 /// Shows or hides one part of the toolbar action cluster from the window width. The parameter

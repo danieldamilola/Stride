@@ -7,11 +7,11 @@ using System.Windows.Markup;
 using System.Windows.Threading;
 using System.Xml.Linq;
 using Microsoft.Extensions.DependencyInjection;
-using StrideBrowser;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.UI;
+using UmberBrowser;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.UI;
 
 /// <summary>
 /// Drives the real tab tearing and docking path against real windows and a real page.
@@ -28,9 +28,9 @@ internal static class Program
         using var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BrowserResources.xaml")!;
         var dictionary = XDocument.Load(resourceStream).Descendants().First(e => e.Name.LocalName == "ResourceDictionary");
         dictionary.SetAttributeValue(XNamespace.Xmlns + "x", "http://schemas.microsoft.com/winfx/2006/xaml");
-        dictionary.SetAttributeValue(XNamespace.Xmlns + "conv", "clr-namespace:StrideBrowser.Converters;assembly=Stride");
-        foreach (var element in dictionary.Descendants().Where(e => e.Name.NamespaceName == "clr-namespace:StrideBrowser.Converters"))
-            element.Name = XName.Get(element.Name.LocalName, "clr-namespace:StrideBrowser.Converters;assembly=Stride");
+        dictionary.SetAttributeValue(XNamespace.Xmlns + "conv", "clr-namespace:UmberBrowser.Converters;assembly=Umber");
+        foreach (var element in dictionary.Descendants().Where(e => e.Name.NamespaceName == "clr-namespace:UmberBrowser.Converters"))
+            element.Name = XName.Get(element.Name.LocalName, "clr-namespace:UmberBrowser.Converters;assembly=Umber");
         app.Resources = (ResourceDictionary)XamlReader.Parse(dictionary.ToString());
         app.ShutdownMode = ShutdownMode.OnExplicitShutdown;
         Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
@@ -38,8 +38,8 @@ internal static class Program
 
         // Every store is in memory and the WebView2 profile is a fresh directory, so a
         // run cannot read or write the installed browser's profile.
-        Require(StrideBrowser.Helpers.AppPaths.IsIsolatedProfile,
-            $"STRIDE_DATA_DIR is not redirecting the data tree, AppPaths.Base is {StrideBrowser.Helpers.AppPaths.DataDirectory}");
+        Require(UmberBrowser.Helpers.AppPaths.IsIsolatedProfile,
+            $"UMBER_DATA_DIR is not redirecting the data tree, AppPaths.Base is {UmberBrowser.Helpers.AppPaths.DataDirectory}");
 
         var result = 1;
         app.Dispatcher.BeginInvoke(new Action(async () =>
@@ -71,7 +71,7 @@ internal static class Program
             ClearDataOnExit = false,
             ShowTabNames = true
         };
-        var session = new BrowserSession { WebViewDataDirectory = Path.Combine(Path.GetTempPath(), "StrideTabTearingSmoke", Guid.NewGuid().ToString("N")) };
+        var session = new BrowserSession { WebViewDataDirectory = Path.Combine(Path.GetTempPath(), "UmberTabTearingSmoke", Guid.NewGuid().ToString("N")) };
         var closedTabs = new MemoryClosedTabs();
         var sessionStore = new MemorySession();
         var settingsStore = new MemorySettings(settings);
@@ -456,15 +456,15 @@ internal static class Program
         engine.CloseTab(background);
         foreach (var (url, title) in new[]
         {
-            (InternalUrls.NewTab, "New Tab - Stride"),
-            (InternalUrls.Settings, "Settings - Stride"),
-            (InternalUrls.OneTab, "Saved tabs - Stride"),
-            (InternalUrls.History, "History - Stride"),
-            (InternalUrls.Downloads, "Downloads - Stride"),
-            (InternalUrls.Onboarding, "Welcome to Stride"),
-            (InternalUrls.ReleaseNotes, "What's New in Stride"),
+            (InternalUrls.NewTab, "New Tab - Umber"),
+            (InternalUrls.Settings, "Settings - Umber"),
+            (InternalUrls.OneTab, "Saved tabs - Umber"),
+            (InternalUrls.History, "History - Umber"),
+            (InternalUrls.Downloads, "Downloads - Umber"),
+            (InternalUrls.Onboarding, "Welcome to Umber"),
+            (InternalUrls.ReleaseNotes, "What's New in Umber"),
             (InternalUrls.Focus, "FOCUS"),
-            (InternalUrls.Health, "Health - Stride")
+            (InternalUrls.Health, "Health - Umber")
         })
         {
             engine.SwitchTo(previous);

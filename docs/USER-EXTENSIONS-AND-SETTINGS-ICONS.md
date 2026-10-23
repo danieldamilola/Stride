@@ -33,7 +33,7 @@ Add a settings section, probably under the existing "Installed Extensions & Core
 
 - A "Load unpacked extension" row that opens a folder picker.
 - Validate the chosen folder has a `manifest.json` at its top level before calling `LoadUnpackedAsync`.
-- Copy the folder into `%LocalAppData%\StrideBrowser\extensions\<name>` rather than registering it in place. The API docs state that changing an extension's content after installation causes it to be removed from the profile. Registering from a location the user might edit or delete is asking for that failure.
+- Copy the folder into `%LocalAppData%\UmberBrowser\extensions\<name>` rather than registering it in place. The API docs state that changing an extension's content after installation causes it to be removed from the profile. Registering from a location the user might edit or delete is asking for that failure.
 - List what is currently installed with a toggle and a remove button, calling the existing methods.
 
 `AddBrowserExtensionAsync` error values worth handling explicitly, from the docs:
@@ -75,7 +75,7 @@ Extensions must not be re-registered on every launch. WebView2 persists them, so
 
 ### Open questions
 
-- Should a user extension be able to see Stride's own injected scripts? A content script and our injected content script run in the same world, so an extension could conflict with the theme colour, link preview, or YouTube scripts. Probably worth a warning in the docs, or isolating our scripts into a separate world if the API allows it.
+- Should a user extension be able to see Umber's own injected scripts? A content script and our injected content script run in the same world, so an extension could conflict with the theme colour, link preview, or YouTube scripts. Probably worth a warning in the docs, or isolating our scripts into a separate world if the API allows it.
 - Do we want an extension to be able to toggle `AdBlockEnabled`? That setting drives both uBlock and the parked adnuke script. An extension enabling uBlock behind the user's back is confusing.
 
 ## Part 2: settings icon consistency
@@ -116,7 +116,7 @@ Decide whether to keep eight entries or match the reference's grouping. Grouping
 
 ### Not doing without asking
 
-- Replacing the icon set wholesale. The existing icons are internally consistent, they are just not distinctive to Stride and one is visually off. A full swap is a design change, not a consistency fix.
+- Replacing the icon set wholesale. The existing icons are internally consistent, they are just not distinctive to Umber and one is visually off. A full swap is a design change, not a consistency fix.
 - Any change to the settings page layout beyond the rail.
 
 ## Order of work

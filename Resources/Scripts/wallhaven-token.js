@@ -6,6 +6,6 @@
     // by checking the message source origin instead, so nothing secret needs to reach the page.
     var allowedHosts = [__ALLOWED_HOSTS__];
     if (allowedHosts.indexOf(window.location.hostname) !== -1) {
-        window.__STRIDE_WALLHAVEN = true;
+        window.__UMBER_WALLHAVEN = true;
     }
 })();

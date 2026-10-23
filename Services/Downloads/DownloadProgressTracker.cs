@@ -1,4 +1,4 @@
-namespace StrideBrowser.Services.Downloads;
+namespace UmberBrowser.Services.Downloads;
 
 public sealed class DownloadProgressTracker
 {

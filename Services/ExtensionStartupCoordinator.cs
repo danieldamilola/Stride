@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using StrideBrowser.Helpers;
+using UmberBrowser.Helpers;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Runs the extension registration once per real WebView2 user data folder and

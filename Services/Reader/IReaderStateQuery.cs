@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace StrideBrowser.Services.Reader;
+namespace UmberBrowser.Services.Reader;
 
 /// <summary>
 /// Narrow query interface that TabEngine uses to check reader state

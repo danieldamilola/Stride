@@ -1,7 +1,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace StrideBrowser.Helpers;
+namespace UmberBrowser.Helpers;
 
 /// <summary>
 /// Loads embedded resource files and optionally applies placeholder substitution.
@@ -10,7 +10,7 @@ namespace StrideBrowser.Helpers;
 public static class ResourceLoader
 {
     private static readonly Assembly Asm = Assembly.GetExecutingAssembly();
-    private static readonly string Prefix = typeof(ResourceLoader).Namespace!.Split('.')[0]; // "StrideBrowser"
+    private static readonly string Prefix = typeof(ResourceLoader).Namespace!.Split('.')[0]; // "UmberBrowser"
 
     /// <summary>
     /// Loads an embedded resource as a string.

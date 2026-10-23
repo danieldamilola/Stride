@@ -1,6 +1,6 @@
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.Downloads;
+namespace UmberBrowser.Services.Downloads;
 
 public static class RecentDownloadList
 {

@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const assert = require('node:assert/strict');
-const { chromium } = require(process.env.STRIDE_PLAYWRIGHT || 'playwright');
+const { chromium } = require(process.env.UMBER_PLAYWRIGHT || 'playwright');
 
 (async () => {
   const directory = process.argv[2];

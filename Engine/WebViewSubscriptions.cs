@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>Removes window-specific page handlers before a tab changes owners.</summary>
 internal sealed class WebViewSubscriptions : IDisposable

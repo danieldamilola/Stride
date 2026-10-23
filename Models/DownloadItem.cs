@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Windows.Media.Imaging;
 
-namespace StrideBrowser.Models;
+namespace UmberBrowser.Models;
 
 public sealed class DownloadItem : INotifyPropertyChanged
 {

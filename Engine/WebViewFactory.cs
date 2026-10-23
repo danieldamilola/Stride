@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Owns WebView2 environment + control creation and configuration:
@@ -101,7 +101,7 @@ public sealed class WebViewFactory
     }
 
     /// <summary>
-    /// Builds the options every Stride WebView2 environment is created with.
+    /// Builds the options every Umber WebView2 environment is created with.
     ///
     /// Two privacy properties are set here and both are documented SDK surface, not
     /// Chromium flags:
@@ -109,8 +109,8 @@ public sealed class WebViewFactory
     ///   IsCustomCrashReportingEnabled = true. Microsoft states that when this is true,
     ///   "Windows won't send crash data to Microsoft endpoint". The default is false,
     ///   where WebView respects the Windows diagnostic data setting instead. This does not
-    ///   disable every WebView2 diagnostic signal, and Stride does not claim it does.
-    ///   Required from SDK 1.0.1414-prerelease; Stride pins 1.0.4181-prerelease.
+    ///   disable every WebView2 diagnostic signal, and Umber does not claim it does.
+    ///   Required from SDK 1.0.1414-prerelease; Umber pins 1.0.4181-prerelease.
     ///
     ///   EnableTrackingPrevention = true. Already the default, and Microsoft says an app
     ///   "shouldn't disable this property if WebView2 is being used as a 'full browser'
@@ -176,7 +176,7 @@ public sealed class WebViewFactory
     public static string BuildBrowserArguments(bool smartScreenEnabled, bool forceDarkMode = false)
     {
         var args =
-            "--app-user-model-id=Stride " +
+            "--app-user-model-id=Umber " +
             "--disable-background-networking " +
             "--disable-breakpad " +
             "--disable-component-update " +
@@ -232,10 +232,10 @@ public sealed class WebViewFactory
         ApplyTrackingPreventionLevel(core);
 
         core.SetVirtualHostNameToFolderMapping("local.assets", System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Pages"), CoreWebView2HostResourceAccessKind.Allow);
-        var userAssetsPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
+        var userAssetsPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "Umber", "Backgrounds");
         if (!System.IO.Directory.Exists(userAssetsPath)) System.IO.Directory.CreateDirectory(userAssetsPath);
         core.SetVirtualHostNameToFolderMapping("user.assets", userAssetsPath, CoreWebView2HostResourceAccessKind.Allow);
-        // NOTE: no temp.stride mapping. The temp directory is user-owned and must never be
+        // NOTE: no temp.umber mapping. The temp directory is user-owned and must never be
         // reachable from web content (it would expose %TEMP% to any page). Removed deliberately.
 
         // Strip native Edge bloat UI

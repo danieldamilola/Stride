@@ -1,4 +1,4 @@
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Pure domain-matching logic for Focus Mode blocklists. Extracted from

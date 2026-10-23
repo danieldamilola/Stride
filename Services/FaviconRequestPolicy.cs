@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Net;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>The answer the loader acts on. <see cref="Reason"/> is for the trace and tests.</summary>
 public readonly record struct FaviconRequestDecision(bool Allowed, string Host, string Reason)
@@ -25,7 +25,7 @@ public readonly record struct FaviconRequestDecision(bool Allowed, string Host, 
 /// </summary>
 public static class FaviconRequestPolicy
 {
-    /// <summary>The only third-party icon service Stride talks to.</summary>
+    /// <summary>The only third-party icon service Umber talks to.</summary>
     public const string IconServiceBaseUrl = "https://icons.duckduckgo.com/ip3/";
 
     /// <summary>

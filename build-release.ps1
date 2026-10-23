@@ -1,11 +1,11 @@
 $ErrorActionPreference = "Stop"
 
-# 1. Kill Stride if running
-Write-Host "Stopping Stride processes..." -ForegroundColor Cyan
-Stop-Process -Name "Stride" -Force -ErrorAction SilentlyContinue
+# 1. Kill Umber if running
+Write-Host "Stopping Umber processes..." -ForegroundColor Cyan
+Stop-Process -Name "Umber" -Force -ErrorAction SilentlyContinue
 
 # 2. Extract Version from csproj
-$csprojPath = "Stride.csproj"
+$csprojPath = "Umber.csproj"
 [xml]$projectXml = Get-Content $csprojPath
 $version = $projectXml.Project.PropertyGroup.Version
 if (-not $version) {
@@ -49,15 +49,15 @@ if (-not (Test-Path $ublockDestPath)) {
     Write-Host "uBlock $ublockVersion already cached at $ublockDestPath" -ForegroundColor DarkGray
 }
 
-Write-Host "Publishing Stride.Updater..." -ForegroundColor Cyan
-dotnet publish Stride.Updater\Stride.Updater.csproj -c Release -r win-x64 --self-contained true -o .\publish
+Write-Host "Publishing Umber.Updater..." -ForegroundColor Cyan
+dotnet publish Umber.Updater\Umber.Updater.csproj -c Release -r win-x64 --self-contained true -o .\publish
 
-Write-Host "Publishing Stride..." -ForegroundColor Cyan
-dotnet publish Stride.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o .\publish
+Write-Host "Publishing Umber..." -ForegroundColor Cyan
+dotnet publish Umber.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o .\publish
 
 # 4. Create ZIP for Auto-Updates - atomic via temp file
-$zipPath = ".\Releases\Stride-win-x64.zip"
-$zipTemp = ".\Releases\Stride-win-x64_tmp.zip"
+$zipPath = ".\Releases\Umber-win-x64.zip"
+$zipTemp = ".\Releases\Umber-win-x64_tmp.zip"
 if (Test-Path $zipTemp) { Remove-Item $zipTemp -Force }
 Write-Host "Creating ZIP archive for auto-updates at $zipPath..." -ForegroundColor Cyan
 Compress-Archive -Path ".\publish\*" -DestinationPath $zipTemp -Force

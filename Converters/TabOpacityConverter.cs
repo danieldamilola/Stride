@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace StrideBrowser.Converters;
+namespace UmberBrowser.Converters;
 
 /// <summary>
 /// Returns the favicon opacity for a tab based on its lifecycle state

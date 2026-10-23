@@ -2,9 +2,9 @@ using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
-using StrideBrowser.Services;
+using UmberBrowser.Services;
 
-namespace StrideBrowser;
+namespace UmberBrowser;
 
 public partial class App : Application
 {
@@ -40,12 +40,12 @@ public partial class App : Application
 
         System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Helpers.AppPaths.LogFile));
         System.Diagnostics.Trace.AutoFlush = true;
-        System.Diagnostics.Trace.WriteLine("--- STRIDE STARTED ---");
+        System.Diagnostics.Trace.WriteLine("--- UMBER STARTED ---");
 
         base.OnStartup(e);
 
         // Set AppUserModelID for taskbar grouping
-        Interop.NativeMethods.SetCurrentProcessExplicitAppUserModelID("Stride");
+        Interop.NativeMethods.SetCurrentProcessExplicitAppUserModelID("Umber");
 
         // Build DI container
         _serviceProvider = Composition.BuildServiceProvider();
@@ -101,7 +101,7 @@ public partial class App : Application
                 if (!string.IsNullOrWhiteSpace(crashDetails))
                 {
                     var result = MessageBox.Show(
-                        "Stride Browser recovered from an unexpected error during your last session.\n\nWould you like to report this to the developer on GitHub?",
+                        "Umber Browser recovered from an unexpected error during your last session.\n\nWould you like to report this to the developer on GitHub?",
                         "Crash Recovered",
                         MessageBoxButton.YesNo,
                         MessageBoxImage.Warning);
@@ -111,7 +111,7 @@ public partial class App : Application
                         // Take the last 2000 chars to avoid URL too long issues
                         var trimmedLog = crashDetails.Length > 2000 ? crashDetails.Substring(crashDetails.Length - 2000) : crashDetails;
                         var body = Uri.EscapeDataString($"**Describe the bug**\n\n**Crash Log:**\n```\n{trimmedLog}\n```");
-                        var url = $"https://github.com/danieldamilola/Stride/issues/new?title=Crash%20Report&body={body}";
+                        var url = $"https://github.com/danieldamilola/Umber/issues/new?title=Crash%20Report&body={body}";
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
                             FileName = url,
@@ -137,8 +137,8 @@ public partial class App : Application
         Dispatcher.InvokeAsync(() =>
         {
             MessageBox.Show(
-                $"Stride Browser encountered an error:\n\n{e.Exception.Message}",
-                "Stride Browser",
+                $"Umber Browser encountered an error:\n\n{e.Exception.Message}",
+                "Umber Browser",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         });

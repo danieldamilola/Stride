@@ -1,4 +1,4 @@
-// Stride Browser - YouTube Enhancer
+// Umber Browser - YouTube Enhancer
 // Injected on youtube.com to set quality, speed, autoplay, and loop preferences.
 // Only runs on youtube.com. Inspired by MisterTube-V3 (github.com/NextEra-Development/MisterTube-V3).
 // Handles ads, live streams, shorts, quality re-forcing, and speed persistence.
@@ -8,12 +8,12 @@
     var host = location.hostname;
     if (host !== 'youtube.com' && host !== 'www.youtube.com' && !host.endsWith('.youtube.com')) return;
 
-    // Config source: live re-injection sets window.__STRIDE_YT_CONFIG and wins;
+    // Config source: live re-injection sets window.__UMBER_YT_CONFIG and wins;
     // otherwise the config seeded in localStorage at document creation applies.
     function readConfig() {
-        if (window.__STRIDE_YT_CONFIG) return window.__STRIDE_YT_CONFIG;
+        if (window.__UMBER_YT_CONFIG) return window.__UMBER_YT_CONFIG;
         try {
-            var raw = localStorage.getItem('__stride_yt_enhancer');
+            var raw = localStorage.getItem('__umber_yt_enhancer');
             if (raw) return JSON.parse(raw);
         } catch (e) {}
         return { enabled: false };
@@ -21,8 +21,8 @@
 
     // Shared config object, mutated in place on live reload so listeners that
     // closed over it always see current values.
-    if (!window.__STRIDE_YT_ENHANCER_CFG) window.__STRIDE_YT_ENHANCER_CFG = {};
-    var cfg = window.__STRIDE_YT_ENHANCER_CFG;
+    if (!window.__UMBER_YT_ENHANCER_CFG) window.__UMBER_YT_ENHANCER_CFG = {};
+    var cfg = window.__UMBER_YT_ENHANCER_CFG;
     function refreshConfig() {
         var latest = readConfig();
         for (var k in cfg) delete cfg[k];
@@ -34,7 +34,7 @@
     // Live reload: re-read config and re-apply without re-registering anything.
     // Routed through applyWhenReady rather than applyAll so a reload mid-ad or
     // before the player is ready still lands, matching the first-run path.
-    if (window.__STRIDE_YT_ENHANCER_LOADED) {
+    if (window.__UMBER_YT_ENHANCER_LOADED) {
         refreshConfig();
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', applyWhenReady);
@@ -43,7 +43,7 @@
         }
         return;
     }
-    window.__STRIDE_YT_ENHANCER_LOADED = true;
+    window.__UMBER_YT_ENHANCER_LOADED = true;
 
     // ── Helpers ──────────────────────────────────────────────────────
 
@@ -216,19 +216,19 @@
     // navigations.
     var _speedListenerVideo = null;
 
-    // Records the rate Stride last wrote. ratechange is dispatched from a queued
+    // Records the rate Umber last wrote. ratechange is dispatched from a queued
     // media task rather than synchronously, so a boolean flag flipped on a timer
     // races the event it is meant to identify. Comparing against the last value
     // written is deterministic.
     function setRate(video, rate) {
-        video._strideAppliedRate = rate;
+        video._umberAppliedRate = rate;
         video.playbackRate = rate;
     }
 
-    // True when the current rate is the one Stride wrote, meaning the change
+    // True when the current rate is the one Umber wrote, meaning the change
     // came from us rather than from YouTube or the user.
     function isOurRateChange(video) {
-        var applied = video._strideAppliedRate;
+        var applied = video._umberAppliedRate;
         return typeof applied === 'number' && Math.abs(video.playbackRate - applied) < 0.01;
     }
 
@@ -241,7 +241,7 @@
         attachSpeedListener(video);
 
         // Respect a manual speed choice until the next navigation.
-        if (video._strideUserOverride) return;
+        if (video._umberUserOverride) return;
 
         if (!speed || speed === 1.0) {
             // Back to normal speed, so a previous setting does not linger.
@@ -271,9 +271,9 @@
             var speed = cfg.speed;
             if (!speed || speed === 1.0) return;
 
-            var chosenByUser = video._strideRateMenuOpen;
+            var chosenByUser = video._umberRateMenuOpen;
             if (chosenByUser) {
-                video._strideUserOverride = true;
+                video._umberUserOverride = true;
                 return;
             }
 
@@ -297,14 +297,14 @@
                 : null;
             if (!item) return;
             var video = getVideo();
-            if (video) video._strideRateMenuOpen = true;
+            if (video) video._umberRateMenuOpen = true;
         }, true);
 
         // The flag marks the click that produced the following ratechange, so it
         // is cleared once that event has been handled.
         document.addEventListener('ratechange', function() {
             var video = getVideo();
-            if (video) video._strideRateMenuOpen = false;
+            if (video) video._umberRateMenuOpen = false;
         }, true);
     }
 
@@ -335,7 +335,7 @@
 
     // ── Main Apply ───────────────────────────────────────────────────
 
-    // Undoes everything Stride wrote. Used when the enhancer is switched off in
+    // Undoes everything Umber wrote. Used when the enhancer is switched off in
     // settings on a tab that is already open, so nothing keeps applying.
     function undoAll() {
         var video = getVideo();
@@ -461,7 +461,7 @@
     // document.querySelector('video') returns on the way back: during a roll
     // that can be a different element, which would leave the real video paused
     // or force-play something the user never started.
-    var _pausedByStride = null;
+    var _pausedByUmber = null;
 
     document.addEventListener('visibilitychange', function() {
         if (!cfg.enabled || !cfg.pauseOnSwitch) return;
@@ -470,12 +470,12 @@
             var video = getVideo();
             if (!video || video.paused) return;
             video.pause();
-            _pausedByStride = video;
+            _pausedByUmber = video;
             return;
         }
 
-        var paused = _pausedByStride;
-        _pausedByStride = null;
+        var paused = _pausedByUmber;
+        _pausedByUmber = null;
         if (!paused) return;
 
         // A video that finished or moved on while hidden should not restart.
@@ -491,14 +491,14 @@
         // manual speed override and re-apply the configured speed.
         var v = getVideo();
         if (v) {
-            v._strideUserOverride = false;
-            v._strideRateMenuOpen = false;
+            v._umberUserOverride = false;
+            v._umberRateMenuOpen = false;
         }
 
         // A manual quality pick applies to the video you were watching. The next
         // video starts at your configured quality again.
         _userChoseQuality = false;
-        _pausedByStride = null;
+        _pausedByUmber = null;
 
         applyWhenReady();
     });

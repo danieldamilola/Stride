@@ -5,11 +5,11 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Puts one uBlock Origin folder into the state where the extension's own updater can
-/// still run, without any of the network machinery Stride does not have.
+/// still run, without any of the network machinery Umber does not have.
 ///
 /// The pinned 1.73 source decides this, not preference. In <c>js/assets.js</c>:
 /// <c>registerAssetSource</c> sets <c>hasRemoteURL</c> from whether any
@@ -59,7 +59,7 @@ public static class UBlockAssetRepair
     /// every other storage key keeps its name, so no user configuration is discarded.
     /// The old value is left where it is rather than deleted.
     /// </summary>
-    public const string RepairedRegistryKey = "assetSourceRegistry.stride.refresh.v1";
+    public const string RepairedRegistryKey = "assetSourceRegistry.umber.refresh.v1";
 
     private static readonly Regex RegistryReadCall = new(
         @"cacheStorage\.get\(\s*'" + UpstreamRegistryKey + @"'\s*\)",

@@ -1,6 +1,6 @@
-# Stride Design Document
+# Umber Design Document
 
-> The design system behind Stride: brand intent, tokens, typography, iconography, components, motion, and the rules for writing UI code that stays Stride.
+> The design system behind Umber: brand intent, tokens, typography, iconography, components, motion, and the rules for writing UI code that stays Umber.
 
 **Last updated:** 2026-08-29
 **Audience:** contributors touching WPF chrome, internal HTML pages, injected scripts.
@@ -9,7 +9,7 @@
 
 ## 1. Product and brand intent
 
-Stride is a fast, minimalist, privacy focused browser for Windows. It is a calm workspace that replaces noisy, bloated browsers.
+Umber is a fast, minimalist, privacy focused browser for Windows. It is a calm workspace that replaces noisy, bloated browsers.
 
 - **Users:** power users, developers, and casual users who want focus and minimalism.
 - **Personality:** calm, minimalist, focused.
@@ -17,7 +17,7 @@ Stride is a fast, minimalist, privacy focused browser for Windows. It is a calm 
 
 ### 1.1 Anti references
 
-Stride must never look like:
+Umber must never look like:
 
 - Generic AI template slop with default gradients and purple blue SaaS cream
 - Warm tinted SaaS cream generic templates
@@ -97,7 +97,7 @@ When the user picks a custom accent, the app rebuilds `Accent`, `AccentWash`, an
   - New Tab: **Outfit** 300, 400, 500, 600. The page is the personalized canvas, so it earns a display face.
   - History: **Inter** 300, 400, 500, 600, for dense list legibility.
 - **Chrome scale:** 11 captions, 13 body, 14 brand and command input. Three off scale sizes exist: 12px tab titles, 12px standard address bar, 12px tooltips. Dialogs use 16px semibold title with 14px message and input.
-- **Weights:** Regular everywhere. `SemiBold` for the Stride wordmark and dialog titles. `600` for page headings and active nav. Focus page heading is `700`.
+- **Weights:** Regular everywhere. `SemiBold` for the Umber wordmark and dialog titles. `600` for page headings and active nav. Focus page heading is `700`.
 - **Stack gap:** OneTab and Error name Inter in their font stack but never load it. They render in Segoe UI.
 - **Measure:** Text stays under about 75 characters per line in content columns. Settings content max width is 720px. History and OneTab full width lists are exempt.
 
@@ -108,7 +108,7 @@ When the user picks a custom accent, the app rebuilds `Accent`, `AccentWash`, an
 - **Source:** Lucide inspired, 24 by 24 viewBox, stroke based.
 - **Stroke:** width 1 to 1.4. Toolbar glyphs use 1.4. Tiny glyphs use 1 to 1.2. Caps and joins are round everywhere. Only the refresh glyph is filled.
 - **Sizes:** 10 to 14px in the toolbar. Settings gear is 14px, the largest. Page icons run 14 to 18px. Nothing exceeds 24px inside a button.
-- **Consistency:** every chrome icon is a geometry in `App.xaml`. Pages use inline SVGs. No raster icons. No third party icon fonts. Favicons are the one sanctioned raster and they belong to the site, not to Stride.
+- **Consistency:** every chrome icon is a geometry in `App.xaml`. Pages use inline SVGs. No raster icons. No third party icon fonts. Favicons are the one sanctioned raster and they belong to the site, not to Umber.
 - **Legacy emoji:** three glyphs still ship. Downloads empty state uses a folder, Error uses a warning triangle, OneTab uses Unicode stars. New code must use SVG.
 
 ---

@@ -1,6 +1,6 @@
 using System;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// The width each part of the toolbar row is built from, and the window widths at which the

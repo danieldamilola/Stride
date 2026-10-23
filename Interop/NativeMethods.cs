@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace StrideBrowser.Interop;
+namespace UmberBrowser.Interop;
 
 /// <summary>
 /// P/Invoke declarations and native struct definitions used by the window chrome.
@@ -73,7 +73,7 @@ internal static class NativeMethods
     /// <summary>
     /// Sets the AppUserModelID for the current process. This tells Windows
     /// Task Manager to group all child processes (WebView2, GPU, etc.)
-    /// under the main Stride entry instead of "Utility".
+    /// under the main Umber entry instead of "Utility".
     /// Must be called before creating any windows.
     /// </summary>
     [DllImport("shell32.dll", SetLastError = true)]
@@ -166,7 +166,7 @@ internal static class NativeMethods
 
     // ── Shell icon refresh ──
     // Sent after install or update so the Start menu and taskbar drop cached
-    // bitmaps for Stride.exe and read the new icon without a manual clear.
+    // bitmaps for Umber.exe and read the new icon without a manual clear.
     internal const int SHCNE_ASSOCCHANGED = 0x08000000;
     internal const uint SHCNF_IDLIST = 0;
 

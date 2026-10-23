@@ -1,7 +1,7 @@
-# Stride handoff: setup, updates and light theme
+# Umber handoff: setup, updates and light theme
 
 Date: 2026-10-21
-Repository: C:\dev\Stride
+Repository: C:\dev\Umber
 Branch: feat/download-history
 Latest pushed commit: faf29c0d, Redesign setup and updates pages and replace the light theme
 Earlier pushed commit: 7921626c, Improve downloads with a recent panel and dated history
@@ -104,7 +104,7 @@ Root: C:\Users\Daniel\.bb\thread-storage\thr_hkhatuaqyi\download-fix-verificatio
 - Program.cs and DownloadFixVerification.csproj are the external native harness. Default item globs are disabled so the isolated source snapshot is not accidentally compiled into the harness.
 - staged-download-history is the isolated validation copy. The initial name comes from the download commit; it was updated with the follow-up changes for the full suite. MainWindow.xaml.cs in that copy contains only the download base and the new AccentWashColor assignment.
 
-Preview: C:\dev\Stride\bin\SetupPreview\Stride.exe. Close the existing Stride instance first so single-instance forwarding does not hide the new build. The redesigned pages are accessible from Settings, under About.
+Preview: C:\dev\Umber\bin\SetupPreview\Umber.exe. Close the existing Umber instance first so single-instance forwarding does not hide the new build. The redesigned pages are accessible from Settings, under About.
 
 ## Preserve separate performance work
 
@@ -117,8 +117,8 @@ These were already in progress and remain uncommitted. Do not discard or stage t
 - Engine/WebViewIpcBridge.cs
 - MainWindow.xaml.cs
 - Resources/Scripts/theme-color.js
-- StrideBrowser.Tests/TabActivationPerformanceTests.cs
-- StrideBrowser.Tests/theme-color-performance.mjs
+- UmberBrowser.Tests/TabActivationPerformanceTests.cs
+- UmberBrowser.Tests/theme-color-performance.mjs
 
 MainWindow.xaml.cs is shared. The single AccentWashColor assignment and its blank line are committed in faf29c0d. The adaptive-tint handler refactor and the BOM remain uncommitted from the performance work. Preserve them and review the diff before staging.
 

@@ -1,7 +1,7 @@
-<UserControl x:Class="StrideBrowser.Controls.DownloadsPanel"
+<UserControl x:Class="UmberBrowser.Controls.DownloadsPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:models="clr-namespace:StrideBrowser.Models"
+             xmlns:models="clr-namespace:UmberBrowser.Models"
              KeyboardNavigation.TabNavigation="Cycle" Focusable="True"
              AutomationProperties.Name="Recent downloads">
     <UserControl.Resources>

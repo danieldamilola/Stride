@@ -2,10 +2,10 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Downloads, caches, and parses massive blocklists (500k+ domains) for Focus Mode.

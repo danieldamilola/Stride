@@ -1,6 +1,6 @@
 using System;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// The minimum tracking size a top level window must report in its

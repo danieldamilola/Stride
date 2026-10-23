@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models.Reader;
+namespace UmberBrowser.Models.Reader;
 
 /// <summary>
 /// User-controllable reader presentation. Persisted via <see cref="Services.ISettingsStore"/>.

@@ -2,7 +2,7 @@
 <html lang="en" data-theme="{{THEME}}">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Get started - Stride</title>
+<title>Get started - Umber</title>
 <style>
 :root { color-scheme:dark; --bg-base:#111; --bg-surface:#202020; --bg-hover:#292929; --border:#343434; --text-main:#eee; --text-muted:#aaa; --solid:#eee; --on-solid:#171717; }
 :root[data-theme="light"] { color-scheme:light; --bg-base:#f9f9f9; --bg-dark:#f9f9f9; --bg-surface:#ffffff; --bg-hover:#e8e8e8; --bg-card:#ffffff; --card:#ffffff; --border:#d9d9d9; --border-subtle:#e8e8e8; --control-border:#8d8d8d; --text-main:#202020; --text-bright:#202020; --text-muted:#5f5f5f; --text-dim:#5f5f5f; --white:#202020; --solid:#202020; --on-solid:#ffffff; --text-link:#3a3a3a; --download-progress:#646464; --danger-text:#b42318; }
@@ -99,9 +99,9 @@ input[type="radio"],input[type="checkbox"] { accent-color:var(--text-main); }
 </style>
 </head>
 <body>
-<header class="header"><div class="brand"><img src="{{APP_ICON}}" alt="">Stride</div><button class="quiet" id="skipBtn">Set up later</button></header>
+<header class="header"><div class="brand"><img src="{{APP_ICON}}" alt="">Umber</div><button class="quiet" id="skipBtn">Set up later</button></header>
 <div class="layout">
-<aside class="sidebar"><p class="sidebar-title">Make Stride yours</p><nav class="steps" aria-label="Setup steps">
+<aside class="sidebar"><p class="sidebar-title">Make Umber yours</p><nav class="steps" aria-label="Setup steps">
 <button class="step-nav" data-nav="0" aria-current="step"><span class="step-number">1</span><span class="step-label">Welcome</span></button>
 <button class="step-nav" data-nav="1"><span class="step-number">2</span><span class="step-label">Appearance</span></button>
 <button class="step-nav" data-nav="2"><span class="step-number">3</span><span class="step-label">Search</span></button>
@@ -109,7 +109,7 @@ input[type="radio"],input[type="checkbox"] { accent-color:var(--text-main); }
 <button class="step-nav" data-nav="4"><span class="step-number">5</span><span class="step-label">Ready</span></button>
 </nav><p class="sidebar-note">Your choices are saved as you go. You can change them in Settings.</p></aside>
 <main class="content">
-<section class="step" data-step="0" aria-labelledby="welcomeTitle"><p class="eyebrow">Welcome to Stride</p><h1 class="page-title" id="welcomeTitle" tabindex="-1">Let's get you set up.</h1><p class="intro">Choose your look, pick a search engine, and set a few browsing preferences. Then get straight to your next page.</p>
+<section class="step" data-step="0" aria-labelledby="welcomeTitle"><p class="eyebrow">Welcome to Umber</p><h1 class="page-title" id="welcomeTitle" tabindex="-1">Let's get you set up.</h1><p class="intro">Choose your look, pick a search engine, and set a few browsing preferences. Then get straight to your next page.</p>
 <div class="browser-preview" aria-hidden="true"><div class="preview-toolbar"><i></i><i></i><i></i><div class="preview-address" id="addrStandard">Search or enter a website</div></div><div class="preview-page"><span>Search or open a website.</span><div class="preview-search"></div></div></div>
 <div class="welcome-notes"><span><svg viewBox="0 0 24 24"><path d="M3 5h18v15H3ZM3 9h18M7 5V3m4 2V3"/></svg>Tabs for your everyday</span><span><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Zm-4-10 3 3 5-6"/></svg>Built-in ad blocking</span></div></section>
 <section class="step" data-step="1" aria-labelledby="appearanceTitle" hidden><p class="eyebrow">Appearance</p><h2 class="page-title" id="appearanceTitle" tabindex="-1">Choose your look.</h2><p class="intro">Start with a theme and how you like your tabs.</p>
@@ -129,7 +129,7 @@ input[type="radio"],input[type="checkbox"] { accent-color:var(--text-main); }
 <label class="preference"><span class="preference-text"><span class="preference-name">Hibernate inactive tabs</span><span class="preference-description">Unload inactive tabs to free memory. They reload when opened.</span></span><input class="switch" type="checkbox" data-field="hibernate" data-setting="tabHibernation" aria-label="Hibernate inactive tabs"></label>
 <label class="preference"><span class="preference-text"><span class="preference-name">Clear browsing data on exit</span><span class="preference-description">Clear history, cookies and cache when you exit.</span></span><input class="switch" type="checkbox" data-field="clearOnExit" data-setting="clearOnExit" aria-label="Clear browsing data on exit"></label>
 </div></section>
-<section class="step" data-step="4" aria-labelledby="readyTitle" hidden><p class="eyebrow">You're ready</p><h2 class="page-title" id="readyTitle" tabindex="-1">Your next page is waiting.</h2><p class="intro">Here is how Stride is set up for you.</p><dl class="summary"><div class="summary-row"><dt>Appearance</dt><dd id="summaryTheme"></dd></div><div class="summary-row"><dt>Search</dt><dd id="summarySearch"></dd></div><div class="summary-row"><dt>Tabs</dt><dd id="summaryTabs"></dd></div><div class="summary-row"><dt>Ad blocking</dt><dd id="summaryBlocking"></dd></div></dl><div class="default-browser"><div><strong>Open your links in Stride</strong><p>Choose Stride as your default in Windows Settings.</p></div><button class="secondary" id="defaultBtn">Make default</button></div><p class="status" id="defaultStatus" role="status" hidden></p></section>
+<section class="step" data-step="4" aria-labelledby="readyTitle" hidden><p class="eyebrow">You're ready</p><h2 class="page-title" id="readyTitle" tabindex="-1">Your next page is waiting.</h2><p class="intro">Here is how Umber is set up for you.</p><dl class="summary"><div class="summary-row"><dt>Appearance</dt><dd id="summaryTheme"></dd></div><div class="summary-row"><dt>Search</dt><dd id="summarySearch"></dd></div><div class="summary-row"><dt>Tabs</dt><dd id="summaryTabs"></dd></div><div class="summary-row"><dt>Ad blocking</dt><dd id="summaryBlocking"></dd></div></dl><div class="default-browser"><div><strong>Open your links in Umber</strong><p>Choose Umber as your default in Windows Settings.</p></div><button class="secondary" id="defaultBtn">Make default</button></div><p class="status" id="defaultStatus" role="status" hidden></p></section>
 <p class="status" id="setupStatus" role="status" hidden></p>
 <footer class="footer"><button class="quiet" id="backBtn">Back</button><span class="footer-progress" id="pageNum">1 of 5</span><button class="primary" id="nextBtn"><span id="nextLabel">Get started</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button><button class="primary" id="doneBtn" hidden>Start browsing</button></footer>
 </main></div>
@@ -176,20 +176,20 @@ function render(focus = false) {
     syncChoices();
     if (focus) { steps[cur].querySelector('h1,h2').focus({preventScroll:true}); window.scrollTo({top:0,behavior:'instant'}); }
 }
-function finish() { post('onboarding-done'); if (!window.chrome?.webview) { status.hidden=false; status.textContent='Setup complete. Stride will open a new tab.'; } }
+function finish() { post('onboarding-done'); if (!window.chrome?.webview) { status.hidden=false; status.textContent='Setup complete. Umber will open a new tab.'; } }
 document.getElementById('nextBtn').addEventListener('click',()=>{ cur=Math.min(cur+1,steps.length-1); render(true); });
 document.getElementById('backBtn').addEventListener('click',()=>{ cur=Math.max(cur-1,0); render(true); });
 nav.forEach(button=>button.addEventListener('click',()=>{cur=Number(button.dataset.nav); render(true); }));
 document.getElementById('doneBtn').addEventListener('click',finish);
 document.getElementById('skipBtn').addEventListener('click',finish);
-document.getElementById('defaultBtn').addEventListener('click',()=>{ post('set-default-browser'); const note=document.getElementById('defaultStatus'); note.textContent='Choose Stride in the Windows Settings window.'; note.hidden=false; });
+document.getElementById('defaultBtn').addEventListener('click',()=>{ post('set-default-browser'); const note=document.getElementById('defaultStatus'); note.textContent='Choose Umber in the Windows Settings window.'; note.hidden=false; });
 for (const input of document.querySelectorAll('input[data-field]')) input.addEventListener('change',()=>{
     const field=input.dataset.field, key=input.dataset.setting, previous=S[field];
     const value=input.type==='checkbox' ? input.checked : field==='showTabNames' ? input.value==='true' : input.value;
     S[field]=value; dirty.add(field);
     const wireValue=field==='engine' ? ENGINES.find(engine=>engine.id===value).setting : String(value);
     pending.set(key,{field,previous,value:wireValue});
-    status.hidden=!restartNeeded; status.dataset.error='false'; if (restartNeeded) status.textContent='Restart Stride after setup to apply this change.'; postSetting(key,wireValue); syncChoices();
+    status.hidden=!restartNeeded; status.dataset.error='false'; if (restartNeeded) status.textContent='Restart Umber after setup to apply this change.'; postSetting(key,wireValue); syncChoices();
 });
 window.chrome?.webview?.addEventListener('message',event=>{
     let message=String(event.data || ''); if (message.startsWith(__T)) message=message.slice(__T.length);
@@ -203,7 +203,7 @@ window.chrome?.webview?.addEventListener('message',event=>{
             if (!change || change.value!==result.value) return;
             pending.delete(result.key);
             if (!result.success) { S[change.field]=change.previous; dirty.delete(change.field); syncChoices(); status.textContent=result.message || 'This setting could not be saved.'; status.dataset.error='true'; status.hidden=false; post('onboarding-ready'); }
-            else if (result.restartRequired) { restartNeeded=true; status.textContent='Restart Stride after setup to apply this change.'; status.dataset.error='false'; status.hidden=false; }
+            else if (result.restartRequired) { restartNeeded=true; status.textContent='Restart Umber after setup to apply this change.'; status.dataset.error='false'; status.hidden=false; }
         }
     } catch {}
 });

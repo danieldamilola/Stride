@@ -1,6 +1,6 @@
-// Stride Browser - YouTube Unhook
+// Umber Browser - YouTube Unhook
 // CSS class-toggle pattern inspired by unhookng (github.com/TheArchons/unhookng).
-// Reads window.__STRIDE_UNHOOK config injected by C#.
+// Reads window.__UMBER_UNHOOK config injected by C#.
 // Toggles classes on <html> to gate pre-written CSS rules.
 (function() {
     'use strict';
@@ -16,14 +16,14 @@
 
     // Class applied to guide sections this script hides, so the hiding is
     // reversible at runtime. See the moreYT rule in the stylesheet.
-    var HIDE_SECTION_CLASS = 'stride-unhook-hide-section';
+    var HIDE_SECTION_CLASS = 'umber-unhook-hide-section';
 
-    // Config source: live re-injection sets window.__STRIDE_UNHOOK and wins;
+    // Config source: live re-injection sets window.__UMBER_UNHOOK and wins;
     // otherwise the config seeded in localStorage at document creation applies.
     function readConfig() {
-        if (window.__STRIDE_UNHOOK) return window.__STRIDE_UNHOOK;
+        if (window.__UMBER_UNHOOK) return window.__UMBER_UNHOOK;
         try {
-            var raw = localStorage.getItem('__stride_unhook');
+            var raw = localStorage.getItem('__umber_unhook');
             if (raw) return JSON.parse(raw);
         } catch (e) {}
         return {};
@@ -31,8 +31,8 @@
 
     // Shared config object, mutated in place on live reload so listeners that
     // closed over it always see current values.
-    if (!window.__STRIDE_UNHOOK_CFG) window.__STRIDE_UNHOOK_CFG = {};
-    var cfg = window.__STRIDE_UNHOOK_CFG;
+    if (!window.__UMBER_UNHOOK_CFG) window.__UMBER_UNHOOK_CFG = {};
+    var cfg = window.__UMBER_UNHOOK_CFG;
     function refreshConfig() {
         var latest = readConfig();
         for (var k in cfg) delete cfg[k];
@@ -47,14 +47,14 @@
     // definitions called applyClasses with FEATURES undefined and threw a TypeError
     // on every settings change, and handed injectStyleSheet an undefined stylesheet
     // whenever the style node had been removed.
-    var isReinjection = !!window.__STRIDE_UNHOOK_LOADED;
+    var isReinjection = !!window.__UMBER_UNHOOK_LOADED;
 
-    // ── Static CSS - all rules pre-written, gated by html.stride-unhook-* classes ──
+    // ── Static CSS - all rules pre-written, gated by html.umber-unhook-* classes ──
     var CSS = [
         // ─ Home Feed ─
-        'html.stride-unhook-homeFeed ytd-browse[page-subtype="home"] ytd-rich-grid-renderer { display:none!important }',
-        'html.stride-unhook-homeFeed ytd-browse[page-subtype="home"] #contents.ytd-rich-grid-renderer { display:none!important }',
-        'html.stride-unhook-homeFeed ytd-rich-section-renderer { display:none!important }',
+        'html.umber-unhook-homeFeed ytd-browse[page-subtype="home"] ytd-rich-grid-renderer { display:none!important }',
+        'html.umber-unhook-homeFeed ytd-browse[page-subtype="home"] #contents.ytd-rich-grid-renderer { display:none!important }',
+        'html.umber-unhook-homeFeed ytd-rich-section-renderer { display:none!important }',
 
         // ─ Shorts ─────────────────────────────────────────────────────
         // What broke the feed before, and what this avoids:
@@ -76,37 +76,37 @@
 
         // The Shorts shelf on the home feed. The direct-child path stops this
         // from matching any other kind of shelf.
-        'html.stride-unhook-shorts ytd-rich-shelf-renderer[is-shorts] { display:none!important }',
-        'html.stride-unhook-shorts ytd-rich-section-renderer:has(> #contents > ytd-rich-shelf-renderer[is-shorts]) { display:none!important }',
+        'html.umber-unhook-shorts ytd-rich-shelf-renderer[is-shorts] { display:none!important }',
+        'html.umber-unhook-shorts ytd-rich-section-renderer:has(> #contents > ytd-rich-shelf-renderer[is-shorts]) { display:none!important }',
 
         // Individual Shorts sitting in the home feed grid among normal videos.
-        'html.stride-unhook-shorts ytd-browse[page-subtype="home"] ytd-rich-item-renderer[is-slim-media][rendered-from-rich-grid] { display:none!important }',
+        'html.umber-unhook-shorts ytd-browse[page-subtype="home"] ytd-rich-item-renderer[is-slim-media][rendered-from-rich-grid] { display:none!important }',
 
         // Carousel shelves outside the home feed, e.g. Subscriptions.
-        'html.stride-unhook-shorts ytd-browse:not([page-subtype="history"]) ytd-reel-shelf-renderer { display:none!important }',
+        'html.umber-unhook-shorts ytd-browse:not([page-subtype="history"]) ytd-reel-shelf-renderer { display:none!important }',
 
         // Left navigation, expanded and collapsed.
-        'html.stride-unhook-shorts ytd-guide-entry-renderer:has(> a[title="Shorts"]) { display:none!important }',
-        'html.stride-unhook-shorts ytd-mini-guide-entry-renderer:has(> a[aria-label="Shorts"]) { display:none!important }',
+        'html.umber-unhook-shorts ytd-guide-entry-renderer:has(> a[title="Shorts"]) { display:none!important }',
+        'html.umber-unhook-shorts ytd-mini-guide-entry-renderer:has(> a[aria-label="Shorts"]) { display:none!important }',
 
         // Channel page tab and the Shorts filter chip.
-        'html.stride-unhook-shorts yt-tab-shape[tab-title="Shorts"] { display:none!important }',
-        'html.stride-unhook-shorts yt-chip-cloud-chip-renderer:has(> #chip-container > yt-formatted-string[title="Shorts"]) { display:none!important }',
+        'html.umber-unhook-shorts yt-tab-shape[tab-title="Shorts"] { display:none!important }',
+        'html.umber-unhook-shorts yt-chip-cloud-chip-renderer:has(> #chip-container > yt-formatted-string[title="Shorts"]) { display:none!important }',
 
         // Search results: the shelf and any individual Short.
-        'html.stride-unhook-shorts ytd-search ytd-reel-shelf-renderer { display:none!important }',
-        'html.stride-unhook-shorts ytd-search ytd-video-renderer:has(> a[href^="/shorts/"]) { display:none!important }',
+        'html.umber-unhook-shorts ytd-search ytd-reel-shelf-renderer { display:none!important }',
+        'html.umber-unhook-shorts ytd-search ytd-video-renderer:has(> a[href^="/shorts/"]) { display:none!important }',
 
         // ─ Mixes ─
-        'html.stride-unhook-mixes ytd-radio-renderer { display:none!important }',
-        'html.stride-unhook-mixes ytd-compact-radio-renderer { display:none!important }',
+        'html.umber-unhook-mixes ytd-radio-renderer { display:none!important }',
+        'html.umber-unhook-mixes ytd-compact-radio-renderer { display:none!important }',
 
         // ─ Explore / Trending ─
-        'html.stride-unhook-explore ytd-guide-entry-renderer:has(a[href^="/feed/explore"]) { display:none!important }',
-        'html.stride-unhook-explore ytd-guide-entry-renderer:has(a[href^="/feed/trending"]) { display:none!important }',
+        'html.umber-unhook-explore ytd-guide-entry-renderer:has(a[href^="/feed/explore"]) { display:none!important }',
+        'html.umber-unhook-explore ytd-guide-entry-renderer:has(a[href^="/feed/trending"]) { display:none!important }',
 
         // ─ Subscriptions ─
-        'html.stride-unhook-subscriptions ytd-browse[page-subtype="subscriptions"] #contents { display:none!important }',
+        'html.umber-unhook-subscriptions ytd-browse[page-subtype="subscriptions"] #contents { display:none!important }',
 
         // ─ Video Sidebar ────────────────────────────────────────────
         // Hides the whole right column so the video takes the full width.
@@ -128,11 +128,11 @@
         // even before #secondary is laid out, which avoids a one-frame flash of
         // the player at the narrow width. It sizes rather than hides, so it
         // cannot push content below the fold.
-        'html.stride-unhook-sidebar ytd-watch-flexy #secondary { display:none!important }',
-        'html.stride-unhook-sidebar ytd-watch-flexy { --ytd-watch-flexy-sidebar-width:0px!important }',
+        'html.umber-unhook-sidebar ytd-watch-flexy #secondary { display:none!important }',
+        'html.umber-unhook-sidebar ytd-watch-flexy { --ytd-watch-flexy-sidebar-width:0px!important }',
         // #primary must be allowed to shrink inside the flex row, otherwise it
         // keeps its intrinsic width and overflows the row.
-        'html.stride-unhook-sidebar ytd-watch-flexy #primary { min-width:0!important }',
+        'html.umber-unhook-sidebar ytd-watch-flexy #primary { min-width:0!important }',
         // The old "hide recommended videos" rule was
         //   ytd-watch-next-secondary-results-renderer { display:none }
         // which emptied the sidebar's contents but left the column, so the
@@ -141,31 +141,31 @@
         // subsumes it, since there is nothing left to empty.
 
         // ─ Comments ─
-        'html.stride-unhook-comments #comments { display:none!important }',
-        'html.stride-unhook-comments ytd-comments { display:none!important }',
-        'html.stride-unhook-comments ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-comments-section"] { display:none!important }',
+        'html.umber-unhook-comments #comments { display:none!important }',
+        'html.umber-unhook-comments ytd-comments { display:none!important }',
+        'html.umber-unhook-comments ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-comments-section"] { display:none!important }',
 
         // ─ Video Info ─
-        'html.stride-unhook-videoInfo #above-the-fold { display:none!important }',
-        'html.stride-unhook-videoInfo ytd-watch-metadata { display:none!important }',
-        'html.stride-unhook-videoInfo #below { display:none!important }',
+        'html.umber-unhook-videoInfo #above-the-fold { display:none!important }',
+        'html.umber-unhook-videoInfo ytd-watch-metadata { display:none!important }',
+        'html.umber-unhook-videoInfo #below { display:none!important }',
 
         // ─ Live Chat ─
-        'html.stride-unhook-liveChat ytd-live-chat-frame { display:none!important }',
-        'html.stride-unhook-liveChat #chat-container { display:none!important }',
-        'html.stride-unhook-liveChat #chat { display:none!important }',
+        'html.umber-unhook-liveChat ytd-live-chat-frame { display:none!important }',
+        'html.umber-unhook-liveChat #chat-container { display:none!important }',
+        'html.umber-unhook-liveChat #chat { display:none!important }',
 
         // ─ Playlist ─
-        'html.stride-unhook-playlist ytd-playlist-panel-renderer { display:none!important }',
-        'html.stride-unhook-playlist #playlist { display:none!important }',
+        'html.umber-unhook-playlist ytd-playlist-panel-renderer { display:none!important }',
+        'html.umber-unhook-playlist #playlist { display:none!important }',
 
         // ─ Merch / Offers ─
-        'html.stride-unhook-merch ytd-offer-module-renderer { display:none!important }',
-        'html.stride-unhook-merch ytd-brand-video-shelf-renderer { display:none!important }',
+        'html.umber-unhook-merch ytd-offer-module-renderer { display:none!important }',
+        'html.umber-unhook-merch ytd-brand-video-shelf-renderer { display:none!important }',
 
         // ─ Fundraiser ─
-        'html.stride-unhook-fundraiser ytd-donation-shelf-renderer { display:none!important }',
-        'html.stride-unhook-fundraiser ytd-donation-unavailable-renderer { display:none!important }',
+        'html.umber-unhook-fundraiser ytd-donation-shelf-renderer { display:none!important }',
+        'html.umber-unhook-fundraiser ytd-donation-unavailable-renderer { display:none!important }',
 
         // ─ End Screen ─
         // The current end screen is the video-wall overlay above. The old
@@ -173,45 +173,45 @@
         // and their rules never matched anything.
 
         // ─ End Cards / Annotations ─
-        'html.stride-unhook-endCards .ytp-ce-element { display:none!important }',
-        'html.stride-unhook-endCards .ytp-ce-covering-overlay { display:none!important }',
-        'html.stride-unhook-endCards .ytp-cards-teaser { display:none!important }',
-        'html.stride-unhook-endCards .ytp-ce-covering-image { display:none!important }',
+        'html.umber-unhook-endCards .ytp-ce-element { display:none!important }',
+        'html.umber-unhook-endCards .ytp-ce-covering-overlay { display:none!important }',
+        'html.umber-unhook-endCards .ytp-cards-teaser { display:none!important }',
+        'html.umber-unhook-endCards .ytp-ce-covering-image { display:none!important }',
 
-        'html.stride-unhook-annotations .iv-branding { display:none!important }',
+        'html.umber-unhook-annotations .iv-branding { display:none!important }',
 
         // ─ Top Header ─
         // The header is position:fixed, so the scroll offset YouTube applies
         // comes from --ytd-masthead-height. Zeroing it is what pulls the page
         // back up. The body margin reset is not needed and collided with Dark
         // Reader, which is also injected.
-        'html.stride-unhook-topHeader #masthead-container { display:none!important }',
-        'html.stride-unhook-topHeader #masthead { display:none!important }',
-        'html.stride-unhook-topHeader ytd-masthead { display:none!important }',
-        'html.stride-unhook-topHeader { --ytd-masthead-height:0px!important }',
+        'html.umber-unhook-topHeader #masthead-container { display:none!important }',
+        'html.umber-unhook-topHeader #masthead { display:none!important }',
+        'html.umber-unhook-topHeader ytd-masthead { display:none!important }',
+        'html.umber-unhook-topHeader { --ytd-masthead-height:0px!important }',
 
         // ─ Notifications ─
-        'html.stride-unhook-notifications ytd-notification-topbar-button-renderer { display:none!important }',
-        'html.stride-unhook-notifications ytd-guide-entry-renderer:has(a[title="Notifications"]) { display:none!important }',
-        'html.stride-unhook-notifications ytd-guide-entry-renderer:has(a[href^="/feed/notifications"]) { display:none!important }',
+        'html.umber-unhook-notifications ytd-notification-topbar-button-renderer { display:none!important }',
+        'html.umber-unhook-notifications ytd-guide-entry-renderer:has(a[title="Notifications"]) { display:none!important }',
+        'html.umber-unhook-notifications ytd-guide-entry-renderer:has(a[href^="/feed/notifications"]) { display:none!important }',
 
         // ─ Inapt Search Results ─
-        'html.stride-unhook-inaptSearch ytd-horizontal-card-list-renderer { display:none!important }',
+        'html.umber-unhook-inaptSearch ytd-horizontal-card-list-renderer { display:none!important }',
 
         // ─ Channel Watermark (new) ─
-        'html.stride-unhook-endCards .ytp-ce-channel-watermark { display:none!important }',
+        'html.umber-unhook-endCards .ytp-ce-channel-watermark { display:none!important }',
 
         // Voice Search (moves with the masthead controls it sits in)
-        'html.stride-unhook-topHeader #voice-search-button { display:none!important }',
+        'html.umber-unhook-topHeader #voice-search-button { display:none!important }',
 
         // ─ Thanks / Clip buttons (new) ─
-        'html.stride-unhook-merch yt-button-shape[id="super-thanks-button"] { display:none!important }',
-        'html.stride-unhook-merch yt-button-shape[id="clip-button"] { display:none!important }',
+        'html.umber-unhook-merch yt-button-shape[id="super-thanks-button"] { display:none!important }',
+        'html.umber-unhook-merch yt-button-shape[id="clip-button"] { display:none!important }',
 
         // ─ Video Wall / Autoplay overlay at end of video ─
-        'html.stride-unhook-endFeed .ytp-suggestion-set { display:none!important }',
-        'html.stride-unhook-endFeed .html5-endscreen { display:none!important }',
-        'html.stride-unhook-endFeed .videowall-endscreen { display:none!important }',
+        'html.umber-unhook-endFeed .ytp-suggestion-set { display:none!important }',
+        'html.umber-unhook-endFeed .html5-endscreen { display:none!important }',
+        'html.umber-unhook-endFeed .videowall-endscreen { display:none!important }',
 
         // ─ Shorts in search results: REMOVED with the rest of the Shorts
         // feature, for the reasons given at the top of this list.
@@ -220,16 +220,16 @@
         // Class-gated like every other rule, so turning the setting off at
         // runtime restores the section instead of leaving it hidden for the
         // life of the document.
-        'html.stride-unhook-moreYT ytd-guide-section-renderer.stride-unhook-hide-section { display:none!important }'
+        'html.umber-unhook-moreYT ytd-guide-section-renderer.umber-unhook-hide-section { display:none!important }'
     ].join('\n');
 
     // ── Inject static CSS once ───────────────────────────────────────
     function injectStyleSheet() {
-        if (document.getElementById('__stride_unhook')) return;
+        if (document.getElementById('__umber_unhook')) return;
         var target = document.head || document.documentElement;
         if (!target) return; // safety - will retry via DOMContentLoaded
         var style = document.createElement('style');
-        style.id = '__stride_unhook';
+        style.id = '__umber_unhook';
         style.textContent = CSS;
         target.appendChild(style);
     }
@@ -250,7 +250,7 @@
         if (!html) return;
         for (var i = 0; i < FEATURES.length; i++) {
             var key = FEATURES[i];
-            var className = 'stride-unhook-' + key;
+            var className = 'umber-unhook-' + key;
             if (cfg[key]) {
                 html.classList.add(className);
             } else {
@@ -276,7 +276,7 @@
         runJsActions();
         return;
     }
-    window.__STRIDE_UNHOOK_LOADED = true;
+    window.__UMBER_UNHOOK_LOADED = true;
 
     // ── JS-only actions (can't be done with CSS) ─────────────────────
     function runJsActions() {
@@ -301,10 +301,10 @@
         // Disable autoplay toggle. Skip when the YouTube Enhancer is enabled
         // with autoplay off, since it already owns this toggle.
         if (cfg.autoplay) {
-            var ytCfg = window.__STRIDE_YT_CONFIG;
+            var ytCfg = window.__UMBER_YT_CONFIG;
             if (!ytCfg) {
                 try {
-                    var raw = localStorage.getItem('__stride_yt_enhancer');
+                    var raw = localStorage.getItem('__umber_yt_enhancer');
                     if (raw) ytCfg = JSON.parse(raw);
                 } catch (e) {}
             }
@@ -317,8 +317,8 @@
                 // click again and turn autoplay-next back on. The flag sits on the
                 // node, so a button the player has since replaced is eligible
                 // again while the one we already acted on is left alone.
-                if (btn && btn.getAttribute('aria-checked') === 'true' && !btn.__strideAutonavClicked) {
-                    btn.__strideAutonavClicked = true;
+                if (btn && btn.getAttribute('aria-checked') === 'true' && !btn.__umberAutonavClicked) {
+                    btn.__umberAutonavClicked = true;
                     btn.click();
                 }
             }
@@ -330,7 +330,7 @@
         // hidden. Two problems. The button it named, .ytp-size-button, is the
         // pre-2018 cycling control and is not the theater button on the current
         // player, so the click could land on fullscreen and make the whole
-        // Stride window jump in and out of fullscreen. And theater mode pins
+        // Umber window jump in and out of fullscreen. And theater mode pins
         // the player to the top of the scroll container, which interacts badly
         // with a hidden sidebar: the player keeps its full height, the
         // description falls below the fold, and there is no scroll range left

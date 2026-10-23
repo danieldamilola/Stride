@@ -2,13 +2,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
 
-using StrideBrowser.Services.Reader;
-using StrideBrowser.ViewModels.Reader;
+using UmberBrowser.Services.Reader;
+using UmberBrowser.ViewModels.Reader;
 
-namespace StrideBrowser.ViewModels;
+namespace UmberBrowser.ViewModels;
 
 /// <summary>
 /// Thin coordinator between the UI and the engine/services.
@@ -106,7 +107,7 @@ public sealed partial class BrowserViewModel : ObservableObject, IDisposable
 
     /// <summary>Fallback tab favicon that follows the app theme. Dark by default.</summary>
     [ObservableProperty]
-    private string _fallbackIconUri = "pack://application:,,,/icons/stride-browser-dark-32x32.png";
+    private string _fallbackIconUri = AppIconResources.TabDark;
 
     private readonly Engine.TabEngine _engine;
     private readonly IReaderService _readerService;

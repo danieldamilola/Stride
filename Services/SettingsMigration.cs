@@ -1,6 +1,6 @@
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// One-time repairs applied when a settings.json written by an older build is read.

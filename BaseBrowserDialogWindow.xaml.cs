@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 
-namespace StrideBrowser;
+namespace UmberBrowser;
 
 public partial class BaseBrowserDialogWindow : Window, INotifyPropertyChanged
 {

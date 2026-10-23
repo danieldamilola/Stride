@@ -1,4 +1,4 @@
-// Stride Browser - Find in Page
+// Umber Browser - Find in Page
 // Injected to handle Ctrl+F find-in-page functionality within WebView2.
 (function() {
     'use strict';
@@ -72,8 +72,8 @@
     }
 
     // Expose to WebView2
-    window.__strideFind = findInPage;
-    window.__strideFindNext = nextMatch;
-    window.__strideFindPrev = prevMatch;
-    window.__strideFindClear = clearHighlights;
+    window.__umberFind = findInPage;
+    window.__umberFindNext = nextMatch;
+    window.__umberFindPrev = prevMatch;
+    window.__umberFindClear = clearHighlights;
 })();

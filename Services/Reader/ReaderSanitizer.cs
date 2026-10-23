@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace StrideBrowser.Services.Reader;
+namespace UmberBrowser.Services.Reader;
 
 /// <summary>
 /// Sanitizes untrusted article HTML. Contract pinned in ADR v4.

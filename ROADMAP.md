@@ -1,10 +1,10 @@
 ﻿# Roadmap & Future Plans
 
-Stride is a lightweight, privacy-focused Windows desktop browser built on WPF and the Microsoft Edge WebView2 engine. The roadmap below reflects the feature set the project is working toward, grouped by what already exists and what is planned.
+Umber is a lightweight, privacy-focused Windows desktop browser built on WPF and the Microsoft Edge WebView2 engine. The roadmap below reflects the feature set the project is working toward, grouped by what already exists and what is planned.
 
 ## Already built
 
-- **Favicon Pill Tabs** - Unique Stride Signature UI that compresses inactive tabs into clean icons and expands active ones, saving vertical and horizontal screen real estate.
+- **Favicon Pill Tabs** - A tab strip that compresses inactive tabs into clean icons and expands the active one, saving vertical and horizontal screen real estate.
 - **Command Bar Navigation** - Press `Ctrl+L` to invoke a floating, intelligent command bar with instant local history and autocomplete.
 - **Native Ad & Tracker Blocking** - Built-in network-level blocking capabilities with native support for parsing and applying uBlock Origin rules, enhanced with custom cosmetic filters.
 - **Smart Memory Management** - Intelligent tab hibernation and LRU (Least Recently Used) eviction algorithms to keep memory usage strictly bounded, no matter how many tabs you open.
@@ -18,7 +18,7 @@ Stride is a lightweight, privacy-focused Windows desktop browser built on WPF an
 
 ## Upcoming features
 
-- **History retention settings** - Add an optional setting to keep all browsing history, keep the last 30 or 90 days, or clear history when Stride exits. Keep automatic deletion off by default. Let users clear history without deleting cookies or signing out of websites.
+- **History retention settings** - Add an optional setting to keep all browsing history, keep the last 30 or 90 days, or clear history when Umber exits. Keep automatic deletion off by default. Let users clear history without deleting cookies or signing out of websites.
 - **Extensions** - Support for Chrome, Firefox, and Safari extensions. A curated set of 20 verified extensions will be included out of the box, with the engine expanding to support the standard Chromium manifest format.
 - **Vertical tree tabs** - A tree-style vertical tab layout for power users with ultrawide monitors. This replaces and expands on the existing Vertical Tabs Mode planned in the roadmap.
 - **Tab groups** - Visual tab grouping with the ability to collapse/expand groups, keeping many tabs organized without clutter.
@@ -32,7 +32,7 @@ Stride is a lightweight, privacy-focused Windows desktop browser built on WPF an
 
 ## Existing items carried forward
 
-- **Cross-Platform Linux Port (Avalonia)** - Exploring bringing the exact Stride experience (and UI parity) to Linux desktop environments via Avalonia UI.
+- **Cross-Platform Linux Port (Avalonia)** - Exploring bringing the exact Umber experience (and UI parity) to Linux desktop environments via Avalonia UI.
 - **Extension Marketplace Integration** - Expanding the internal extension engine to support standard Chromium extension manifest formats.
 - **Sync Engine** - Secure, end-to-end encrypted synchronization of history, bookmarks, and settings across multiple devices.
 - **Vertical Tabs Mode** - Optional vertical tab layout for power users with ultrawide monitors. This work is being integrated into the broader vertical tree tabs feature above.

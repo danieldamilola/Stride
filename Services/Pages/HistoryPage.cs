@@ -1,7 +1,7 @@
 using System.Text.Json;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 /// <summary>Generates the history page HTML. Entries are passed as JSON for client-side rendering.</summary>
 public sealed class HistoryPage

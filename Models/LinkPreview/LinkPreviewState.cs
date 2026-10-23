@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace StrideBrowser.Models.LinkPreview;
+namespace UmberBrowser.Models.LinkPreview;
 
 /// <summary>Observable peek state. Owned by LinkPreviewService. ViewModel mirrors it.</summary>
 public sealed record LinkPreviewState(

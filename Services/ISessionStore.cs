@@ -1,4 +1,4 @@
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>Session entry for saving/restoring tabs across restarts.</summary>
 public record SessionEntry(string Url, string Title, bool IsPinned, bool IsActive = false);

@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using StrideBrowser.Helpers;
+using UmberBrowser.Helpers;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Persists session state (open tabs) to disk for restore-on-startup.

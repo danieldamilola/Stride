@@ -1,8 +1,8 @@
 using System.Text.Json;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// YouTube Unhook - hides distracting YouTube UI elements.
@@ -12,7 +12,7 @@ public sealed class YouTubeUnhook
 {
     /// <summary>
     /// Returns a JS string that writes the unhook config into localStorage, or into
-    /// window.__STRIDE_UNHOOK when the page refuses the write, then runs the unhook
+    /// window.__UMBER_UNHOOK when the page refuses the write, then runs the unhook
     /// script. Returns empty string if unhook is disabled.
     /// <paramref name="forceConfig"/> additionally points the running document at the
     /// new config, so a live settings change takes effect without a navigation.
@@ -63,19 +63,19 @@ public sealed class YouTubeUnhook
         //
         // The page can refuse the write. Storage is denied outright by blocked third
         // party storage and in private mode, and refused by quota on a full one. The
-        // script reads window.__STRIDE_UNHOOK first and localStorage second, so a
+        // script reads window.__UMBER_UNHOOK first and localStorage second, so a
         // refused write would leave it with nothing and every setting would read as
         // off with nothing to say why. The refusal therefore falls back to the
         // in-document variable, which costs the page its persistence across
         // navigations but not the user's choices.
         var configLine =
-            "try { localStorage.setItem('__stride_unhook', '" + json + "'); }" +
-            " catch (e) { window.__STRIDE_UNHOOK = " + json + "; }";
+            "try { localStorage.setItem('__umber_unhook', '" + json + "'); }" +
+            " catch (e) { window.__UMBER_UNHOOK = " + json + "; }";
 
         // Live reload also points the running document at the new config, so the
         // running instance reads the new values without waiting for a navigation.
         if (forceConfig)
-            configLine += " window.__STRIDE_UNHOOK = " + json + ";";
+            configLine += " window.__UMBER_UNHOOK = " + json + ";";
 
         // The unhook script is injected again. Shorts and sidebar are gone from
         // the config; see the notes above.

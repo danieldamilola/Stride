@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using System.Windows;
-using StrideBrowser.Models;
-using StrideBrowser.Models.LinkPreview;
-using StrideBrowser.Services;
+using UmberBrowser.Models;
+using UmberBrowser.Models.LinkPreview;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Wires the IPC surface of a WebView2 control: web-message reception with
@@ -44,6 +45,20 @@ public sealed class WebViewIpcBridge
     private readonly Func<BrowserTab, CancellationToken, Task<CoreWebView2?>> _ensureTabReadyAsync;
     private readonly Action<BrowserTab> _removeSentinelTab;
     private readonly Services.LinkPreview.ILinkPreviewDownloadSuppressor _downloadSuppressor;
+
+    /// <summary>
+    /// The colour of a tab that has been accepted but not applied yet.
+    /// <para>
+    /// A page that scrolls without changing its colour sends the same value again and
+    /// again. The applied value on the tab catches the repeats once the first one has
+    /// been applied, but several copies can arrive before that happens, so the value
+    /// that is on its way to the toolbar is remembered here as well. The record dies
+    /// with the tab.
+    /// </para>
+    /// </summary>
+    private readonly ConditionalWeakTable<BrowserTab, StrongBox<string?>> _pendingThemeColors = new();
+
+    private readonly object _themeLock = new();
 
     public WebViewIpcBridge(
         Dispatcher dispatcher,
@@ -153,7 +168,7 @@ public sealed class WebViewIpcBridge
     /// <summary>
     /// Removes the WebView2 control's built-in WindowCloseRequested handler. That handler
     /// closes the host WPF window whenever page script calls window.close, which is how a
-    /// download landing page takes the whole browser down. Stride closes only the tab, so
+    /// download landing page takes the whole browser down. Umber closes only the tab, so
     /// the built-in handler must go. Returns true when a built-in handler was removed.
     /// </summary>
     public static bool TryDetachHostWindowClose(object? control, object? core)
@@ -237,10 +252,31 @@ public sealed class WebViewIpcBridge
                 return true;
             }
             if (!IsSameTopLevelDocument(source, topLevelSource)) return true;
+
+            // The setting decides whether a theme colour is wanted at all. The page is
+            // not trusted to know that, and a page that keeps sending while the
+            // feature is off must not reach the toolbar.
+            if (!_settings.AdaptiveToolbarTint) return true;
+
+            // The same colour the toolbar already shows is not worth a refresh. The
+            // check runs before the dispatcher is asked to do the work.
+            if (!TryReserveThemeColor(tab, colorStr)) return true;
+
             _dispatcher.InvokeAsync(() =>
             {
-                tab.ThemeColor = colorStr;
-                TabStateChanged?.Invoke(tab);
+                try
+                {
+                    // The setting may have been turned off while the colour was on its
+                    // way, and the colour may have been applied by then.
+                    if (!_settings.AdaptiveToolbarTint) return;
+                    if (tab.ThemeColor == colorStr) return;
+                    tab.ThemeColor = colorStr;
+                    TabStateChanged?.Invoke(tab);
+                }
+                finally
+                {
+                    ReleaseThemeColor(tab, colorStr);
+                }
             });
             return true;
         }
@@ -371,6 +407,41 @@ public sealed class WebViewIpcBridge
     }
 
     /// <summary>
+    /// Decides whether a theme colour is worth passing on to the toolbar.
+    /// <para>
+    /// The colour the tab already shows is not repeated, and a colour that is on its
+    /// way to the toolbar is not queued a second time. The second check matters
+    /// because several copies of the same colour can arrive before the first one has
+    /// been applied.
+    /// </para>
+    /// </summary>
+    private bool TryReserveThemeColor(BrowserTab tab, string color)
+    {
+        if (tab.ThemeColor == color) return false;
+
+        var slot = _pendingThemeColors.GetValue(tab, _ => new StrongBox<string?>(null));
+        lock (_themeLock)
+        {
+            if (slot.Value == color) return false;
+            slot.Value = color;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Drops the reservation once the colour has been applied, so a colour that was
+    /// cleared elsewhere is not held back by a stale reservation.
+    /// </summary>
+    private void ReleaseThemeColor(BrowserTab tab, string color)
+    {
+        if (!_pendingThemeColors.TryGetValue(tab, out var slot)) return;
+        lock (_themeLock)
+        {
+            if (slot.Value == color) slot.Value = null;
+        }
+    }
+
+    /// <summary>
     /// Origins whose web messages bypass the per-session IPC token.
     /// <para>
     /// Only <c>local.assets</c> qualifies. That origin is mapped to the application's own
@@ -379,7 +450,7 @@ public sealed class WebViewIpcBridge
     /// </para>
     /// <para>
     /// <c>user.assets</c> must never appear here. It is mapped to
-    /// <c>%APPDATA%\Stride\Backgrounds</c>, a user-writable folder the Settings page
+    /// <c>%APPDATA%\Umber\Backgrounds</c>, a user-writable folder the Settings page
     /// opens in Explorer for the user to drop wallpaper images into. Any HTML file
     /// landing there becomes a document on a real HTTPS origin with <c>window.chrome.webview</c>
     /// available, so treating it as trusted hands unauthenticated callers the whole
@@ -541,7 +612,7 @@ public sealed class WebViewIpcBridge
                 return;
             }
 
-            // Otherwise, handle it ourselves by opening a new Stride tab
+            // Otherwise, handle it ourselves by opening a new Umber tab
             e.Handled = true;
             var deferral = e.GetDeferral();
 

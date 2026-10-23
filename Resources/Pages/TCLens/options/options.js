@@ -152,7 +152,7 @@ async function loadInitialState() {
     state.targetTabId = stored.targetTabId;
     state.targetTab = await getTargetTab(state.targetTabId);
   } catch (e) {
-    console.warn("Chrome storage not available, running in native Stride mode.");
+    console.warn("Chrome storage not available, running in native Umber mode.");
   }
 
   await renderDashboard(state, el, providers);
@@ -528,10 +528,10 @@ function hideLoading() {
 }
 
 /* ─────────────────────────────────────────────────────────────
- * Stride Integration: tclensProcessInjection
+ * Umber Integration: tclensProcessInjection
  * ───────────────────────────────────────────────────────────── */
 window.tclensProcessInjection = async (payload) => {
-  window.__strideTCLensPayload = payload;
+  window.__umberTCLensPayload = payload;
   state.targetTabId = -1;
   state.targetTab = { url: payload.url, title: payload.title };
   await renderDashboard(state, el, providers);
@@ -542,9 +542,9 @@ window.tclensProcessInjection = async (payload) => {
  * ───────────────────────────────────────────────────────────── */
 
 async function sendBg(message) {
-  if (window.__strideTCLensPayload) {
+  if (window.__umberTCLensPayload) {
     if (message.type === "INJECT_SCRAPER") return { success: true };
-    if (message.type === "EXTRACT_PAGE_TEXT") return { text: window.__strideTCLensPayload.text, success: true };
+    if (message.type === "EXTRACT_PAGE_TEXT") return { text: window.__umberTCLensPayload.text, success: true };
     if (message.type === "SET_BADGE") return { success: true };
   }
   if (!window.chrome?.runtime?.sendMessage) {
@@ -563,8 +563,8 @@ async function sendBg(message) {
  * ───────────────────────────────────────────────────────────── */
 
 async function getTargetTab(tabId) {
-  if (tabId === -1 && window.__strideTCLensPayload) {
-    return { url: window.__strideTCLensPayload.url, title: window.__strideTCLensPayload.title };
+  if (tabId === -1 && window.__umberTCLensPayload) {
+    return { url: window.__umberTCLensPayload.url, title: window.__umberTCLensPayload.title };
   }
   if (!Number.isInteger(tabId)) return null;
   try {

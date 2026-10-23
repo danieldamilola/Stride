@@ -1,10 +1,11 @@
 using System.Globalization;
 using System.IO;
 using System.Text;
-using StrideBrowser.Models;
-using StrideBrowser.Services.Input;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
+using UmberBrowser.Services.Input;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 /// <summary>Generates the settings page HTML.</summary>
 public sealed class SettingsPage
@@ -150,11 +151,11 @@ public sealed class SettingsPage
             // Escape every user-supplied / template-supplied value before it ever reaches HTML.
             // Text content gets full HTML encoding (so < and > cannot inject tags).
             // Attribute values get the JS-in-attribute encoding (so quotes cannot break out).
-            var escName = StrideBrowser.Helpers.JsEncoder.Encode(def.Name);
-            var escLabel = StrideBrowser.Helpers.JsEncoder.HtmlEncode(def.Label);
-            var escDescription = StrideBrowser.Helpers.JsEncoder.HtmlEncode(def.Description ?? string.Empty);
-            var escCategory = StrideBrowser.Helpers.JsEncoder.HtmlEncode(def.Category);
-            var escDefaultDisplay = StrideBrowser.Helpers.JsEncoder.Encode(FormatComboDisplay(def.DefaultCombo));
+            var escName = UmberBrowser.Helpers.JsEncoder.Encode(def.Name);
+            var escLabel = UmberBrowser.Helpers.JsEncoder.HtmlEncode(def.Label);
+            var escDescription = UmberBrowser.Helpers.JsEncoder.HtmlEncode(def.Description ?? string.Empty);
+            var escCategory = UmberBrowser.Helpers.JsEncoder.HtmlEncode(def.Category);
+            var escDefaultDisplay = UmberBrowser.Helpers.JsEncoder.Encode(FormatComboDisplay(def.DefaultCombo));
 
             // Category subsection header
             if (def.Category != lastCategory)
@@ -169,9 +170,9 @@ public sealed class SettingsPage
             var isCustom = customShortcuts.ContainsKey(def.Name);
             var displayCombo = FormatComboDisplay(currentCombo);
             // Escape user-supplied combo values before embedding in HTML/JS attributes.
-            var escCombo = StrideBrowser.Helpers.JsEncoder.Encode(currentCombo);
-            var escDisplay = StrideBrowser.Helpers.JsEncoder.HtmlEncode(displayCombo);
-            var escDefault = StrideBrowser.Helpers.JsEncoder.Encode(def.DefaultCombo);
+            var escCombo = UmberBrowser.Helpers.JsEncoder.Encode(currentCombo);
+            var escDisplay = UmberBrowser.Helpers.JsEncoder.HtmlEncode(displayCombo);
+            var escDefault = UmberBrowser.Helpers.JsEncoder.Encode(def.DefaultCombo);
 
             sb.AppendLine("        <div class=\"setting-row\">");
             sb.AppendLine("            <div class=\"setting-info\">");
@@ -215,7 +216,7 @@ public sealed class SettingsPage
     {
         try
         {
-            using var stream = Helpers.ResourceLoader.OpenStream("icons.stride-browser-128x128.png");
+            using var stream = ResourceLoader.OpenStream(AppIconResources.AboutResource);
             using var memory = new MemoryStream();
             stream.CopyTo(memory);
             return "data:image/png;base64," + Convert.ToBase64String(memory.ToArray());

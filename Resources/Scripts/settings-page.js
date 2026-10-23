@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const summary = document.getElementById('searchSummary');
   const clear = document.getElementById('clearSearch');
   let selected = navItems[0].dataset.target;
-  try { const saved = localStorage.getItem('stride_active_settings_tab'); if (sections.some(s => s.id === saved)) selected = saved; } catch {}
+  try { const saved = localStorage.getItem('umber_active_settings_tab'); if (sections.some(s => s.id === saved)) selected = saved; } catch {}
   const openBeforeSearch = new Map();
   function render() {
     const query = search.value.trim().toLowerCase();
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   navItems.forEach(item => item.addEventListener('click', () => {
     selected = item.dataset.target; search.value = '';
-    try { localStorage.setItem('stride_active_settings_tab', selected); } catch {}
+    try { localStorage.setItem('umber_active_settings_tab', selected); } catch {}
     render();
   }));
   search.addEventListener('input', render);
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pending = pendingSettings.get(result.key);
     if (pending && pending.value !== result.value) return;
     if (pending) { clearTimeout(pending.timer); pendingSettings.delete(result.key); }
-    const message = result.success ? (result.restartRequired ? 'Restart Stride to apply this change.' : '') : result.message;
+    const message = result.success ? (result.restartRequired ? 'Restart Umber to apply this change.' : '') : result.message;
     showSettingStatus(message, !result.success);
     if (!result.success) { const el = pending?.el; if (el?.dataset.savedValue !== undefined) { if (el.type === 'checkbox') el.checked = el.dataset.savedValue === 'true'; else el.value = el.dataset.savedValue; } return; }
     document.querySelectorAll('[data-setting-key="'+result.key+'"]').forEach(el => {

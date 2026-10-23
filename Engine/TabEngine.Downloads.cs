@@ -1,8 +1,8 @@
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Models;
-using StrideBrowser.Services.Downloads;
+using UmberBrowser.Models;
+using UmberBrowser.Services.Downloads;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 public sealed partial class TabEngine
 {

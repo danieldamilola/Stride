@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace StrideBrowser.Services.ContextMenus;
+namespace UmberBrowser.Services.ContextMenus;
 
 /// <summary>The complete layout of one context menu, ready to render.</summary>
 public sealed record ContextMenuPlan

@@ -1,7 +1,7 @@
-using StrideBrowser.Models;
-using StrideBrowser.Services.Pages;
+using UmberBrowser.Models;
+using UmberBrowser.Services.Pages;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Thin facade over the per-page generators.

@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>UpdateSigner</AssemblyName>
-    <RootNamespace>Stride.UpdateSigner</RootNamespace>
+    <RootNamespace>Umber.UpdateSigner</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

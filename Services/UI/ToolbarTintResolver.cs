@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Media;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// Pure color math behind the adaptive toolbar tint: maps a site theme color

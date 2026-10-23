@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Windows;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>One window's contribution to the startup snapshot.</summary>
 public sealed record SnapshotSource(

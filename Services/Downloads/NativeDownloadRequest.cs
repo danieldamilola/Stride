@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Engine.Handlers;
-using StrideBrowser.Models;
+using UmberBrowser.Engine.Handlers;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.Downloads;
+namespace UmberBrowser.Services.Downloads;
 
 public sealed class NativeDownloadRequest : IDisposable
 {
