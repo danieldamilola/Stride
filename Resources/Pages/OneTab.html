@@ -136,32 +136,140 @@
     <main class="saved-tabs-content">{{CONTENT}}</main>
     <script>
     (function() {
+        var content = document.querySelector('.saved-tabs-content');
+        var source = content.querySelector('[onclick*="onetab-"]');
+        var tokenMatch = source && source.getAttribute('onclick').match(/postMessage\('([^']+):onetab-/);
+        var token = tokenMatch ? tokenMatch[1] : '';
+        function send(message) { if (token) window.chrome.webview.postMessage(token + ':' + message); }
+        function groupFor(id) { return [...content.querySelectorAll('.group')].find(group => group.dataset.groupId === id); }
+        function reindex(group) {
+            var rows = group.querySelectorAll('.tab');
+            rows.forEach((row, index) => row.dataset.tabIndex = index);
+            group.querySelector('.group-count').textContent = rows.length + ' tabs';
+        }
+        function move(parent, selector, oldIndex, newIndex) {
+            var nodes = [...parent.querySelectorAll(':scope > ' + selector)];
+            if (oldIndex < 0 || newIndex < 0 || oldIndex >= nodes.length || newIndex >= nodes.length || oldIndex === newIndex) return;
+            parent.insertBefore(nodes[oldIndex], oldIndex < newIndex ? nodes[newIndex].nextSibling : nodes[newIndex]);
+        }
+        // Generated rows contain the original star index. Read the current row index after moves.
+        content.addEventListener('click', function(event) {
+            var star = event.target.closest('.tab-star');
+            if (!star) return;
+            event.preventDefault(); event.stopImmediatePropagation();
+            var row = star.closest('.tab');
+            send('onetab-star:' + row.dataset.groupId + ':' + row.dataset.tabIndex);
+        }, true);
+        window.chrome.webview.addEventListener('message', function(event) {
+            var prefix = token + ':onetab:';
+            if (!token || typeof event.data !== 'string' || !event.data.startsWith(prefix)) return;
+            var update;
+            try { update = JSON.parse(event.data.substring(prefix.length)); } catch { return; }
+            var focus = document.activeElement;
+            var nextFocus = null;
+            var x = window.scrollX, y = window.scrollY;
+            var group = groupFor(update.groupId);
+            if (update.action === 'removeGroup' && group) {
+                if (group.contains(focus)) nextFocus = group.nextElementSibling?.querySelector('button,.group-name') || group.previousElementSibling?.querySelector('button,.group-name') || input;
+                group.remove();
+            } else if (update.action === 'rename' && group) {
+                var name = group.querySelector('.group-name');
+                if (name.textContent !== update.name) name.textContent = update.name;
+            } else if (update.action === 'star' && group) {
+                var row = group.querySelectorAll('.tab')[update.index];
+                if (row) {
+                    var star = row.querySelector('.tab-star');
+                    var starred = star.classList.toggle('starred');
+                    star.textContent = starred ? '\u2605' : '\u2606';
+                    star.setAttribute('aria-pressed', String(starred));
+                }
+            } else if (update.action === 'removeTab' && group) {
+                // The store removes the first matching URL, including when duplicates exist.
+                var row = [...group.querySelectorAll('.tab')].find(row => row.querySelector('.tab-url').textContent === update.url);
+                if (row) {
+                    if (row.contains(focus)) nextFocus = row.nextElementSibling?.querySelector('.tab-star') || row.previousElementSibling?.querySelector('.tab-star') || group.querySelector('.group-name');
+                    row.remove();
+                    if (group.querySelector('.tab')) reindex(group);
+                    else { nextFocus = input; group.remove(); }
+                }
+            } else if (update.action === 'reorderTab' && group) {
+                move(group.querySelector('.tab-list'), '.tab', update.oldIndex, update.newIndex);
+                reindex(group);
+            } else if (update.action === 'reorderGroup') {
+                move(content, '.group', update.oldIndex, update.newIndex);
+            }
+            if (!content.querySelector('.group') && !content.querySelector('.empty')) {
+                var initialEmpty = document.createElement('div'); initialEmpty.className = 'empty';
+                initialEmpty.textContent = 'No saved tabs. Use Save all tabs in the browser menu to save your open pages.';
+                content.append(initialEmpty);
+            }
+            if (group?.isConnected && (update.action === 'rename' || update.action === 'removeTab')) filterGroup(group, input.value.toLowerCase().trim());
+            updateNoResults();
+            var target = focus?.isConnected ? focus : nextFocus;
+            if (target && document.activeElement !== target) target.focus({preventScroll:true});
+            window.scrollTo(x, y);
+        });
+        // Move the existing nodes only after the host applies the same ordered mutation.
+        var dragged = null;
+        content.querySelectorAll('.tab,.group-header').forEach(node => node.draggable = true);
+        content.addEventListener('dragstart', function(event) {
+            if (event.target.closest('[contenteditable="true"]')) { event.preventDefault(); return; }
+            var row = event.target.closest('.tab');
+            var header = event.target.closest('.group-header');
+            dragged = row || header?.closest('.group');
+            if (!dragged) return;
+            event.dataTransfer.setData('text/plain', 'saved-tab');
+            event.dataTransfer.effectAllowed = 'move';
+        });
+        content.addEventListener('dragover', function(event) {
+            if (!dragged) return;
+            var target = event.target.closest(dragged.classList.contains('tab') ? '.tab' : '.group');
+            if (target && (dragged.classList.contains('group') || target.dataset.groupId === dragged.dataset.groupId)) event.preventDefault();
+        });
+        content.addEventListener('drop', function(event) {
+            if (!dragged) return;
+            var isTab = dragged.classList.contains('tab');
+            var target = event.target.closest(isTab ? '.tab' : '.group');
+            if (!target || target === dragged || isTab && target.dataset.groupId !== dragged.dataset.groupId) { dragged = null; return; }
+            event.preventDefault();
+            if (isTab) send('onetab-reorder-tab:' + dragged.dataset.groupId + ':' + dragged.dataset.tabIndex + ':' + target.dataset.tabIndex);
+            else {
+                var groups = [...content.querySelectorAll('.group')];
+                send('onetab-reorder-group:' + groups.indexOf(dragged) + ':' + groups.indexOf(target));
+            }
+            dragged = null;
+        });
+        content.addEventListener('dragend', function() { dragged = null; });
         var input = document.getElementById('onetab-search');
         if (!input) return;
         var empty = document.createElement('p'); empty.className = 'no-results'; empty.setAttribute('role', 'status'); empty.hidden = true; empty.textContent = 'No saved tabs match your search.'; document.querySelector('.saved-tabs-content').prepend(empty);
+        function filterGroup(g, q) {
+            var tabs = g.querySelectorAll('.tab');
+            var anyVisible = false;
+            var groupMatch = ((g.querySelector('.group-name') || {}).textContent || '').toLowerCase().includes(q);
+            for (var j = 0; j < tabs.length; j++) {
+                var t = tabs[j];
+                var title = (t.querySelector('.tab-title') || {}).textContent || '';
+                var url = (t.querySelector('.tab-url') || {}).textContent || '';
+                var match = !q || groupMatch || title.toLowerCase().includes(q) || url.toLowerCase().includes(q);
+                t.classList.toggle('hidden', !match);
+                if (match) anyVisible = true;
+            }
+            g.classList.toggle('hidden', !anyVisible && !groupMatch && q.length > 0);
+        }
+        function updateNoResults() {
+            var q = input.value.trim();
+            var groups = content.querySelectorAll('.group');
+            var initialEmpty = document.querySelector('.empty'); if (initialEmpty) initialEmpty.hidden = !!q;
+            empty.hidden = !q || [...groups].some(g => !g.classList.contains('hidden'));
+        }
         input.addEventListener('input', function() {
             var q = input.value.toLowerCase().trim();
-            var initialEmpty = document.querySelector('.empty'); if (initialEmpty) initialEmpty.hidden = !!q;
-            var groups = document.querySelectorAll('.group');
+            var groups = content.querySelectorAll('.group');
             for (var i = 0; i < groups.length; i++) {
-                var g = groups[i];
-                var tabs = g.querySelectorAll('.tab');
-                var anyVisible = false;
-                var groupMatch = ((g.querySelector('.group-name') || {}).textContent || '').toLowerCase().includes(q);
-                for (var j = 0; j < tabs.length; j++) {
-                    var t = tabs[j];
-                    var title = (t.querySelector('.tab-title') || {}).textContent || '';
-                    var url = (t.querySelector('.tab-url') || {}).textContent || '';
-                    var match = !q || groupMatch || title.toLowerCase().includes(q) || url.toLowerCase().includes(q);
-                    t.classList.toggle('hidden', !match);
-                    if (match) anyVisible = true;
-                }
-                // Also check group name
-                var name = (g.querySelector('.group-name') || {}).textContent || '';
-                if (name.toLowerCase().includes(q)) anyVisible = true;
-                g.classList.toggle('hidden', !anyVisible && q.length > 0);
+                filterGroup(groups[i], q);
             }
-            empty.hidden = !q || [...groups].some(g => !g.classList.contains('hidden'));
+            updateNoResults();
         });
     })();
     </script>

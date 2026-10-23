@@ -105,3 +105,4 @@ All notable changes to Umber are recorded here, newest first.
 - Shortcut recording reads physical digit and punctuation keys, so combinations such as Ctrl+Shift+1 can be recorded and rebound.
 - Update checks report no available update when the repository has no published releases.
 - Context menu separators now use the theme's line colour instead of the WPF default, so they stay visible in both themes.
+

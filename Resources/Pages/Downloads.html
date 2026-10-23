@@ -71,6 +71,7 @@ dialog p { color:var(--text-muted); line-height:1.6; margin:0 0 20px; }
 <main class="main">
     <div class="empty-state" id="emptyState" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><p id="emptyText">No downloads yet</p></div>
     <div id="downloadList"></div>
+    <nav aria-label="Download history pages" style="display:flex;align-items:center;gap:16px"><button id="previousPage" type="button">Previous</button><span id="pageStatus" role="status" aria-live="polite"></span><button id="nextPage" type="button">Next</button></nav>
 </main>
 <dialog id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
     <h2 id="confirmTitle"></h2><p id="confirmMessage"></p>
@@ -80,7 +81,10 @@ dialog p { color:var(--text-muted); line-height:1.6; margin:0 0 20px; }
 <script>
 const __T = '{{IPC_TOKEN}}:';
 let downloads = [];
-try { downloads = JSON.parse(document.getElementById('downloadsData').textContent || '[]'); } catch {}
+const rowData = new Map();
+let page = 0, total = 0, sequence = 0, active = true, timer;
+const client = globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2);
+let request = client + ':0';
 const list = document.getElementById('downloadList');
 const itemMap = new Map(), groupMap = new Map();
 const paths = {
@@ -110,7 +114,19 @@ function dateInfo(iso, now = new Date()) {
     return {key,label};
 }
 function post(message) { window.chrome?.webview?.postMessage(message); }
-function requestSync() { post(__T + 'download-sync'); }
+function scheduleSync() {
+    clearTimeout(timer);
+    if (!document.hidden) timer = setTimeout(requestSync, active ? 500 : 5000);
+}
+function requestSync() {
+    if (document.hidden) return;
+    post(__T + 'download-sync:' + JSON.stringify({ query:document.getElementById('search').value, page, request }));
+    scheduleSync();
+}
+function changePage(next = 0) {
+    page = next; request = client + ':' + ++sequence; active = true;
+    requestSync();
+}
 function send(prefix,id) { post(__T + prefix + id); requestSync(); }
 function actionsFor(dl) {
     const actions = [];
@@ -173,14 +189,20 @@ function updateItem(el,dl) {
     }
 }
 function sync(incoming) {
-    downloads = incoming;
-    const allIds = new Set(incoming.map(dl=>dl.id));
-    for (const [id,el] of itemMap) if (!allIds.has(id)) { el.remove(); itemMap.delete(id); }
-    const query = document.getElementById('search').value.trim().toLocaleLowerCase();
-    const visible = incoming.filter(dl=>!query || ((dl.fileName || '') + ' ' + (dl.url || '')).toLocaleLowerCase().includes(query))
-        .slice().sort((a,b)=> (new Date(b.startedAt).getTime() || 0) - (new Date(a.startedAt).getTime() || 0));
+    // Ignore replies for a search or page that the user has already left.
+    if (incoming.request !== request || !Array.isArray(incoming.ids) || !Array.isArray(incoming.changed)) return;
+    page = incoming.page; total = incoming.total; active = incoming.active;
+    const ids = new Set(incoming.ids);
+    for (const [id,el] of itemMap) if (!ids.has(id)) { el.remove(); itemMap.delete(id); rowData.delete(id); }
+    for (const dl of incoming.changed) {
+        rowData.set(dl.id,dl);
+        let el = itemMap.get(dl.id);
+        if (!el) { el = buildItem(dl); itemMap.set(dl.id,el); }
+        updateItem(el,dl);
+    }
+    downloads = incoming.ids.map(id=>rowData.get(id)).filter(Boolean);
     const groups = new Map();
-    for (const dl of visible) {
+    for (const dl of downloads) {
         const info = dateInfo(dl.startedAt);
         if (!groups.has(info.key)) groups.set(info.key,{label:info.label,items:[]});
         groups.get(info.key).items.push(dl);
@@ -189,22 +211,23 @@ function sync(incoming) {
     for (const [key,group] of groups) {
         let section = groupMap.get(key);
         if (!section) { section = document.createElement('section'); section.className = 'day-group'; section.innerHTML = '<h2 class="day-title"></h2><div class="day-items"></div>'; groupMap.set(key,section); }
-        section.querySelector('h2').textContent = group.label;
+        const heading = section.querySelector('h2'); if (heading.textContent !== group.label) heading.textContent = group.label;
         if (list.children[groupIndex] !== section) list.insertBefore(section,list.children[groupIndex] || null);
         groupIndex++;
         const target = section.querySelector('.day-items'); let index = 0;
         for (const dl of group.items) {
-            let el = itemMap.get(dl.id); if (!el) { el = buildItem(dl); itemMap.set(dl.id,el); }
-            updateItem(el,dl); el.hidden = false;
+            const el = itemMap.get(dl.id);
             if (target.children[index] !== el) target.insertBefore(el,target.children[index] || null);
             index++;
         }
     }
-    const visibleIds = new Set(visible.map(dl=>dl.id));
-    for (const [id,el] of itemMap) if (!visibleIds.has(id)) el.hidden = true;
     for (const [key,section] of groupMap) if (!groups.has(key)) { section.remove(); groupMap.delete(key); }
-    document.getElementById('emptyState').hidden = visible.length !== 0;
-    document.getElementById('emptyText').textContent = query ? 'No matching downloads' : 'No downloads yet';
+    document.getElementById('emptyState').hidden = downloads.length !== 0;
+    document.getElementById('emptyText').textContent = document.getElementById('search').value.trim() ? 'No matching downloads' : 'No downloads yet';
+    document.getElementById('previousPage').disabled = page === 0;
+    document.getElementById('nextPage').disabled = (page + 1) * 50 >= total;
+    document.getElementById('pageStatus').textContent = total ? (page * 50 + 1) + ' to ' + Math.min((page + 1) * 50,total) + ' of ' + total : '0 downloads';
+    scheduleSync();
 }
 let confirmAction = null;
 const dialog = document.getElementById('confirmDialog');
@@ -217,15 +240,16 @@ dialog.addEventListener('close',()=>{ confirmAction = null; });
 document.getElementById('confirmActionBtn').addEventListener('click',()=>{ confirmAction?.(); dialog.close(); requestSync(); });
 document.getElementById('clearBtn').addEventListener('click',()=>showConfirm('Clear finished history?','This removes finished and cancelled records. Files stay on your computer.',()=>post(__T + 'download-clear')));
 document.getElementById('clearAllBtn').addEventListener('click',()=>showConfirm('Cancel downloads and clear history?','Active downloads will be cancelled. Downloaded files stay on your computer.',()=>post(__T + 'download-clear-all')));
-document.getElementById('search').addEventListener('input',()=>sync(downloads));
+document.getElementById('search').maxLength = 2048;
+document.getElementById('search').addEventListener('input',()=>changePage());
+document.getElementById('previousPage').addEventListener('click',()=>changePage(Math.max(0,page-1)));
+document.getElementById('nextPage').addEventListener('click',()=>changePage(page+1));
 window.chrome?.webview?.addEventListener('message',event=>{
     const message = String(event.data || ''), prefix = __T + 'downloads:';
     if (message.startsWith(prefix)) { try { sync(JSON.parse(message.slice(prefix.length))); } catch {} }
 });
 window.addEventListener('focus',requestSync);
-document.addEventListener('visibilitychange',()=>{ if (!document.hidden) requestSync(); });
-setInterval(requestSync,500);
-sync(downloads);
+document.addEventListener('visibilitychange',()=>{ clearTimeout(timer); if (!document.hidden) requestSync(); });
 requestSync();
 </script>
 </body>

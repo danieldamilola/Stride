@@ -55,8 +55,7 @@ public sealed partial class TabEngine : IDisposable
     // and must not land in this history.
     private readonly IClosedTabStore _closedTabStore;
 
-    /// <summary>Serializes native control setup, not each tab's first navigation.</summary>
-    private readonly TabCreationCoordinator _creationCoordinator = new();
+    private readonly SemaphoreSlim _activationGate = new(1, 1); // Serialize WebView2 creation
     private CancellationTokenSource? _activationCts;
     private bool _disposed;
 
@@ -186,19 +185,7 @@ public sealed partial class TabEngine : IDisposable
         );
         _hibernationManager.SetPreviewOriginCheck(id => _previewOriginTabId == id);
 
-        foreach (var item in _downloadStore.Items)
-        {
-            // No-op: WebView2 handles download resume natively;
-            // no need to attach custom resume handlers.
-        }
-
-        _downloadStore.Items.CollectionChanged += (s, e) =>
-        {
-            if (e.NewItems != null)
-            {
-                // No-op: no custom resume handler needed.
-            }
-        };
+        _hibernationManager.SetDownloadProtectionCheck(Downloads.IsTabProtectedByDownload);
 
         // BrowserSettings is a process singleton shared by every window, and each window
         // has its own engine and its own live profiles. Subscribing here is what makes a
@@ -209,6 +196,16 @@ public sealed partial class TabEngine : IDisposable
 
     private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(BrowserSettings.AdaptiveToolbarTint))
+        {
+            _dispatcher.Invoke(() =>
+            {
+                foreach (var id in _webViews.Keys.ToArray())
+                    if (TryGetCore(id, out var core) && core is not null)
+                        _ = _contentScriptInjector.UpdateThemeColorScriptAsync(core, _settings);
+            });
+            return;
+        }
         if (e.PropertyName is nameof(BrowserSettings.TabSleepEnabled) or nameof(BrowserSettings.AllowPinnedTabsToSleep))
         {
             _dispatcher.Invoke(_hibernationManager.ApplySleepSettings);
@@ -298,8 +295,8 @@ public sealed partial class TabEngine : IDisposable
             InternalUrls.History => "History",
             InternalUrls.Extensions => "Extensions",
             InternalUrls.Downloads => "Downloads",
-            InternalUrls.Onboarding => "Welcome to Umber",
-            InternalUrls.ReleaseNotes => "What's New in Umber",
+            InternalUrls.Onboarding => "Welcome to Stride",
+            InternalUrls.ReleaseNotes => "What's New in Stride",
             InternalUrls.Focus => "Focus Locked",
             InternalUrls.Health => "Health",
             _ => "New Tab"
@@ -490,32 +487,19 @@ public sealed partial class TabEngine : IDisposable
             return;
         }
 
-        // Native control setup is serialized. The first navigation is not: a slow
-        // extension reconciliation for this tab must not stop another tab from
-        // building or showing its own control. The gate wait is owned by engine
-        // lifecycle (_shutdownCts), NOT display activation (cts). A tab switch
-        // cancels display continuation (cts) but must not abort shared creation
-        // that other waiters depend on.
+        // Only runtime creation holds the shared gate. Per-tab extension readiness
+        // continues after release and belongs to engine lifetime, not display selection.
         try
         {
-            if (_disposed || !Tabs.Contains(tab))
+            Func<Task>? firstNavigation = null;
+            await CreateThenNavigateAsync(_activationGate, async () =>
             {
-                _readinessCoordinator.TryCancel(tab.Id);
-                return;
-            }
-
-            if (!_webViews.ContainsKey(tab.Id) || tab.IsHibernated)
-            {
-                var created = await _creationCoordinator.RunAsync(
-                    setupAsync: () => CreateWebViewControlForTabAsync(tab),
-                    firstNavigationAsync: control => CompleteInitialNavigationAsync(tab, control),
-                    _shutdownCts.Token);
-                if (created is null) return;
-            }
-            else
-            {
-                _readinessCoordinator.TrySetResult(tab.Id, _webViews[tab.Id]);
-            }
+                if (_disposed || !Tabs.Contains(tab)) throw new OperationCanceledException();
+                if (!_webViews.ContainsKey(tab.Id) || tab.IsHibernated)
+                    firstNavigation = await CreateWebViewForTab(tab);
+                else
+                    _readinessCoordinator.TrySetResult(tab.Id, _webViews[tab.Id]);
+            }, () => firstNavigation?.Invoke() ?? Task.CompletedTask, _shutdownCts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -537,6 +521,16 @@ public sealed partial class TabEngine : IDisposable
 
         _hibernationManager.SuspendBackgroundTabs(tab);
         _hibernationManager.EvictExcessWebViews(tab);
+    }
+
+    internal static async Task CreateThenNavigateAsync(SemaphoreSlim gate,
+        Func<Task> create, Func<Task> navigate, CancellationToken shutdown)
+    {
+        await gate.WaitAsync(shutdown);
+        try { await create(); }
+        finally { gate.Release(); }
+        shutdown.ThrowIfCancellationRequested();
+        await navigate();
     }
 
     /// <summary>
@@ -856,7 +850,7 @@ public sealed partial class TabEngine : IDisposable
     public void NavigateToDownloads(BrowserTab tab)
     {
         if (!_webViews.TryGetValue(tab.Id, out var wv) || wv.CoreWebView2 is null) return;
-        try { NavigateToHtmlString(tab, _pages.DownloadsPage(_downloadStore.Items.ToList(), _ipcToken), "downloads"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { NavigateToHtmlString(tab, _pages.DownloadsPage([], _ipcToken), "downloads"); } catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
 
     public void NavigateToOnboarding(BrowserTab tab)
@@ -1102,26 +1096,14 @@ public sealed partial class TabEngine : IDisposable
     // ──── WebView2 Creation ────
 
     /// <summary>
-    /// Builds a WebView2 control for a tab and wires its native setup. This is the
-    /// operation the creation coordinator serializes across tabs.
+    /// Creates a WebView2 control for a tab and wires its events.
     ///
     /// Every step here runs on the dispatcher, so each one is timed and the total
     /// is written to the trace. This is what identifies which step owns a stall,
     /// rather than inferring it from a timer gap alone.
-    ///
-    /// The first navigation is deliberately not part of this method. It is a per
-    /// tab wait for the shared extension registration, and holding the creation
-    /// gate across it was what blocked unrelated tabs. The caller runs it after
-    /// this method returns.
     /// </summary>
-    private async Task<ControlCreation?> CreateWebViewControlForTabAsync(BrowserTab tab)
+    private async Task<Func<Task>> CreateWebViewForTab(BrowserTab tab)
     {
-        if (_disposed || !Tabs.Contains(tab))
-        {
-            _readinessCoordinator.TryCancel(tab.Id);
-            return null;
-        }
-
         var overall = System.Diagnostics.Stopwatch.StartNew();
         var isInternal = tab.Url?.StartsWith("internal://") ?? true;
 
@@ -1132,11 +1114,7 @@ public sealed partial class TabEngine : IDisposable
         tab.IsSleeping = false;
         // A drag that starts while the control is still being built cannot move it, so
         // the tab is marked in flight until the build settles one way or the other.
-        // The mark stays until the first navigation below has also run, because a
-        // transfer before that point would leave the destination holding a control
-        // with no document in it.
         _creatingTabs.Add(tab.Id);
-        var keepCreating = false;
         try
         {
             // Claimed here, before the control is reachable from Navigate, because
@@ -1173,19 +1151,21 @@ public sealed partial class TabEngine : IDisposable
                 // an empty 200, so it ran alongside uBlock and could empty a real
                 // response before the extension or the page ever saw it.
                 //
-                // The registration itself is not kicked off here. It is awaited by the
-                // first navigation, immediately before the first external request this
-                // control makes, so an internal page never waits for it and never keeps
-                // another tab's setup behind it.
+                // The registration itself is not kicked off here any more. It is awaited
+                // below, immediately before the first external navigation this control
+                // makes, so an internal page never waits for it.
 
                 var injectSw = System.Diagnostics.Stopwatch.StartNew();
                 await _contentScriptInjector.InjectAsync(wv.CoreWebView2, _settings, _telemetryToken);
                 var injectMs = injectSw.ElapsedMilliseconds;
 
+                if (_disposed || !Tabs.Contains(tab) || !_webViews.TryGetValue(tab.Id, out var owned) || !ReferenceEquals((object)owned, (object)wv))
+                    throw new OperationCanceledException();
+
                 _readinessCoordinator.TrySetResult(tab.Id, wv);
 
                 System.Diagnostics.Trace.WriteLine(
-                    $"TabEngine.CreateWebViewControlForTab total={overall.ElapsedMilliseconds}ms " +
+                    $"TabEngine.CreateWebViewForTab total={overall.ElapsedMilliseconds}ms " +
                     $"ensure={ensureMs}ms configure={applyMs}ms wire={wireMs}ms " +
                     $"inject={injectMs}ms");
             }
@@ -1199,58 +1179,37 @@ public sealed partial class TabEngine : IDisposable
                 throw;
             }
 
-            if (_disposed || !Tabs.Contains(tab))
-            {
-                AbandonControl(tab, wv);
-                _readinessCoordinator.TryCancel(tab.Id);
-                return null;
-            }
-
-            // Registered above, before the awaits, so a failure part way through cannot
-            // leave a live WebView that the engine does not know about.
-            // Built in pages are served by the first navigation after the setup gate
-            // is released. Restore, the hibernation wake and the transfer recycle all
-            // create through this path, and none of them remembers a second navigation
-            // step. Warm activations reuse the live control and never reach this path,
-            // so a mere switch never reloads live page state.
-            // PendingNative is claimed inside ServeBuiltInPage by doing nothing, which
-            // keeps the core clean for the popup handoff.
-            keepCreating = true;
-            return new ControlCreation(wv, intent);
+            // Core readiness lets popup adoption and A/B/A switching share this
+            // configured control. First navigation remains a separate owned operation.
+            return () => CompleteInitialNavigationAsync(tab, wv, intent);
         }
-        finally
+        catch
         {
-            if (!keepCreating) _creatingTabs.Remove(tab.Id);
+            _creatingTabs.Remove(tab.Id);
+            throw;
         }
     }
 
-    /// <summary>
-    /// Delivers one tab's first document after its control setup has left the
-    /// serialized creation gate.
-    ///
-    /// A built in page is served immediately. An external URL waits for the shared
-    /// extension registration on its own, so a slow registration for this tab holds
-    /// no other tab's setup. The wait belongs to the engine, not to the activation
-    /// that started it: a tab switch cancels display activation so rapid clicks do
-    /// not queue up, and if that also cancelled this wait the request could go out
-    /// with the registration unproven.
-    ///
-    /// The intent, the tab membership and the core are checked again after the
-    /// wait, because the tab may have been closed, rebuilt, transferred or given a
-    /// newer request while the gate was open.
-    /// </summary>
-    private async Task CompleteInitialNavigationAsync(BrowserTab tab, ControlCreation control)
+    private async Task CompleteInitialNavigationAsync(BrowserTab tab, dynamic wv, long intent)
     {
-        dynamic wv = control.View;
         try
         {
-            if (_disposed || !Tabs.Contains(tab))
+            if (_disposed || !Tabs.Contains(tab) || !_webViews.TryGetValue(tab.Id, out var owned) || !ReferenceEquals((object)owned, (object)wv))
             {
                 AbandonControl(tab, wv);
                 return;
             }
 
-            if (!IsLatestNavigationIntent(tab.Id, control.Intent))
+            // Registered above, before the awaits, so a failure part way through cannot
+            // leave a live WebView that the engine does not know about.
+            // Built in pages are served here, not by the caller: restore, the
+            // hibernation wake and the transfer recycle all create through this
+            // path, and none of them remembers a second navigation step.
+            // Warm activations reuse the live control and never reach this
+            // path, so a mere switch never reloads live page state.
+            // PendingNative is claimed inside ServeBuiltInPage by doing
+            // nothing, which keeps the core clean for the popup handoff.
+            if (!IsLatestNavigationIntent(tab.Id, intent))
             {
                 // A newer request already put its document into this control while the
                 // runtime was starting. Serving the startup page again would replace it,
@@ -1260,75 +1219,63 @@ public sealed partial class TabEngine : IDisposable
                 return;
             }
 
-            if (ServeBuiltInPage(tab)) return;
-
-            // First external navigation for this control. uBlock is registered and
-            // reconciled to the current preference before the request is issued,
-            // instead of racing it. An internal page and the pending native sentinel
-            // never reach this branch.
-            var gateSw = System.Diagnostics.Stopwatch.StartNew();
-            var gate = await AwaitExtensionGateAsync(wv, tab.Url, _shutdownCts.Token);
-            System.Diagnostics.Trace.WriteLine(
-                $"TabEngine first external navigation tab={tab.Id} url={tab.Url} " +
-                $"gate={gateSw.ElapsedMilliseconds}ms {gate}");
-
-            if (gate != ExtensionGateOutcome.Proceed)
+            if (!ServeBuiltInPage(tab))
             {
-                // Cancelled by the engine going away, so the control is dropped
-                // rather than left live with no document in it. A later activation
-                // builds a fresh one and waits again.
-                Trace.WriteLine($"TabEngine first external navigation suppressed for tab {tab.Id}");
-                AbandonControl(tab, wv);
-                return;
-            }
+                // First external navigation for this control. uBlock is registered and
+                // reconciled to the current preference before the request is issued,
+                // instead of racing it. An internal page and the pending native
+                // sentinel never reach this line.
+                //
+                // The wait belongs to the engine, not to the activation that started
+                // it. A tab switch cancels the activation so rapid clicks do not queue
+                // up, and if that also cancelled this wait the request would go out
+                // with the registration unproven, or the control would sit live and
+                // never navigated while warm activation treated it as ready.
+                var gateSw = System.Diagnostics.Stopwatch.StartNew();
+                var gate = await AwaitExtensionGateAsync(wv, tab.Url, _shutdownCts.Token);
+                System.Diagnostics.Trace.WriteLine(
+                    $"TabEngine first external navigation tab={tab.Id} url={tab.Url} " +
+                    $"gate={gateSw.ElapsedMilliseconds}ms {gate}");
 
-            if (_disposed || !Tabs.Contains(tab))
-            {
-                AbandonControl(tab, wv);
-                return;
-            }
+                if (gate != ExtensionGateOutcome.Proceed)
+                {
+                    // Cancelled by the engine going away, so the control is dropped
+                    // rather than left live with no document in it. A later activation
+                    // builds a fresh one and waits again.
+                    Trace.WriteLine($"TabEngine first external navigation suppressed for tab {tab.Id}");
+                    AbandonControl(tab, wv);
+                    return;
+                }
 
-            if (!IsLatestNavigationIntent(tab.Id, control.Intent))
-            {
-                // A newer request owns this tab now. It may already have delivered a
-                // document into this same control, or its own continuation may still
-                // be waiting on the same gate. Issuing this one as well would either
-                // double navigate the newer url or re-serve a page that is already
-                // loaded, and an internal page that arrived in the meantime would be
-                // overwritten by the startup url. The control stays live because the
-                // newer request needs it. There is no newer intent in the pass above,
-                // so a control is never left with no document because of this.
-                Trace.WriteLine(
-                    $"TabEngine first external navigation dropped as superseded for tab {tab.Id}: {tab.Url}");
-                return;
-            }
+                if (_disposed || !Tabs.Contains(tab) || !_webViews.TryGetValue(tab.Id, out var current) || !ReferenceEquals((object)current, (object)wv))
+                {
+                    AbandonControl(tab, wv);
+                    return;
+                }
 
-            _webViewFactory.NavigateInitialUrl(wv, tab);
+                if (!IsLatestNavigationIntent(tab.Id, intent))
+                {
+                    // A newer request owns this tab now. It may already have delivered a
+                    // document into this same control, or its own continuation may still
+                    // be waiting on the same gate. Issuing this one as well would either
+                    // double navigate the newer url or re-serve a page that is already
+                    // loaded, and an internal page that arrived in the meantime would be
+                    // overwritten by the startup url. The control stays live because the
+                    // newer request needs it. There is no newer intent in the pass above,
+                    // so a control is never left with no document because of this.
+                    Trace.WriteLine(
+                        $"TabEngine first external navigation dropped as superseded for tab {tab.Id}: {tab.Url}");
+                    return;
+                }
+
+                _webViewFactory.NavigateInitialUrl(wv, tab);
+            }
         }
         finally
         {
-            // The first navigation has settled one way or the other, so a drag may now
-            // move the control without losing the document that belongs in it.
-            _creatingTabs.Remove(tab.Id);
+            if (!_webViews.TryGetValue(tab.Id, out var current) || ReferenceEquals((object)current, (object)wv))
+                _creatingTabs.Remove(tab.Id);
         }
-    }
-
-    /// <summary>
-    /// A control built for one tab, plus the navigation intent its setup claimed.
-    /// The intent is carried across the setup gate so the first navigation can
-    /// check that no newer request took ownership while the control was built.
-    /// </summary>
-    private sealed class ControlCreation
-    {
-        public ControlCreation(dynamic view, long intent)
-        {
-            View = view;
-            Intent = intent;
-        }
-
-        public dynamic View { get; }
-
-        public long Intent { get; }
     }
 
     /// <summary>What the extension gate decided the caller should do next.</summary>
@@ -1456,11 +1403,14 @@ public sealed partial class TabEngine : IDisposable
     /// </summary>
     private void AbandonControl(BrowserTab tab, dynamic wv)
     {
-        _readinessCoordinator.TryCancel(tab.Id);
-        UnwireTabEvents(tab.Id);
-        _webViews.Remove(tab.Id);
-        _controlHosts.Remove(tab.Id);
-        ForgetNavigationIntent(tab.Id);
+        if (_webViews.TryGetValue(tab.Id, out var current) && ReferenceEquals((object)current, (object)wv))
+        {
+            _readinessCoordinator.TryCancel(tab.Id);
+            UnwireTabEvents(tab.Id);
+            _webViews.Remove(tab.Id);
+            _controlHosts.Remove(tab.Id);
+            ForgetNavigationIntent(tab.Id);
+        }
         _webViewHost?.Children.Remove((FrameworkElement)wv);
         try { wv.Dispose(); } catch (Exception ex) { Trace.WriteLine(ex); }
     }
@@ -1735,11 +1685,11 @@ public sealed partial class TabEngine : IDisposable
     public async Task ReInjectUnhookAsync()
     {
         const string cleanup =
-            "window.__UMBER_UNHOOK = null; " +
-            "try { localStorage.removeItem('__umber_unhook'); } catch (e) {} " +
+            "window.__STRIDE_UNHOOK = null; " +
+            "try { localStorage.removeItem('__stride_unhook'); } catch (e) {} " +
             "var rc = document.documentElement.classList; " +
             "for (var i = rc.length - 1; i >= 0; i--) { " +
-            "if (rc.item(i).indexOf('umber-unhook-') === 0) rc.remove(rc.item(i)); }";
+            "if (rc.item(i).indexOf('stride-unhook-') === 0) rc.remove(rc.item(i)); }";
 
         var script = _youtubeUnhook.GetScript(_settings, forceConfig: true);
 
@@ -1776,8 +1726,8 @@ public sealed partial class TabEngine : IDisposable
     public async Task ReInjectEnhancerAsync()
     {
         const string cleanup =
-            "window.__UMBER_YT_CONFIG = { enabled: false }; " +
-            "try { localStorage.removeItem('__umber_yt_enhancer'); } catch (e) {} " +
+            "window.__STRIDE_YT_CONFIG = { enabled: false }; " +
+            "try { localStorage.removeItem('__stride_yt_enhancer'); } catch (e) {} " +
             "document.querySelectorAll('video').forEach(function(v) { v.loop = false; });";
 
         var script = _youtubeEnhancer.GetScript(_settings, forceConfig: true);
@@ -1884,6 +1834,7 @@ public sealed partial class TabEngine : IDisposable
 
             _dispatcher.InvokeAsync(() =>
             {
+                if (WebViewIpcBridge.TryApplyThemeColor(tab, "", true)) TabStateChanged?.Invoke(tab);
                 tab.IsLoading = true;
                 LoadingStateChanged?.Invoke(tab, true);
             });
@@ -2019,7 +1970,7 @@ public sealed partial class TabEngine : IDisposable
         EventHandler<CoreWebView2ProcessFailedEventArgs> onProcessFailed = (_, e) =>
         {
             try { Trace.WriteLine($"ProcessFailed kind={e.ProcessFailedKind} tab={tab.Title}"); Trace.Flush(); }
-            catch (Exception ex) { Trace.WriteLine($"ProcessFailed trace failed: {ex}"); }
+            catch { }
             _dispatcher.Invoke(() =>
             {
                 try
@@ -2195,13 +2146,13 @@ public sealed partial class TabEngine : IDisposable
         try
         {
             await wv.CoreWebView2.ExecuteScriptAsync(
-                "(function(){ var s = document.getElementById('__umberDimStyle'); if (!s) { s = document.createElement('style'); s.id = '__umberDimStyle'; s.innerHTML = 'html { filter: brightness(0.25) !important; transition: filter 0.15s ease !important; }'; (document.head || document.documentElement).appendChild(s); } })();");
+                "(function(){ var s = document.getElementById('__strideDimStyle'); if (!s) { s = document.createElement('style'); s.id = '__strideDimStyle'; s.innerHTML = 'html { filter: brightness(0.25) !important; transition: filter 0.15s ease !important; }'; (document.head || document.documentElement).appendChild(s); } })();");
         }
         catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
 
         if (generation != _previewGeneration || _previewOriginTabId != tabId)
         {
-            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__umberDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
             return;
         }
 
@@ -2228,7 +2179,7 @@ public sealed partial class TabEngine : IDisposable
                 tab.IsSleeping = false;
             }
             try { wv.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal; } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
-            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__umberDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+            try { _ = wv.CoreWebView2.ExecuteScriptAsync("(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();"); } catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
         }
     }
 
@@ -2258,7 +2209,7 @@ public sealed partial class TabEngine : IDisposable
         try
         {
             _ = wv.CoreWebView2.ExecuteScriptAsync(
-                "(function(){ var s = document.getElementById('__umberDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();");
+                "(function(){ var s = document.getElementById('__strideDimStyle'); if (s) s.remove(); document.documentElement.style.filter = ''; })();");
         }
         catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
     }
@@ -2334,5 +2285,6 @@ public sealed partial class TabEngine : IDisposable
         foreach (var id in _webViews.Keys.ToArray()) TeardownWebView(id);
     }
 }
+
 
 

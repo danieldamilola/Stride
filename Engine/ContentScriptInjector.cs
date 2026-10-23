@@ -1,8 +1,5 @@
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using UmberBrowser.Helpers;
 using UmberBrowser.Models;
@@ -14,14 +11,14 @@ public sealed class ContentScriptInjector
 {
     private readonly YouTubeUnhook _youtubeUnhook;
 
-    /// <summary>
-    /// The settings singleton, when the container supplied one. The injector reads
-    /// the adaptive tint setting from it so a change reaches the pages without the
-    /// window or the engine having to pass the change along.
-    /// </summary>
-    private readonly BrowserSettings? _settings;
+    private static readonly HashSet<string> _trustedExternalOrigins = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "wallhaven.cc",
+        "www.wallhaven.cc",
+    };
 
-    private Dispatcher? _dispatcher;
+    public static bool IsTrustedExternalOrigin(string host) =>
+        !string.IsNullOrEmpty(host) && _trustedExternalOrigins.Contains(host);
 
     /// <summary>
     /// The id WebView2 gave the registered YouTube bootstrap on each core.
@@ -34,242 +31,47 @@ public sealed class ContentScriptInjector
     /// and a tab that moves between windows keeps the same core and the same record.
     /// </summary>
     private readonly ConditionalWeakTable<CoreWebView2, StrongBox<string?>> _youTubeScriptIds = new();
-
-    /// <summary>
-    /// What is registered on one core right now: the id of the theme script and the
-    /// setting it was registered with. The record dies with the core, so a closed
-    /// tab leaves nothing behind and a tab that moves between windows keeps its
-    /// registration.
-    /// </summary>
-    internal sealed class ThemeScriptState
+    private sealed class ThemeScriptState
     {
-        public string? ScriptId;
-        public bool Enabled;
+        public readonly SemaphoreSlim Gate = new(1, 1);
+        public string? Id;
+        public bool? Enabled;
+    }
+    private readonly ConditionalWeakTable<CoreWebView2, ThemeScriptState> _themeScripts = new();
+
+    internal static string ThemeColorBootstrap(bool enabled) =>
+        ResourceLoader.Load("Resources.Scripts.theme-color.js")
+            .Replace("__STRIDE_THEME_ENABLED__", enabled ? "true" : "false");
+
+    /// <summary>Updates both future documents and the current document on one core.</summary>
+    public async Task UpdateThemeColorScriptAsync(CoreWebView2 core, BrowserSettings settings)
+    {
+        var state = _themeScripts.GetValue(core, _ => new ThemeScriptState());
+        await state.Gate.WaitAsync();
+        try
+        {
+            do
+            {
+                var enabled = settings.AdaptiveToolbarTint;
+                if (state.Enabled != enabled || state.Id is null)
+                {
+                    if (state.Id is not null) core.RemoveScriptToExecuteOnDocumentCreated(state.Id);
+                    state.Id = null;
+                    state.Id = await core.AddScriptToExecuteOnDocumentCreatedAsync(ThemeColorBootstrap(enabled));
+                    state.Enabled = enabled;
+                }
+                // This setting contains no secret. The public setter only controls style extraction.
+                await core.ExecuteScriptAsync("window.__strideThemeColor?.setEnabled(" + (enabled ? "true" : "false") + ");");
+            } while (state.Enabled != settings.AdaptiveToolbarTint);
+        }
+        catch (Exception ex) { Trace.WriteLine($"ContentScriptInjector: theme color update failed: {ex.Message}"); }
+        finally { state.Gate.Release(); }
     }
 
-    /// <summary>
-    /// The WebView2 calls the theme script needs. The interface exists so the update
-    /// path can be exercised without a live core.
-    /// </summary>
-    internal interface IThemeScriptTarget
-    {
-        Task<string> AddScriptAsync(string script);
-        void RemoveScript(string scriptId);
-        void PostMessage(string message);
-    }
-
-    private sealed class CoreThemeScriptTarget(CoreWebView2 core) : IThemeScriptTarget
-    {
-        public Task<string> AddScriptAsync(string script) => core.AddScriptToExecuteOnDocumentCreatedAsync(script);
-        public void RemoveScript(string scriptId) => core.RemoveScriptToExecuteOnDocumentCreated(scriptId);
-        public void PostMessage(string message) => core.PostWebMessageAsString(message);
-    }
-
-    /// <summary>The per core registration of the theme script.</summary>
-    private readonly ConditionalWeakTable<CoreWebView2, ThemeScriptState> _themeStates = new();
-
-    /// <summary>
-    /// The cores the theme script was registered on. The references are weak, so a
-    /// closed tab is collected and the list does not keep a torn down core alive.
-    /// The list is what makes the cores reachable at all: a weak table cannot be
-    /// walked, and the setting has to reach every core that is open.
-    /// </summary>
-    private readonly List<WeakReference<CoreWebView2>> _themeCores = new();
-
-    private readonly object _themeLock = new();
-
-    /// <summary>
-    /// Held while a registration is being replaced, so two changes that overlap
-    /// cannot leave a core with two scripts or with the older one.
-    /// </summary>
-    private readonly SemaphoreSlim _themeGate = new(1, 1);
-
-    /// <summary>The control message that turns the adaptive tint on in a live page.</summary>
-    internal const string ThemeControlEnabled = "theme-tint-control:1";
-
-    /// <summary>The control message that turns the adaptive tint off in a live page.</summary>
-    internal const string ThemeControlDisabled = "theme-tint-control:0";
-
-    /// <summary>
-    /// Replaced with the adaptive tint setting when the script is registered, so a
-    /// document knows whether it should watch the page before the first page event
-    /// arrives.
-    /// </summary>
-    private const string ThemeEnabledPlaceholder = "__UMBER_THEME_TINT_ENABLED__";
-
-    private static readonly HashSet<string> _trustedExternalOrigins = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "wallhaven.cc",
-        "www.wallhaven.cc",
-    };
-
-    public static bool IsTrustedExternalOrigin(string host) =>
-        !string.IsNullOrEmpty(host) && _trustedExternalOrigins.Contains(host);
-
-    public ContentScriptInjector(YouTubeUnhook youtubeUnhook, BrowserSettings? settings = null)
+    public ContentScriptInjector(YouTubeUnhook youtubeUnhook)
     {
         _youtubeUnhook = youtubeUnhook;
-        _settings = settings;
-        _dispatcher = Application.Current?.Dispatcher;
-
-        // The settings singleton is shared by every window, so one subscription here
-        // reaches the pages of all of them, including a tab that moved to another
-        // window. The subscriber is the injector itself, which lives as long as the
-        // settings do.
-        if (settings is not null)
-            settings.PropertyChanged += OnSettingsPropertyChanged;
     }
-
-    /// <summary>
-    /// The theme colour script as it is registered on a core.
-    /// <para>
-    /// The setting is baked into the text. A document that is created later then
-    /// starts in the right state without asking the host, and a document that was
-    /// created while the setting was off is told to start through a control message.
-    /// </para>
-    /// </summary>
-    internal static string BuildThemeScript(bool enabled)
-    {
-        var script = ResourceLoader.Load("Resources.Scripts.theme-color.js");
-        return script.Replace(ThemeEnabledPlaceholder, enabled ? "true" : "false");
-    }
-
-    private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName != nameof(BrowserSettings.AdaptiveToolbarTint)) return;
-        _ = ApplyAdaptiveTintAsync();
-    }
-
-    /// <summary>
-    /// Brings every live core in step with the adaptive tint setting. The registered
-    /// script is replaced with one built for the setting as it is now, so the next
-    /// document starts in the right state, and the document that is open now is told
-    /// to start or stop watching the page.
-    /// </summary>
-    public async Task ApplyAdaptiveTintAsync()
-    {
-        try
-        {
-            var dispatcher = UiDispatcher;
-            if (dispatcher is not null && !dispatcher.CheckAccess())
-            {
-                Func<Task> work = () => ApplyAdaptiveTintOnCurrentThreadAsync();
-                var operation = dispatcher.InvokeAsync(work);
-                await await operation;
-                return;
-            }
-
-            await ApplyAdaptiveTintOnCurrentThreadAsync();
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"ContentScriptInjector: adaptive tint update failed: {ex.Message}");
-        }
-    }
-
-    private async Task ApplyAdaptiveTintOnCurrentThreadAsync()
-    {
-        foreach (var core in LiveThemeCores())
-        {
-            try
-            {
-                await ApplyThemeStateAsync(
-                    new CoreThemeScriptTarget(core),
-                    ThemeState(core),
-                    () => DesiredEnabled(null));
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"ContentScriptInjector: adaptive tint update failed for a core: {ex.Message}");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Registers the script for the current setting on one target and tells the
-    /// document that is open now. The setting is read while the update is held, so
-    /// the newest change wins when two of them overlap, and the document is never
-    /// told to do something the registered script does not say.
-    /// </summary>
-    internal async Task ApplyThemeStateAsync(IThemeScriptTarget target, ThemeScriptState state, Func<bool> desiredState)
-    {
-        var enabled = false;
-        await _themeGate.WaitAsync();
-        try
-        {
-            enabled = desiredState();
-            if (state.Enabled != enabled || string.IsNullOrEmpty(state.ScriptId))
-            {
-                if (!string.IsNullOrEmpty(state.ScriptId))
-                    target.RemoveScript(state.ScriptId);
-                state.ScriptId = await target.AddScriptAsync(BuildThemeScript(enabled));
-                state.Enabled = enabled;
-            }
-        }
-        finally
-        {
-            _themeGate.Release();
-        }
-
-        target.PostMessage(enabled ? ThemeControlEnabled : ThemeControlDisabled);
-    }
-
-    private async Task RegisterThemeScriptAsync(CoreWebView2 core, BrowserSettings settings)
-    {
-        try
-        {
-            lock (_themeLock)
-            {
-                _themeCores.RemoveAll(entry => !entry.TryGetTarget(out _));
-                var known = false;
-                foreach (var entry in _themeCores)
-                {
-                    if (entry.TryGetTarget(out var candidate) && ReferenceEquals(candidate, core))
-                    {
-                        known = true;
-                        break;
-                    }
-                }
-                if (!known) _themeCores.Add(new WeakReference<CoreWebView2>(core));
-            }
-
-            await ApplyThemeStateAsync(
-                new CoreThemeScriptTarget(core),
-                ThemeState(core),
-                () => DesiredEnabled(settings));
-        }
-        catch (Exception ex)
-        {
-            // A core being torn down throws here. The next control built from the same
-            // settings registers a correct script anyway, so this is not fatal.
-            Trace.WriteLine($"ContentScriptInjector: theme script registration failed: {ex.Message}");
-        }
-    }
-
-    private ThemeScriptState ThemeState(CoreWebView2 core) => _themeStates.GetValue(core, _ => new ThemeScriptState());
-
-    private List<CoreWebView2> LiveThemeCores()
-    {
-        var live = new List<CoreWebView2>();
-        lock (_themeLock)
-        {
-            for (var i = _themeCores.Count - 1; i >= 0; i--)
-            {
-                if (_themeCores[i].TryGetTarget(out var core)) live.Add(core);
-                else _themeCores.RemoveAt(i);
-            }
-        }
-        live.Reverse();
-        return live;
-    }
-
-    private bool DesiredEnabled(BrowserSettings? fallback)
-    {
-        if (_settings is not null) return _settings.AdaptiveToolbarTint;
-        return fallback?.AdaptiveToolbarTint ?? false;
-    }
-
-    private Dispatcher? UiDispatcher => _dispatcher ??= Application.Current?.Dispatcher;
 
     /// <summary>
     /// Replaces the registered YouTube bootstrap on one core with one built from the
@@ -339,12 +141,7 @@ public sealed class ContentScriptInjector
             ResourceLoader.Load("Resources.Scripts.wallhaven-downloader.js"));
 
         // Adaptive Theme Color Extractor (Ported from Adaptive-Tab-Bar-Colour Extension)
-        //
-        // The script is registered whatever the setting says, so a document that was
-        // loaded while the setting was off can be switched on later without a reload.
-        // The setting is baked into the registered text, and a live change reaches
-        // the open document as a control message.
-        await RegisterThemeScriptAsync(core, settings);
+        await UpdateThemeColorScriptAsync(core, settings);
 
         // Link Preview - Alt plus click, on demand, no background timer
         if (settings.LinkPreviewEnabled)
@@ -354,3 +151,4 @@ public sealed class ContentScriptInjector
         }
     }
 }
+

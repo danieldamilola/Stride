@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -14,17 +13,17 @@ public sealed partial class DownloadsPanelViewModel : ObservableObject, IDisposa
 {
     private readonly IDownloadStore _store;
     private readonly TabEngine _engine;
-    private readonly HashSet<DownloadItem> _observed = new();
+    private readonly DownloadCollectionObserver _observer;
     public ObservableCollection<DownloadItem> RecentDownloads { get; } = new();
     public DownloadsPanelViewModel(IDownloadStore store, TabEngine engine)
-    { _store = store; _engine = engine; _store.Items.CollectionChanged += OnChanged; Refresh(); }
-    private void OnChanged(object? sender, NotifyCollectionChangedEventArgs e) => Refresh();
+    {
+        _store = store;
+        _engine = engine;
+        _observer = new(store.Items, ItemChanged, _ => Refresh());
+        Refresh();
+    }
     public void Refresh()
     {
-        foreach (var removed in _observed.Where(item => !_store.Items.Contains(item)).ToArray())
-        { removed.PropertyChanged -= ItemChanged; _observed.Remove(removed); }
-        foreach (var item in _store.Items)
-            if (_observed.Add(item)) item.PropertyChanged += ItemChanged;
         var desired = RecentDownloadList.Select(_store.Items, DateTime.UtcNow);
         _ = _engine.Downloads.FileDetails.RefreshAsync(desired);
         foreach (var removed in RecentDownloads.Where(item => !desired.Contains(item)).ToArray()) RecentDownloads.Remove(removed);
@@ -47,8 +46,6 @@ public sealed partial class DownloadsPanelViewModel : ObservableObject, IDisposa
     [RelayCommand] private void Folder(DownloadItem item) => _engine.Downloads.ShowInFolder(item.Id);
     public void Dispose()
     {
-        _store.Items.CollectionChanged -= OnChanged;
-        foreach (var item in _observed) item.PropertyChanged -= ItemChanged;
-        _observed.Clear();
+        _observer.Dispose();
     }
 }

@@ -72,6 +72,7 @@ public static class IpcSecurityPolicy
                 message == WebMessagePrefix.DownloadClear ||
                 message == WebMessagePrefix.DownloadClearAll ||
                 message == WebMessagePrefix.DownloadRequestSync ||
+                message.StartsWith(WebMessagePrefix.DownloadRequestSync + ":", StringComparison.Ordinal) ||
                 message.StartsWith(WebMessagePrefix.DownloadPause, StringComparison.Ordinal) ||
                 message.StartsWith(WebMessagePrefix.DownloadResume, StringComparison.Ordinal) ||
                 message.StartsWith(WebMessagePrefix.DownloadRetry, StringComparison.Ordinal) ||

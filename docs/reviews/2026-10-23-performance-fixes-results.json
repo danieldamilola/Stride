@@ -1,0 +1,1750 @@
+{
+  "capturedUtc": "2026-10-23T11:53:27.7542777Z",
+  "runtime": "9.0.20",
+  "os": "Microsoft Windows NT 10.0.26200.0",
+  "processors": 8,
+  "passed": true,
+  "switches": [
+    "--full"
+  ],
+  "mode": "Release recommended; synthetic isolated profile; no remote sites",
+  "results": [
+    {
+      "name": "history-add-ui-mutation",
+      "rows": 100,
+      "samples": 25,
+      "medianMs": 0.0188,
+      "p95Ms": 0.0264,
+      "medianAllocatedBytes": 456,
+      "scope": "mutation only; no durability awaited"
+    },
+    {
+      "name": "history-add-awaited-background-flush",
+      "rows": 100,
+      "samples": 25,
+      "medianMs": 109.2583,
+      "p95Ms": 119.3119,
+      "medianAllocatedBytes": null,
+      "scope": "wall time includes coalescing delay, background snapshot, JSON serialization and atomic replacement; no caller allocation claim"
+    },
+    {
+      "name": "history-search-all",
+      "rows": 100,
+      "samples": 25,
+      "medianMs": 0.0161,
+      "p95Ms": 0.0278,
+      "medianAllocatedBytes": 6440,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "local-suggestions",
+      "rows": 100,
+      "samples": 25,
+      "medianMs": 0.0306,
+      "p95Ms": 0.0422,
+      "medianAllocatedBytes": 13216,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "frequent-sites",
+      "rows": 100,
+      "samples": 25,
+      "medianMs": 0.1834,
+      "p95Ms": 0.3008,
+      "medianAllocatedBytes": 42248,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "history-add-background-atomic-write",
+      "rows": 100,
+      "samples": 28,
+      "medianMs": 1.8139,
+      "p95Ms": 2.9381,
+      "medianAllocatedBytes": null,
+      "scope": "writer callback only; excludes snapshot and serialization; includes 3 warmups"
+    },
+    {
+      "name": "history-add-write-count",
+      "rows": 100,
+      "writes": 28,
+      "totalUtf8Bytes": 352246,
+      "wroteOnDispatcher": false
+    },
+    {
+      "name": "history-file",
+      "rows": 100,
+      "bytes": 13995
+    },
+    {
+      "name": "history-add-ui-mutation",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 0.013,
+      "p95Ms": 0.0293,
+      "medianAllocatedBytes": 456,
+      "scope": "mutation only; no durability awaited"
+    },
+    {
+      "name": "history-add-awaited-background-flush",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 109.401,
+      "p95Ms": 111.5528,
+      "medianAllocatedBytes": null,
+      "scope": "wall time includes coalescing delay, background snapshot, JSON serialization and atomic replacement; no caller allocation claim"
+    },
+    {
+      "name": "history-search-all",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 0.178,
+      "p95Ms": 0.2009,
+      "medianAllocatedBytes": 49640,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "local-suggestions",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 0.1246,
+      "p95Ms": 0.2035,
+      "medianAllocatedBytes": 63616,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "frequent-sites",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 3.7301,
+      "p95Ms": 5.6283,
+      "medianAllocatedBytes": 292808,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "history-add-background-atomic-write",
+      "rows": 1000,
+      "samples": 28,
+      "medianMs": 1.8694,
+      "p95Ms": 2.6827,
+      "medianAllocatedBytes": null,
+      "scope": "writer callback only; excludes snapshot and serialization; includes 3 warmups"
+    },
+    {
+      "name": "history-add-write-count",
+      "rows": 1000,
+      "writes": 28,
+      "totalUtf8Bytes": 3194849,
+      "wroteOnDispatcher": false
+    },
+    {
+      "name": "history-file",
+      "rows": 1000,
+      "bytes": 115516
+    },
+    {
+      "name": "history-add-ui-mutation",
+      "rows": 10000,
+      "samples": 25,
+      "medianMs": 0.0195,
+      "p95Ms": 0.0601,
+      "medianAllocatedBytes": 456,
+      "scope": "mutation only; no durability awaited"
+    },
+    {
+      "name": "history-add-awaited-background-flush",
+      "rows": 10000,
+      "samples": 25,
+      "medianMs": 124.8082,
+      "p95Ms": 126.4637,
+      "medianAllocatedBytes": null,
+      "scope": "wall time includes coalescing delay, background snapshot, JSON serialization and atomic replacement; no caller allocation claim"
+    },
+    {
+      "name": "history-search-all",
+      "rows": 10000,
+      "samples": 25,
+      "medianMs": 0.6914,
+      "p95Ms": 1.4618,
+      "medianAllocatedBytes": 480296,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "local-suggestions",
+      "rows": 10000,
+      "samples": 25,
+      "medianMs": 0.6822,
+      "p95Ms": 1.6036,
+      "medianAllocatedBytes": 566048,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "frequent-sites",
+      "rows": 10000,
+      "samples": 25,
+      "medianMs": 8.0783,
+      "p95Ms": 11.0912,
+      "medianAllocatedBytes": 2686344,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "history-add-background-atomic-write",
+      "rows": 10000,
+      "samples": 28,
+      "medianMs": 3.4291,
+      "p95Ms": 4.7647,
+      "medianAllocatedBytes": null,
+      "scope": "writer callback only; excludes snapshot and serialization; includes 3 warmups"
+    },
+    {
+      "name": "history-add-write-count",
+      "rows": 10000,
+      "writes": 28,
+      "totalUtf8Bytes": 32080069,
+      "wroteOnDispatcher": false
+    },
+    {
+      "name": "history-file",
+      "rows": 10000,
+      "bytes": 1145638
+    },
+    {
+      "name": "downloads-json-all-record-diagnostic",
+      "rows": 100,
+      "samples": 25,
+      "medianMs": 0.427,
+      "p95Ms": 0.8774,
+      "medianAllocatedBytes": 154352,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "downloads-all-record-diagnostic-payload",
+      "rows": 100,
+      "bytes": 50171,
+      "icons": false,
+      "productTransfer": false
+    },
+    {
+      "name": "download-state-ui-mutation",
+      "rows": 100,
+      "samples": 25,
+      "medianMs": 0.0205,
+      "p95Ms": 0.0354,
+      "medianAllocatedBytes": 1056,
+      "scope": "mutation only; no durability awaited"
+    },
+    {
+      "name": "download-state-awaited-background-flush",
+      "rows": 100,
+      "samples": 25,
+      "medianMs": 109.1245,
+      "p95Ms": 110.7111,
+      "medianAllocatedBytes": null,
+      "scope": "wall time includes coalescing delay, background snapshot, JSON serialization and atomic replacement; no caller allocation claim"
+    },
+    {
+      "name": "download-state-background-atomic-write",
+      "rows": 100,
+      "samples": 29,
+      "medianMs": 1.6486,
+      "p95Ms": 3.0301,
+      "medianAllocatedBytes": null,
+      "scope": "writer callback only; excludes snapshot and serialization; includes 3 warmups"
+    },
+    {
+      "name": "download-state-write-count",
+      "rows": 100,
+      "writes": 29,
+      "totalUtf8Bytes": 1083469,
+      "wroteOnDispatcher": false
+    },
+    {
+      "name": "downloads-json-all-record-diagnostic",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 4.9036,
+      "p95Ms": 6.2582,
+      "medianAllocatedBytes": 1545752,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "downloads-all-record-diagnostic-payload",
+      "rows": 1000,
+      "bytes": 504671,
+      "icons": false,
+      "productTransfer": false
+    },
+    {
+      "name": "download-state-ui-mutation",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 0.0145,
+      "p95Ms": 0.0222,
+      "medianAllocatedBytes": 1056,
+      "scope": "mutation only; no durability awaited"
+    },
+    {
+      "name": "download-state-awaited-background-flush",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 108.6812,
+      "p95Ms": 110.0476,
+      "medianAllocatedBytes": null,
+      "scope": "wall time includes coalescing delay, background snapshot, JSON serialization and atomic replacement; no caller allocation claim"
+    },
+    {
+      "name": "download-state-background-atomic-write",
+      "rows": 1000,
+      "samples": 29,
+      "medianMs": 2.195,
+      "p95Ms": 3.5749,
+      "medianAllocatedBytes": null,
+      "scope": "writer callback only; excludes snapshot and serialization; includes 3 warmups"
+    },
+    {
+      "name": "download-state-write-count",
+      "rows": 1000,
+      "writes": 29,
+      "totalUtf8Bytes": 10949269,
+      "wroteOnDispatcher": false
+    },
+    {
+      "name": "downloads-json-all-record-diagnostic",
+      "rows": 5000,
+      "samples": 25,
+      "medianMs": 15.3942,
+      "p95Ms": 23.6348,
+      "medianAllocatedBytes": 7753752,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "downloads-all-record-diagnostic-payload",
+      "rows": 5000,
+      "bytes": 2536671,
+      "icons": false,
+      "productTransfer": false
+    },
+    {
+      "name": "download-state-ui-mutation",
+      "rows": 5000,
+      "samples": 25,
+      "medianMs": 0.0152,
+      "p95Ms": 0.0307,
+      "medianAllocatedBytes": 1056,
+      "scope": "mutation only; no durability awaited"
+    },
+    {
+      "name": "download-state-awaited-background-flush",
+      "rows": 5000,
+      "samples": 25,
+      "medianMs": 124.3279,
+      "p95Ms": 127.165,
+      "medianAllocatedBytes": null,
+      "scope": "wall time includes coalescing delay, background snapshot, JSON serialization and atomic replacement; no caller allocation claim"
+    },
+    {
+      "name": "download-state-background-atomic-write",
+      "rows": 5000,
+      "samples": 29,
+      "medianMs": 3.9551,
+      "p95Ms": 7.0054,
+      "medianAllocatedBytes": null,
+      "scope": "writer callback only; excludes snapshot and serialization; includes 3 warmups"
+    },
+    {
+      "name": "download-state-write-count",
+      "rows": 5000,
+      "writes": 29,
+      "totalUtf8Bytes": 55261269,
+      "wroteOnDispatcher": false
+    },
+    {
+      "name": "saved-tab-toggle-star-ui-mutation",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 0.0153,
+      "p95Ms": 0.044,
+      "medianAllocatedBytes": 592,
+      "scope": "mutation only; no durability awaited"
+    },
+    {
+      "name": "saved-tab-toggle-star-awaited-background-flush",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 109.7526,
+      "p95Ms": 113.3509,
+      "medianAllocatedBytes": null,
+      "scope": "wall time includes coalescing delay, background snapshot, JSON serialization and atomic replacement; no caller allocation claim"
+    },
+    {
+      "name": "saved-tab-toggle-star-background-atomic-write",
+      "rows": 1000,
+      "samples": 29,
+      "medianMs": 2.0569,
+      "p95Ms": 3.5341,
+      "medianAllocatedBytes": null,
+      "scope": "writer callback only; excludes snapshot and serialization; includes 3 warmups"
+    },
+    {
+      "name": "saved-tab-toggle-star-write-count",
+      "rows": 1000,
+      "writes": 29,
+      "totalUtf8Bytes": 6313866,
+      "wroteOnDispatcher": false
+    },
+    {
+      "name": "saved-tab-toggle-star-ui-mutation",
+      "rows": 10000,
+      "samples": 25,
+      "medianMs": 0.0154,
+      "p95Ms": 0.0354,
+      "medianAllocatedBytes": 592,
+      "scope": "mutation only; no durability awaited"
+    },
+    {
+      "name": "saved-tab-toggle-star-awaited-background-flush",
+      "rows": 10000,
+      "samples": 25,
+      "medianMs": 125.146,
+      "p95Ms": 140.6385,
+      "medianAllocatedBytes": null,
+      "scope": "wall time includes coalescing delay, background snapshot, JSON serialization and atomic replacement; no caller allocation claim"
+    },
+    {
+      "name": "saved-tab-toggle-star-background-atomic-write",
+      "rows": 10000,
+      "samples": 29,
+      "medianMs": 5.2462,
+      "p95Ms": 8.5175,
+      "medianAllocatedBytes": null,
+      "scope": "writer callback only; excludes snapshot and serialization; includes 3 warmups"
+    },
+    {
+      "name": "saved-tab-toggle-star-write-count",
+      "rows": 10000,
+      "writes": 29,
+      "totalUtf8Bytes": 63681666,
+      "wroteOnDispatcher": false
+    },
+    {
+      "name": "reader-unclosed-tags",
+      "rows": 100,
+      "samples": 5,
+      "medianMs": 0.0234,
+      "p95Ms": 0.0235,
+      "medianAllocatedBytes": 7864,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "reader-unclosed-tags",
+      "rows": 500,
+      "samples": 5,
+      "medianMs": 0.0909,
+      "p95Ms": 2.5264,
+      "medianAllocatedBytes": 36456,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "reader-unclosed-tags",
+      "rows": 1000,
+      "samples": 5,
+      "medianMs": 0.1338,
+      "p95Ms": 0.1424,
+      "medianAllocatedBytes": 72672,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "reader-unclosed-tags",
+      "rows": 2000,
+      "samples": 5,
+      "medianMs": 0.2629,
+      "p95Ms": 0.2897,
+      "medianAllocatedBytes": 145080,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "repeat-suspension",
+      "liveTabs": 10,
+      "invocations": 20,
+      "suspendCalls": 9,
+      "expected": 9,
+      "baseline": 180,
+      "fakeCore": true
+    },
+    {
+      "name": "webview-runtime",
+      "version": "154.0.4258.62"
+    },
+    {
+      "name": "history-render",
+      "retainedRows": 1000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 2.5,
+            "nodes": 339,
+            "rows": 50
+          },
+          "observerMs": [
+            0.5
+          ]
+        },
+        {
+          "render": {
+            "ms": 2.100000023841858,
+            "nodes": 339,
+            "rows": 50
+          },
+          "observerMs": [
+            0.30000007152557373
+          ]
+        },
+        {
+          "render": {
+            "ms": 1.600000023841858,
+            "nodes": 339,
+            "rows": 50
+          },
+          "observerMs": [
+            0.2999999523162842
+          ]
+        },
+        {
+          "render": {
+            "ms": 2,
+            "nodes": 339,
+            "rows": 50
+          },
+          "observerMs": [
+            0.2999999523162842
+          ]
+        },
+        {
+          "render": {
+            "ms": 3.1999999284744263,
+            "nodes": 339,
+            "rows": 50
+          },
+          "observerMs": [
+            0.5
+          ]
+        }
+      ]
+    },
+    {
+      "name": "history-keyboard-expand-dialog",
+      "enterExpandedDate": true,
+      "spaceExpandedDomain": true,
+      "ariaExpanded": true,
+      "dialogInert": true,
+      "tabStayedInDialog": true,
+      "escapeRestoredFocus": true,
+      "keyboard": "Chromium Input.dispatchKeyEvent; OS input and assistive technology excluded"
+    },
+    {
+      "name": "history-render",
+      "retainedRows": 10000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 3,
+            "nodes": 339,
+            "rows": 50
+          },
+          "observerMs": [
+            0.5
+          ]
+        },
+        {
+          "render": {
+            "ms": 2.700000047683716,
+            "nodes": 339,
+            "rows": 50
+          },
+          "observerMs": [
+            0.3999999761581421
+          ]
+        },
+        {
+          "render": {
+            "ms": 4.700000047683716,
+            "nodes": 339,
+            "rows": 50
+          },
+          "observerMs": [
+            0.3999999761581421
+          ]
+        },
+        {
+          "render": {
+            "ms": 2.399999976158142,
+            "nodes": 339,
+            "rows": 50
+          },
+          "observerMs": [
+            0.20000004768371582
+          ]
+        },
+        {
+          "render": {
+            "ms": 2.1999999284744263,
+            "nodes": 339,
+            "rows": 50
+          },
+          "observerMs": [
+            0.30000007152557373
+          ]
+        }
+      ]
+    },
+    {
+      "name": "history-keyboard-expand-dialog",
+      "enterExpandedDate": true,
+      "spaceExpandedDomain": true,
+      "ariaExpanded": true,
+      "dialogInert": true,
+      "tabStayedInDialog": true,
+      "escapeRestoredFocus": true,
+      "keyboard": "Chromium Input.dispatchKeyEvent; OS input and assistive technology excluded"
+    },
+    {
+      "name": "downloads-host-unchanged-visible-query-delta",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 0.0465,
+      "p95Ms": 0.0555,
+      "medianAllocatedBytes": 30248,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "downloads-host-single-progress-delta",
+      "rows": 1000,
+      "samples": 25,
+      "medianMs": 0.0475,
+      "p95Ms": 0.068,
+      "medianAllocatedBytes": 30664,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "downloads-bounded-navigation",
+      "retainedRows": 1000,
+      "utf8Bytes": 38493,
+      "accepted": true,
+      "rows": 50,
+      "scope": "real WebView2, shipped HTML, shipped query/delta; probe-local native message adapter, no engine security router or file checks"
+    },
+    {
+      "name": "downloads-full-changed-50-apply",
+      "retainedRows": 1000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 13,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.30000007152557373
+          ]
+        },
+        {
+          "render": {
+            "ms": 13.399999976158142,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.30000007152557373
+          ]
+        },
+        {
+          "render": {
+            "ms": 11.199999928474426,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.20000004768371582
+          ]
+        },
+        {
+          "render": {
+            "ms": 12,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.3999999761581421
+          ]
+        },
+        {
+          "render": {
+            "ms": 13.299999952316284,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.3999999761581421
+          ]
+        }
+      ]
+    },
+    {
+      "name": "downloads-empty-changed-50-apply-diagnostic",
+      "retainedRows": 1000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 0.6000000238418579,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.10000002384185791
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.19999992847442627,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.3999999761581421,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.2999999523162842,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.19999992847442627,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "downloads-unchanged-dom-check",
+      "retainedRows": 1000,
+      "focusStable": true,
+      "note": "Direct empty delta is diagnostic. The host suppresses this payload in ordinary operation."
+    },
+    {
+      "name": "downloads-single-row-progress-apply",
+      "retainedRows": 1000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 0.5,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.5,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.7000000476837158,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.8999999761581421,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.10000002384185791
+          ]
+        },
+        {
+          "render": {
+            "ms": 5.700000047683716,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.20000004768371582
+          ]
+        }
+      ]
+    },
+    {
+      "name": "downloads-idle-request",
+      "retainedRows": 1000,
+      "requests": 1,
+      "nativePayloads": 0,
+      "timerObserved": true,
+      "observationMs": 5250,
+      "actionIdCorrect": true,
+      "oldestSearchAndPage": true
+    },
+    {
+      "name": "downloads-dialog-focus",
+      "opened": true,
+      "cancelFocused": true,
+      "focusRestored": true,
+      "limitation": "Programmatic click opens the dialog. Escape is sent through Chromium Input.dispatchKeyEvent. OS input and assistive technology are not exercised."
+    },
+    {
+      "name": "downloads-hidden-branch",
+      "retainedRows": 1000,
+      "requestsWhileHidden": 0,
+      "syntheticDocumentHidden": true
+    },
+    {
+      "name": "downloads-native-adapter-transfers",
+      "retainedRows": 1000,
+      "Requests": 10,
+      "Payloads": 6,
+      "transfers": [
+        {
+          "query": "",
+          "Page": 0,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25802,
+          "queryAndDeltaMs": 0.5174
+        },
+        {
+          "query": "",
+          "Page": 0,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25802,
+          "queryAndDeltaMs": 0.1483
+        },
+        {
+          "query": "",
+          "Page": 1,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25842,
+          "queryAndDeltaMs": 0.1884
+        },
+        {
+          "query": "",
+          "Page": 0,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25802,
+          "queryAndDeltaMs": 0.1456
+        },
+        {
+          "query": "",
+          "Page": 19,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 26043,
+          "queryAndDeltaMs": 0.1395
+        },
+        {
+          "query": "Example file 999.zip",
+          "Page": 0,
+          "changed": 1,
+          "visible": 1,
+          "bytes": 608,
+          "queryAndDeltaMs": 0.1991
+        }
+      ]
+    },
+    {
+      "name": "downloads-host-unchanged-visible-query-delta",
+      "rows": 5000,
+      "samples": 25,
+      "medianMs": 0.325,
+      "p95Ms": 0.4097,
+      "medianAllocatedBytes": 30248,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "downloads-host-single-progress-delta",
+      "rows": 5000,
+      "samples": 25,
+      "medianMs": 0.1582,
+      "p95Ms": 0.2346,
+      "medianAllocatedBytes": 30664,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "downloads-bounded-navigation",
+      "retainedRows": 5000,
+      "utf8Bytes": 38493,
+      "accepted": true,
+      "rows": 50,
+      "scope": "real WebView2, shipped HTML, shipped query/delta; probe-local native message adapter, no engine security router or file checks"
+    },
+    {
+      "name": "downloads-full-changed-50-apply",
+      "retainedRows": 5000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 42.799999952316284,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.7000000476837158
+          ]
+        },
+        {
+          "render": {
+            "ms": 38.59999990463257,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.6000000238418579
+          ]
+        },
+        {
+          "render": {
+            "ms": 26.200000047683716,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.8999999761581421
+          ]
+        },
+        {
+          "render": {
+            "ms": 34.90000009536743,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.7000000476837158
+          ]
+        },
+        {
+          "render": {
+            "ms": 36.5,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            1.5
+          ]
+        }
+      ]
+    },
+    {
+      "name": "downloads-empty-changed-50-apply-diagnostic",
+      "retainedRows": 5000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 0.7000000476837158,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.09999990463256836
+          ]
+        },
+        {
+          "render": {
+            "ms": 1.2000000476837158,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.5999999046325684,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.7000000476837158,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.6999999284744263,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.10000002384185791
+          ]
+        }
+      ]
+    },
+    {
+      "name": "downloads-unchanged-dom-check",
+      "retainedRows": 5000,
+      "focusStable": true,
+      "note": "Direct empty delta is diagnostic. The host suppresses this payload in ordinary operation."
+    },
+    {
+      "name": "downloads-single-row-progress-apply",
+      "retainedRows": 5000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 2.100000023841858,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 1.2000000476837158,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 1.399999976158142,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 1.0999999046325684,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.10000002384185791
+          ]
+        },
+        {
+          "render": {
+            "ms": 1.2999999523162842,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "downloads-idle-request",
+      "retainedRows": 5000,
+      "requests": 1,
+      "nativePayloads": 0,
+      "timerObserved": true,
+      "observationMs": 5250,
+      "actionIdCorrect": true,
+      "oldestSearchAndPage": true
+    },
+    {
+      "name": "downloads-dialog-focus",
+      "opened": true,
+      "cancelFocused": true,
+      "focusRestored": true,
+      "limitation": "Programmatic click opens the dialog. Escape is sent through Chromium Input.dispatchKeyEvent. OS input and assistive technology are not exercised."
+    },
+    {
+      "name": "downloads-hidden-branch",
+      "retainedRows": 5000,
+      "requestsWhileHidden": 0,
+      "syntheticDocumentHidden": true
+    },
+    {
+      "name": "downloads-native-adapter-transfers",
+      "retainedRows": 5000,
+      "Requests": 10,
+      "Payloads": 6,
+      "transfers": [
+        {
+          "query": "",
+          "Page": 0,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25802,
+          "queryAndDeltaMs": 4.9128
+        },
+        {
+          "query": "",
+          "Page": 0,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25802,
+          "queryAndDeltaMs": 0.4348
+        },
+        {
+          "query": "",
+          "Page": 1,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25842,
+          "queryAndDeltaMs": 0.2192
+        },
+        {
+          "query": "",
+          "Page": 0,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25802,
+          "queryAndDeltaMs": 5.6779
+        },
+        {
+          "query": "",
+          "Page": 99,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 26243,
+          "queryAndDeltaMs": 0.3409
+        },
+        {
+          "query": "Example file 4999.zip",
+          "Page": 0,
+          "changed": 1,
+          "visible": 1,
+          "bytes": 612,
+          "queryAndDeltaMs": 0.9372
+        }
+      ]
+    },
+    {
+      "name": "downloads-host-unchanged-visible-query-delta",
+      "rows": 10000,
+      "samples": 25,
+      "medianMs": 0.153,
+      "p95Ms": 0.1734,
+      "medianAllocatedBytes": 30248,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "downloads-host-single-progress-delta",
+      "rows": 10000,
+      "samples": 25,
+      "medianMs": 0.1334,
+      "p95Ms": 0.2133,
+      "medianAllocatedBytes": 30664,
+      "scope": "synchronous caller on WPF dispatcher"
+    },
+    {
+      "name": "downloads-bounded-navigation",
+      "retainedRows": 10000,
+      "utf8Bytes": 38493,
+      "accepted": true,
+      "rows": 50,
+      "scope": "real WebView2, shipped HTML, shipped query/delta; probe-local native message adapter, no engine security router or file checks"
+    },
+    {
+      "name": "downloads-full-changed-50-apply",
+      "retainedRows": 10000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 26.300000071525574,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.8999999761581421
+          ]
+        },
+        {
+          "render": {
+            "ms": 32.59999990463257,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.7999999523162842
+          ]
+        },
+        {
+          "render": {
+            "ms": 26.100000023841858,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.5999999046325684
+          ]
+        },
+        {
+          "render": {
+            "ms": 38.700000047683716,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.7999999523162842
+          ]
+        },
+        {
+          "render": {
+            "ms": 20.800000071525574,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.5
+          ]
+        }
+      ]
+    },
+    {
+      "name": "downloads-empty-changed-50-apply-diagnostic",
+      "retainedRows": 10000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 0.5,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.5,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.8000000715255737,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.5,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 0.8000000715255737,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "downloads-unchanged-dom-check",
+      "retainedRows": 10000,
+      "focusStable": true,
+      "note": "Direct empty delta is diagnostic. The host suppresses this payload in ordinary operation."
+    },
+    {
+      "name": "downloads-single-row-progress-apply",
+      "retainedRows": 10000,
+      "scope": "real WebView2 synchronous JS plus separate observer samples; excludes native message transfer and paint",
+      "samples": [
+        {
+          "render": {
+            "ms": 0.7999999523162842,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.10000002384185791
+          ]
+        },
+        {
+          "render": {
+            "ms": 1,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 1.2999999523162842,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0.10000002384185791
+          ]
+        },
+        {
+          "render": {
+            "ms": 1.399999976158142,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        },
+        {
+          "render": {
+            "ms": 1,
+            "nodes": 1244,
+            "rows": 50
+          },
+          "observerMs": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "downloads-idle-request",
+      "retainedRows": 10000,
+      "requests": 1,
+      "nativePayloads": 0,
+      "timerObserved": true,
+      "observationMs": 5250,
+      "actionIdCorrect": true,
+      "oldestSearchAndPage": true
+    },
+    {
+      "name": "downloads-dialog-focus",
+      "opened": true,
+      "cancelFocused": true,
+      "focusRestored": true,
+      "limitation": "Programmatic click opens the dialog. Escape is sent through Chromium Input.dispatchKeyEvent. OS input and assistive technology are not exercised."
+    },
+    {
+      "name": "downloads-hidden-branch",
+      "retainedRows": 10000,
+      "requestsWhileHidden": 0,
+      "syntheticDocumentHidden": true
+    },
+    {
+      "name": "downloads-native-adapter-transfers",
+      "retainedRows": 10000,
+      "Requests": 10,
+      "Payloads": 6,
+      "transfers": [
+        {
+          "query": "",
+          "Page": 0,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25803,
+          "queryAndDeltaMs": 5.1413
+        },
+        {
+          "query": "",
+          "Page": 0,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25803,
+          "queryAndDeltaMs": 0.126
+        },
+        {
+          "query": "",
+          "Page": 1,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25843,
+          "queryAndDeltaMs": 14.8026
+        },
+        {
+          "query": "",
+          "Page": 0,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 25803,
+          "queryAndDeltaMs": 0.1242
+        },
+        {
+          "query": "",
+          "Page": 199,
+          "changed": 50,
+          "visible": 50,
+          "bytes": 26245,
+          "queryAndDeltaMs": 0.1976
+        },
+        {
+          "query": "Example file 9999.zip",
+          "Page": 0,
+          "changed": 1,
+          "visible": 1,
+          "bytes": 612,
+          "queryAndDeltaMs": 0.8593
+        }
+      ]
+    },
+    {
+      "name": "unchanged-theme-scroll",
+      "events": 8,
+      "messages": 0,
+      "distinct": []
+    },
+    {
+      "name": "native-suspension-latency",
+      "succeeded": 5,
+      "refused": 0,
+      "exceptions": 0,
+      "medianSuspendMs": 0.6752,
+      "maxSuspendMs": 8.384,
+      "medianResumeMs": 0.0386,
+      "maxResumeMs": 0.3607,
+      "scope": "fresh real CoreWebView2 control with IsVisible false during the calls; TrySuspendAsync and Resume with MemoryUsageTargetLevel Low",
+      "note": "latency on this machine; excludes garbage collection, renderer memory savings and OS power effects"
+    },
+    {
+      "name": "wallpaper-decode",
+      "wallpapers": 14,
+      "thumbnails": 14,
+      "totalBytes": 7266359,
+      "baselineBytes": 80661686,
+      "rows": [
+        {
+          "name": "Backgrounds/alexander-slattery-LI748t0BK8w-unsplash.jpg",
+          "ok": true,
+          "width": 2560,
+          "height": 1440,
+          "ms": 39.5
+        },
+        {
+          "name": "Backgrounds/benjamin-voros-phIFdC6lA4E-unsplash.jpg",
+          "ok": true,
+          "width": 2158,
+          "height": 1440,
+          "ms": 39.299999952316284
+        },
+        {
+          "name": "Backgrounds/casey-horner-O0R5XZfKUGQ-unsplash.jpg",
+          "ok": true,
+          "width": 2157,
+          "height": 1440,
+          "ms": 39.199999928474426
+        },
+        {
+          "name": "Backgrounds/clay-banks-u27Rrbs9Dwc-unsplash.jpg",
+          "ok": true,
+          "width": 2158,
+          "height": 1440,
+          "ms": 40.299999952316284
+        },
+        {
+          "name": "Backgrounds/hrvoje_photography-pdRsf77OBoo-unsplash.jpg",
+          "ok": true,
+          "width": 2160,
+          "height": 1440,
+          "ms": 39.200000047683716
+        },
+        {
+          "name": "Backgrounds/jms-kFHz9Xh3PPU-unsplash.jpg",
+          "ok": true,
+          "width": 2160,
+          "height": 1440,
+          "ms": 40.10000002384186
+        },
+        {
+          "name": "Backgrounds/john-cobb-IE_sifhay7o-unsplash.jpg",
+          "ok": true,
+          "width": 2160,
+          "height": 1440,
+          "ms": 39.300000071525574
+        },
+        {
+          "name": "Backgrounds/john-fowler-03Pv2Ikm5Hk-unsplash.jpg",
+          "ok": true,
+          "width": 2037,
+          "height": 1440,
+          "ms": 39.60000002384186
+        },
+        {
+          "name": "Backgrounds/john-towner-JgOeRuGD_Y4-unsplash.jpg",
+          "ok": true,
+          "width": 2159,
+          "height": 1440,
+          "ms": 40.10000002384186
+        },
+        {
+          "name": "Backgrounds/jonas-leupe-896EmUa8ZHM-unsplash.jpg",
+          "ok": true,
+          "width": 2160,
+          "height": 1440,
+          "ms": 40
+        },
+        {
+          "name": "Backgrounds/jonatan-pie-3l3RwQdHRHg-unsplash.jpg",
+          "ok": true,
+          "width": 2156,
+          "height": 1440,
+          "ms": 40
+        },
+        {
+          "name": "Backgrounds/joshua-sortino-xZqr8WtYEJ0-unsplash.jpg",
+          "ok": true,
+          "width": 2159,
+          "height": 1440,
+          "ms": 39.89999997615814
+        },
+        {
+          "name": "Backgrounds/kace-rodriguez-p3OzJuT_Dks-unsplash.jpg",
+          "ok": true,
+          "width": 2160,
+          "height": 1440,
+          "ms": 40.10000002384186
+        },
+        {
+          "name": "Backgrounds/luca-bravo-ii5JY_46xH0-unsplash.jpg",
+          "ok": true,
+          "width": 2160,
+          "height": 1440,
+          "ms": 40.200000047683716
+        },
+        {
+          "name": "Backgrounds/Thumbnails/alexander-slattery-LI748t0BK8w-unsplash.jpg",
+          "ok": true,
+          "width": 320,
+          "height": 180,
+          "ms": 39.700000047683716
+        },
+        {
+          "name": "Backgrounds/Thumbnails/benjamin-voros-phIFdC6lA4E-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 39.89999997615814
+        },
+        {
+          "name": "Backgrounds/Thumbnails/casey-horner-O0R5XZfKUGQ-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 39.5
+        },
+        {
+          "name": "Backgrounds/Thumbnails/clay-banks-u27Rrbs9Dwc-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 39.89999997615814
+        },
+        {
+          "name": "Backgrounds/Thumbnails/hrvoje_photography-pdRsf77OBoo-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 39.39999997615814
+        },
+        {
+          "name": "Backgrounds/Thumbnails/jms-kFHz9Xh3PPU-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 39.89999997615814
+        },
+        {
+          "name": "Backgrounds/Thumbnails/john-cobb-IE_sifhay7o-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 40
+        },
+        {
+          "name": "Backgrounds/Thumbnails/john-fowler-03Pv2Ikm5Hk-unsplash.jpg",
+          "ok": true,
+          "width": 255,
+          "height": 180,
+          "ms": 39.89999997615814
+        },
+        {
+          "name": "Backgrounds/Thumbnails/john-towner-JgOeRuGD_Y4-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 40
+        },
+        {
+          "name": "Backgrounds/Thumbnails/jonas-leupe-896EmUa8ZHM-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 40
+        },
+        {
+          "name": "Backgrounds/Thumbnails/jonatan-pie-3l3RwQdHRHg-unsplash.jpg",
+          "ok": true,
+          "width": 269,
+          "height": 180,
+          "ms": 40
+        },
+        {
+          "name": "Backgrounds/Thumbnails/joshua-sortino-xZqr8WtYEJ0-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 39.89999997615814
+        },
+        {
+          "name": "Backgrounds/Thumbnails/kace-rodriguez-p3OzJuT_Dks-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 39.89999997615814
+        },
+        {
+          "name": "Backgrounds/Thumbnails/luca-bravo-ii5JY_46xH0-unsplash.jpg",
+          "ok": true,
+          "width": 270,
+          "height": 180,
+          "ms": 40
+        }
+      ]
+    },
+    {
+      "name": "downloads-large-navigation",
+      "retainedRows": 5000,
+      "utf8Bytes": 38493,
+      "accepted": true,
+      "scope": "shell navigation only; bounded data delivery is exercised by the Downloads page suite"
+    },
+    {
+      "name": "extension-gate-internal-activation",
+      "externalCreationMs": 1340,
+      "innerTabActivationMs": 263,
+      "innerRendered": true,
+      "externalStillPendingBeforeRelease": true,
+      "controlledReconcile": "one held TaskCompletionSource shared by the profile coordinator",
+      "creationGateFreeDuringPendingExternalWait": true,
+      "blockedRemoteRequestsFromHeldTab": 0,
+      "releaseOutcome": "failed attempt; navigation proceeds without a ready state",
+      "externalCompletedAfterReleaseMs": 2923,
+      "scope": "real TabEngine activation path with a real WebView2 control and a deliberately delayed shared reconcile",
+      "preFixBaseline": "pre-fix code kept the creation semaphore through the extension wait, so a new internal tab waited behind it"
+    },
+    {
+      "name": "downloads-real-engine-ipc",
+      "retainedRows": 5000,
+      "visibleRows": 50,
+      "unchangedNativePayloads": 0,
+      "oldRecordSearch": true,
+      "pagination": true,
+      "removeIdCorrect": true,
+      "deletedFileRefresh": true,
+      "progressChangedRows": 1,
+      "focusStable": true,
+      "scope": "actual TabEngine, registered document security, router, DownloadMessageHandler, real store and file details; reflection attaches an already initialized WebView"
+    },
+    {
+      "name": "saved-tabs-real-engine-ipc",
+      "star": true,
+      "tabReorder": true,
+      "groupReorder": true,
+      "duplicateUrlRemoval": true,
+      "rename": true,
+      "focusStable": true,
+      "mutationsNavigated": 0,
+      "limitation": "Small saved-tab DOM fixture; 10,000-record mutation and restart coverage comes from store tests. Drag routes are invoked through IPC, not OS pointer dragging."
+    },
+    {
+      "name": "downloads-real-engine-ipc",
+      "retainedRows": 10000,
+      "visibleRows": 50,
+      "unchangedNativePayloads": 0,
+      "oldRecordSearch": true,
+      "pagination": true,
+      "removeIdCorrect": true,
+      "deletedFileRefresh": true,
+      "progressChangedRows": 1,
+      "focusStable": true,
+      "scope": "actual TabEngine, registered document security, router, DownloadMessageHandler, real store and file details; reflection attaches an already initialized WebView"
+    },
+    {
+      "name": "saved-tabs-real-engine-ipc",
+      "star": true,
+      "tabReorder": true,
+      "groupReorder": true,
+      "duplicateUrlRemoval": true,
+      "rename": true,
+      "focusStable": true,
+      "mutationsNavigated": 0,
+      "limitation": "Small saved-tab DOM fixture; 10,000-record mutation and restart coverage comes from store tests. Drag routes are invoked through IPC, not OS pointer dragging."
+    }
+  ]
+}

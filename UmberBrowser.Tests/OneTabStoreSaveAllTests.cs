@@ -1,15 +1,20 @@
 using UmberBrowser.Models;
 using UmberBrowser.Services;
 using Xunit;
+using System.IO;
 
 namespace UmberBrowser.Tests;
 
-public class OneTabStoreSaveAllTests
+public class OneTabStoreSaveAllTests : IDisposable
 {
+    private readonly string _directory = Path.Combine(Path.GetTempPath(), "StrideOneTabTests", Guid.NewGuid().ToString("N"));
+    private OneTabStore CreateStore() => new(Path.Combine(_directory, "saved-tabs.json"));
+    public void Dispose() { if (Directory.Exists(_directory)) Directory.Delete(_directory, true); }
+
     [Fact]
-    public void SaveAll_FiltersInternalUrls()
+    public async Task SaveAll_FiltersInternalUrls()
     {
-        var store = new OneTabStore();
+        var store = CreateStore();
         var tabs = new List<BrowserTab>
         {
             new() { Url = "https://example.com", Title = "Example" },
@@ -27,12 +32,13 @@ public class OneTabStoreSaveAllTests
         Assert.Equal("https://test.org", group.Tabs[1].Url);
 
         store.RemoveGroup(group.Id);
+        Assert.True(await store.FlushAsync());
     }
 
     [Fact]
     public void SaveAll_ReturnsNullWhenNoSaveableTabs()
     {
-        var store = new OneTabStore();
+        var store = CreateStore();
         var tabs = new List<BrowserTab>
         {
             new() { Url = "internal://settings", Title = "Settings" }
@@ -46,7 +52,7 @@ public class OneTabStoreSaveAllTests
     [Fact]
     public void SaveAll_ReturnsNullWhenEmpty()
     {
-        var store = new OneTabStore();
+        var store = CreateStore();
         var group = store.SaveAll(new List<BrowserTab>());
         Assert.Null(group);
     }

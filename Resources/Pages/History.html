@@ -291,6 +291,7 @@
 
     <div class="main">
         <div class="list-inner" id="historyContent"></div>
+        <nav class="list-inner" aria-label="History pages" style="display:flex;align-items:center;gap:16px;padding:16px 0"><button class="icon-btn" id="previousPage" type="button">Previous</button><span id="pageStatus" role="status" aria-live="polite"></span><button class="icon-btn" id="nextPage" type="button">Next</button></nav>
     </div>
 
     <div class="dialog-overlay" id="confirmDialog">
@@ -354,23 +355,46 @@
 
         const dateChevronSvg = `<svg class="date-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
 
-        function render(filter = '') {
+        const historyPageSize = 50;
+        let historyPage = 0, historyFilter = '', indexedSource = null, indexedLength = -1, historyIndex = [];
+        const historyTimeFormatter = new Intl.DateTimeFormat(undefined, { hour:'numeric', minute:'2-digit' });
+        function prepareEntries() {
+            if (indexedSource === entries && indexedLength === entries.length) return;
+            indexedSource = entries; indexedLength = entries.length;
+            const dates = new Map(), domains = new Map(), times = new Map();
+            historyIndex = entries.map(e => {
+                const date = new Date(e.VisitedAt), stamp = date.getTime() || 0;
+                const day = [date.getFullYear(),date.getMonth(),date.getDate()].join('-');
+                if (!dates.has(day)) dates.set(day, Number.isFinite(date.getTime()) ? formatDate(e.VisitedAt) : 'UNKNOWN DATE');
+                if (!domains.has(e.Url)) domains.set(e.Url,getDomain(e.Url));
+                const minute = Math.floor(stamp / 60000);
+                if (!times.has(minute)) times.set(minute,Number.isFinite(date.getTime()) ? historyTimeFormatter.format(date) : '');
+                return { entry:e, stamp, search:((e.Title || '') + ' ' + (e.Url || '')).toLowerCase(),
+                    date:dates.get(day), domain:domains.get(e.Url), time:times.get(minute) };
+            }).sort((a,b)=>b.stamp-a.stamp);
+        }
+
+        // Keep this entry point usable by the page probe and by search input.
+        function render(filter = '', page = 0) {
+            prepareEntries();
+            historyFilter = filter;
             const container = document.getElementById('historyContent');
             const lowerFilter = filter.toLowerCase();
-            const filtered = filter
-                ? entries.filter(e => (e.Title || '').toLowerCase().includes(lowerFilter) || (e.Url || '').toLowerCase().includes(lowerFilter))
-                : entries;
-
+            const filtered = lowerFilter ? historyIndex.filter(e=>e.search.includes(lowerFilter)) : historyIndex;
+            historyPage = Math.max(0,Math.min(page,Math.max(0,Math.ceil(filtered.length/historyPageSize)-1)));
+            const sorted = filtered.slice(historyPage*historyPageSize,(historyPage+1)*historyPageSize);
+            document.getElementById('previousPage').disabled = historyPage === 0;
+            document.getElementById('nextPage').disabled = (historyPage+1)*historyPageSize >= filtered.length;
+            document.getElementById('pageStatus').textContent = filtered.length ? (historyPage*historyPageSize+1) + ' to ' + Math.min((historyPage+1)*historyPageSize,filtered.length) + ' of ' + filtered.length : '0 entries';
             if (filtered.length === 0) {
                 container.innerHTML = `<div class="empty">${filter ? 'No results found.' : 'No browsing history yet.'}</div>`;
+                updateCollapseBtnState();
                 return;
             }
 
-            const sorted = [...filtered].sort((a, b) => new Date(b.VisitedAt) - new Date(a.VisitedAt));
-
-            const byDate = {};
+            const byDate = Object.create(null);
             sorted.forEach(e => {
-                const key = formatDate(e.VisitedAt);
+                const key = e.date;
                 if (!byDate[key]) byDate[key] = [];
                 byDate[key].push(e);
             });
@@ -381,9 +405,9 @@
             for (const [dateLabel, dateEntries] of Object.entries(byDate)) {
                 const dateSectionId = `date-${index}`;
 
-                const byDomain = {};
+                const byDomain = Object.create(null);
                 dateEntries.forEach(e => {
-                    const domain = getDomain(e.Url);
+                    const domain = e.domain;
                     if (!byDomain[domain]) byDomain[domain] = [];
                     byDomain[domain].push(e);
                 });
@@ -402,7 +426,7 @@
                     const groupId = `g-${index}-${domainIndex}`;
 
                     if (domainEntries.length === 1) {
-                        const e = domainEntries[0];
+                        const cached = domainEntries[0], e = cached.entry;
                         const title = e.Title || e.Url;
                         html += `<div class="entry">
                             <img src="${faviconUrl(domain)}" width="15" height="15"
@@ -411,7 +435,7 @@
                                 <a class="entry-title" data-url="${escapeHtml(e.Url)}">${escapeHtml(title)}</a>
                                 <span class="entry-url">${escapeHtml(e.Url)}</span>
                             </div>
-                            <span class="entry-time">${formatTime(e.VisitedAt)}</span>
+                            <span class="entry-time">${cached.time}</span>
                         </div>`;
                     } else {
                         html += `<div class="domain-group collapsed" id="${groupId}">
@@ -423,14 +447,15 @@
                             </div>
                             <div class="domain-entries">`;
 
-                        domainEntries.forEach(e => {
+                        domainEntries.forEach(cached => {
+                            const e = cached.entry;
                             const title = e.Title || e.Url;
                             html += `<div class="entry">
                                 <div class="entry-main">
                                     <a class="entry-title" data-url="${escapeHtml(e.Url)}">${escapeHtml(title)}</a>
                                     <span class="entry-url">${escapeHtml(e.Url)}</span>
                                 </div>
-                                <span class="entry-time">${formatTime(e.VisitedAt)}</span>
+                                <span class="entry-time">${cached.time}</span>
                             </div>`;
                         });
 
@@ -486,6 +511,8 @@
         });
 
         document.getElementById('searchInput').addEventListener('input', e => render(e.target.value));
+        document.getElementById('previousPage').addEventListener('click',()=>render(historyFilter,historyPage-1));
+        document.getElementById('nextPage').addEventListener('click',()=>render(historyFilter,historyPage+1));
 
         document.getElementById('clearBtn').addEventListener('click', () => {
             document.getElementById('confirmDialog').classList.add('open');

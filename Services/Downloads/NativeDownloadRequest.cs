@@ -73,7 +73,7 @@ public sealed class NativeDownloadRequest : IDisposable
                     item.FileName = TabDownloadHandler.ResolveDownloadFileName(e.ResultFilePath, e.DownloadOperation.Uri);
                     item.ReceivedBytes = 0; item.SpeedBytesPerSec = 0; item.EstimatedTimeRemaining = null;
                     item.TotalBytes = e.DownloadOperation.TotalBytesToReceive is <= long.MaxValue ? (long)e.DownloadOperation.TotalBytesToReceive.Value : 0;
-                    TabDownloadHandler.Track(e.DownloadOperation, item, dispatcher, _store, _session.NativeDownloads, _actions, originTabId);
+                    TabDownloadHandler.Track(e.DownloadOperation, item, dispatcher, _store, _session.NativeDownloads, _actions, originTabId, dependsOnOriginTab: false);
                     var operation = e.DownloadOperation;
                     operation.StateChanged += (_, _) =>
                     {

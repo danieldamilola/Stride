@@ -41,10 +41,11 @@ public enum FaviconLoadScope
 public sealed class FaviconLoader
 {
     internal const int MaxCacheEntries = 200;
+    internal const int MaxIconBytes = 1024 * 1024;
 
     private readonly BrowserSettings _settings;
     private readonly HttpClient _http;
-    private readonly string _cacheDir;
+    private readonly FaviconDiskCache _disk;
 
     public FaviconLoader(BrowserSettings settings)
         : this(settings, new HttpClient { Timeout = TimeSpan.FromSeconds(8) }, AppPaths.FaviconCacheDir) { }
@@ -57,7 +58,7 @@ public sealed class FaviconLoader
     {
         _settings = settings;
         _http = http;
-        _cacheDir = cacheDir;
+        _disk = new FaviconDiskCache(cacheDir);
     }
 
     // In-memory LRU cache for the current session
@@ -124,9 +125,16 @@ public sealed class FaviconLoader
             }
         }
 
-        var bitmap = await loadTask;
-
-        lock (_inflightLock) { _inflightLoads.Remove(key); }
+        BitmapImage? bitmap;
+        try { bitmap = await loadTask.ConfigureAwait(false); }
+        finally
+        {
+            lock (_inflightLock)
+            {
+                if (_inflightLoads.TryGetValue(key, out var current) && ReferenceEquals(current, loadTask))
+                    _inflightLoads.Remove(key);
+            }
+        }
 
         // A miss is not remembered. Caching the empty answer would make one cache-only
         // lookup suppress every later native or network load for that host.
@@ -156,16 +164,13 @@ public sealed class FaviconLoader
         {
             using var stream = await core.GetFaviconAsync(
                 CoreWebView2FaviconImageFormat.Png);
-            if (stream is null || stream.Length == 0) return null;
-
-            // Read into byte array
-            using var ms = new MemoryStream();
-            await stream.CopyToAsync(ms);
-            var bytes = ms.ToArray();
-            if (bytes.Length == 0) return null;
+            if (stream is null) return null;
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+            var bytes = await ReadBoundedBytesAsync(stream, timeout.Token);
+            if (bytes is null || bytes.Length == 0) return null;
 
             // Save to disk cache
-            await SaveToDiskAsync(host, bytes);
+            await SaveToDiskAsync(host, bytes).ConfigureAwait(false);
 
             // Create BitmapImage on UI thread
             var bitmap = await DecodeOnUiThreadAsync(bytes);
@@ -185,7 +190,7 @@ public sealed class FaviconLoader
         string host, FaviconLoadScope scope, bool networkCapable, FaviconRequestDecision decision)
     {
         // 1. Try disk cache
-        var cached = await LoadFromDiskAsync(host);
+        var cached = await LoadFromDiskAsync(host).ConfigureAwait(false);
         // A host whose icon is already on disk never needs a third-party request, even
         // when the bytes could not be decoded this time. Treating a decode failure as a
         // cache miss is what would turn a warm cache back into a disclosure.
@@ -209,11 +214,11 @@ public sealed class FaviconLoader
 
         // The request happens before any WPF decoding, so it does not depend on a running
         // Application, and the bytes go to the disk cache the way a native icon does.
-        var bytes = await FetchIconBytesAsync(decision.Host);
+        var bytes = await FetchIconBytesAsync(decision.Host).ConfigureAwait(false);
         if (bytes is null || bytes.Length == 0) return null;
 
-        await SaveToDiskAsync(host, bytes);
-        return (await LoadFromDiskAsync(host)).Bitmap;
+        await SaveToDiskAsync(host, bytes).ConfigureAwait(false);
+        return (await LoadFromDiskAsync(host).ConfigureAwait(false)).Bitmap;
     }
 
     /// <summary>
@@ -222,23 +227,24 @@ public sealed class FaviconLoader
     /// </summary>
     private async Task<(bool Found, BitmapImage? Bitmap)> LoadFromDiskAsync(string host)
     {
-        var path = Path.Combine(_cacheDir, $"{host}.png");
-        if (!File.Exists(path)) return (false, null);
-
-        try
-        {
-            var bytes = await File.ReadAllBytesAsync(path);
-            if (bytes.Length == 0) return (true, null);
-            return (true, await DecodeOnUiThreadAsync(bytes));
-        }
-        catch { return (true, null); }
+        _disk.SchedulePrune();
+        var cached = await _disk.ReadAsync(host).ConfigureAwait(false);
+        if (cached.Bytes is null || cached.Bytes.Length == 0) return (cached.Found, null);
+        try { return (cached.Found, await DecodeOnUiThreadAsync(cached.Bytes).ConfigureAwait(false)); }
+        catch { return (cached.Found, null); }
     }
 
     private async Task<byte[]?> FetchIconBytesAsync(string allowedHost)
     {
         try
         {
-            return await _http.GetByteArrayAsync(FaviconRequestPolicy.BuildIconUrl(allowedHost));
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+            using var response = await _http.GetAsync(FaviconRequestPolicy.BuildIconUrl(allowedHost),
+                HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            response.EnsureSuccessStatusCode();
+            if (response.Content.Headers.ContentLength > MaxIconBytes) return null;
+            using var stream = await response.Content.ReadAsStreamAsync(timeout.Token);
+            return await ReadBoundedBytesAsync(stream, timeout.Token);
         }
         catch (Exception ex)
         {
@@ -247,16 +253,22 @@ public sealed class FaviconLoader
         }
     }
 
-    private async Task SaveToDiskAsync(string host, byte[] data)
+    internal static async Task<byte[]?> ReadBoundedBytesAsync(Stream stream, CancellationToken cancellationToken = default)
     {
-        try
+        if (stream.CanSeek && stream.Length - stream.Position > MaxIconBytes) return null;
+        using var output = new MemoryStream();
+        var buffer = new byte[8192];
+        while (output.Length <= MaxIconBytes)
         {
-            Directory.CreateDirectory(_cacheDir);
-            var path = Path.Combine(_cacheDir, $"{host}.png");
-            await File.WriteAllBytesAsync(path, data);
+            var count = await stream.ReadAsync(buffer.AsMemory(0, (int)Math.Min(buffer.Length, MaxIconBytes + 1L - output.Length)), cancellationToken).ConfigureAwait(false);
+            if (count == 0) return output.ToArray();
+            if (output.Length + count > MaxIconBytes) return null;
+            output.Write(buffer, 0, count);
         }
-        catch { /* Non-critical */ }
+        return null;
     }
+
+    private Task SaveToDiskAsync(string host, byte[] data) => _disk.WriteAsync(host, data);
 
     /// <summary>
     /// Decodes PNG bytes into a frozen bitmap on the UI thread. Returns null when there is
