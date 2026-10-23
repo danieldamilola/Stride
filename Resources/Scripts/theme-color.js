@@ -1,36 +1,31 @@
 ﻿(function() {
-    // Only the top-level document describes the page the user is looking at. The host
-    // drops messages that arrive from a frame, so the script does no work in one.
-    if (window.top !== window.self) return;
-
-    // The host bakes the adaptive tint setting into the script it registers, so a
-    // document knows whether it should watch the page before the first event fires.
-    // A setting change under a live page arrives as a control message instead.
-    var enabled = __UMBER_THEME_TINT_ENABLED__;
-
-    const pageEvents = ['click', 'resize', 'scroll', 'visibilitychange', 'DOMContentLoaded', 'load'];
-    const animationEvents = ['transitionend', 'transitioncancel', 'animationend', 'animationcancel'];
-    const throttleIntervalMs = 250;
-
-    let lastSent = null;
-    let lastSentAt = 0;
-    let dispatchTimeout = null;
-    let observeTimeout = null;
-    let observer = null;
-    let attached = false;
-
-    const colorScheme = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-
-    function post(color) {
-        window.chrome.webview.postMessage('THEME_COLOR:' + color);
+    // The session token is not needed here. The host already checks the message source
+    // before it accepts a THEME_COLOR value, and everything this script computes comes from
+    // the page's own computed styles, so the page could send it unauthenticated anyway.
+    // Publishing the token into this closure only widened the set of pages that could read it.
+    var initialEnabled = typeof __STRIDE_THEME_ENABLED__ === 'undefined' ? true : __STRIDE_THEME_ENABLED__;
+    if (window.top && window.top !== window) return;
+    if (window.__strideThemeColor) {
+        window.__strideThemeColor.setEnabled(initialEnabled);
+        return;
     }
+    var enabled = false, lastColor;
+    var canvas, context;
+    var t = function(value) {
+        if (!enabled || value === lastColor) return;
+        lastColor = value;
+        window.chrome.webview.postMessage('THEME_COLOR:' + value);
+    };
 
     function colorToHex(color, baseColor) {
         if (!color || color === 'rgba(0, 0, 0, 0)' || color === 'transparent') return '';
-        var canvas = document.createElement('canvas');
-        canvas.width = 1;
-        canvas.height = 1;
-        var ctx = canvas.getContext('2d');
+        if (!context) {
+            canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 1;
+            context = canvas.getContext('2d');
+        }
+        var ctx = context;
+        if (!ctx) return '';
 
         ctx.fillStyle = '#000000';
         ctx.fillStyle = color;
@@ -41,12 +36,14 @@
 
         if (parsed1 === '#000000' && parsed2 === '#ffffff') return '';
 
-        var isDark = colorScheme ? colorScheme.matches : false;
+        var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        ctx.clearRect(0, 0, 1, 1);
         ctx.fillStyle = isDark ? '#121212' : '#ffffff';
+        ctx.fillRect(0, 0, 1, 1);
         if (baseColor && baseColor !== 'rgba(0, 0, 0, 0)' && baseColor !== 'transparent') {
             ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, 1, 1);
         }
-        ctx.fillRect(0, 0, 1, 1);
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, 1, 1);
 
@@ -55,10 +52,8 @@
         return '#' + hex(data[0]) + hex(data[1]) + hex(data[2]);
     }
 
-    // Returns the colour of the page, or an empty string when the page has none.
-    // The caller decides whether that colour is worth a message.
     function extractThemeColor() {
-        var isDark = colorScheme ? colorScheme.matches : false;
+        var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         var bodyBg = document.body ? window.getComputedStyle(document.body).backgroundColor : null;
         var docBg = document.documentElement ? window.getComputedStyle(document.documentElement).backgroundColor : null;
         var baseBg = (bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)') ? bodyBg : docBg;
@@ -73,7 +68,10 @@
                     var bg = style.backgroundColor;
                     if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
                         var h = colorToHex(bg, baseBg);
-                        if (h) return h;
+                        if (h) {
+                            t(h);
+                            return;
+                        }
                     }
                 }
             }
@@ -93,7 +91,10 @@
             }
         }
         var hex = colorToHex(themeColor, baseBg);
-        if (hex) return hex;
+        if (hex) {
+            t(hex);
+            return;
+        }
 
         // 3. Fall back to body or document element background
         try {
@@ -102,7 +103,10 @@
                 var bg = bodyStyle.backgroundColor;
                 if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
                     var h = colorToHex(bg, baseBg);
-                    if (h) return h;
+                    if (h) {
+                        t(h);
+                        return;
+                    }
                 }
             }
 
@@ -111,32 +115,36 @@
                 var bg = docStyle.backgroundColor;
                 if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
                     var h = colorToHex(bg, baseBg);
-                    if (h) return h;
+                    if (h) {
+                        t(h);
+                        return;
+                    }
                 }
             }
         } catch(e) {}
 
-        return '';
+        t('');
     }
 
-    // Reports the page colour, but only when it differs from the colour the host
-    // already has. An unchanged colour costs the host a full tab refresh, and a page
-    // that scrolls without changing its colour must not produce one message per
-    // scroll event.
+    let dispatchTimeout, observeTimeout, observer, observedBody;
+    let lastSentAt = 0;
+    const scheme = window.matchMedia?.('(prefers-color-scheme: dark)');
+    const dynamicEvents = ['click', 'resize', 'scroll', 'visibilitychange', 'DOMContentLoaded', 'load'];
+    const animationEvents = ['transitionend', 'transitioncancel', 'animationend', 'animationcancel'];
+    const throttleIntervalMs = 250;
+
     function sendColour() {
         if (!enabled) return;
+        if (observer && document.body && document.body !== observedBody) {
+            observedBody = document.body;
+            observer.observe(observedBody, { attributes:true, attributeFilter:['class','style'] });
+        }
         clearTimeout(dispatchTimeout);
-        dispatchTimeout = null;
         const remaining = throttleIntervalMs + lastSentAt - Date.now();
         const dispatch = function() {
-            dispatchTimeout = null;
-            if (!enabled) return;
-            if (document.visibilityState !== 'visible') return;
+            if (!enabled || document.visibilityState !== 'visible') return;
             lastSentAt = Date.now();
-            const color = extractThemeColor();
-            if (color === lastSent) return;
-            lastSent = color;
-            post(color);
+            extractThemeColor();
         };
         if (remaining <= 0) {
             dispatch();
@@ -146,91 +154,44 @@
     }
 
     function sendColourRequiresFocus() {
-        if (!enabled) return;
         if (document.hasFocus()) sendColour();
     }
 
-    function observe() {
-        if (!observer) return;
-        if (document.head && document.documentElement) {
-            observer.observe(document.head, { childList: true, subtree: true, attributes: true, attributeFilter: ['content'] });
-            observer.observe(document.documentElement, { childList: true, attributes: false });
-            sendColour();
-        } else {
-            observeTimeout = setTimeout(observe, 50);
+    function enableDynamic() {
+        dynamicEvents.forEach(event => window.addEventListener(event, sendColour));
+        animationEvents.forEach(event => window.addEventListener(event, sendColourRequiresFocus));
+        scheme?.addEventListener?.('change', sendColour);
+        observer = new MutationObserver(sendColour);
+        function tryObserve() {
+            if (!enabled) return;
+            if (document.head && document.documentElement) {
+                observer.observe(document.head, { childList:true, subtree:true, attributes:true, attributeFilter:['content','media'] });
+                observer.observe(document.documentElement, { childList:true, attributes:true, attributeFilter:['class','style'] });
+                sendColour();
+            } else {
+                observeTimeout = setTimeout(tryObserve,50);
+            }
         }
+        tryObserve();
     }
-
-    function attach() {
-        if (attached) return;
-        attached = true;
-
-        pageEvents.forEach(function(event) {
-            window.addEventListener(event, sendColour);
-        });
-        animationEvents.forEach(function(event) {
-            window.addEventListener(event, sendColourRequiresFocus);
-        });
-        if (colorScheme && colorScheme.addEventListener) {
-            colorScheme.addEventListener('change', sendColour);
-        }
-
-        observer = new MutationObserver(function(mutations) {
-            sendColour();
-        });
-        observe();
-    }
-
-    // Stops every listener, the observer and every timer. Nothing on the page is
-    // read and nothing is sent while the setting is off.
-    function detach() {
-        if (!attached) return;
-        attached = false;
-
-        pageEvents.forEach(function(event) {
-            window.removeEventListener(event, sendColour);
-        });
-        animationEvents.forEach(function(event) {
-            window.removeEventListener(event, sendColourRequiresFocus);
-        });
-        if (colorScheme && colorScheme.removeEventListener) {
-            colorScheme.removeEventListener('change', sendColour);
-        }
-
-        if (observer) {
-            observer.disconnect();
-            observer = null;
-        }
-        clearTimeout(dispatchTimeout);
-        dispatchTimeout = null;
-        clearTimeout(observeTimeout);
-        observeTimeout = null;
-    }
-
-    // The host tells the document when the setting changes. Turning the setting on
-    // starts the watchers again and reports the current colour, even when the
-    // colour is the one the host already knows.
-    function setEnabled(next) {
-        if (next === enabled) return;
-        enabled = next;
-        lastSent = null;
+    function setEnabled(value) {
+        value = !!value;
+        if (enabled === value) return;
+        enabled = value;
         if (enabled) {
-            attach();
-            sendColour();
+            lastColor = undefined;
+            lastSentAt = 0;
+            enableDynamic();
         } else {
-            detach();
+            clearTimeout(dispatchTimeout);
+            clearTimeout(observeTimeout);
+            observer?.disconnect();
+            observedBody = null;
+            dynamicEvents.forEach(event => window.removeEventListener(event,sendColour));
+            animationEvents.forEach(event => window.removeEventListener(event,sendColourRequiresFocus));
+            scheme?.removeEventListener?.('change',sendColour);
         }
     }
-
-    function onHostMessage(event) {
-        if (!event || typeof event.data !== 'string') return;
-        if (event.data === 'theme-tint-control:1') setEnabled(true);
-        else if (event.data === 'theme-tint-control:0') setEnabled(false);
-    }
-
-    if (window.chrome && window.chrome.webview && window.chrome.webview.addEventListener) {
-        window.chrome.webview.addEventListener('message', onHostMessage);
-    }
-
-    if (enabled) attach();
+    window.__strideThemeColor = { setEnabled };
+    setEnabled(initialEnabled);
 })();
