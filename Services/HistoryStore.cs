@@ -9,13 +9,30 @@ namespace StrideBrowser.Services;
 /// <summary>Persists browsing history to disk.</summary>
 public sealed class HistoryStore : IHistoryStore
 {
-    private static readonly string FilePath = AppPaths.HistoryFile;
+    private readonly string FilePath;
 
     private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = false };
 
-    private readonly Lock _lock = new();
+    private readonly object _lock = new();
+    private readonly OrderedStorePersistence<List<HistoryEntry>> _persistence;
     private List<HistoryEntry> _entries = [];
     private bool _loaded;
+
+    public HistoryStore() : this(null) { }
+
+    public HistoryStore(string? filePath, Action<string, string>? write = null)
+    {
+        FilePath = filePath ?? AppPaths.HistoryFile;
+        _persistence = new(_lock, () => _entries.Select(Clone).ToList(),
+            entries => (write ?? AtomicFileWriter.WriteAllText)(FilePath, JsonSerializer.Serialize(entries, JsonOpts)));
+    }
+
+    private static HistoryEntry Clone(HistoryEntry entry) => new()
+    {
+        Url = entry.Url, Title = entry.Title, VisitedAt = entry.VisitedAt
+    };
+
+    public Task<bool> FlushAsync(CancellationToken cancellationToken = default) => _persistence.FlushAsync(cancellationToken);
 
     private void EnsureLoaded()
     {
@@ -45,7 +62,7 @@ public sealed class HistoryStore : IHistoryStore
                 if (_entries.Count > 10_000)
                     _entries.RemoveRange(0, _entries.Count - 10_000);
 
-                Persist();
+                _persistence.Changed();
             }
             catch (Exception ex) { Trace.WriteLine($"HistoryStore.Add failed: {ex.Message}"); }
         }
@@ -59,7 +76,7 @@ public sealed class HistoryStore : IHistoryStore
             try
             {
                 EnsureLoaded();
-                return _entries.OrderByDescending(e => e.VisitedAt).ToList();
+                return _entries.OrderByDescending(e => e.VisitedAt).Select(Clone).ToList();
             }
             catch (Exception ex) { Trace.WriteLine($"HistoryStore.Load failed: {ex.Message}"); return []; }
         }
@@ -76,7 +93,7 @@ public sealed class HistoryStore : IHistoryStore
                 return _entries
                     .Where(e => (e.Url?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
                                 (e.Title?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false))
-                    .ToList();
+                    .Select(Clone).ToList();
             }
             catch (Exception ex) { Trace.WriteLine($"HistoryStore.Search failed: {ex.Message}"); return []; }
         }
@@ -86,7 +103,7 @@ public sealed class HistoryStore : IHistoryStore
     /// <returns>True when the file no longer exists and in-memory entries were cleared.</returns>
     public bool Clear()
     {
-        lock (_lock)
+        return _persistence.WriteNow(() =>
         {
             try
             {
@@ -100,7 +117,7 @@ public sealed class HistoryStore : IHistoryStore
                 Trace.WriteLine($"HistoryStore.Clear failed: {ex.Message}");
                 return false;
             }
-        }
+        }, persistFailure: true);
     }
 
     /// <summary>Returns the top N most visited URLs grouped by domain.</summary>
@@ -116,21 +133,11 @@ public sealed class HistoryStore : IHistoryStore
                     .GroupBy(e => new Uri(e.Url).Host, StringComparer.OrdinalIgnoreCase)
                     .OrderByDescending(g => g.Count())
                     .Take(count)
-                    .Select(g => g.OrderByDescending(e => e.VisitedAt).First())
+                    .Select(g => Clone(g.OrderByDescending(e => e.VisitedAt).First()))
                     .ToList();
             }
             catch (Exception ex) { Trace.WriteLine($"HistoryStore.GetFrequentSites failed: {ex.Message}"); return []; }
         }
     }
 
-    private void Persist()
-    {
-        try
-        {
-            var dir = Path.GetDirectoryName(FilePath)!;
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-            AtomicFileWriter.WriteAllText(FilePath, JsonSerializer.Serialize(_entries, JsonOpts));
-        }
-        catch (Exception ex) { Trace.WriteLine($"HistoryStore.Persist failed: {ex.Message}"); }
-    }
 }

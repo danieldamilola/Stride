@@ -237,11 +237,14 @@ public sealed class WebViewIpcBridge
                 return true;
             }
             if (!IsSameTopLevelDocument(source, topLevelSource)) return true;
-            _dispatcher.InvokeAsync(() =>
+            if (!_settings.AdaptiveToolbarTint || string.Equals(tab.ThemeColor, colorStr, StringComparison.OrdinalIgnoreCase)) return true;
+            void ApplyColor()
             {
-                tab.ThemeColor = colorStr;
-                TabStateChanged?.Invoke(tab);
-            });
+                if (_isTabAlive(tab.Id) && TryApplyThemeColor(tab, colorStr, _settings.AdaptiveToolbarTint))
+                    TabStateChanged?.Invoke(tab);
+            }
+            if (_dispatcher.CheckAccess()) ApplyColor();
+            else _dispatcher.InvokeAsync(ApplyColor);
             return true;
         }
 
@@ -367,6 +370,13 @@ public sealed class WebViewIpcBridge
         if (value.Length != 7 || value[0] != '#') return false;
         for (int i = 1; i < value.Length; i++)
             if (!Uri.IsHexDigit(value[i])) return false;
+        return true;
+    }
+
+    internal static bool TryApplyThemeColor(BrowserTab tab, string value, bool enabled)
+    {
+        if (!enabled || !IsThemeColorValue(value) || string.Equals(tab.ThemeColor, value, StringComparison.OrdinalIgnoreCase)) return false;
+        tab.ThemeColor = value;
         return true;
     }
 

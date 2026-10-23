@@ -232,7 +232,8 @@ public sealed class BrowserWindowManager
         await RunCloseSteps(
             ("window shutdown writes", () => WriteShutdownAsync(entry)),
             ("tab recycle after window close", () => RecycleHostsAsync(entry, window)),
-            ("engine shutdown", () => { entry.Engine.Shutdown(); return Task.CompletedTask; }));
+            ("engine shutdown", () => { entry.Engine.Shutdown(); return Task.CompletedTask; }),
+            ("store shutdown flush", () => FlushStoresAsync(entry)));
         // The final close is scheduled on the window's own dispatcher. Scheduling it can
         // itself fault when the dispatcher is already going away; that is traced rather than
         // left to escape as an unobserved fault. Whether the window then actually closes is
@@ -255,6 +256,20 @@ public sealed class BrowserWindowManager
             try { await step(); }
             catch (Exception ex) { Trace.WriteLine($"{what} failed: {ex}"); }
         }
+    }
+
+    private async Task FlushStoresAsync(Entry entry)
+    {
+        if (_windows.Any(window => window != entry && !window.Closing)) return;
+        await RunCloseSteps(
+            ("history flush", async () => ReportFlush("history", await entry.Services.GetRequiredService<IHistoryStore>().FlushAsync())),
+            ("download flush", async () => ReportFlush("downloads", await entry.Services.GetRequiredService<IDownloadStore>().FlushAsync())),
+            ("saved tabs flush", async () => ReportFlush("saved tabs", await entry.Services.GetRequiredService<IOneTabStore>().FlushAsync())));
+    }
+
+    private static void ReportFlush(string store, bool success)
+    {
+        if (!success) Trace.WriteLine($"Shutdown could not persist {store}. The last successful atomic file remains on disk.");
     }
 
     private async Task WriteShutdownAsync(Entry entry)

@@ -496,7 +496,12 @@
             status.textContent = urls.length ? 'Select an image to preview and save it.' : 'Add images to the wallpaper folder, then reload this page.';
             urls.forEach((url, i) => {
                 const button = document.createElement('button'); button.className = 'wallpaper-choice'; button.setAttribute('aria-label','Use wallpaper ' + (i+1));
-                const img = document.createElement('img'); img.src = url; img.alt = ''; button.append(img);
+                const img = document.createElement('img'); img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
+                const source = new URL(url);
+                img.src = source.hostname === 'local.assets' && source.pathname.startsWith('/Backgrounds/')
+                    ? new URL('Thumbnails/' + source.pathname.split('/').pop(), source).href : url;
+                img.onerror = () => { img.onerror = null; if (img.src !== url) img.src = url; };
+                button.append(img);
                 button.onclick = () => { document.body.style.backgroundImage = 'url("' + url.replaceAll('"','%22') + '")'; window.chrome.webview.postMessage(__T+'setting:newTabBackground:'+encodeURIComponent(url)); status.textContent = 'Wallpaper selected.'; };
                 grid.append(button);
             });

@@ -10,4 +10,5 @@ public interface IHistoryStore
     List<HistoryEntry> Search(string query);
     bool Clear();
     List<HistoryEntry> GetFrequentSites(int count = 8);
+    Task<bool> FlushAsync(CancellationToken cancellationToken = default) => Task.FromResult(true);
 }

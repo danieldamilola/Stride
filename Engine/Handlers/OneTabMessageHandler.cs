@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
 using StrideBrowser.Engine;
 using StrideBrowser.Models;
 using StrideBrowser.Services;
@@ -42,31 +43,25 @@ public class OneTabMessageHandler : IWebMessageHandler
             lastTab = _engine.CreateTab(entry.Url, blockDuplicates: false);
 
         _oneTabStore.RemoveGroup(groupId);
+        UpdateOneTabPages(new { action = "removeGroup", groupId });
 
         if (lastTab is not null)
             await _engine.ActivateAsync(lastTab);
 
-        RefreshOneTabPages();
     }
 
     private Task HandleOneTabDelete(string groupId)
     {
         _oneTabStore.RemoveGroup(groupId);
-        RefreshOneTabPages();
+        UpdateOneTabPages(new { action = "removeGroup", groupId });
         return Task.CompletedTask;
     }
 
     private Task HandleOneTabRename(string payload)
     {
         if (!TrySplitPayload(payload, out var groupId, out var newName)) return Task.CompletedTask;
-        var groups = _oneTabStore.Load();
-        var group = groups.FirstOrDefault(g => g.Id == groupId);
-        if (group is not null)
-        {
-            group.Name = newName;
-            _oneTabStore.Save(groups);
-            RefreshOneTabPages();
-        }
+        _oneTabStore.RenameGroup(groupId, newName);
+        UpdateOneTabPages(new { action = "rename", groupId, name = newName });
         return Task.CompletedTask;
     }
 
@@ -75,7 +70,7 @@ public class OneTabMessageHandler : IWebMessageHandler
         if (!TrySplitPayload(payload, out var groupId, out var url)) return;
 
         _oneTabStore.RemoveTab(groupId, url);
-        RefreshOneTabPages();
+        UpdateOneTabPages(new { action = "removeTab", groupId, url });
 
         var tab = _engine.CreateTab(url, blockDuplicates: false);
         await _engine.ActivateAsync(tab);
@@ -86,7 +81,7 @@ public class OneTabMessageHandler : IWebMessageHandler
         if (!TrySplitPayload(payload, out var groupId, out var url)) return Task.CompletedTask;
 
         _oneTabStore.RemoveTab(groupId, url);
-        RefreshOneTabPages();
+        UpdateOneTabPages(new { action = "removeTab", groupId, url });
         return Task.CompletedTask;
     }
 
@@ -96,7 +91,7 @@ public class OneTabMessageHandler : IWebMessageHandler
         if (!int.TryParse(indexStr, out var tabIndex)) return Task.CompletedTask;
 
         _oneTabStore.ToggleStar(groupId, tabIndex);
-        RefreshOneTabPages();
+        UpdateOneTabPages(new { action = "star", groupId, index = tabIndex });
         return Task.CompletedTask;
     }
 
@@ -109,7 +104,7 @@ public class OneTabMessageHandler : IWebMessageHandler
             return Task.CompletedTask;
 
         _oneTabStore.ReorderTab(groupId, oldIdx, newIdx);
-        RefreshOneTabPages();
+        UpdateOneTabPages(new { action = "reorderTab", groupId, oldIndex = oldIdx, newIndex = newIdx });
         return Task.CompletedTask;
     }
 
@@ -121,17 +116,24 @@ public class OneTabMessageHandler : IWebMessageHandler
             return Task.CompletedTask;
 
         _oneTabStore.ReorderGroup(oldIdx, newIdx);
-        RefreshOneTabPages();
+        UpdateOneTabPages(new { action = "reorderGroup", oldIndex = oldIdx, newIndex = newIdx });
         return Task.CompletedTask;
     }
 
-    private void RefreshOneTabPages()
+    private void UpdateOneTabPages(object update)
     {
-        var groups = _oneTabStore.Load();
+        var message = _engine.IpcToken + ":onetab:" + JsonSerializer.Serialize(update);
         foreach (var t in _engine.Tabs)
         {
-            if (t.Url == InternalUrls.OneTab)
-                _engine.NavigateToOneTab(t, groups);
+            if (t.Url != InternalUrls.OneTab) continue;
+            try
+            {
+                if (_engine.GetWebViewElement(t.Id) is not { } view) continue;
+                // Both WPF WebView2 control types expose their core on the owning dispatcher.
+                dynamic webView = view;
+                webView.CoreWebView2?.PostWebMessageAsString(message);
+            }
+            catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Saved tabs update failed: {ex}"); }
         }
     }
 

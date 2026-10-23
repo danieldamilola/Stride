@@ -1,0 +1,27 @@
+{
+  "capturedUtc": "2026-10-23T15:19:36.473429Z",
+  "runtime": "9.0.20",
+  "os": "Microsoft Windows NT 10.0.26200.0",
+  "processors": 8,
+  "passed": true,
+  "switches": [
+    "--extension-gate"
+  ],
+  "mode": "Release recommended; synthetic isolated profile; no remote sites",
+  "results": [
+    {
+      "name": "extension-gate-internal-activation",
+      "externalCreationMs": 1062,
+      "innerTabActivationMs": 321,
+      "innerRendered": true,
+      "externalStillPendingBeforeRelease": true,
+      "controlledReconcile": "one held TaskCompletionSource shared by the profile coordinator",
+      "creationGateFreeDuringPendingExternalWait": true,
+      "blockedRemoteRequestsFromHeldTab": 0,
+      "releaseOutcome": "failed attempt; navigation proceeds without a ready state",
+      "externalCompletedAfterReleaseMs": 1687,
+      "scope": "real TabEngine activation path with a real WebView2 control and a deliberately delayed shared reconcile",
+      "preFixBaseline": "pre-fix code kept the creation semaphore through the extension wait, so a new internal tab waited behind it"
+    }
+  ]
+}

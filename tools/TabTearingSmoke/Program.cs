@@ -69,7 +69,8 @@ internal static class Program
             AutoCheckForUpdates = false,
             RestoreSessionOnStartup = false,
             ClearDataOnExit = false,
-            ShowTabNames = true
+            ShowTabNames = true,
+            AdaptiveToolbarTint = true
         };
         var session = new BrowserSession { WebViewDataDirectory = Path.Combine(Path.GetTempPath(), "StrideTabTearingSmoke", Guid.NewGuid().ToString("N")) };
         var closedTabs = new MemoryClosedTabs();
@@ -102,13 +103,34 @@ internal static class Program
         var tab = source.CreateTab("about:blank", false);
         await source.ActivateAsync(tab);
         var core = source.GetCoreForTab(tab.Id)!;
+        // Serve the local fixture independently of Chromium's user-data directory.
+        var fixtureDirectory = Path.Combine(StrideBrowser.Helpers.AppPaths.DataDirectory, "transfer-fixture", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(fixtureDirectory);
+        var pagePath = Path.Combine(fixtureDirectory, "transfer-test.html");
+        core.SetVirtualHostNameToFolderMapping("transfer.test", fixtureDirectory,
+            Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.DenyCors);
+        const string pageUri = "https://transfer.test/transfer-test.html";
         var loaded = new TaskCompletionSource();
-        core.NavigationCompleted += (_, _) => loaded.TrySetResult();
-        var pagePath = Path.Combine(session.WebViewDataDirectory, "transfer-test.html");
+        void PageLoaded(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
+        {
+            Note($"fixture navigation: {core.Source}, success={e.IsSuccess}, status={e.WebErrorStatus}");
+            if (core.Source != pageUri) return;
+            if (e.IsSuccess) loaded.TrySetResult();
+            else loaded.TrySetException(new InvalidOperationException($"Transfer fixture navigation failed: {e.WebErrorStatus}"));
+        }
+        core.NavigationCompleted += PageLoaded;
         File.WriteAllText(pagePath, "<html><body style='background:#295c45;color:white;font:24px sans-serif'><h1>Tab transfer state</h1><input id='draft' value='unsaved text'><p id='count'></p><script>window.marker=String(Date.now())+Math.random();window.ticks=0;setInterval(()=>{ticks++;document.getElementById('count').textContent=ticks},50)</script></body></html>");
-        core.Navigate(new Uri(pagePath).AbsoluteUri);
-        await loaded.Task;
+        try
+        {
+            // Use the product navigation entry point so a pending startup navigation
+            // cannot overwrite this newer fixture request after extension readiness.
+            source.Navigate(tab, pageUri);
+            await loaded.Task.WaitAsync(TimeSpan.FromSeconds(30));
+        }
+        finally { core.NavigationCompleted -= PageLoaded; }
         for (var i = 0; i < 100 && await core.ExecuteScriptAsync("typeof window.ticks") != "\"number\""; i++) await Task.Delay(50);
+        Require(await core.ExecuteScriptAsync("typeof window.ticks") == "\"number\"",
+            "Transfer fixture script did not initialize", core.Source);
         await core.ExecuteScriptAsync("document.getElementById('draft').value='keep this draft';history.pushState({},'', '#kept');");
         var marker = await core.ExecuteScriptAsync("window.marker");
         var ticks = int.Parse(await core.ExecuteScriptAsync("window.ticks"));
@@ -149,7 +171,7 @@ internal static class Program
         await core.ExecuteScriptAsync("document.title='Moved title'");
         await WaitFor(() => tab.Title == "Moved title");
         await SettleThemeColorAsync();
-        await core.ExecuteScriptAsync("chrome.webview.postMessage('" + session.TelemetryToken + ":THEME_COLOR:#123456')");
+        await core.ExecuteScriptAsync("chrome.webview.postMessage('THEME_COLOR:#123456')");
         await WaitFor(() => tab.ThemeColor == "#123456");
         Require(tab.Title == "Moved title" && tab.ThemeColor == "#123456", "Destination receives page events: " + tab.Title + " / " + tab.ThemeColor);
 
@@ -460,9 +482,9 @@ internal static class Program
             (InternalUrls.Settings, "Settings - Stride"),
             (InternalUrls.OneTab, "Saved tabs - Stride"),
             (InternalUrls.History, "History - Stride"),
-            (InternalUrls.Downloads, "Downloads - Stride"),
-            (InternalUrls.Onboarding, "Welcome to Stride"),
-            (InternalUrls.ReleaseNotes, "What's New in Stride"),
+            (InternalUrls.Downloads, "Download history - Stride"),
+            (InternalUrls.Onboarding, "Get started - Stride"),
+            (InternalUrls.ReleaseNotes, "What's new - Stride"),
             (InternalUrls.Focus, "FOCUS"),
             (InternalUrls.Health, "Health - Stride")
         })
