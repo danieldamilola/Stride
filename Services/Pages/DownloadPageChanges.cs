@@ -1,6 +1,7 @@
-using StrideBrowser.Models;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 /// <summary>Compares only the visible page and emits changed presentation rows.</summary>
 public sealed class DownloadPageChanges
@@ -30,3 +31,7 @@ public sealed class DownloadPageChanges
     public sealed record Update(string Request, int Page, int Total, string[] Ids,
         DownloadJson.DownloadPageRow[] Changed, bool Active);
 }
+
+
+
+

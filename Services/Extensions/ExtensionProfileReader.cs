@@ -1,7 +1,7 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 
-namespace StrideBrowser.Services.Extensions;
+namespace UmberBrowser.Services.Extensions;
 
 public sealed record ExtensionProfileEntry(string Id, string Folder, bool IsComponent);
 

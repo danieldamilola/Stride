@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using System.Windows;
-using StrideBrowser.Models;
-using StrideBrowser.Models.LinkPreview;
-using StrideBrowser.Services;
+using UmberBrowser.Models;
+using UmberBrowser.Models.LinkPreview;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Wires the IPC surface of a WebView2 control: web-message reception with
@@ -564,3 +564,4 @@ public sealed class WebViewIpcBridge
         subscriptions.Add(() => core.NewWindowRequested -= onNewWindowRequested);
     }
 }
+

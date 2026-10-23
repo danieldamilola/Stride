@@ -1,8 +1,8 @@
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.Models.Reader;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Models.Reader;
 
-namespace StrideBrowser.Services.Reader;
+namespace UmberBrowser.Services.Reader;
 
 /// <summary>
 /// Stores per-tab ReaderSession, owns truth, raises SessionChanged.

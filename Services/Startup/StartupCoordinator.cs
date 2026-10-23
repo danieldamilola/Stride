@@ -2,11 +2,11 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.Services.CommandLine;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Services.CommandLine;
 
-namespace StrideBrowser.Services.Startup;
+namespace UmberBrowser.Services.Startup;
 
 public class StartupCoordinator
 {

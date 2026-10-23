@@ -1,6 +1,6 @@
 using System;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// Decides whether a TabStateChanged event needs a WebView activation, by

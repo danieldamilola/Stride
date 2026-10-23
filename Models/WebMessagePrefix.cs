@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models;
+namespace UmberBrowser.Models;
 
 /// <summary>Constants for web message prefixes sent from internal pages via postMessage.</summary>
 public static class WebMessagePrefix

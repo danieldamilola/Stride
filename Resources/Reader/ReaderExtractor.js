@@ -52,6 +52,6 @@
     });
   }
 
-  window.__strideReaderExtract = extract;
-  window.__strideReaderIsReadable = isReadable;
+  window.__umberReaderExtract = extract;
+  window.__umberReaderIsReadable = isReadable;
 })();

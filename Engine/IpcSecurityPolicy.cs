@@ -1,7 +1,7 @@
 using System;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Enforces route permissions for privileged browser commands originating from internal documents.

@@ -1,6 +1,6 @@
-using StrideBrowser.Helpers;
+using UmberBrowser.Helpers;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 /// <summary>
 /// Renders internal pages that embed a JSON payload for client-side rendering.

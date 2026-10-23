@@ -1,6 +1,6 @@
 using System;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Tracks the active internal document identity for a browser tab.

@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using StrideBrowser.Models.LinkPreview;
-using StrideBrowser.Services.LinkPreview;
+using UmberBrowser.Models.LinkPreview;
+using UmberBrowser.Services.LinkPreview;
 using System.Windows;
 
-namespace StrideBrowser.ViewModels.LinkPreview;
+namespace UmberBrowser.ViewModels.LinkPreview;
 
 /// <summary>
 /// Thin ViewModel that mirrors LinkPreviewService state for binding.

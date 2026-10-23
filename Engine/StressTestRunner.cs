@@ -1,7 +1,7 @@
 #if DEBUG
 using System.Diagnostics;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Runs a multi-phase stress test against the tab engine to verify stability

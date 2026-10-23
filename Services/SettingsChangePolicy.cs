@@ -1,8 +1,8 @@
 using System.Globalization;
-using StrideBrowser.Models;
-using StrideBrowser.Services.Input;
+using UmberBrowser.Models;
+using UmberBrowser.Services.Input;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 public static class SettingsChangePolicy
 {

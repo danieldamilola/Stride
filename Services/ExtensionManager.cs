@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -6,11 +6,11 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
-using StrideBrowser.Helpers;
+using UmberBrowser.Helpers;
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Manages WebView2 browser extensions including built-in uBlock Origin.
@@ -36,7 +36,7 @@ public sealed class ExtensionManager
     /// straight off GitHub.
     /// <para>
     /// Trust On First Use is not sufficient here. The old implementation wrote the hash of
-    /// whatever it found into %LocalAppData%\StrideBrowser and returned success on first run,
+    /// whatever it found into %LocalAppData%\UmberBrowser and returned success on first run,
     /// so anything able to write to the install directory or to that file before the first
     /// launch chose its own trust anchor and got loaded with full page access on every site.
     /// The stored hash is now only used to report drift after the fact.
@@ -132,7 +132,7 @@ public sealed class ExtensionManager
         // Refuse to buffer an oversized response in memory before it reaches disk.
         c.MaxResponseContentBufferSize = MaxDownloadBytes;
         if (!c.DefaultRequestHeaders.Contains("User-Agent"))
-            c.DefaultRequestHeaders.Add("User-Agent", "StrideBrowser-ExtensionManager");
+            c.DefaultRequestHeaders.Add("User-Agent", "UmberBrowser-ExtensionManager");
         return c;
     }
 
@@ -374,7 +374,7 @@ public sealed class ExtensionManager
         var decision = await DecideAsync(
             registered: ublock is not null,
             // Users can now load their own extensions. Display names cannot prove
-            // that a download manager belongs to Stride's former bundled install.
+            // that a download manager belongs to umber's former bundled install.
             legacyExtensionPresent: false,
             desiredEnabled: desiredEnabled);
         var plan = decision.Plan;

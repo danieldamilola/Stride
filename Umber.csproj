@@ -1,0 +1,130 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows10.0.17763.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>UmberBrowser</RootNamespace>
+    <AssemblyName>Umber</AssemblyName>
+    <ApplicationIcon Condition="'$(Configuration)' == 'Debug'">icons\umber-dev.ico</ApplicationIcon>
+    <ApplicationIcon Condition="'$(Configuration)' != 'Debug'">icons\umber.ico</ApplicationIcon>
+    <Version>0.1.0</Version>
+    <!-- Exclude nested projects and verification artifacts from SDK and WPF item globs. -->
+    <DefaultItemExcludesInProjectFolder>$(DefaultItemExcludesInProjectFolder);tools\**;src\**;UmberBrowser.Tests\**;Umber.Updater\**</DefaultItemExcludesInProjectFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Umber.Updater\**" />
+    <Compile Remove="dump.cs" />
+    <Content Remove="Umber.Updater\**" />
+    <None Remove="Umber.Updater\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.*" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4181-prerelease" />
+  </ItemGroup>
+
+  <!-- Nested projects; exclude from this project's default globs -->
+  <ItemGroup>
+    <Compile Remove="UmberBrowser.Tests\**" />
+    <Compile Remove="src\**" />
+    <Compile Remove="tools\**" />
+    <!-- Page items need the same exclusions as Compile. The WPF default glob is
+         **/*.xaml, so any harness under tools\ that keeps its own App.xaml or a copied
+         theme was compiled into the app and collided with the real one: CS0111 on
+         InitializeComponent and CS0102 on _contentLoaded, for the whole solution. -->
+    <Page Remove="UmberBrowser.Tests\**" />
+    <Page Remove="src\**" />
+    <Page Remove="tools\**" />
+    <EmbeddedResource Remove="UmberBrowser.Tests\**" />
+    <EmbeddedResource Remove="src\**" />
+    <EmbeddedResource Remove="tools\**" />
+    <None Remove="UmberBrowser.Tests\**" />
+    <None Remove="src\**" />
+    <None Remove="tools\**" />
+  </ItemGroup>
+
+  <!-- The changelog is also the source for the in-app release notes. -->
+  <ItemGroup>
+    <EmbeddedResource Include="CHANGELOG.md" LogicalName="UmberBrowser.CHANGELOG.md" />
+  </ItemGroup>
+
+  <!-- Embedded HTML templates and JS scripts -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Pages\*.html" />
+    <EmbeddedResource Include="Resources\Pages\*.css" />
+    <EmbeddedResource Include="Resources\Scripts\*.js" />
+    <EmbeddedResource Include="Resources\Reader\*.html" />
+    <EmbeddedResource Include="Resources\Reader\*.css" />
+    <EmbeddedResource Include="Resources\Reader\*.js" />
+    <!-- App icon for the Settings about card. Both flavor variants are embedded;
+         AppIconResources picks one at compile time. -->
+    <EmbeddedResource Include="icons\umber-browser-128x128.png" />
+    <EmbeddedResource Include="icons\umber-browser-dev-dark-128x128.png" />
+  </ItemGroup>
+
+
+
+  <!-- Local Assets for Virtual Host -->
+  <ItemGroup>
+    <Content Include="Resources\Pages\*.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Pages\Backgrounds\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Pages\Backgrounds\Thumbnails\*.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Extensions\*.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Pages\TCLens\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Pages\pdfjs\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- App icons - embedded as Resource for WPF single-file compatibility -->
+  <ItemGroup>
+    <Resource Include="icons\umber-browser-*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\umber-mark-*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\umber-tile.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\umber.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\umber-light.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\umber-dev.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\umber-dev-light.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The test project exercises internal security predicates such as the pinned
+         uBlock hash and the archive size limits. -->
+    <InternalsVisibleTo Include="UmberBrowser.Tests" />
+  </ItemGroup>
+
+</Project>
+
+

@@ -1,21 +1,20 @@
 # Changelog
 
-All notable changes to Stride are recorded here, newest first.
+All notable changes to Umber are recorded here, newest first.
 
 ## [Unreleased]
 
 ### Added
 
-- Added a project performance audit with Release measurements, WebView2 page and asset checks, and a repeatable isolated diagnostic tool. The tool modes reproduce the delayed extension activation case and sample native suspension latency.
 - Performance settings can allow pinned tabs to follow tab sleep and automatic hibernation separately.
 
 ### Changed
 
-- History and Downloads use pages of results. Download updates keep unchanged controls and send only changed visible rows.
-- History, download history and saved tabs coalesce ordinary file writes in the background and flush pending writes before the last window closes.
-- Saved-tab edits update the current page without reloading it.
-- Bundled wallpapers use smaller screen-sized images and lazy picker thumbnails.
-- Favicon responses and disk storage have size and retention limits.
+- Replaced the placeholder ghost icon with the Umber tree-ring mark. Debug builds use the violet dev colorway, release builds use the neutral colorway, and both share the same ring geometry.
+- Tabs without a site favicon use the transparent Umber ring mark at the full favicon size. Window, taskbar and About icons keep the tiled artwork.
+- The window, taskbar and About tile icons draw the ring mark larger inside the same rounded tile. The 32px executable icon mark now spans 28px instead of 25px.
+- The window icon now decodes the .ico frame that matches the window DPI instead of always the smallest 16px frame. The taskbar button no longer upscales the 16px frame, so the mark keeps its drawn size on the taskbar.
+- Renamed the product to Umber. The namespaces are UmberBrowser, the application project is Umber.csproj, the executable is Umber.exe, the updater project is Umber.Updater and the test project is UmberBrowser.Tests. Data lives in %LocalAppData%\UmberBrowser with umber.log and background images in %AppData%\Umber, and UMBER_DATA_DIR relocates the data tree. The registry keys are Umber, UmberHTML and UmberURL, the icon files use the umber- prefix, and the installer and update package are Umber-win-Setup.exe and Umber-win-x64.zip.
 - Restored sessions now start with every background tab hibernated, including pinned tabs, regardless of the tab hibernation and pinned tab settings. The saved active tab stays loaded.
 - Reorganized Settings into General, Appearance, Tabs, Search, Privacy & Security, Focus, Shortcuts and About. Search has its own page, YouTube Unhook is under Focus, and default browser, hardware acceleration and reset actions are under General.
 - Settings search keeps matching controls with their group headings and opens matching detail groups.
@@ -26,18 +25,14 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Fixed
 
-- Favicon cache failures now produce diagnostics while preserving best-effort recovery. Tab-transfer verification uses a separate fixture directory for each run.
-- Performance verification checks actual Downloads rendering during extension startup. The tab-transfer tool uses the browser navigation path and current page and message contracts.
-- Downloads opens with large retained histories, and unchanged records no longer rebuild the full list on each update.
-- A tab waiting for extension startup no longer blocks creation of another tab.
-- Background tabs avoid duplicate suspension requests, and downloads protect the tab that owns their native transfer.
-- Toolbar color messages skip unchanged colors and stop extraction while adaptive tint is disabled.
-- Reader sanitization bounds malformed-input work and prepares article content off the UI thread.
-- Recovered four bundled wallpapers damaged by an earlier encoding conversion.
-- Download toolbar progress tracks active transfers without rescanning completed history on each progress update.
+- The wallpaper downloader saved nothing whenever the wallpaper host served the image to render instead of as an attachment. URLs that never raise a download event now fall back to a direct HTTP transfer that carries the profile cookies, supports pause, resume and cancel, and refuses to save rendered pages such as error documents. Downloads from wallhaven previously always ended as "Failed, Size unknown".
 - Turning off tab sleep resumes sleeping pages in every open window, including suspensions that finish after the setting changes.
 - Pinned tabs stay awake when their sleep setting is off. Turning it off wakes pinned tabs that are already sleeping.
 - Online suggestions skip address and file path inputs. Turning suggestions off cancels pending requests and discards late responses.
+
+### Removed
+
+- The new tab page no longer shows its own search field. The toolbar address field is the only address input.
 
 ## [0.1.0] - 2026-10-21
 
@@ -55,8 +50,9 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Changed
 
-- Extensions includes YouTube tools, adaptive toolbar color, Focus and forced dark websites with their existing settings. The toolbar menu uses the same controls and spacing as Downloads.
+### Changed
 
+- Extensions includes YouTube tools, adaptive toolbar color, Focus and forced dark websites with their existing settings. The toolbar menu uses the same controls and spacing as Downloads.
 - Moved extension management out of Settings. YouTube controls now have their own Settings category.
 - Built-in pages share heading and search-field sizes. Download and history searches sit beside the header actions, and saved tabs uses the same header layout.
 
@@ -74,6 +70,10 @@ All notable changes to Stride are recorded here, newest first.
 - Replaced the old release history with this changelog. The in-app release notes now read published entries from the same file.
 - The dark theme uses neutral charcoal backgrounds, gray borders and neutral text across the browser frame, address suggestions, link previews and built-in pages.
 - Settings no longer shows routine save confirmations. Save errors and restart notices remain visible.
+
+### Removed
+
+- The new tab page no longer shows its own search field. The toolbar address field is the only address input.
 
 ### Fixed
 
@@ -105,3 +105,4 @@ All notable changes to Stride are recorded here, newest first.
 - Shortcut recording reads physical digit and punctuation keys, so combinations such as Ctrl+Shift+1 can be recorded and rebound.
 - Update checks report no available update when the repository has no published releases.
 - Context menu separators now use the theme's line colour instead of the WPF default, so they stay visible in both themes.
+

@@ -3,14 +3,14 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace StrideBrowser.Converters;
+namespace UmberBrowser.Converters;
 
 /// <summary>
 /// Collapses tab titles once the tab container shrinks near icon width, so a
 /// crowded strip degrades to favicons instead of clipping text. A parameter
 /// sets the threshold in pixels and a leading ! inverts the result, so the
 /// favicon close overlay can reappear exactly when the end button hides.
-/// 48 matches <see cref="StrideBrowser.Services.UI.TabShrinkPanel.MinNamedTabWidth"/>.
+/// 48 matches <see cref="UmberBrowser.Services.UI.TabShrinkPanel.MinNamedTabWidth"/>.
 /// </summary>
 public sealed class TabWidthToVisibilityConverter : IValueConverter
 {

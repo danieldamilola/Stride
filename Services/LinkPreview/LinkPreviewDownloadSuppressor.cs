@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace StrideBrowser.Services.LinkPreview;
+namespace UmberBrowser.Services.LinkPreview;
 
 public interface ILinkPreviewDownloadSuppressor
 {

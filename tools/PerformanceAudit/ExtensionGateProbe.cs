@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.LinkPreview;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.LinkPreview;
 
 internal static partial class Program
 {
@@ -155,3 +155,4 @@ internal static partial class Program
         }
     }
 }
+

@@ -1,6 +1,6 @@
 using System.IO;
-using StrideBrowser.Models;
-namespace StrideBrowser.Services.Downloads;
+using UmberBrowser.Models;
+namespace UmberBrowser.Services.Downloads;
 
 public static class DownloadDestination
 {

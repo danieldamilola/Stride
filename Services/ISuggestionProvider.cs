@@ -1,6 +1,6 @@
-﻿namespace StrideBrowser.Services;
+﻿namespace UmberBrowser.Services;
 
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
 /// <summary>
 /// Fetches address bar suggestions from local history and shortcuts plus a web search API.

@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.ComponentModel;
 using System.IO;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.Downloads;
+namespace UmberBrowser.Services.Downloads;
 
 public interface IDownloadTransfer
 {

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using StrideBrowser.Models.Reader;
+using UmberBrowser.Models.Reader;
 
-namespace StrideBrowser.Services.Reader;
+namespace UmberBrowser.Services.Reader;
 
 public sealed class ReaderSessionStore : IReaderStateQuery
 {

@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace StrideBrowser.Converters;
+namespace UmberBrowser.Converters;
 
 public class ProgressToDashArrayConverter : IValueConverter
 {

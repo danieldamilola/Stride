@@ -5,12 +5,12 @@
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyName>StrideTabTearingSmoke</AssemblyName>
+    <AssemblyName>UmberTabTearingSmoke</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../Stride.csproj" />
+    <ProjectReference Include="../../Umber.csproj" />
     <Page Include="../../Themes/*.xaml" Link="Themes/%(Filename)%(Extension)" />
-    <Resource Include="../../icons/*.ico;../../icons/stride-browser-*.png" Link="icons/%(Filename)%(Extension)" />
+    <Resource Include="../../icons/*.ico;../../icons/umber-browser-*.png" Link="icons/%(Filename)%(Extension)" />
     <EmbeddedResource Include="../../App.xaml" LogicalName="BrowserResources.xaml" />
   </ItemGroup>
 </Project>

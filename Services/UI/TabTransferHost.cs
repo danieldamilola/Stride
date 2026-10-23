@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// Lets the tab strip hand a dragged tab to another window. Absent in tests and in any

@@ -6,15 +6,15 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 public static class SingleInstanceManager
 {
-    private const string MutexNameBase = "StrideBrowser_SingleInstanceMutex_v1";
-    private const string PipeNameBase = "StrideBrowser_SingleInstancePipe_v1";
+    private const string MutexNameBase = "UmberBrowser_SingleInstanceMutex_v1";
+    private const string PipeNameBase = "UmberBrowser_SingleInstancePipe_v1";
 
     /// <summary>
-    /// When the data tree has been relocated by STRIDE_DATA_DIR the instance
+    /// When the data tree has been relocated by UMBER_DATA_DIR the instance
     /// names get a suffix derived from that directory, so a relocated run does
     /// not grab the installed browser's mutex and does not forward its command
     /// line into the installed browser's pipe. With no relocation the suffix is

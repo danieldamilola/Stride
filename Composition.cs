@@ -1,12 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
-using StrideBrowser.Engine;
-using StrideBrowser.Engine.Handlers;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.ViewModels;
+using UmberBrowser.Engine;
+using UmberBrowser.Engine.Handlers;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.ViewModels;
 using System.Net.Http;
 
-namespace StrideBrowser;
+namespace UmberBrowser;
 
 /// <summary>
 /// Composition root - registers all services into the DI container.

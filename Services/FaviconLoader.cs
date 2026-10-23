@@ -2,10 +2,10 @@ using System.IO;
 using System.Net.Http;
 using System.Windows.Media.Imaging;
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>Where a favicon is being asked for, which decides if the network is allowed.</summary>
 public enum FaviconLoadScope
@@ -31,9 +31,9 @@ public enum FaviconLoadScope
 ///   3. Stores in a persistent SQLite DB (Favicons / favicons.sqlite)
 ///   4. Loads from cache first on revisit
 ///
-/// Stride approach (this class):
+/// Umber approach (this class):
 ///   1. WebView2 FaviconChanged event → GetFaviconAsync() for PNG data
-///   2. Saves PNG to disk cache (%LocalAppData%\StrideBrowser\favicons\{host}.png)
+///   2. Saves PNG to disk cache (%LocalAppData%\UmberBrowser\favicons\{host}.png)
 ///   3. On next visit, loads from disk first (no network call)
 ///   4. Asks the DuckDuckGo icon service only when the user opted in, only for a page
 ///      navigation, and only for a host <see cref="FaviconRequestPolicy"/> allows

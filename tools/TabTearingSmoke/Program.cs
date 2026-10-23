@@ -7,11 +7,11 @@ using System.Windows.Markup;
 using System.Windows.Threading;
 using System.Xml.Linq;
 using Microsoft.Extensions.DependencyInjection;
-using StrideBrowser;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.UI;
+using UmberBrowser;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.UI;
 
 /// <summary>
 /// Drives the real tab tearing and docking path against real windows and a real page.
@@ -28,9 +28,9 @@ internal static class Program
         using var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BrowserResources.xaml")!;
         var dictionary = XDocument.Load(resourceStream).Descendants().First(e => e.Name.LocalName == "ResourceDictionary");
         dictionary.SetAttributeValue(XNamespace.Xmlns + "x", "http://schemas.microsoft.com/winfx/2006/xaml");
-        dictionary.SetAttributeValue(XNamespace.Xmlns + "conv", "clr-namespace:StrideBrowser.Converters;assembly=Stride");
-        foreach (var element in dictionary.Descendants().Where(e => e.Name.NamespaceName == "clr-namespace:StrideBrowser.Converters"))
-            element.Name = XName.Get(element.Name.LocalName, "clr-namespace:StrideBrowser.Converters;assembly=Stride");
+        dictionary.SetAttributeValue(XNamespace.Xmlns + "conv", "clr-namespace:UmberBrowser.Converters;assembly=Umber");
+        foreach (var element in dictionary.Descendants().Where(e => e.Name.NamespaceName == "clr-namespace:UmberBrowser.Converters"))
+            element.Name = XName.Get(element.Name.LocalName, "clr-namespace:UmberBrowser.Converters;assembly=Umber");
         app.Resources = (ResourceDictionary)XamlReader.Parse(dictionary.ToString());
         app.ShutdownMode = ShutdownMode.OnExplicitShutdown;
         Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
@@ -38,8 +38,8 @@ internal static class Program
 
         // Every store is in memory and the WebView2 profile is a fresh directory, so a
         // run cannot read or write the installed browser's profile.
-        Require(StrideBrowser.Helpers.AppPaths.IsIsolatedProfile,
-            $"STRIDE_DATA_DIR is not redirecting the data tree, AppPaths.Base is {StrideBrowser.Helpers.AppPaths.DataDirectory}");
+        Require(UmberBrowser.Helpers.AppPaths.IsIsolatedProfile,
+            $"UMBER_DATA_DIR is not redirecting the data tree, AppPaths.Base is {UmberBrowser.Helpers.AppPaths.DataDirectory}");
 
         var result = 1;
         app.Dispatcher.BeginInvoke(new Action(async () =>
@@ -69,10 +69,9 @@ internal static class Program
             AutoCheckForUpdates = false,
             RestoreSessionOnStartup = false,
             ClearDataOnExit = false,
-            ShowTabNames = true,
-            AdaptiveToolbarTint = true
+            ShowTabNames = true
         };
-        var session = new BrowserSession { WebViewDataDirectory = Path.Combine(Path.GetTempPath(), "StrideTabTearingSmoke", Guid.NewGuid().ToString("N")) };
+        var session = new BrowserSession { WebViewDataDirectory = Path.Combine(Path.GetTempPath(), "UmberTabTearingSmoke", Guid.NewGuid().ToString("N")) };
         var closedTabs = new MemoryClosedTabs();
         var sessionStore = new MemorySession();
         var settingsStore = new MemorySettings(settings);
@@ -103,34 +102,13 @@ internal static class Program
         var tab = source.CreateTab("about:blank", false);
         await source.ActivateAsync(tab);
         var core = source.GetCoreForTab(tab.Id)!;
-        // Serve the local fixture independently of Chromium's user-data directory.
-        var fixtureDirectory = Path.Combine(StrideBrowser.Helpers.AppPaths.DataDirectory, "transfer-fixture", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(fixtureDirectory);
-        var pagePath = Path.Combine(fixtureDirectory, "transfer-test.html");
-        core.SetVirtualHostNameToFolderMapping("transfer.test", fixtureDirectory,
-            Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.DenyCors);
-        const string pageUri = "https://transfer.test/transfer-test.html";
         var loaded = new TaskCompletionSource();
-        void PageLoaded(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
-        {
-            Note($"fixture navigation: {core.Source}, success={e.IsSuccess}, status={e.WebErrorStatus}");
-            if (core.Source != pageUri) return;
-            if (e.IsSuccess) loaded.TrySetResult();
-            else loaded.TrySetException(new InvalidOperationException($"Transfer fixture navigation failed: {e.WebErrorStatus}"));
-        }
-        core.NavigationCompleted += PageLoaded;
+        core.NavigationCompleted += (_, _) => loaded.TrySetResult();
+        var pagePath = Path.Combine(session.WebViewDataDirectory, "transfer-test.html");
         File.WriteAllText(pagePath, "<html><body style='background:#295c45;color:white;font:24px sans-serif'><h1>Tab transfer state</h1><input id='draft' value='unsaved text'><p id='count'></p><script>window.marker=String(Date.now())+Math.random();window.ticks=0;setInterval(()=>{ticks++;document.getElementById('count').textContent=ticks},50)</script></body></html>");
-        try
-        {
-            // Use the product navigation entry point so a pending startup navigation
-            // cannot overwrite this newer fixture request after extension readiness.
-            source.Navigate(tab, pageUri);
-            await loaded.Task.WaitAsync(TimeSpan.FromSeconds(30));
-        }
-        finally { core.NavigationCompleted -= PageLoaded; }
+        core.Navigate(new Uri(pagePath).AbsoluteUri);
+        await loaded.Task;
         for (var i = 0; i < 100 && await core.ExecuteScriptAsync("typeof window.ticks") != "\"number\""; i++) await Task.Delay(50);
-        Require(await core.ExecuteScriptAsync("typeof window.ticks") == "\"number\"",
-            "Transfer fixture script did not initialize", core.Source);
         await core.ExecuteScriptAsync("document.getElementById('draft').value='keep this draft';history.pushState({},'', '#kept');");
         var marker = await core.ExecuteScriptAsync("window.marker");
         var ticks = int.Parse(await core.ExecuteScriptAsync("window.ticks"));
@@ -171,7 +149,7 @@ internal static class Program
         await core.ExecuteScriptAsync("document.title='Moved title'");
         await WaitFor(() => tab.Title == "Moved title");
         await SettleThemeColorAsync();
-        await core.ExecuteScriptAsync("chrome.webview.postMessage('THEME_COLOR:#123456')");
+        await core.ExecuteScriptAsync("chrome.webview.postMessage('" + session.TelemetryToken + ":THEME_COLOR:#123456')");
         await WaitFor(() => tab.ThemeColor == "#123456");
         Require(tab.Title == "Moved title" && tab.ThemeColor == "#123456", "Destination receives page events: " + tab.Title + " / " + tab.ThemeColor);
 
@@ -478,15 +456,15 @@ internal static class Program
         engine.CloseTab(background);
         foreach (var (url, title) in new[]
         {
-            (InternalUrls.NewTab, "New Tab - Stride"),
-            (InternalUrls.Settings, "Settings - Stride"),
-            (InternalUrls.OneTab, "Saved tabs - Stride"),
-            (InternalUrls.History, "History - Stride"),
-            (InternalUrls.Downloads, "Download history - Stride"),
-            (InternalUrls.Onboarding, "Get started - Stride"),
-            (InternalUrls.ReleaseNotes, "What's new - Stride"),
+            (InternalUrls.NewTab, "New Tab - Umber"),
+            (InternalUrls.Settings, "Settings - Umber"),
+            (InternalUrls.OneTab, "Saved tabs - Umber"),
+            (InternalUrls.History, "History - Umber"),
+            (InternalUrls.Downloads, "Downloads - Umber"),
+            (InternalUrls.Onboarding, "Welcome to Umber"),
+            (InternalUrls.ReleaseNotes, "What's New in Umber"),
             (InternalUrls.Focus, "FOCUS"),
-            (InternalUrls.Health, "Health - Stride")
+            (InternalUrls.Health, "Health - Umber")
         })
         {
             engine.SwitchTo(previous);

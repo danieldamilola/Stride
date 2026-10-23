@@ -1,4 +1,4 @@
-const pendingSettings = new Map();
+﻿const pendingSettings = new Map();
 let activeRecorder = null;
 let recorderTimer = null;
 function showSettingStatus(message, error = false) {
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const clear = document.getElementById('clearSearch');
   let selected = navItems[0].dataset.target;
   try {
-    const saved = localStorage.getItem('stride_active_settings_tab');
+    const saved = localStorage.getItem('umber_active_settings_tab');
     const target = { 'section-performance':'section-tabs', 'section-extensions':'section-focus', 'section-youtube':'section-focus' }[saved] || saved;
     if (sections.some(s => s.id === target)) selected = target;
   } catch {}
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   navItems.forEach(item => item.addEventListener('click', () => {
     selected = item.dataset.target; search.value = '';
-    try { localStorage.setItem('stride_active_settings_tab', selected); } catch {}
+    try { localStorage.setItem('umber_active_settings_tab', selected); } catch {}
     render();
   }));
   search.addEventListener('input', render);
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pending = pendingSettings.get(result.key);
     if (pending && pending.value !== result.value) return;
     if (pending) { clearTimeout(pending.timer); pendingSettings.delete(result.key); }
-    const message = result.success ? (result.restartRequired ? 'Restart Stride to apply this change.' : '') : result.message;
+    const message = result.success ? (result.restartRequired ? 'Restart Umber to apply this change.' : '') : result.message;
     if (!result.success || result.restartRequired || document.getElementById('settingsStatus')?.dataset.error === 'true')
       showSettingStatus(message, !result.success);
     if (!result.success) { const el = pending?.el; if (el?.dataset.savedValue !== undefined) { if (el.type === 'checkbox') el.checked = el.dataset.savedValue === 'true'; else el.value = el.dataset.savedValue; } return; }

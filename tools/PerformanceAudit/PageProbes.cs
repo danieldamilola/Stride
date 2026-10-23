@@ -3,10 +3,10 @@ using System.IO;
 using System.Text.Json;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.Pages;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.Pages;
 
 internal static partial class Program
 {
@@ -286,3 +286,4 @@ internal static partial class Program
         await view.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, output);
     }
 }
+

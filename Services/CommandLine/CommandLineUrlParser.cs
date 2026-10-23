@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace StrideBrowser.Services.CommandLine;
+namespace UmberBrowser.Services.CommandLine;
 
 public interface ICommandLineUrlParser
 {
@@ -15,7 +15,7 @@ public class CommandLineUrlParser : ICommandLineUrlParser
         if (arg.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
             arg.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
             arg.StartsWith("file://", StringComparison.OrdinalIgnoreCase) ||
-            arg.StartsWith("stride://", StringComparison.OrdinalIgnoreCase))
+            arg.StartsWith("umber://", StringComparison.OrdinalIgnoreCase))
         {
             url = arg;
             return true;

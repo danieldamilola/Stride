@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models;
+namespace UmberBrowser.Models;
 
 /// <summary>Constants for internal browser URLs. Eliminates magic strings.</summary>
 public static class InternalUrls

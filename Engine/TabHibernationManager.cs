@@ -6,11 +6,11 @@ using System.Runtime.CompilerServices;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Interop;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Interop;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Manages memory and resource usage by hibernating inactive tabs
@@ -373,3 +373,4 @@ public sealed class TabHibernationManager
         return true;
     }
 }
+

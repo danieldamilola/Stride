@@ -1,12 +1,12 @@
-﻿// Stride Browser - YouTube Ad Nuker
+﻿// Umber Browser - YouTube Ad Nuker
 // Runs at document_start on youtube.com. Kills ads instantly - no skip, no wait.
 // Multi-layer approach: DOM removal, video skip, player API override.
 (function() {
     'use strict';
 
     if (!location.hostname.includes('youtube.com')) return;
-    if (window.__STRIDE_AD_NUKER_LOADED) return;
-    window.__STRIDE_AD_NUKER_LOADED = true;
+    if (window.__UMBER_AD_NUKER_LOADED) return;
+    window.__UMBER_AD_NUKER_LOADED = true;
 
     // ── CSS: Hide all ad-related elements instantly ──────────────────
     var AD_CSS = [
@@ -70,11 +70,11 @@
 
     // Inject CSS - deferred to when DOM is ready
     function injectAdCss() {
-        if (document.getElementById('__stride_ad_nuke')) return;
+        if (document.getElementById('__umber_ad_nuke')) return;
         var target = document.head || document.documentElement;
         if (!target) return;
         var style = document.createElement('style');
-        style.id = '__stride_ad_nuke';
+        style.id = '__umber_ad_nuke';
         style.textContent = AD_CSS;
         target.appendChild(style);
     }
@@ -129,7 +129,7 @@
     function watchPlayer() {
         var player = document.querySelector('.html5-video-player');
         if (!player) return;
-        if (player._strideAdWatcher) return;
+        if (player._umberAdWatcher) return;
 
         // Nuke any ad that's already playing when we attach
         nukeVideoAd();
@@ -147,7 +147,7 @@
                     } else {
                         // Ad ended - unmute
                         var v = player.querySelector('video');
-                        if (v && v.muted && v._strideMuted !== true) {
+                        if (v && v.muted && v._umberMuted !== true) {
                             v.muted = false;
                         }
                     }
@@ -155,7 +155,7 @@
             }
         });
         observer.observe(player, { attributes: true, attributeFilter: ['class'] });
-        player._strideAdWatcher = true;
+        player._umberAdWatcher = true;
     }
 
     // ── Watch for ad elements in DOM ─────────────────────────────────
@@ -186,7 +186,7 @@
 
     function interceptVideo() {
         var video = document.querySelector('video');
-        if (!video || video._strideAdInterceptor) return;
+        if (!video || video._umberAdInterceptor) return;
 
         video.addEventListener('timeupdate', function() {
             var player = document.querySelector('.html5-video-player');
@@ -197,7 +197,7 @@
                 }
             }
         });
-        video._strideAdInterceptor = true;
+        video._umberAdInterceptor = true;
     }
 
     // ── Main observer - wait for ytd-app then watch for player/ads ──

@@ -3,7 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta charset="UTF-8" />
-<title>Health - Stride</title>
+<title>Health - Umber</title>
 <style>
 :root { --bg-base: #111113; --text-main: #e5e5e5; --card: #1a1a1e; }
 body { margin:0; padding:32px; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; background: var(--bg-base); color: var(--text-main); }
@@ -15,7 +15,7 @@ h1 { font-size: 20px; margin-bottom: 16px; }
 </style>
 </head>
 <body>
-<h1 class="page-title">Stride Health</h1>
+<h1 class="page-title">Umber Health</h1>
 <div class="card">
 <div class="label">Version</div>
 <div class="value">{{CURRENT_VERSION}}</div>
@@ -38,6 +38,6 @@ async function copyDiagnostics(button) {
     button.textContent = 'Diagnostics copied';
   } catch { button.textContent = 'Select and copy the diagnostics text'; }
 }
-window.__STRIDE_IPC_TOKEN__ = "{{IPC_TOKEN}}";</script>
+window.__UMBER_IPC_TOKEN__ = "{{IPC_TOKEN}}";</script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using StrideBrowser.Services;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Models;
+namespace UmberBrowser.Models;
 
 /// <summary>
 /// One tab the user closed, kept so it can be reopened with Ctrl+Shift+T.

@@ -2,11 +2,11 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Security;
-using StrideBrowser.Helpers;
+using UmberBrowser.Helpers;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
-/// <summary>How much crash dump history Stride keeps on disk.</summary>
+/// <summary>How much crash dump history Umber keeps on disk.</summary>
 /// <param name="MaxAge">A dump older than this is removed regardless of the other limits.</param>
 /// <param name="MaxFiles">At most this many dumps are kept, newest first.</param>
 /// <param name="MaxTotalBytes">At most this many bytes of dumps are kept, newest first.</param>
@@ -15,7 +15,7 @@ public sealed record CrashDumpLimits(TimeSpan MaxAge, int MaxFiles, long MaxTota
 /// <summary>What one pass did.</summary>
 /// <param name="FolderAccepted">
 /// False when the folder was refused, which is the safe outcome. Nothing was deleted in
-/// that case, and nothing is deleted anywhere else either: this is the only place Stride
+/// that case, and nothing is deleted anywhere else either: this is the only place Umber
 /// removes files.
 /// </param>
 /// <param name="Retained">Dumps the pass chose to keep. A dump it could not read is not counted here.</param>
@@ -77,7 +77,7 @@ public sealed record CrashDumpPruneResult(
 /// </summary>
 public static class CrashDumpRetention
 {
-    /// <summary>Seven days, five dumps, 100 MiB. The limits Stride documents.</summary>
+    /// <summary>Seven days, five dumps, 100 MiB. The limits Umber documents.</summary>
     public static readonly CrashDumpLimits DefaultLimits =
         new(TimeSpan.FromDays(7), MaxFiles: 5, MaxTotalBytes: 100L * 1024 * 1024);
 
@@ -152,7 +152,7 @@ public static class CrashDumpRetention
         if (normalizedRoot is null || normalizedFolder is null)
             return Refuse(folder, "the report folder or user data folder is not a usable path");
 
-        // The report folder has to be this Stride run's own. This is the check that stops
+        // The report folder has to be this Umber run's own. This is the check that stops
         // a wrong or hostile path from pointing the deletion anywhere else.
         if (!AppPaths.IsSameOrAncestor(normalizedRoot, normalizedFolder))
             return Refuse(folder, $"'{folder}' is not inside this run's user data folder '{normalizedRoot}'");

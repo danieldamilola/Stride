@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Windows;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 public sealed partial class TabEngine
 {

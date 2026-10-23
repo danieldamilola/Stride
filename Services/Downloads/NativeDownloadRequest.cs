@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Engine.Handlers;
-using StrideBrowser.Models;
+using UmberBrowser.Engine.Handlers;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.Downloads;
+namespace UmberBrowser.Services.Downloads;
 
 public sealed class NativeDownloadRequest : IDisposable
 {
@@ -95,8 +95,20 @@ public sealed class NativeDownloadRequest : IDisposable
                 }
             };
             core.Navigate(item.Url);
-            if (!await started.Task.WaitAsync(TimeSpan.FromSeconds(20), token))
-                throw new InvalidOperationException("The link did not provide a file.");
+            var navigated = await started.Task.WaitAsync(TimeSpan.FromSeconds(20), token);
+            if (!navigated)
+            {
+                // The URL answered with content the hidden window rendered
+                // instead of an attachment, so no DownloadStarting ever raised.
+                // Fall back to a direct HTTP transfer, still sharing the
+                // profile cookies so signed-in content authorises the same way.
+                await HttpFallbackTransfer.StartAsync(core, item, dispatcher,
+                    _store, _actions, originTabId, token);
+                // The fallback captured what it needs up front and needs no
+                // controller afterwards. The adopted path closes through the
+                // download state change instead.
+                Close();
+            }
         }
         catch { Close(); throw; }
     }

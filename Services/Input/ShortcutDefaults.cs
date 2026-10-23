@@ -1,4 +1,4 @@
-namespace StrideBrowser.Services.Input;
+namespace UmberBrowser.Services.Input;
 
 /// <summary>
 /// Defines all rebindable keyboard shortcuts with their default key combos,

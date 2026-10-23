@@ -3,7 +3,7 @@
   <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8" />
-    <title>Settings - Stride</title>
+    <title>Settings - Umber</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -577,7 +577,7 @@ const __T = "{{IPC_TOKEN}}:";
 
           <li><button type="button" class="sidebar-nav-item" data-target="section-system">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
-            About
+            About Umber
           </button></li>
         </ul>
       </aside>
@@ -599,7 +599,7 @@ const __T = "{{IPC_TOKEN}}:";
 <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Set as default browser</div>
-                  <div class="setting-desc">Open web links with Stride</div>
+                  <div class="setting-desc">Open web links with Umber</div>
                 </div>
                 <div class="setting-control">
                   <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'set-default-browser')">Set Default</button>
@@ -622,7 +622,7 @@ const __T = "{{IPC_TOKEN}}:";
 <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Getting Started</div>
-                  <div class="setting-desc">Revisit the Stride onboarding guide</div>
+                  <div class="setting-desc">Revisit the Umber onboarding guide</div>
                 </div>
                 <div class="setting-control">
                   <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'open-onboarding')">Open</button>
@@ -653,7 +653,7 @@ const __T = "{{IPC_TOKEN}}:";
                   <div class="setting-desc">Restore browser preferences. Locked Focus rules stay unchanged.</div>
                 </div>
                 <div class="setting-control">
-                  <button class="action-btn danger" style="color: #e53935; border-color: #e53935" onclick="if(confirm('Reset browser preferences? Locked Focus rules will remain in place. Restart Stride afterward to apply startup preferences.')) window.chrome.webview.postMessage(__T + 'reset-settings')">Reset to defaults</button>
+                  <button class="action-btn danger" style="color: #e53935; border-color: #e53935" onclick="if(confirm('Reset browser preferences? Locked Focus rules will remain in place. Restart Umber afterward to apply startup preferences.')) window.chrome.webview.postMessage(__T + 'reset-settings')">Reset to defaults</button>
                 </div>
               </div>
 </div>
@@ -971,8 +971,9 @@ const __T = "{{IPC_TOKEN}}:";
                 <div class="setting-control">
                   <input type="checkbox" class="toggle" {{CHK_ADBLOCK}} onchange="s('adBlock', this)" />
                 </div>
+               </div>
               </div>
-<div class="setting-row">
+              <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Tracking prevention</div>
                   <div class="setting-desc">Blocks cross-site trackers in the engine, alongside uBlock Origin. Strict blocks more, and Microsoft warns it can make some sites behave unexpectedly. Balanced is the default.</div>
@@ -1015,7 +1016,7 @@ const __T = "{{IPC_TOKEN}}:";
 <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Clear data on exit</div>
-                  <div class="setting-desc">Remove browsing data when you close Stride</div>
+                  <div class="setting-desc">Remove browsing data when you close Umber</div>
                 </div>
                 <div class="setting-control">
                   <input type="checkbox" class="toggle" {{CHK_CLEAR}} onchange="s('clearOnExit', this)" />
@@ -1024,7 +1025,7 @@ const __T = "{{IPC_TOKEN}}:";
 <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">Favicon network fallback</div>
-                  <div class="setting-desc">Off by default. When on, Stride may send a site's hostname to DuckDuckGo's icon service while loading a page icon. Local and private hostnames are refused. History and suggestion rows only use cached icons.</div>
+                  <div class="setting-desc">Off by default. When on, Umber may send a site's hostname to DuckDuckGo's icon service while loading a page icon. Local and private hostnames are refused. History and suggestion rows only use cached icons.</div>
                 </div>
                 <div class="setting-control">
                   <input type="checkbox" class="toggle" {{CHK_FAVICON_PROXY}} onchange="s('faviconProxy', this)" />
@@ -1154,7 +1155,7 @@ const __T = "{{IPC_TOKEN}}:";
               </div>
               <div style="padding: 16px;">
                 <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
-                  When locked, Stride blocks known adult-content and Telegram domains using community-maintained blocklists, in addition to any domains you enter below. These categories are always on while Focus Mode is locked and cannot be toggled individually.
+                  When locked, Umber blocks known adult-content and Telegram domains using community-maintained blocklists, in addition to any domains you enter below. These categories are always on while Focus Mode is locked and cannot be toggled individually.
                 </div>
                 <div id="focusInputSection" style="display: {{FOCUS_INPUT_DISPLAY}};">
                   <div style="font-size: 13.5px; color: var(--text-bright); margin-bottom: 8px">
@@ -1184,13 +1185,13 @@ const __T = "{{IPC_TOKEN}}:";
 
 {{KEYBOARD_SHORTCUTS_HTML}}
 
-<div class="section" id="section-system" data-search-title="About Stride">
-<div class="section-header">About Stride</div>
+<div class="section" id="section-system" data-search-title="About Umber">
+<div class="section-header">About Umber</div>
 <div class="card searchable-block" style="padding:0; overflow:hidden;">
               <!-- Identity row -->
               <div class="about-identity">
                 <img class="about-logo" src="{{APP_ICON}}" alt="" />
-                <div class="setting-label" style="font-size:15px;">Stride</div>
+                <div class="setting-label" style="font-size:15px;">Umber</div>
               </div>
 
               <!-- Build and runtime info -->
@@ -1208,12 +1209,12 @@ const __T = "{{IPC_TOKEN}}:";
 
               <!-- Credits -->
               <div class="about-credits">
-                Copyright 2026 The Stride Authors. All rights reserved.
+                Copyright 2026 The Umber Authors. All rights reserved.
                 <br />
-                Stride is made possible by the
+                Umber is made possible by the
                 <a href="https://learn.microsoft.com/microsoft-edge/webview2/" target="_blank" rel="noreferrer" style="color:var(--text-main)">Microsoft Edge WebView2</a>
                 open source project and other
-                <a href="https://github.com/danieldamilola/Stride/blob/main/THIRD-PARTY-NOTICES.md" target="_blank" rel="noreferrer" style="color:var(--text-main)">open source software</a>.
+                <a href="https://github.com/danieldamilola/Umber/blob/main/THIRD-PARTY-NOTICES.md" target="_blank" rel="noreferrer" style="color:var(--text-main)">open source software</a>.
               </div>
             </div>
 <div class="settings-group">
@@ -1234,13 +1235,13 @@ const __T = "{{IPC_TOKEN}}:";
                   <div class="setting-desc" id="updateStatus">Current version: {{CURRENT_VERSION}}</div>
                 </div>
                 <div class="setting-control">
-                  <button class="action-btn" id="checkUpdateBtn" onclick="if (this.innerText === 'Download & Install') { this.innerText = 'Downloading update... Stride will restart shortly.'; this.disabled = true; window.chrome.webview.postMessage(__T + 'install-update:' + currentDownloadUrl); } else { this.innerText = 'Checking...'; this.disabled = true; window.chrome.webview.postMessage(__T + 'check-for-update'); }">Check for Updates</button>
+                  <button class="action-btn" id="checkUpdateBtn" onclick="if (this.innerText === 'Download & Install') { this.innerText = 'Downloading update... Umber will restart shortly.'; this.disabled = true; window.chrome.webview.postMessage(__T + 'install-update:' + currentDownloadUrl); } else { this.innerText = 'Checking...'; this.disabled = true; window.chrome.webview.postMessage(__T + 'check-for-update'); }">Check for Updates</button>
                 </div>
               </div>
 <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">What's New</div>
-                  <div class="setting-desc">View the Stride release notes</div>
+                  <div class="setting-desc">View the Umber release notes</div>
                 </div>
                 <div class="setting-control">
                   <button class="action-btn" onclick="window.chrome.webview.postMessage(__T + 'open-releasenotes')">Open</button>
@@ -1251,7 +1252,7 @@ const __T = "{{IPC_TOKEN}}:";
 <details class="card"><summary style="padding:16px;cursor:pointer">Technical details</summary>
               <div class="setting-row">
                 <div class="setting-info">
-                  <div class="setting-label">Stride Browser</div>
+                  <div class="setting-label">Umber Browser</div>
                   <div class="setting-desc">Primary application build</div>
                 </div>
                 <div class="setting-control" style="font-size:12.5px; color:var(--text-muted); font-family:monospace; font-weight:500;">
@@ -1328,7 +1329,7 @@ const __T = "{{IPC_TOKEN}}:";
                               btn.innerText = 'Check for Updates';
                               btn.disabled = false;
                           } else {
-                              status.innerText = 'Stride is up to date (v{{CURRENT_VERSION}}).';
+                              status.innerText = 'Umber is up to date (v{{CURRENT_VERSION}}).';
                               btn.innerText = 'Check for Updates';
                               btn.disabled = false;
                           }

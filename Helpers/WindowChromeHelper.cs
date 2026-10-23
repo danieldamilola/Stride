@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
-using StrideBrowser.Interop;
+using UmberBrowser.Interop;
 
-namespace StrideBrowser.Helpers;
+namespace UmberBrowser.Helpers;
 
 /// <summary>
 /// Handles native window chrome operations: maximize bounds fix,

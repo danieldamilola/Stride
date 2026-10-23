@@ -1,6 +1,6 @@
 # Fullscreen Fix
 
-How we fixed video fullscreen in Stride: the taskbar stayed visible, a thin
+How we fixed video fullscreen in Umber: the taskbar stayed visible, a thin
 light border showed around the media, and the window state got stuck after
 exiting fullscreen. This document covers the symptoms, the root causes, every
 file touched, and how the new fullscreen path works.
@@ -160,7 +160,7 @@ Added constants: `DWMWA_BORDER_COLOR` (34), `DWMWCP_DONOTROUND` (1),
 `SWP_FRAMECHANGED` (0x0020). `DwmSetWindowAttribute`, `SetWindowPos`,
 `MonitorFromWindow`, and `GetMonitorInfo` already existed.
 
-### Edited: Stride.csproj
+### Edited: Umber.csproj
 
 Added `<Compile Remove="dump.cs" />`. `dump.cs` is an untracked scratch file
 with its own `Main` that broke the build with CS0017, duplicate entry point.
@@ -170,7 +170,7 @@ The file stays on disk; it is just excluded from compilation.
 
 Added a Bug Fixes entry under v1.2.1 covering the fullscreen fix.
 
-### New: StrideBrowser.Tests/FullscreenTransitionsTests.cs
+### New: UmberBrowser.Tests/FullscreenTransitionsTests.cs
 
 Ten tests over the pure state machine:
 
@@ -186,8 +186,8 @@ Ten tests over the pure state machine:
 
 ## Verification
 
-- `dotnet build Stride.csproj -c Debug`: 0 errors.
-- `dotnet test StrideBrowser.Tests/StrideBrowser.Tests.csproj`: 202 passed,
+- `dotnet build Umber.csproj -c Debug`: 0 errors.
+- `dotnet test UmberBrowser.Tests/UmberBrowser.Tests.csproj`: 202 passed,
   0 failed, 8 skipped.
 - App launched from `dotnet run` and stayed alive with its window up.
 - Manual check performed by hand: video fullscreen covers the taskbar with no

@@ -1,6 +1,7 @@
-using StrideBrowser.Models;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 /// <summary>Caches searchable metadata and keeps page selection separate from progress updates.</summary>
 public sealed class DownloadPageQuery
@@ -35,3 +36,7 @@ public sealed class DownloadPageQuery
 
     public sealed record Selection(int Page, int Total, DownloadItem[] Items);
 }
+
+
+
+

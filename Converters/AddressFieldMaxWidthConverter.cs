@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
 using System.Windows.Data;
-using StrideBrowser.Services.UI;
+using UmberBrowser.Services.UI;
 
-namespace StrideBrowser.Converters;
+namespace UmberBrowser.Converters;
 
 /// <summary>
 /// Caps the address field at the width the middle of the toolbar row can spare. The field is

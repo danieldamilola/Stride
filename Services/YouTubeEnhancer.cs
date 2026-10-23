@@ -1,8 +1,8 @@
 using System.Text.Json;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Generates JavaScript that enhances the YouTube viewing experience.
@@ -12,7 +12,7 @@ namespace StrideBrowser.Services;
 /// </summary>
 public sealed class YouTubeEnhancer
 {
-    private const string StorageKey = "__stride_yt_enhancer";
+    private const string StorageKey = "__umber_yt_enhancer";
 
     /// <summary>Quality values YouTube's player API accepts plus our meta-values.</summary>
     private static readonly HashSet<string> ValidQualities = new(StringComparer.OrdinalIgnoreCase)
@@ -73,13 +73,13 @@ public sealed class YouTubeEnhancer
 
         // Config persists in the page's localStorage so live-reloaded values
         // survive SPA navigations. Initial injection only seeds it.
-        var seed = forceConfig ? "" : "if (!localStorage.getItem('__stride_yt_enhancer')) ";
+        var seed = forceConfig ? "" : "if (!localStorage.getItem('__umber_yt_enhancer')) ";
         var configLine =
             "try { " + seed + "localStorage.setItem('" + StorageKey + "', '" + json + "'); } catch (e) {}";
 
         // Live reload also points the running document at the new config.
         if (forceConfig)
-            configLine += " window.__STRIDE_YT_CONFIG = " + json + ";";
+            configLine += " window.__UMBER_YT_CONFIG = " + json + ";";
 
         // The enhancer script is parked in Parked/youtube and no longer injected.
         // The config line is still returned so live reload can flip the running

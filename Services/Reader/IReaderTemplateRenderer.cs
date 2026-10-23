@@ -1,6 +1,6 @@
-using StrideBrowser.Models.Reader;
+using UmberBrowser.Models.Reader;
 
-namespace StrideBrowser.Services.Reader;
+namespace UmberBrowser.Services.Reader;
 
 /// <summary>
 /// Wraps sanitized HTML into the display document.

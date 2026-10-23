@@ -1,9 +1,9 @@
 using System;
 using System.Windows.Controls;
 using System.Windows.Input;
-using StrideBrowser.Engine;
+using UmberBrowser.Engine;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 public sealed class ToolbarNavigationController : IDisposable
 {

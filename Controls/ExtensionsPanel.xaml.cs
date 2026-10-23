@@ -1,8 +1,8 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 
-namespace StrideBrowser.Controls;
+namespace UmberBrowser.Controls;
 
 public partial class ExtensionsPanel : UserControl
 {

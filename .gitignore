@@ -63,7 +63,7 @@ tools/RecoveryVerification/
 ## Local validation output. Test result files and hang dumps, the isolated build and
 ## artifact output, and FIX-REPORT.md which is a local resize validation note. These are
 ## diagnostics and never committed. Nothing is deleted by this rule.
-StrideBrowser.Tests/TestResults/
+UmberBrowser.Tests/TestResults/
 tools/build-artifacts/
 tools/build-isolated/
 FIX-REPORT.md
@@ -71,7 +71,7 @@ FIX-REPORT.md
 Output/
 publish/
 
-## Logs (written to %LocalAppData%\StrideBrowser at runtime - never repo-local)
+## Logs (written to %LocalAppData%\UmberBrowser at runtime - never repo-local)
 *.log
 crash.log
 trace.log

@@ -1,10 +1,10 @@
 using System.IO;
 using System.Net;
 using System.Text;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models.Reader;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models.Reader;
 
-namespace StrideBrowser.Services.Reader;
+namespace UmberBrowser.Services.Reader;
 
 /// <summary>
 /// Reads Resources/Reader/ReaderTemplate.html and ReaderTemplate.css as embedded resources,

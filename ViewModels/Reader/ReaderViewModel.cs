@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using StrideBrowser.Models.Reader;
-using StrideBrowser.Services.Reader;
+using UmberBrowser.Models.Reader;
+using UmberBrowser.Services.Reader;
 
-namespace StrideBrowser.ViewModels.Reader;
+namespace UmberBrowser.ViewModels.Reader;
 
 /// <summary>
 /// Single shared VM that mirrors the active tab session owned by IReaderService.

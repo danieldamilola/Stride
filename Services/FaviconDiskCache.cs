@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>Serializes cache file changes within a profile and prunes only its PNG files.</summary>
 internal sealed class FaviconDiskCache
@@ -126,3 +126,5 @@ internal sealed class FaviconDiskCache
         }
     }
 }
+
+

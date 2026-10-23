@@ -1,7 +1,7 @@
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 using System.Net;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>Resolves raw user input into navigable URLs.</summary>
 public sealed class NavigationService

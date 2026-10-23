@@ -2,11 +2,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.Downloads;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.Downloads;
 
-namespace StrideBrowser.Engine.Handlers;
+namespace UmberBrowser.Engine.Handlers;
 
 public static class TabDownloadHandler
 {
@@ -131,7 +131,7 @@ public static class TabDownloadHandler
     public static bool IsSecurityBlock(string reason) => reason is "FileMalicious" or "FileBlocked" or "FileSecurityCheckFailed" or "FileVirusInfected";
     public static string DescribeFailure(string reason) => reason switch
     {
-        "FileAccessDenied" or "FileFailed" => "Stride could not save the file. Check that the download folder is available and writable.",
+        "FileAccessDenied" or "FileFailed" => "Umber could not save the file. Check that the download folder is available and writable.",
         "FileNoSpace" => "There is not enough free space to save this file.",
         "FileNameTooLong" => "The file name or download folder path is too long.",
         "NetworkDisconnected" or "NetworkFailed" or "NetworkServerDown" => "The connection was lost. Check your internet connection and retry.",

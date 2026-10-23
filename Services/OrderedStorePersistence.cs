@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>One writer owns each store. Failed writes stay dirty for a later mutation or flush.</summary>
 internal sealed class OrderedStorePersistence<T>(object stateGate, Func<T> snapshot, Action<T> write)
@@ -126,3 +126,5 @@ internal sealed class OrderedStorePersistence<T>(object stateGate, Func<T> snaps
         finally { _writer.Release(); }
     }
 }
+
+

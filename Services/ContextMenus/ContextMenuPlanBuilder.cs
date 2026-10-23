@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace StrideBrowser.Services.ContextMenus;
+namespace UmberBrowser.Services.ContextMenus;
 
 /// <summary>
 /// Pure factory for context menu layouts. Takes a snapshot of the right-click
@@ -48,7 +48,7 @@ public static class ContextMenuPlanBuilder
         {
             items.Add(Cmd("copy", "Copy"));
             items.Add(Cmd("search-selection",
-                $"Search Stride for '{Truncate(ctx.SelectionText)}'",
+                $"Search Umber for '{Truncate(ctx.SelectionText)}'",
                 payload: BuildSearchUrl(ctx.SelectionText, searchEngine)));
             items.Add(Sep());
         }

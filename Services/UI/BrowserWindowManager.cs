@@ -3,13 +3,13 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Extensions.DependencyInjection;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.Services.LinkPreview;
-using StrideBrowser.Services.Reader;
-using StrideBrowser.Services.Startup;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Services.LinkPreview;
+using UmberBrowser.Services.Reader;
+using UmberBrowser.Services.Startup;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>Owns window scopes and coordinates tab transfers and application shutdown.</summary>
 public sealed class BrowserWindowManager

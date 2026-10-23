@@ -1,8 +1,8 @@
-const fs = require('node:fs');
+﻿const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const assert = require('node:assert/strict');
-const { chromium } = require(process.env.STRIDE_PLAYWRIGHT || 'playwright');
+const { chromium } = require(process.env.UMBER_PLAYWRIGHT || 'playwright');
 let browser;
 
 (async () => {
@@ -55,7 +55,7 @@ let browser;
       await page.reload();
       assert.equal(await page.locator('#section-search').isVisible(),true,'Selected category was not restored');
       for (const [saved, target] of [['section-performance','section-tabs'],['section-extensions','section-focus']]) {
-        await page.evaluate(value => localStorage.setItem('stride_active_settings_tab',value),saved);
+        await page.evaluate(value => localStorage.setItem('umber_active_settings_tab',value),saved);
         await page.reload();
         assert.equal(await page.locator('#'+target).isVisible(),true,'Old section did not redirect to its new location');
       }
@@ -76,7 +76,7 @@ let browser;
       });
       assert.equal(await page.locator('#settingsStatus').isVisible(),false,'Successful save showed routine confirmation text');
       await page.evaluate(() => window.__sendNative('setting-result:'+JSON.stringify({key:'hwAccel',value:'false',success:true,restartRequired:true})));
-      assert.match(await page.locator('#settingsStatus').textContent(),/Restart Stride/);
+      assert.match(await page.locator('#settingsStatus').textContent(),/Restart Umber/);
       await suggestions.click();
       assert.equal(await page.locator('#settingsStatus').isVisible(),true,'A routine save hid the restart notice');
       await page.evaluate(() => window.__sendNative('setting-result:'+JSON.stringify({key:'searchSuggestions',value:'false',success:false,message:'Could not save this preference.'})));

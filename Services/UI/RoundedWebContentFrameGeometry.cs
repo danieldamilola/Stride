@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// The measured geometry of the compact rounded frame around the web content.

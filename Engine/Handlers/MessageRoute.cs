@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace StrideBrowser.Engine.Handlers;
+namespace UmberBrowser.Engine.Handlers;
 
 /// <summary>
 /// A single web-message route. Exact routes are matched before prefix routes

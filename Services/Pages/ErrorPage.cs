@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 /// <summary>Generates the error page HTML for navigation failures.</summary>
 public sealed class ErrorPage

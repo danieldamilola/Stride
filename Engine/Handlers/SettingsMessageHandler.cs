@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Engine.Handlers;
+namespace UmberBrowser.Engine.Handlers;
 
 public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter, IDisposable
 {
@@ -111,7 +111,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter, IDisp
     /// <summary>Opens the user backgrounds folder in the file explorer.</summary>
     private Task HandleOpenBackgroundsFolder()
     {
-        var userBgFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Stride", "Backgrounds");
+        var userBgFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Umber", "Backgrounds");
         if (!System.IO.Directory.Exists(userBgFolder))
             System.IO.Directory.CreateDirectory(userBgFolder);
 
@@ -149,7 +149,7 @@ public class SettingsMessageHandler : IWebMessageHandler, ISettingEmitter, IDisp
         }
         SettingsChangePolicy.TryApply(_settings, key, value, out _);
         SettingChanged?.Invoke(key, key == "shortcut" ? value.Split(':', 2)[0] : value);
-        SendResult(key, value, true, SettingsChangePolicy.RequiresRestart(key) ? "Saved. Restart Stride to apply this change." : "Saved.");
+        SendResult(key, value, true, SettingsChangePolicy.RequiresRestart(key) ? "Saved. Restart Umber to apply this change." : "Saved.");
 
         if (key == "zoom") _engine.ApplyDefaultZoom();
 

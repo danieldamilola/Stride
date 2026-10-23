@@ -7,10 +7,10 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// Moves a tab with the pointer and commits its new slot on release. Reordering runs on

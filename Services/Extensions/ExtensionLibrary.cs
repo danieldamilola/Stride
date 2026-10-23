@@ -1,16 +1,16 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Helpers;
+using UmberBrowser.Helpers;
 
-namespace StrideBrowser.Services.Extensions;
+namespace UmberBrowser.Services.Extensions;
 
 public sealed record InstalledExtension(string Id, string Name, string Description, string Version,
     bool IsEnabled, bool IsBuiltIn, bool IsPinned, string IconDataUri, bool HasPopup, bool HasOptions,
     IReadOnlyList<string> Permissions, string SourceLabel, string Path, string? Error, bool CanToggle = true);
 public sealed record ExtensionSnapshot(bool DeveloperMode, IReadOnlyList<InstalledExtension> Extensions, string? Error = null);
 
-/// <summary>Native profile inventory plus the source folders chosen through Stride.</summary>
+/// <summary>Native profile inventory plus the source folders chosen through umber.</summary>
 public sealed class ExtensionLibrary
 {
     public const int MaxPinnedExtensions = 3;
@@ -81,7 +81,7 @@ public sealed class ExtensionLibrary
                 return new InstalledExtension(item.Id, item.Name, manifest?.Description ?? "", manifest?.Version ?? "",
                     item.IsEnabled, item.builtIn, pinned.Contains(item.Id), manifest?.IconDataUri ?? "",
                     manifest?.PopupPath is not null, manifest?.OptionsPath is not null, manifest?.Permissions ?? [],
-                    item.builtIn ? "Built into Stride" : item.folder is null ? "Installed in this profile" : "Loaded from a folder",
+                    item.builtIn ? "Built into umber" : item.folder is null ? "Installed in this profile" : "Loaded from a folder",
                     item.folder ?? "", error);
             }).OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase).ToArray());
             return new(DeveloperMode, items);
@@ -112,7 +112,7 @@ public sealed class ExtensionLibrary
         folder = System.IO.Path.GetFullPath(folder);
         if (_builtIns.TryGetValue(core.Profile.ProfilePath, out var builtIn) &&
             builtIn.ExtensionFolder is not null && AppPaths.PathEquals(folder, builtIn.ExtensionFolder))
-            throw new InvalidOperationException("Stride manages its built-in extension. Choose another folder.");
+            throw new InvalidOperationException("umber manages its built-in extension. Choose another folder.");
         await Task.Run(() => ExtensionManifestReader.Read(folder));
         var extension = await core.Profile.AddBrowserExtensionAsync(folder);
         var sources = new Dictionary<string, string>(_preferences.Sources) { [extension.Id] = folder };
@@ -150,7 +150,7 @@ public sealed class ExtensionLibrary
     {
         RequireDeveloperMode();
         ProtectComponent(id);
-        if (IsBuiltIn(core, id)) throw new InvalidOperationException("Stride manages updates to its built-in extension.");
+        if (IsBuiltIn(core, id)) throw new InvalidOperationException("umber manages updates to its built-in extension.");
         var extension = (await core.Profile.GetBrowserExtensionsAsync()).FirstOrDefault(x => x.Id == id);
         var enabled = extension?.IsEnabled ?? _preferences.Enabled.GetValueOrDefault(id, true);
         var folder = Folder(core, id);
@@ -215,7 +215,7 @@ public sealed class ExtensionLibrary
         catch (Exception ex)
         {
             _preferences = candidate;
-            throw new IOException(completed + ", but its Stride preferences could not be saved. Keep this session open and try the action again. " + ex.Message, ex);
+            throw new IOException(completed + ", but its umber preferences could not be saved. Keep this session open and try the action again. " + ex.Message, ex);
         }
     }
     public sealed record Preferences

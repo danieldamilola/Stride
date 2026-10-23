@@ -1,9 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.Downloads;
+namespace UmberBrowser.Services.Downloads;
 
 /// <summary>Keeps toolbar progress limited to active transfers rather than completed history.</summary>
 internal sealed class DownloadActivityTracker : IDisposable
@@ -61,3 +61,5 @@ internal sealed class DownloadActivityTracker : IDisposable
         Changed = null;
     }
 }
+
+

@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>How one extension startup, gate or toggle ended.</summary>
 public enum ExtensionStartupStatus

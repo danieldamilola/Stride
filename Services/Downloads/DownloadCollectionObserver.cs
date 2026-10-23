@@ -1,9 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.Downloads;
+namespace UmberBrowser.Services.Downloads;
 
 /// <summary>Tracks item subscriptions from collection changes without searching retained history.</summary>
 internal sealed class DownloadCollectionObserver : IDisposable
@@ -59,3 +59,5 @@ internal sealed class DownloadCollectionObserver : IDisposable
         _observed.Clear();
     }
 }
+
+

@@ -1,4 +1,4 @@
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 public sealed record SiteConnectionInfo(string Host, bool IsInsecure, string Summary, string Description)
 {

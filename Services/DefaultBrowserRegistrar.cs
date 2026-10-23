@@ -2,23 +2,26 @@ using System.Diagnostics;
 using System.IO;
 using Microsoft.Win32;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
-/// Registers Stride Browser as a default browser candidate in the Windows registry (HKCU).
+/// Registers Umber Browser as a default browser candidate in the Windows registry (HKCU).
 /// On Windows 10+, apps cannot programmatically set themselves as default - the user must
 /// choose in Settings → Apps → Default Apps after registration.
 /// </summary>
 public static class DefaultBrowserRegistrar
 {
-    private const string AppName = "Stride";
+    private const string AppName = "Umber";
     private const string AppDescription = "A fast, privacy-focused web browser.";
-    private const string ProgIdHtml = "StrideHTML";
-    private const string ProgIdUrl = "StrideURL";
-    private const string CapabilitiesPath = @"Software\Stride\Capabilities";
+    private const string ProgIdHtml = "UmberHTML";
+    private const string ProgIdUrl = "UmberURL";
+    private const string CapabilitiesPath = @"Software\Umber\Capabilities";
+
+    /// <summary>Executable name of the assembly, used when the process path is unavailable.</summary>
+    public const string ExecutableFileName = "Umber.exe";
 
     /// <summary>
-    /// Writes all required registry keys under HKCU so Windows recognises Stride Browser
+    /// Writes all required registry keys under HKCU so Windows recognises Umber Browser
     /// as an available browser for HTTP, HTTPS, and HTML files.
     /// </summary>
     public static void Register()
@@ -26,7 +29,7 @@ public static class DefaultBrowserRegistrar
         try
         {
             var exePath = Environment.ProcessPath
-                ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "StrideBrowser.exe");
+                ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ExecutableFileName);
             var openCommand = $"\"{exePath}\" \"%1\"";
             var iconValue = $"\"{exePath}\",0";
 
@@ -110,7 +113,7 @@ public static class DefaultBrowserRegistrar
     }
 
     /// <summary>
-    /// Opens the Windows Settings → Default Apps page so the user can select Stride Browser.
+    /// Opens the Windows Settings → Default Apps page so the user can select Umber Browser.
     /// </summary>
     public static void OpenDefaultAppsSettings()
     {
@@ -128,7 +131,7 @@ public static class DefaultBrowserRegistrar
         }
     }
 
-    /// <summary>Checks whether Stride Browser is already registered as a browser candidate.</summary>
+    /// <summary>Checks whether Umber Browser is already registered as a browser candidate.</summary>
     public static bool IsRegistered()
     {
         try

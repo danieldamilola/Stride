@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models;
+namespace UmberBrowser.Models;
 
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;

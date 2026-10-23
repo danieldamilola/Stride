@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Interop;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Keeps a torn-off tab's WebView2 control bound to the window it is now shown in.

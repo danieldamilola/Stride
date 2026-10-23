@@ -1,7 +1,7 @@
 using System.Windows.Input;
-using StrideBrowser.Engine;
+using UmberBrowser.Engine;
 
-namespace StrideBrowser.Services.Input;
+namespace UmberBrowser.Services.Input;
 
 /// <summary>
 /// Declarative keyboard shortcut table. Maps (modifiers, key) pairs

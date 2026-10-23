@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace StrideBrowser.Helpers;
+namespace UmberBrowser.Helpers;
 
 /// <summary>
 /// Decides whether a URL's host is a network target the browser should not fetch on behalf of

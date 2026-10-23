@@ -1,6 +1,6 @@
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Bounded, persistent history of tabs the user closed, oldest first so the

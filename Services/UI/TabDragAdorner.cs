@@ -5,8 +5,9 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using UmberBrowser.Helpers;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// Renders the dragged tab at its actual size and keeps the pointer's grip position.
@@ -118,7 +119,7 @@ public sealed class TabDragAdorner : Adorner
         return Math.Clamp(slot, lo, hi);
     }
 
-    /// <summary>Loads the fallback Stride mark used when a tab has no favicon. Dark by default.</summary>
+    /// <summary>Loads the fallback Umber mark used when a tab has no favicon. Dark by default.</summary>
     public static ImageSource? DefaultIcon(bool light = false)
     {
         try
@@ -126,8 +127,8 @@ public sealed class TabDragAdorner : Adorner
             var bmp = new BitmapImage();
             bmp.BeginInit();
             bmp.UriSource = new Uri(light
-                ? "pack://application:,,,/icons/stride-browser-light-32x32.png"
-                : "pack://application:,,,/icons/stride-browser-dark-32x32.png");
+                ? AppIconResources.TabLight
+                : AppIconResources.TabDark);
             bmp.DecodePixelWidth = 32;
             bmp.EndInit();
             bmp.Freeze();

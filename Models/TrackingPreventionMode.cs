@@ -2,10 +2,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Web.WebView2.Core;
 
-namespace StrideBrowser.Models;
+namespace UmberBrowser.Models;
 
 /// <summary>
-/// How hard WebView2 tracking prevention works. These are the only two levels Stride
+/// How hard WebView2 tracking prevention works. These are the only two levels Umber
 /// offers, and both keep protection switched on.
 /// </summary>
 /// <remarks>

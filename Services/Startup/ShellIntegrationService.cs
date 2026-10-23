@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace StrideBrowser.Services.Startup;
+namespace UmberBrowser.Services.Startup;
 
 public interface IShellIntegrationService
 {
@@ -12,7 +12,7 @@ public interface IShellIntegrationService
 
 public static class ShellIntegrationPolicy
 {
-    public const string AppId = "Stride";
+    public const string AppId = "Umber";
 
     public static bool ShouldRefresh(bool isPostUpdate, bool isNewVersion)
     {
@@ -26,12 +26,12 @@ public static class ShellIntegrationPolicy
 
     public static string GetStartMenuShortcutPath(string startMenuProgramsDir)
     {
-        return Path.Combine(startMenuProgramsDir, "Stride", "Stride.lnk");
+        return Path.Combine(startMenuProgramsDir, "Umber", "Umber.lnk");
     }
 
     public static string GetTaskbarPinnedShortcutPath(string appDataDir)
     {
-        return Path.Combine(appDataDir, "Microsoft", "Internet Explorer", "Quick Launch", "User Pinned", "TaskBar", "Stride.lnk");
+        return Path.Combine(appDataDir, "Microsoft", "Internet Explorer", "Quick Launch", "User Pinned", "TaskBar", "Umber.lnk");
     }
 }
 

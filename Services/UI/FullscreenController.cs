@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>Immutable snapshot of the browser fullscreen state.</summary>
 public readonly record struct FullscreenState(bool IsActive, WindowState SavedWindowState)

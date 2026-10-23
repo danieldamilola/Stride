@@ -1,12 +1,12 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.Services.Extensions;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Services.Extensions;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>Window-owned extension actions shared by the toolbar and internal page.</summary>
 public sealed class ExtensionActions(TabEngine engine, ExtensionLibrary library, BrowserSettings settings, ISettingsStore store) : IDisposable

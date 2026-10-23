@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace StrideBrowser.Services.Input;
+namespace UmberBrowser.Services.Input;
 
 /// <summary>
 /// Groups all action delegates that keyboard shortcuts can invoke.

@@ -5,8 +5,8 @@
         // Add CSS for hover effect
         const style = document.createElement('style');
         style.textContent = `
-            .stride-dl-btn { opacity: 0; transition: opacity 0.15s ease-in-out; }
-            figure.thumb:hover .stride-dl-btn { opacity: 1; }
+            .umber-dl-btn { opacity: 0; transition: opacity 0.15s ease-in-out; }
+            figure.thumb:hover .umber-dl-btn { opacity: 1; }
         `;
         document.head.appendChild(style);
 
@@ -40,7 +40,7 @@
             if (!downloadUrl) return;
 
             const downloadDiv = document.createElement('div');
-            downloadDiv.className = 'wbs_dl wbs_unsafe stride-dl-btn';
+            downloadDiv.className = 'wbs_dl wbs_unsafe umber-dl-btn';
             
             downloadDiv.style.position = 'absolute';
             downloadDiv.style.top = '10px';
@@ -50,7 +50,7 @@
             const downloadAnchor = document.createElement('a');
             downloadAnchor.className = 'icon-download';
             downloadAnchor.href = downloadUrl;
-            downloadAnchor.title = 'Download via Stride';
+            downloadAnchor.title = 'Download via Umber';
             
             downloadAnchor.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" style="background: rgba(0,0,0,0.6); border-radius: 4px; padding: 4px;"><path fill="none" stroke="white" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>`;
 
@@ -58,7 +58,7 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                if (window.__STRIDE_WALLHAVEN) {
+                if (window.__UMBER_WALLHAVEN) {
                     // No token. The host authorises this by checking the message source origin
                     // against its allowlist, so nothing secret has to be exposed to the page.
                     window.chrome.webview.postMessage('wallhaven-download:' + downloadUrl);

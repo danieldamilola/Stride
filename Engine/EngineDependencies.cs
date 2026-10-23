@@ -1,8 +1,8 @@
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.LinkPreview;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.LinkPreview;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Non UI dependencies for TabEngine, grouped so the constructor stays small.

@@ -2,12 +2,12 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.Downloads;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.Downloads;
 
-namespace StrideBrowser.ViewModels;
+namespace UmberBrowser.ViewModels;
 
 public sealed partial class DownloadsPanelViewModel : ObservableObject, IDisposable
 {

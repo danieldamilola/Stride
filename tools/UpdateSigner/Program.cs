@@ -3,7 +3,7 @@ using System.IO;
 using System.Xml;
 using Chaos.NaCl;
 
-namespace Stride.UpdateSigner;
+namespace Umber.UpdateSigner;
 
 internal static class Program
 {
@@ -142,7 +142,7 @@ internal static class Program
 
     private static void PrintUsage()
     {
-        Console.WriteLine("Stride appcast signing tool");
+        Console.WriteLine("Umber appcast signing tool");
         Console.WriteLine("  generate <private-key.key>                              create a new Ed25519 keypair");
         Console.WriteLine("  sign <appcast.xml> <installer-file> <private-key.key>  sign the installer's bytes into the appcast");
         Console.WriteLine("  verify <appcast.xml> <pubkey-base64> <installer-file>  verify signatures against the installer's bytes");

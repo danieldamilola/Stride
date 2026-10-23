@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace StrideBrowser.Helpers;
+namespace UmberBrowser.Helpers;
 
 /// <summary>
 /// Writes a file atomically by writing to a .tmp file first,

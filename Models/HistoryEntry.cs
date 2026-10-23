@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models;
+namespace UmberBrowser.Models;
 
 /// <summary>A single browsing history record.</summary>
 public sealed class HistoryEntry

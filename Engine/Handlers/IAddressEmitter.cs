@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace StrideBrowser.Engine.Handlers;
+namespace UmberBrowser.Engine.Handlers;
 
 /// <summary>
 /// Implemented by any message handler that navigates the active tab and wants

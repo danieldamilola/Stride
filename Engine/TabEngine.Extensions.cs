@@ -1,8 +1,8 @@
-using StrideBrowser.Models;
-using StrideBrowser.Helpers;
-using StrideBrowser.Services.Pages;
+﻿using UmberBrowser.Models;
+using UmberBrowser.Helpers;
+using UmberBrowser.Services.Pages;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 public sealed partial class TabEngine
 {

@@ -1,6 +1,6 @@
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 /// <summary>Generates a small shell. The document requests bounded download pages from the host.</summary>
 public sealed class DownloadPage
@@ -10,3 +10,4 @@ public sealed class DownloadPage
         return TemplateRenderer.RenderJsonPage("Resources.Pages.Downloads.html", "DOWNLOADS", "[]", ipcToken);
     }
 }
+

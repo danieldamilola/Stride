@@ -1,11 +1,11 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 public sealed class ContentScriptInjector
 {
@@ -151,3 +151,4 @@ public sealed class ContentScriptInjector
         }
     }
 }
+

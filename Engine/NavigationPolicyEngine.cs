@@ -2,12 +2,12 @@ using System;
 using System.Diagnostics;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
-using StrideBrowser.Helpers;
-using StrideBrowser.Interop;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
+using UmberBrowser.Helpers;
+using UmberBrowser.Interop;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Encapsulates navigation policies: custom protocol handling, focus mode blocks, and HTTPS upgrades.
@@ -52,8 +52,8 @@ public sealed class NavigationPolicyEngine
 
         scheme = parsedUri.Scheme.ToLowerInvariant();
         if (scheme is "http" or "https" or "file" or "data" or
-            "about" or "edge" or "chrome" or "stride" or "javascript" or
-            "extension" or "chrome-extension" or "internal")
+            "about" or "edge" or "chrome" or "umber" or
+            "javascript" or "extension" or "chrome-extension" or "internal")
         {
             return false;
         }

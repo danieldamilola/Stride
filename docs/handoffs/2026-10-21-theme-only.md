@@ -1,7 +1,7 @@
 # Theme-only colors handoff
 
 Date: 2026-10-21
-Repository: C:\dev\Stride
+Repository: C:\dev\Umber
 Branch: feat/download-history
 Previous pushed commit: faf29c0d
 
@@ -40,7 +40,7 @@ Artifacts: C:\Users\Daniel\.bb\thread-storage\thr_hkhatuaqyi\theme-only-verifica
 - Program.cs and ThemeOnlyVerification.csproj for native checks
 
 Focused test log: C:\Users\Daniel\.bb\thread-storage\thr_hkhatuaqyi\theme-only-tests-final.log
-Preview: C:\dev\Stride\bin\ThemeOnlyPreview\Stride.exe. Close the running instance first.
+Preview: C:\dev\Umber\bin\ThemeOnlyPreview\Umber.exe. Close the running instance first.
 Original pre-edit source backups: C:\Users\Daniel\.bb\thread-storage\thr_hkhatuaqyi\theme-only-backup
 
 ## Preserve separate work
@@ -61,7 +61,7 @@ The user requested moving search next to the header actions and using consistent
 - Focused page tests: 156 passed, zero failed, zero skipped.
 - Native WPF/WebView2 checks: 82 passed across light/dark headers, preserved page backgrounds, search geometry, action alignment, actual filtering, empty saved tabs, and 600px/420px layouts. Inspected wide Downloads and History and narrow light Downloads captures.
 - Native artifacts: C:\Users\Daniel\.bb\thread-storage\thr_hkhatuaqyi\page-header-verification. Final output is headers-final-results, runtime-final.log and tests.log. The first verifier run returned a label string instead of a boolean. Correcting the verifier produced the passing run; it was not a product failure.
-- Updated preview: C:\dev\Stride\bin\PageHeaderPreview\Stride.exe. Close the existing instance first.
+- Updated preview: C:\dev\Umber\bin\PageHeaderPreview\Umber.exe. Close the existing instance first.
 
 ## Follow-up: search border and focus
 
@@ -69,4 +69,4 @@ The user rejected the permanent search border and oversized inner focus outline.
 
 Native checks: 40 passed across Downloads, History, Saved tabs and Settings in dark and light mode. Real WebView2 clicks focused the fields. Checks covered idle, focused and blurred states, no duplicate input outline, and stable height. Inspected the focused dark History screenshot. No application logic changed, so the earlier focused page tests were not repeated.
 
-Artifacts: C:\Users\Daniel\.bb\thread-storage\thr_hkhatuaqyi\search-focus-verification. Preview: C:\dev\Stride\bin\SearchFocusPreview\Stride.exe. The user authorized committing and pushing these changes and creating a PR.
+Artifacts: C:\Users\Daniel\.bb\thread-storage\thr_hkhatuaqyi\search-focus-verification. Preview: C:\dev\Umber\bin\SearchFocusPreview\Umber.exe. The user authorized committing and pushing these changes and creating a PR.

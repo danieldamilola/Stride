@@ -6,10 +6,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using StrideBrowser.Models;
+using UmberBrowser.Models;
 using Path = System.Windows.Shapes.Path;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 public sealed class SiteInfoController : IDisposable
 {

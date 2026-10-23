@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stride Codebase Review</title>
+<title>Umber Codebase Review</title>
 <style>
   :root { --bg:#16161c; --panel:#1e1e26; --panel2:#25252f; --text:#e6e2da; --muted:#9a94a6;
           --accent:#d4a574; --crit:#f85149; --med:#e3b341; --low:#7ea3cc; --good:#6fbf8f; --border:#33333f; }
@@ -48,7 +48,7 @@
 </head>
 <body><div class="wrap">
 
-<h1>Stride <span class="accent">Codebase Review</span></h1>
+<h1>Umber <span class="accent">Codebase Review</span></h1>
 <div class="sub">Full audit of every feature area. Generated 2026-08-27 from a three-agent parallel review plus a
 manual pass. Branch <code>feature/v1.2.1-update-ui</code>. Build: 0 errors. Tests: 222 passed, 0 failed.</div>
 
@@ -63,15 +63,15 @@ manual pass. Branch <code>feature/v1.2.1-update-ui</code>. Build: 0 errors. Test
 
 <div class="finding crit"><div class="title">Virtual hosts expose user folders to every website</div>
 <span class="badge crit">Critical</span><span class="badge tag">Security</span><span class="badge tag">WebViewFactory.cs:128</span>
-<p><code>temp.stride</code> maps the entire user temp directory and <code>user.assets</code> maps the Backgrounds folder
+<p><code>temp.umber</code> maps the entire user temp directory and <code>user.assets</code> maps the Backgrounds folder
 to any web origin with <code>HostResourceAccessKind.Allow</code>. Any page can fetch
-<code>http://temp.stride/&lt;guessed-name&gt;</code> and read files from <code>%TEMP%</code>.</p>
+<code>http://temp.umber/&lt;guessed-name&gt;</code> and read files from <code>%TEMP%</code>.</p>
 <p class="fix"><b>Fix:</b> use <code>Deny</code> or <code>DenyCors</code> and scope mappings to the internal pages that need them.</p></div>
 
 <div class="finding crit"><div class="title">file:// origin isolation disabled</div>
 <span class="badge crit">Critical</span><span class="badge tag">Security</span><span class="badge tag">WebViewFactory.cs:92</span>
 <p><code>--allow-file-access-from-files</code> lets a downloaded or opened local HTML file read arbitrary local files via
-XHR. Stride advertises being the default HTML viewer, so web-downloaded files hit this path.</p>
+XHR. Umber advertises being the default HTML viewer, so web-downloaded files hit this path.</p>
 <p class="fix"><b>Fix:</b> serve local files through a scoped virtual host, or gate the flag behind an explicit setting with a warning.</p></div>
 
 <div class="finding crit"><div class="title">Session IPC token can leak to external sites</div>
@@ -90,7 +90,7 @@ cross-thread collection changes bound to the UI.</p>
 
 <div class="finding crit"><div class="title">Updates are installed with no integrity check</div>
 <span class="badge crit">Critical</span><span class="badge tag">Security</span><span class="badge tag">UpdateService.cs:78</span>
-<p>The downloaded zip goes straight to <code>Stride.Updater.exe</code> which replaces application files. No hash or
+<p>The downloaded zip goes straight to <code>Umber.Updater.exe</code> which replaces application files. No hash or
 signature is verified before launch. The ed25519 signer already exists for the appcast; the package itself is unchecked.
 Also missing: a re-entrancy guard on <code>DownloadUpdateAsync</code>, a threading contract for progress events, and an
 await of <code>Shutdown()</code> before starting the updater.</p>
@@ -289,7 +289,7 @@ one process. Fix the comment or the flag.</p></div>
 <li><b>Settings export and import:</b> a one-click full JSON backup of BrowserSettings, shortcuts, and blocklists. All stores already round-trip JSON, so this is mostly plumbing.</li>
 <li><b>Per-site settings:</b> remember zoom, JavaScript toggle, and user-agent override per domain, stored next to history.</li>
 <li><b>SQLite storage backend:</b> for history and downloads once they outgrow JSON. Removes the rewrite-per-navigation cost and the Save race in one move.</li>
-<li><b>stride://health page:</b> shows extension status, adblock filter age, hibernation counts, cache sizes, update state. Turns invisible internals into a debuggable surface.</li>
+<li><b>umber://health page:</b> shows extension status, adblock filter age, hibernation counts, cache sizes, update state. Turns invisible internals into a debuggable surface.</li>
 <li><b>Tab search overlay:</b> search open tabs by title and URL from the command bar. The tab strip is the only finder today.</li>
 <li><b>Audio per tab:</b> mute toggle and audio indicator on tab pills. Hibernation already detects playing tabs, so the signal exists.</li>
 <li><b>Bookmark import depth:</b> recursive folder import with folder mapping.</li>
@@ -330,7 +330,7 @@ one process. Fix the comment or the flag.</p></div>
 <li><b>Settings-driven browser arguments:</b> expose hardware acceleration, process-per-site, and file access flags in an advanced settings section with safe defaults.</li>
 <li><b>Virtual host access level as a constant worth a setting:</b> internal hosts should be DenyCors for pages and Allow only for internal origins.</li>
 <li><b>Per-feature script toggles:</b> adnuke currently rides on AdBlockEnabled. Give the YouTube ad nuker its own switch like the enhancer and unhook have.</li>
-<li><b>History retention setting:</b> days or entry count, with a clear-now button on a stride://history page if one does not exist.</li>
+<li><b>History retention setting:</b> days or entry count, with a clear-now button on a umber://history page if one does not exist.</li>
 <li><b>Favicon cache size setting</b> and a clear-cache action.</li>
 <li><b>Toolbar density:</b> compact and comfortable modes via a single Height resource, since the toolbar height is already one binding point.</li>
 <li><b>Shortcut conflicts surfaced in settings:</b> KeyboardShortcutMap supports rebinding; detect and highlight duplicates instead of silently winning by order.</li>
@@ -353,7 +353,7 @@ one process. Fix the comment or the flag.</p></div>
 <li><span class="badge good">Good</span><b>Test suite discipline.</b> 222 passing tests over the pure logic: navigation policy, focus matcher, shortcuts, reader, link preview, context menus, fullscreen.</li>
 </ul></div>
 
-<div class="foot">Stride codebase review, generated 2026-08-27. Findings sourced from a three-area parallel audit:
+<div class="foot">Umber codebase review, generated 2026-08-27. Findings sourced from a three-area parallel audit:
 engine and tab lifecycle, services and persistence, UI and composition. Verified against the tree at commit time.
 Build and test status at review time: 0 errors, 222 passed, 8 skipped.</div>
 

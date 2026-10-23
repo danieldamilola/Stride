@@ -1,10 +1,10 @@
-# Stride performance review
+# Umber performance review
 
-Date: 2026-10-20. Repository: C:\dev\Stride. Baseline commit: 6e83ddfd, with the current uncommitted UI and settings work present.
+Date: 2026-10-20. Repository: the Umber working copy. Baseline commit: 6e83ddfd, with the current uncommitted UI and settings work present.
 
 ## Scope and evidence
 
-Reviewed tab activation, WebView creation, extension readiness, tab suspension, history persistence and rendering, address suggestions, toolbar telemetry, resize layout and download updates. Measurements used a Release build, a temporary STRIDE_DATA_DIR and generated history. No production history or profile data was read by the benchmark.
+Reviewed tab activation, WebView creation, extension readiness, tab suspension, history persistence and rendering, address suggestions, toolbar telemetry, resize layout and download updates. Measurements used a Release build, a temporary UMBER_DATA_DIR and generated history. No production history or profile data was read by the benchmark.
 
 The measurements cover isolated operations on this machine. They do not establish which path accounts for every reported slowdown. No specific slow interaction was supplied during the review. Startup, scrolling and memory across real sites still need scenario-based profiling. Source-only findings below have not been reproduced with a delayed real extension or a many-tab workload.
 

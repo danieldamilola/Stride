@@ -4,11 +4,11 @@ using System.Text.Json;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using StrideBrowser.Engine;
-using StrideBrowser.Engine.Handlers;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.LinkPreview;
+using UmberBrowser.Engine;
+using UmberBrowser.Engine.Handlers;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.LinkPreview;
 
 internal static partial class Program
 {
@@ -182,3 +182,4 @@ internal static partial class Program
         finally { view.CoreWebView2.NavigationCompleted -= Loaded; }
     }
 }
+

@@ -1,4 +1,4 @@
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>
 /// The per-window record. A window is built before it has loaded, so anything

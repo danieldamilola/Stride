@@ -1,9 +1,9 @@
-using System.Text.Json;
-using StrideBrowser.Models;
-using StrideBrowser.Services.Extensions;
-using StrideBrowser.Services.UI;
+﻿using System.Text.Json;
+using UmberBrowser.Models;
+using UmberBrowser.Services.Extensions;
+using UmberBrowser.Services.UI;
 
-namespace StrideBrowser.Engine.Handlers;
+namespace UmberBrowser.Engine.Handlers;
 
 public sealed class ExtensionMessageHandler(TabEngine engine, ExtensionLibrary library, ExtensionActions actions) : IWebMessageHandler, IDisposable
 {

@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models.LinkPreview;
+namespace UmberBrowser.Models.LinkPreview;
 
 /// <summary>
 /// User-controllable link preview options. Persisted via ISettingsStore.

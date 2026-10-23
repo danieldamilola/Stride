@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,17 +9,18 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
-using StrideBrowser.Engine;
-using StrideBrowser.Interop;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.Input;
-using StrideBrowser.ViewModels;
-using StrideBrowser.ViewModels.Reader;
-using StrideBrowser.Services.Reader;
-using StrideBrowser.Services.UI;
+using UmberBrowser.Engine;
+using UmberBrowser.Helpers;
+using UmberBrowser.Interop;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.Input;
+using UmberBrowser.ViewModels;
+using UmberBrowser.ViewModels.Reader;
+using UmberBrowser.Services.Reader;
+using UmberBrowser.Services.UI;
 
-namespace StrideBrowser;
+namespace UmberBrowser;
 
 /// <summary>
 /// Thin view layer — delegates all logic to BrowserViewModel and TabEngine.
@@ -534,9 +535,9 @@ public partial class MainWindow : Window
     private bool _appIconLight;
 
     /// <summary>
-    /// Applies the theme aware app icon: dark skull everywhere by default,
-    /// light skull only on the light theme. Covers the window taskbar icon
-    /// and the tab fallback favicon.
+    /// Applies the theme aware app icon: the dark tile by default, the light
+    /// tile only on the light theme. Covers the window taskbar icon and the
+    /// tab fallback favicon. Debug builds use the violet dev colorway.
     /// </summary>
     private void ApplyAppIcon()
     {
@@ -544,12 +545,32 @@ public partial class MainWindow : Window
         {
             var themeManager = _services.GetRequiredService<ThemeManager>();
             _appIconLight = !themeManager.IsCurrentlyDark();
-            Icon = new BitmapImage(new Uri(_appIconLight
-                ? "pack://application:,,,/icons/stride-light.ico"
-                : "pack://application:,,,/icons/stride.ico"));
+            var windowUri = new Uri(_appIconLight
+                ? AppIconResources.WindowLight
+                : AppIconResources.WindowDark);
+            // A plain BitmapImage decodes frame 0 of the .ico, which the
+            // generator writes smallest, and the taskbar upscales whatever the
+            // window hands it. Pick the frame nearest the rendered size so the
+            // mark keeps its drawn mass on the taskbar.
+            var decoder = IconBitmapDecoder.Create(
+                windowUri, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+            var frameSizes = decoder.Frames.Select(f => f.PixelWidth).ToList();
+            var dpi = 1.0;
+            try
+            {
+                dpi = VisualTreeHelper.GetDpi(this).DpiScaleX;
+            }
+            catch (InvalidOperationException)
+            {
+                // The window may ask for its icon before it can answer DPI
+                // queries. The 100% pick is a safe default and the theme
+                // handler refreshes it once the window is live.
+            }
+            var target = WindowIconFrames.TargetSize(dpi);
+            Icon = decoder.Frames[WindowIconFrames.SelectIndex(frameSizes, target)];
             _vm.FallbackIconUri = _appIconLight
-                ? "pack://application:,,,/icons/stride-browser-light-32x32.png"
-                : "pack://application:,,,/icons/stride-browser-dark-32x32.png";
+                ? AppIconResources.TabLight
+                : AppIconResources.TabDark;
         }
         catch (Exception ex) { Trace.WriteLine($"ApplyAppIcon failed: {ex.Message}"); }
     }
@@ -890,10 +911,18 @@ public partial class MainWindow : Window
                 UpdateToolbarTint(_engine.ActiveTab);
         }
 
-        if (key == "adaptiveTint" && _engine.ActiveTab is not null)
+        if (key == "adaptiveTint")
         {
+            // Turning the feature off drops the stored colour. The toolbar falls back
+            // to the app theme, and the page reports its colour again when the
+            // feature is turned back on, so the tint follows the page rather than
+            // the colour it had when the feature was switched off.
+            if (!_vm.Settings.AdaptiveToolbarTint && _engine.ActiveTab is { } tintedTab)
+                tintedTab.ThemeColor = "";
+
             _tintAdapter.Reset();
-            UpdateToolbarTint(_engine.ActiveTab);
+            if (_engine.ActiveTab is not null)
+                UpdateToolbarTint(_engine.ActiveTab);
         }
 
         // Live-rebuild shortcut bindings when user rebinds a key
@@ -1092,7 +1121,7 @@ public partial class MainWindow : Window
             _copyTimer.Tick -= OnCopyTimerTick;
             _copyTimer = null;
         }
-        Title = "Stride";
+        Title = "Umber";
     }
 
     private async Task CycleTabAsync(bool reverse)

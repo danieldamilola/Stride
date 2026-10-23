@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   'use strict';
 
   const byId = id => document.getElementById(id);
@@ -40,7 +40,7 @@
   }
 
   function setIcon(container, extension) {
-    container.replaceChildren(icon(extension.id?.startsWith('stride:') ? extension.id.slice(7) : 'puzzle'));
+    container.replaceChildren(icon(extension.id?.startsWith('umber:') ? extension.id.slice(6) : 'puzzle'));
     const source = extension.iconDataUri;
     if (typeof source !== 'string' || !/^data:image\/(png|jpeg|jpg|gif|webp|x-icon|vnd\.microsoft\.icon);base64,[a-z\d+/=\s]+$/i.test(source)) return;
     const image = document.createElement('img');
@@ -102,7 +102,7 @@
 
   function remove(extension) {
     if (extension.isBuiltIn || busy) return;
-    if (window.confirm('Remove "' + extension.name + '" from Stride?')) post('extensions-remove:' + extension.id);
+    if (window.confirm('Remove "' + extension.name + '" from Umber?')) post('extensions-remove:' + extension.id);
   }
 
   function restoreFocus(previous) {
@@ -147,7 +147,7 @@
     info.append(text('p','extension-description',extension.description || 'No description provided.'));
     const meta = document.createElement('div');
     meta.className = 'extension-meta';
-    if (extension.isBuiltIn) meta.append(text('span','','Built into Stride'));
+    if (extension.isBuiltIn) meta.append(text('span','','Built into Umber'));
     if (state.developerMode && extension.version) meta.append(text('span','','Version ' + extension.version));
     info.append(meta);
     summary.append(image,info);
@@ -192,7 +192,7 @@
     setIcon(byId('detailIcon'),extension);
     byId('detailDescription').textContent = extension.description || 'No description provided.';
     byId('detailVersion').textContent = extension.version || 'Not provided';
-    byId('detailSource').textContent = extension.isBuiltIn ? 'Built into Stride' : extension.sourceLabel || 'Loaded from a folder';
+    byId('detailSource').textContent = extension.isBuiltIn ? 'Built into Umber' : extension.sourceLabel || 'Loaded from a folder';
     byId('detailId').textContent = extension.id;
     byId('detailPath').textContent = extension.path || '';
     byId('detailPath').hidden = byId('detailPathLabel').hidden = !extension.path;
@@ -202,7 +202,7 @@
     byId('detailError').hidden = !extension.error;
     const actions = byId('detailActions');
     actions.replaceChildren();
-    if (extension.hasOptions && (extension.isEnabled || extension.id.startsWith('stride:'))) actions.append(action('Extension options',() => post('extensions-open-options:' + extension.id),extension,'options'));
+    if (extension.hasOptions && (extension.isEnabled || extension.id.startsWith('umber:'))) actions.append(action('Extension options',() => post('extensions-open-options:' + extension.id),extension,'options'));
     if (extension.hasPopup && extension.isEnabled) actions.append(action('Open extension',() => post('extensions-open-popup:' + extension.id),extension,'open'));
     if (state.developerMode && !extension.isBuiltIn) actions.append(action('Reload',() => post('extensions-reload:' + extension.id),extension,'detail-reload'));
     if (!extension.isBuiltIn) actions.append(action('Remove',() => remove(extension),extension,'detail-remove',{ danger:true }));

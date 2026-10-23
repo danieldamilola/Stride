@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace StrideBrowser.Engine.Handlers;
+namespace UmberBrowser.Engine.Handlers;
 
 /// <summary>
 /// Contract for web-message handlers. Routes are declared as a flat list of

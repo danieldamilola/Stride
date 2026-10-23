@@ -1,7 +1,7 @@
-<Application x:Class="StrideBrowser.App"
+<Application x:Class="UmberBrowser.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:conv="clr-namespace:StrideBrowser.Converters">
+             xmlns:conv="clr-namespace:UmberBrowser.Converters">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -16,7 +16,7 @@
             <!--  TYPOGRAPHY                                            -->
             <!--  System font. Invisible. Fast. Zero download.          -->
             <!--  3 sizes only: 11 (captions), 13 (body), 14 (brand).  -->
-            <!--  Regular weight everywhere. SemiBold only for "Stride".  -->
+            <!--  Regular weight everywhere. SemiBold only for "Umber".  -->
             <!-- ═══════════════════════════════════════════════════════ -->
             <FontFamily x:Key="UIFont">Segoe UI Variable, Segoe UI</FontFamily>
 
@@ -270,7 +270,7 @@
         </Style>
 
         <!-- ═══════════════════════════════════════════════════════ -->
-        <!--  FAVICON TAB LIST - Stride signature                   -->
+        <!--  FAVICON TAB LIST - Umber signature                   -->
         <!--  Horizontal pills. Active = amber pill. Inactive = icon.-->
         <!--  14px radius on active pill. Compact 2px horizontal gap.-->
         <!-- ═══════════════════════════════════════════════════════ -->

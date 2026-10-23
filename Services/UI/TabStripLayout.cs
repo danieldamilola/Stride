@@ -2,7 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 /// <summary>Reserves room for the new tab button and places it after the visible tabs.</summary>
 public sealed class TabStripLayout : Panel

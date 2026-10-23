@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.IO;
-using StrideBrowser.Helpers;
+using UmberBrowser.Helpers;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 internal static class PageAssets
 {
@@ -10,7 +10,7 @@ internal static class PageAssets
     {
         try
         {
-            using var stream = ResourceLoader.OpenStream("icons.stride-browser-128x128.png");
+            using var stream = ResourceLoader.OpenStream(AppIconResources.AboutResource);
             using var output = new MemoryStream();
             stream.CopyTo(output);
             return "data:image/png;base64," + Convert.ToBase64String(output.ToArray());

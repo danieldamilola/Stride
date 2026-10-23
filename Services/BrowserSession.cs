@@ -1,6 +1,6 @@
 using Microsoft.Web.WebView2.Core;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>State shared by browser windows for the lifetime of the process.</summary>
 public sealed class BrowserSession

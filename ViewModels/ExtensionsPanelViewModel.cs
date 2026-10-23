@@ -1,15 +1,15 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using StrideBrowser.Engine;
-using StrideBrowser.Services.Extensions;
-using StrideBrowser.Services.UI;
+using UmberBrowser.Engine;
+using UmberBrowser.Services.Extensions;
+using UmberBrowser.Services.UI;
 
-namespace StrideBrowser.ViewModels;
+namespace UmberBrowser.ViewModels;
 
 public sealed partial class ExtensionsPanelViewModel : ObservableObject
 {
@@ -84,9 +84,9 @@ public sealed partial class ExtensionsPanelViewModel : ObservableObject
             {
                 var path = extension.Id switch
                 {
-                    "stride:youtube" or "stride:unhook" => "M3,5 L21,5 21,19 3,19 Z M10,9 L15,12 10,15 Z",
-                    "stride:tint" => "M3,4 L21,4 21,20 3,20 Z M3,9 L21,9 M7,6 L8,6 M11,6 L12,6",
-                    "stride:focus" => "M12,3 A9,9 0 1 0 12,21 A9,9 0 0 0 12,3 M6,6 L18,18",
+                    "umber:youtube" or "umber:unhook" => "M3,5 L21,5 21,19 3,19 Z M10,9 L15,12 10,15 Z",
+                    "umber:tint" => "M3,4 L21,4 21,20 3,20 Z M3,9 L21,9 M7,6 L8,6 M11,6 L12,6",
+                    "umber:focus" => "M12,3 A9,9 0 1 0 12,21 A9,9 0 0 0 12,3 M6,6 L18,18",
                     _ => "M20,15 A9,9 0 0 1 9,4 A9,9 0 1 0 20,15"
                 };
                 var drawing = new DrawingImage(new GeometryDrawing(null, new Pen(Brushes.Gray, 1.5), Geometry.Parse(path)));

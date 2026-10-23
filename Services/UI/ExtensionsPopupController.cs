@@ -1,14 +1,14 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using StrideBrowser.Controls;
-using StrideBrowser.Engine;
-using StrideBrowser.Models;
-using StrideBrowser.Services.Extensions;
-using StrideBrowser.ViewModels;
+using UmberBrowser.Controls;
+using UmberBrowser.Engine;
+using UmberBrowser.Models;
+using UmberBrowser.Services.Extensions;
+using UmberBrowser.ViewModels;
 
-namespace StrideBrowser.Services.UI;
+namespace UmberBrowser.Services.UI;
 
 public sealed class ExtensionsPopupController : IDisposable
 {

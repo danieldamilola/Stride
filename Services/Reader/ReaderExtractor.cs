@@ -1,13 +1,13 @@
 using System.Text.Json;
-using StrideBrowser.Engine;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models.Reader;
+using UmberBrowser.Engine;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models.Reader;
 
-namespace StrideBrowser.Services.Reader;
+namespace UmberBrowser.Services.Reader;
 
 /// <summary>
 /// Real extraction runs as JS inside the page WebView2 via ExecuteScriptAsync.
-/// Uses the shared ReaderExtractor.js that exposes window.__strideReaderIsReadable and window.__strideReaderExtract.
+/// Uses the shared ReaderExtractor.js that exposes window.__umberReaderIsReadable and window.__umberReaderExtract.
 /// The double JSON encoding from ExecuteScriptAsync is handled: outer JSON decodes to inner JSON.
 /// </summary>
 public sealed class ReaderExtractor : IReaderExtractor
@@ -21,7 +21,7 @@ public sealed class ReaderExtractor : IReaderExtractor
 
     public async Task<bool> CanExtractAsync(Guid tabId)
     {
-        var script = LoadReaderScript() + "\nwindow.__strideReaderIsReadable();";
+        var script = LoadReaderScript() + "\nwindow.__umberReaderIsReadable();";
         if (string.IsNullOrWhiteSpace(script)) return false;
         var raw = await ExecuteWithTimeoutAsync(tabId, script, 2500);
         if (string.IsNullOrWhiteSpace(raw)) return false;
@@ -56,7 +56,7 @@ public sealed class ReaderExtractor : IReaderExtractor
 
     public async Task<ArticleResult> ExtractAsync(Guid tabId)
     {
-        var script = LoadReaderScript() + "\nwindow.__strideReaderExtract();";
+        var script = LoadReaderScript() + "\nwindow.__umberReaderExtract();";
         if (string.IsNullOrWhiteSpace(script)) throw new InvalidOperationException("ReaderExtractor.js not found");
         var raw = await ExecuteWithTimeoutAsync(tabId, script, 4000);
         if (string.IsNullOrWhiteSpace(raw)) throw new InvalidOperationException("Extractor returned empty");

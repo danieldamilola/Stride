@@ -1,7 +1,7 @@
 (function() {
     try { if (window.top !== window.self) return; } catch (e) { return; }
-    if (window.__strideLinkPreviewInstalled) return;
-    window.__strideLinkPreviewInstalled = true;
+    if (window.__umberLinkPreviewInstalled) return;
+    window.__umberLinkPreviewInstalled = true;
 
     var altHeld = false;
     var lastSentUrl = "";

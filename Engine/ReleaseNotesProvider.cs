@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
-using StrideBrowser.Helpers;
+using UmberBrowser.Helpers;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 public static class ReleaseNotesProvider
 {

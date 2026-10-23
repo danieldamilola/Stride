@@ -13674,7 +13674,7 @@ initCom(PDFViewerApplication);
       }
       const fileOrigin = new URL(file, window.location.href).origin;
       if (fileOrigin !== viewerOrigin) {
-        // throw new Error("file origin does not match viewer's"); // STRIDE: Bypass for external PDFs
+        // throw new Error("file origin does not match viewer's"); // UMBER: Bypass for external PDFs
       }
     } catch (ex) {
       PDFViewerApplication._documentError("pdfjs-loading-error", {

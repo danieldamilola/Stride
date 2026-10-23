@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Text;
 
-namespace StrideBrowser.Services.Reader;
+namespace UmberBrowser.Services.Reader;
 
 /// <summary>Rebuilds untrusted article HTML using only allowed tags and attributes.</summary>
 public sealed class ReaderSanitizer : IReaderSanitizer

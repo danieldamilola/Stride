@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// A completely native, zero-stress Micro-Updater with no external updater frameworks.
@@ -20,8 +20,10 @@ namespace StrideBrowser.Services;
 /// </summary>
 public sealed class UpdateService
 {
-    private const string GitHubApiUrl = "https://api.github.com/repos/danieldamilola/Stride/releases/latest";
-    private const string AssetName = "Stride-win-x64.zip";
+    /// <summary>The repository the product is published from.</summary>
+    internal const string Repository = "danieldamilola/Umber";
+
+    internal const string AssetName = "Umber-win-x64.zip";
 
     private readonly HttpClient _http;
 
@@ -52,7 +54,7 @@ public sealed class UpdateService
         _http = http;
         if (!_http.DefaultRequestHeaders.Contains("User-Agent"))
         {
-            _http.DefaultRequestHeaders.Add("User-Agent", "StrideBrowser-Updater");
+            _http.DefaultRequestHeaders.Add("User-Agent", "UmberBrowser-Updater");
         }
     }
 
@@ -95,20 +97,19 @@ public sealed class UpdateService
 
     /// <summary>
     /// Upper bound on an update package, so a hostile or broken response cannot fill the disk.
-    /// A current Stride release is a small fraction of this.
+    /// A current Umber release is a small fraction of this.
     /// </summary>
     internal const long MaxPackageBytes = 256L * 1024 * 1024;
 
     public async Task<bool?> CheckForUpdatesQuietlyAsync()
     {
         _latestVersion = null;
+        _downloadUrl = null;
+        _expectedAssetDigest = "";
         try
         {
-            using var response = await _http.GetAsync(GitHubApiUrl);
-            if (response.StatusCode == HttpStatusCode.NotFound)
-                return false;
-            response.EnsureSuccessStatusCode();
-            var release = await response.Content.ReadFromJsonAsync<GitHubRelease>();
+            var release = await FetchReleaseAsync();
+
             if (release is null || string.IsNullOrEmpty(release.TagName))
                 return false;
 
@@ -121,10 +122,7 @@ public sealed class UpdateService
             // Prefer the asset URL and digest the API reports over a string-built URL. This keeps the
             // request on the exact asset GitHub named and gives DownloadUpdateAsync something
             // to verify the bytes against.
-            var asset = release.Assets?.FirstOrDefault(a =>
-                string.Equals(a.Name, AssetName, StringComparison.Ordinal) &&
-                a.Url is not null &&
-                a.Url.StartsWith("https://github.com/danieldamilola/Stride/releases/download/", StringComparison.Ordinal));
+            var asset = FindAsset(release.Assets);
 
             _expectedAssetDigest = ParseAssetDigest(asset?.Digest) ?? "";
 
@@ -149,6 +147,49 @@ public sealed class UpdateService
         }
     }
 
+    private async Task<GitHubRelease?> FetchReleaseAsync()
+    {
+        using var response = await _http.GetAsync(ReleasesApiUrl());
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return null;
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<GitHubRelease>();
+    }
+
+    internal static string ReleasesApiUrl()
+        => $"https://api.github.com/repos/{Repository}/releases/latest";
+
+    /// <summary>
+    /// Picks the release asset by name, rejecting any URL outside the release download prefix.
+    /// A tampered response cannot steer the download to another host this way.
+    /// </summary>
+    private static GitHubAsset? FindAsset(List<GitHubAsset>? assets)
+    {
+        if (assets is null) return null;
+
+        return assets.FirstOrDefault(a =>
+            string.Equals(a.Name, AssetName, StringComparison.Ordinal) &&
+            IsReleaseAssetUrl(a.Url));
+    }
+
+    private static bool IsReleaseAssetUrl(string? url)
+    {
+        if (string.IsNullOrEmpty(url)) return false;
+
+        return url.StartsWith(ReleaseDownloadPrefix(), StringComparison.Ordinal);
+    }
+
+    private static string ReleaseDownloadPrefix()
+        => $"https://github.com/{Repository}/releases/download/";
+
+    /// <summary>The URL DownloadUpdateAsync will request, preferring the URL the API reported.</summary>
+    internal string BuildDownloadUrl()
+        => _downloadUrl ?? BuildFallbackDownloadUrl(_latestVersion ?? "", AssetName);
+
+    internal static string BuildFallbackDownloadUrl(string tag, string assetName)
+        => $"{ReleaseDownloadPrefix()}{tag}/{assetName}";
+
     public async Task<bool> DownloadUpdateAsync()
     {
         if (string.IsNullOrEmpty(_latestVersion))
@@ -169,10 +210,9 @@ public sealed class UpdateService
             // The API-reported asset URL when the release check found one, otherwise the built URL.
             // IsAcceptableTag already constrained the tag, so the fallback cannot be steered
             // by path separators or a query string.
-            string downloadUrl = _downloadUrl
-                ?? $"https://github.com/danieldamilola/Stride/releases/download/{_latestVersion}/Stride-win-x64.zip";
+            string downloadUrl = BuildDownloadUrl();
             string tempDir = Path.GetTempPath();
-            _downloadedZipPath = Path.Combine(tempDir, $"StrideUpdate_{Guid.NewGuid():N}.zip");
+            _downloadedZipPath = Path.Combine(tempDir, $"UmberUpdate_{Guid.NewGuid():N}.zip");
 
             using var response = await _http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
@@ -273,7 +313,7 @@ public sealed class UpdateService
         return Convert.ToHexString(hash);
     }
 
-    /// <summary>Ceilings for an update package, all well above a real Stride release.</summary>
+    /// <summary>Ceilings for an update package, all well above a real Umber release.</summary>
     internal const int MaxPackageEntries = 20000;
     internal const long MaxPackageUncompressedBytes = 1024L * 1024 * 1024;
     internal const long MaxPackageEntryBytes = 128L * 1024 * 1024;
@@ -356,11 +396,11 @@ public sealed class UpdateService
         }
 
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        string updaterExe = Path.Combine(baseDir, "Stride.Updater.exe");
+        string updaterExe = Path.Combine(baseDir, "Umber.Updater.exe");
 
         if (!File.Exists(updaterExe))
         {
-            Fail("Stride.Updater.exe is missing. Cannot perform update.");
+            Fail("Umber.Updater.exe is missing. Cannot perform update.");
             return;
         }
 

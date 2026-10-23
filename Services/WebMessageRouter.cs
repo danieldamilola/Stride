@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using StrideBrowser.Engine.Handlers;
+using UmberBrowser.Engine.Handlers;
 
-namespace StrideBrowser.Services;
+namespace UmberBrowser.Services;
 
 /// <summary>
 /// Dispatches web messages from internal pages to typed handlers.

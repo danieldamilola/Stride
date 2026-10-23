@@ -1,4 +1,4 @@
-namespace StrideBrowser.Models.Reader;
+namespace UmberBrowser.Models.Reader;
 
 /// <summary>
 /// Sanitized, template-wrapped content ready to render in the dedicated reader WebView2.

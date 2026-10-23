@@ -1,4 +1,4 @@
-namespace StrideBrowser.Helpers;
+namespace UmberBrowser.Helpers;
 
 /// <summary>
 /// Encodes strings for safe embedding in JavaScript string literals

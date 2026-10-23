@@ -4,12 +4,12 @@ using System.Text.Json;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.Pages;
-using StrideBrowser.Services.Reader;
-using StrideBrowser.Engine;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.Pages;
+using UmberBrowser.Services.Reader;
+using UmberBrowser.Engine;
 
 internal static partial class Program
 {
@@ -404,3 +404,4 @@ public sealed class AuditCore
     public Task<bool> TrySuspendAsync() { SuspendCount++; return Task.FromResult(true); }
     public void Resume() { }
 }
+

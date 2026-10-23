@@ -1,9 +1,9 @@
-# Stride download work handoff
+# Umber download work handoff
 
 For the later wallpaper, setup, update-page and light-theme work, read [the follow-up handoff](2026-10-21-setup-and-theme.md).
 
 Date: 2026-10-21
-Repository: C:\dev\Stride
+Repository: C:\dev\Umber
 Branch: feat/download-history
 Base commit: 178e560c
 
@@ -80,7 +80,7 @@ Validation files: C:\Users\Daniel\.bb\thread-storage\thr_hkhatuaqyi\download-fix
 - DownloadFixVerification.csproj and Program.cs run the real WPF/WebView2 harness.
 - staged-download-history contains an export of the exact index for independent build and test checks.
 
-Preview: C:\dev\Stride\bin\DownloadFixPreview\Stride.exe. Close an existing Stride instance before opening it so single-instance forwarding does not hide the new build.
+Preview: C:\dev\Umber\bin\DownloadFixPreview\Umber.exe. Close an existing Umber instance before opening it so single-instance forwarding does not hide the new build.
 
 ## Preserve separate performance work
 
@@ -93,8 +93,8 @@ Concurrent performance changes remain outside the download commit. They touch:
 - Engine/WebViewIpcBridge.cs
 - MainWindow.xaml.cs
 - Resources/Scripts/theme-color.js
-- StrideBrowser.Tests/TabActivationPerformanceTests.cs
-- StrideBrowser.Tests/theme-color-performance.mjs
+- UmberBrowser.Tests/TabActivationPerformanceTests.cs
+- UmberBrowser.Tests/theme-color-performance.mjs
 
 Three files were staged with only download edits reconstructed from HEAD: Engine/TabEngine.cs, Engine/WebViewIpcBridge.cs and MainWindow.xaml.cs. Their remaining diffs belong to the separate work. Do not stage them wholesale or discard them.
 
@@ -113,4 +113,4 @@ The earlier full worktree suite had one source-text failure in YouTubeNetworkTam
 - rg is unavailable. Use focused git grep or Python searches.
 - Read source as UTF-8. Use Unicode escapes or set PowerShell OutputEncoding before piping non-ASCII Python scripts.
 - Avoid overwriting the user's running Debug build. Use isolated output paths.
-- Do not stop the user's Stride process or modify their normal browser profile during tests.
+- Do not stop the user's Umber process or modify their normal browser profile during tests.

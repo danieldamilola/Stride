@@ -1,9 +1,9 @@
 using System.Net;
 using System.Text;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
 
-namespace StrideBrowser.Services.Pages;
+namespace UmberBrowser.Services.Pages;
 
 /// <summary>Generates the OneTab page HTML showing saved tab groups.</summary>
 public sealed class OneTabPage

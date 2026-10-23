@@ -5,13 +5,13 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using StrideBrowser.Helpers;
-using StrideBrowser.Models;
-using StrideBrowser.Services;
-using StrideBrowser.Services.ContextMenus;
-using StrideBrowser.Services.UI;
+using UmberBrowser.Helpers;
+using UmberBrowser.Models;
+using UmberBrowser.Services;
+using UmberBrowser.Services.ContextMenus;
+using UmberBrowser.Services.UI;
 
-namespace StrideBrowser.Engine;
+namespace UmberBrowser.Engine;
 
 /// <summary>
 /// Manages the full tab lifecycle: creation, switching, hibernation, and disposal.
@@ -109,7 +109,7 @@ public sealed partial class TabEngine : IDisposable
     public event Action<BrowserTab?>? ActiveTabChanged;
 
     /// <summary>Fires when Alt plus click requests a link preview. On demand, no background timer.</summary>
-    public event Action<BrowserTab, string, System.Windows.Rect, StrideBrowser.Models.LinkPreview.LinkPreviewTrigger>? LinkPreviewRequested;
+    public event Action<BrowserTab, string, System.Windows.Rect, UmberBrowser.Models.LinkPreview.LinkPreviewTrigger>? LinkPreviewRequested;
 
     public CoreWebView2Environment? WebViewEnvironment => _webViewFactory.Environment;
 
@@ -2285,5 +2285,6 @@ public sealed partial class TabEngine : IDisposable
         foreach (var id in _webViews.Keys.ToArray()) TeardownWebView(id);
     }
 }
+
 
 
