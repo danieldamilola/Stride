@@ -26,6 +26,7 @@ All notable changes to Stride are recorded here, newest first.
 
 ### Fixed
 
+- Favicon cache failures now produce diagnostics while preserving best-effort recovery. Tab-transfer verification uses a separate fixture directory for each run.
 - Performance verification checks actual Downloads rendering during extension startup. The tab-transfer tool uses the browser navigation path and current page and message contracts.
 - Downloads opens with large retained histories, and unchanged records no longer rebuild the full list on each update.
 - A tab waiting for extension startup no longer blocks creation of another tab.

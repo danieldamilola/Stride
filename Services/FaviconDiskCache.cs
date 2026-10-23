@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 
 namespace StrideBrowser.Services;
@@ -52,7 +53,11 @@ internal sealed class FaviconDiskCache
                 using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 8192, true);
                 return (true, await FaviconLoader.ReadBoundedBytesAsync(stream).ConfigureAwait(false));
             }
-            catch { return (true, (byte[]?)null); }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Favicon cache read failed: {ex}");
+                return (true, (byte[]?)null);
+            }
         }
         finally { _gate.Release(); }
     });
@@ -73,10 +78,14 @@ internal sealed class FaviconDiskCache
             // also covers other loader instances that use this profile directory.
             PruneCore(DateTime.UtcNow);
         }
-        catch { }
+        catch (Exception ex) { Trace.WriteLine($"Favicon cache write failed: {ex}"); }
         finally
         {
-            if (temporary is not null) try { File.Delete(temporary); } catch { }
+            if (temporary is not null)
+            {
+                try { File.Delete(temporary); }
+                catch (Exception ex) { Trace.WriteLine($"Favicon cache temporary cleanup failed: {ex}"); }
+            }
             _gate.Release();
         }
     });
@@ -85,7 +94,7 @@ internal sealed class FaviconDiskCache
     {
         await _gate.WaitAsync().ConfigureAwait(false);
         try { PruneCore(DateTime.UtcNow); }
-        catch { }
+        catch (Exception ex) { Trace.WriteLine($"Favicon cache pruning failed: {ex}"); }
         finally { _gate.Release(); }
     });
 
@@ -109,7 +118,11 @@ internal sealed class FaviconDiskCache
                 count++;
                 bytes += file.Length;
             }
-            catch { /* Locked or removed files can be retried in the next pass. */ }
+            catch (Exception ex)
+            {
+                // Locked or removed files can be retried in the next pass.
+                Trace.WriteLine($"Favicon cache entry pruning failed: {ex}");
+            }
         }
     }
 }

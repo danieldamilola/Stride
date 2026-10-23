@@ -215,7 +215,7 @@ internal static partial class Program
         void Message(object? sender, CoreWebView2WebMessageReceivedEventArgs args)
         {
             try { var value = args.TryGetWebMessageAsString(); if (value.StartsWith("THEME_COLOR:")) messages.Add(value); }
-            catch { }
+            catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Theme probe ignored an unreadable message: {ex}"); }
         }
         view.CoreWebView2.WebMessageReceived += Message;
         try

@@ -104,9 +104,10 @@ internal static class Program
         await source.ActivateAsync(tab);
         var core = source.GetCoreForTab(tab.Id)!;
         // Serve the local fixture independently of Chromium's user-data directory.
-        var pagePath = Path.Combine(StrideBrowser.Helpers.AppPaths.DataDirectory, "transfer-fixture", "transfer-test.html");
-        Directory.CreateDirectory(Path.GetDirectoryName(pagePath)!);
-        core.SetVirtualHostNameToFolderMapping("transfer.test", Path.GetDirectoryName(pagePath)!,
+        var fixtureDirectory = Path.Combine(StrideBrowser.Helpers.AppPaths.DataDirectory, "transfer-fixture", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(fixtureDirectory);
+        var pagePath = Path.Combine(fixtureDirectory, "transfer-test.html");
+        core.SetVirtualHostNameToFolderMapping("transfer.test", fixtureDirectory,
             Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.DenyCors);
         const string pageUri = "https://transfer.test/transfer-test.html";
         var loaded = new TaskCompletionSource();

@@ -10,7 +10,24 @@ namespace StrideBrowser.Tests;
 public sealed class FaviconBudgetTests : IDisposable
 {
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("stride-favicon-budget");
-    public void Dispose() { try { _root.Delete(true); } catch { } }
+    public void Dispose()
+    {
+        try { _root.Delete(true); }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Favicon test cleanup failed: {ex}"); }
+    }
+
+    [Fact]
+    public async Task FailedCacheWriteReleasesTheGateAndAllowsLaterWrites()
+    {
+        var directory = Path.Combine(_root.FullName, "cache");
+        await File.WriteAllTextAsync(directory, "blocks directory creation");
+        var cache = new FaviconDiskCache(directory);
+        await cache.WriteAsync("host", [1, 2, 3]).WaitAsync(TimeSpan.FromSeconds(5));
+        File.Delete(directory);
+        await cache.WriteAsync("host", [1, 2, 3]).WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(new byte[] { 1, 2, 3 }, await File.ReadAllBytesAsync(Path.Combine(directory, "host.png")));
+        Assert.Empty(Directory.GetFiles(directory, "*.tmp"));
+    }
 
     [Fact]
     public async Task NonSeekableOversizedStreamStopsAfterOneByteBeyondTheLimit()
